@@ -130,5 +130,4 @@ def player_detail(cid):
     return render_template("detail.html", error=None, player=selected)
 
 
-if __name__ == "__main__":
-    app.run(debug=True, port=9000)
+
