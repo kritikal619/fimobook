@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>검색 결과</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 40px; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+    th { background-color: #f4f4f4; }
+    a.detail-link { text-decoration: none; color: #0366d6; }
+    a.detail-link:hover { text-decoration: underline; }
+    .error { color: red; margin-bottom: 20px; }
+    .back { margin-top: 20px; display: inline-block; }
+  </style>
+</head>
+<body>
+  <h1>검색 결과</h1>
+
+  {% if error %}
+    <div class="error">{{ error }}</div>
+    <a href="/" class="back">← 다시 검색하기</a>
+  {% else %}
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>클래스</th>
+          <th>이름</th>
+          <th>OVR</th>
+          <th>팀</th>
+          <th>상세보기</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for player in players %}
+          <tr>
+            <td>{{ loop.index }}</td>
+            <td>{{ player.className }}</td>
+            <td>{{ player.playerKor }}</td>
+            <td>{{ player.ovr }}</td>
+            <td>{{ player.team }}</td>
+            <td>
+              <a href="{{ url_for('player_detail', cid=player.cid) }}?names={{ names|urlencode }}"
+                 class="detail-link">
+                보기
+              </a>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <a href="/" class="back">← 다시 검색하기</a>
+  {% endif %}
+</body>
+</html>

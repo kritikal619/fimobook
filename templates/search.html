@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>FC Mobile 선수 검색</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 40px; }
+    label { display: block; margin-bottom: 8px; }
+    input[type="text"] { width: 300px; padding: 6px; }
+    button { padding: 6px 12px; margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <h1>선수 검색</h1>
+  <form method="post" action="/">
+    <label for="names">검색할 선수 이름 (쉼표로 구분)</label>
+    <input type="text" id="names" name="names" placeholder="예: 호나우두, 메시" required />
+    <button type="submit">검색</button>
+  </form>
+</body>
+</html>
