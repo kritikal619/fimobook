@@ -1,21 +1,104 @@
 <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>FC Mobile 선수 검색</title>
+  <!-- Google Fonts: Poppins (디자인 원본에서 사용된 폰트) -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    body { font-family: Arial, sans-serif; margin: 40px; }
-    label { display: block; margin-bottom: 8px; }
-    input[type="text"] { width: 300px; padding: 6px; }
-    button { padding: 6px 12px; margin-top: 10px; }
+    /* 전역 스타일 */
+    body {
+      font-family: 'Poppins', sans-serif;
+      background-color: #f0f2f5; /* 디자인 원본의 배경색 */
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh; /* 전체 뷰포트 높이 */
+      margin: 0;
+      box-sizing: border-box; /* 패딩과 보더가 너비에 포함되도록 설정 */
+    }
+
+    /* 카드형 레이아웃 스타일 */
+    .search-card {
+      background-color: #fff;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1); /* 디자인 원본의 그림자 */
+      width: 100%;
+      max-width: 400px; /* 카드 최대 너비 제한 */
+      box-sizing: border-box;
+    }
+
+    /* 제목 스타일 */
+    h1 {
+      text-align: center;
+      color: #333; /* 디자인 원본의 텍스트 색상 */
+      margin-bottom: 25px;
+      font-size: 28px; /* 폰트 크기 조정 */
+      font-weight: 600; /* Poppins 폰트의 세미볼드 */
+    }
+
+    /* 입력 그룹 (label + input) 스타일 */
+    .input-group {
+      margin-bottom: 20px;
+    }
+
+    /* 라벨 스타일 */
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600; /* Poppins 폰트의 세미볼드 */
+      color: #555; /* 디자인 원본의 텍스트 색상 */
+      font-size: 15px;
+    }
+
+    /* 입력 필드 스타일 */
+    input[type="text"] {
+      width: 100%;
+      padding: 12px 15px;
+      border: 1px solid #ccc;
+      border-radius: 8px; /* 둥근 모서리 */
+      font-size: 16px;
+      box-sizing: border-box;
+      transition: border-color 0.3s ease; /* 포커스 시 부드러운 전환 */
+    }
+
+    input[type="text"]:focus {
+      border-color: #007bff; /* 포커스 시 파란색 테두리 (디자인 원본의 강조색) */
+      outline: none; /* 기본 아웃라인 제거 */
+    }
+
+    /* 버튼 스타일 */
+    button[type="submit"] {
+      width: 100%;
+      padding: 12px;
+      background-color: #007bff; /* 파란색 배경 (디자인 원본의 강조색) */
+      color: #fff; /* 흰색 텍스트 */
+      border: none;
+      border-radius: 8px; /* 둥근 모서리 */
+      font-size: 18px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color 0.3s ease; /* 호버 시 부드러운 전환 */
+    }
+
+    button[type="submit"]:hover {
+      background-color: #0056b3; /* 호버 시 약간 어두운 파란색 */
+    }
   </style>
 </head>
 <body>
-  <h1>선수 검색</h1>
-  <form method="post" action="/">
-    <label for="names">검색할 선수 이름 (쉼표로 구분)</label>
-    <input type="text" id="names" name="names" placeholder="예: 호나우두, 메시" required />
-    <button type="submit">검색</button>
-  </form>
+  <div class="search-card">
+    <h1>선수 검색</h1>
+    <form method="post" action="/">
+      <div class="input-group">
+        <label for="names">검색할 선수 이름 (쉼표로 구분)</label>
+        <input type="text" id="names" name="names" placeholder="예: 호나우두, 메시" required />
+      </div>
+      <button type="submit">검색</button>
+    </form>
+  </div>
 </body>
 </html>

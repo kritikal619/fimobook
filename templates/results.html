@@ -2,55 +2,186 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>검색 결과</title>
+  <!-- Google Fonts: Poppins (이전 디자인에서 사용된 폰트) -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    body { font-family: Arial, sans-serif; margin: 40px; }
-    table { border-collapse: collapse; width: 100%; }
-    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
-    th { background-color: #f4f4f4; }
-    a.detail-link { text-decoration: none; color: #0366d6; }
-    a.detail-link:hover { text-decoration: underline; }
-    .error { color: red; margin-bottom: 20px; }
-    .back { margin-top: 20px; display: inline-block; }
+    /* CSS 변수 설정 (재사용성을 위해) */
+    :root {
+      --primary-color: #007bff; /* 강조색 (버튼, 링크 등) */
+      --secondary-color: #6c757d; /* 보조 버튼 색상 */
+      --background-color: #f0f2f5;
+      --card-bg-color: #fff;
+      --text-color-dark: #333;
+      --text-color-medium: #555;
+      --border-color-light: #eee;
+      --border-color-medium: #ccc;
+      --shadow-light: 0 8px 24px rgba(0, 0, 0, 0.1);
+      --border-radius-default: 8px;
+    }
+
+    /* 전역 스타일 */
+    body {
+      font-family: 'Poppins', sans-serif;
+      background-color: var(--background-color);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh; /* 전체 뷰포트 높이 */
+      margin: 0;
+      box-sizing: border-box; /* 패딩과 보더가 너비에 포함되도록 설정 */
+      padding: 20px; /* 작은 화면에서 여백 확보 */
+    }
+
+    /* 카드형 레이아웃 스타일 (검색 결과 컨테이너) */
+    .result-card {
+      background-color: var(--card-bg-color);
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: var(--shadow-light);
+      width: 100%;
+      max-width: 800px; /* 테이블을 담기 위해 최대 너비 늘림 */
+      box-sizing: border-box;
+    }
+
+    /* 제목 스타일 */
+    h1 {
+      text-align: center;
+      color: var(--text-color-dark);
+      margin-bottom: 25px;
+      font-size: 28px;
+      font-weight: 600;
+    }
+
+    /* 에러 메시지 스타일 */
+    .error {
+      color: red;
+      background-color: #ffe0e0; /* 연한 빨간색 배경 */
+      border: 1px solid #ffb3b3; /* 빨간색 테두리 */
+      border-radius: var(--border-radius-default);
+      padding: 15px;
+      margin-bottom: 20px;
+      text-align: center;
+      font-weight: 500;
+    }
+
+    /* 테이블 스타일 */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 30px; /* 아래 버튼과의 간격 */
+      background-color: var(--card-bg-color); /* 테이블 배경색 */
+      border-radius: var(--border-radius-default); /* 테이블 모서리 둥글게 */
+      overflow: hidden; /* 둥근 모서리 적용을 위해 */
+    }
+
+    th, td {
+      border: 1px solid var(--border-color-light); /* 연한 테두리 */
+      padding: 12px 15px; /* 패딩 늘림 */
+      text-align: left;
+    }
+
+    th {
+      background-color: #f8f8f8; /* 헤더 배경색 */
+      color: var(--text-color-dark);
+      font-weight: 600; /* Poppins 세미볼드 */
+      border-bottom: 2px solid var(--primary-color); /* 강조색 하단 테두리 */
+    }
+
+    /* 테이블 행 줄무늬 및 호버 효과 */
+    tbody tr:nth-child(even) {
+      background-color: #fbfbfb; /* 짝수 행 배경색 */
+    }
+
+    tbody tr:hover {
+      background-color: #e6f7ff; /* 호버 시 연한 파란색 */
+      transition: background-color 0.2s ease;
+    }
+
+    /* 상세보기 링크 스타일 */
+    a.detail-link {
+      display: inline-block;
+      padding: 6px 12px;
+      background-color: #e0f2ff; /* 연한 파란색 배경 */
+      color: var(--primary-color); /* 파란색 텍스트 */
+      text-decoration: none;
+      border-radius: 5px; /* 작은 둥근 모서리 */
+      font-weight: 500;
+      transition: background-color 0.2s ease, transform 0.1s ease;
+    }
+
+    a.detail-link:hover {
+      background-color: #cce7ff; /* 호버 시 약간 어두운 파란색 */
+      transform: translateY(-1px); /* 약간 위로 떠오르는 효과 */
+    }
+
+    /* '다시 검색하기' 버튼 스타일 */
+    a.back {
+      display: block; /* 블록 요소로 만들어 가운데 정렬 가능하게 */
+      width: fit-content; /* 내용에 맞는 너비 */
+      margin: 25px auto 0 auto; /* 위쪽 마진 및 좌우 자동 마진으로 가운데 정렬 */
+      padding: 12px 25px;
+      background-color: var(--secondary-color); /* 회색 버튼 */
+      color: #fff;
+      text-decoration: none;
+      border: none;
+      border-radius: var(--border-radius-default);
+      font-size: 17px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color 0.3s ease, transform 0.1s ease;
+    }
+
+    a.back:hover {
+      background-color: #5a6268; /* 호버 시 약간 어두운 회색 */
+      transform: translateY(-2px); /* 약간 위로 떠오르는 효과 */
+    }
+
+    a.back:active {
+        transform: translateY(0); /* 클릭 시 원위치 */
+    }
   </style>
 </head>
 <body>
-  <h1>검색 결과</h1>
+  <div class="result-card">
+    <h1>검색 결과</h1>
 
-  {% if error %}
-    <div class="error">{{ error }}</div>
-    <a href="/" class="back">← 다시 검색하기</a>
-  {% else %}
-    <table>
-      <thead>
-        <tr>
-          <th>#</th>
-          <th>클래스</th>
-          <th>이름</th>
-          <th>OVR</th>
-          <th>팀</th>
-          <th>상세보기</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for player in players %}
+    {% if error %}
+      <div class="error">{{ error }}</div>
+      <a href="/" class="back">← 다시 검색하기</a>
+    {% else %}
+      <table>
+        <thead>
           <tr>
-            <td>{{ loop.index }}</td>
-            <td>{{ player.className }}</td>
-            <td>{{ player.playerKor }}</td>
-            <td>{{ player.ovr }}</td>
-            <td>{{ player.team }}</td>
-            <td>
-              <a href="{{ url_for('player_detail', cid=player.cid) }}?names={{ names|urlencode }}"
-                 class="detail-link">
-                보기
-              </a>
-            </td>
+            <th>#</th>
+            <th>클래스</th>
+            <th>이름</th>
+            <th>OVR</th>
+            <th>팀</th>
+            <th>상세보기</th>
           </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-    <a href="/" class="back">← 다시 검색하기</a>
-  {% endif %}
+        </thead>
+        <tbody>
+          {% for player in players %}
+            <tr>
+              <td>{{ loop.index }}</td>
+              <td>{{ player.className }}</td>
+              <td>{{ player.playerKor }}</td>
+              <td>{{ player.ovr }}</td>
+              <td>{{ player.team }}</td>
+              <td>
+                <a href="{{ url_for('player_detail', cid=player.cid) }}?names={{ names|urlencode }}"
+                   class="detail-link">
+                  보기
+                </a>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      <a href="/" class="back">← 다시 검색하기</a>
+    {% endif %}
+  </div>
 </body>
 </html>

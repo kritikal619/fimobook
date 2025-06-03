@@ -2,93 +2,253 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>선수 상세 정보</title>
+  <!-- Google Fonts: Poppins -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    body { font-family: Arial, sans-serif; margin: 40px; }
-    table { border-collapse: collapse; width: 50%; margin-bottom: 20px; }
-    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
-    th { background-color: #f4f4f4; }
-    .error { color: red; margin-bottom: 20px; }
-    .back { display: inline-block; margin-top: 20px; }
+    /* CSS 변수 설정 (재사용성을 위해) */
+    :root {
+      --primary-color: #007bff; /* 강조색 (버튼, 링크 등) */
+      --secondary-color: #6c757d; /* 보조 버튼 색상 */
+      --background-color: #f0f2f5;
+      --card-bg-color: #fff;
+      --text-color-dark: #333;
+      --text-color-medium: #555;
+      --border-color-light: #eee;
+      --border-color-medium: #ccc;
+      --shadow-light: 0 8px 24px rgba(0, 0, 0, 0.1);
+      --border-radius-default: 8px;
+    }
+
+    /* 전역 스타일 */
+    body {
+      font-family: 'Poppins', sans-serif;
+      background-color: var(--background-color);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh; /* 전체 뷰포트 높이 */
+      margin: 0;
+      box-sizing: border-box; /* 패딩과 보더가 너비에 포함되도록 설정 */
+      padding: 20px; /* 작은 화면에서 여백 확보 */
+    }
+
+    /* 카드형 레이아웃 스타일 (선수 상세 정보 컨테이너) */
+    .player-card {
+      background-color: var(--card-bg-color);
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: var(--shadow-light);
+      width: 100%;
+      max-width: 800px; /* 테이블을 담기 위해 최대 너비 설정 */
+      box-sizing: border-box;
+    }
+
+    /* 제목 스타일 */
+    h1 {
+      text-align: center;
+      color: var(--text-color-dark);
+      margin-bottom: 25px;
+      font-size: 28px;
+      font-weight: 600;
+    }
+
+    h2 {
+      color: var(--text-color-dark);
+      margin-top: 30px;
+      margin-bottom: 20px;
+      font-size: 22px;
+      font-weight: 600;
+    }
+
+    /* 에러 메시지 스타일 */
+    .error {
+      color: red;
+      background-color: #ffe0e0; /* 연한 빨간색 배경 */
+      border: 1px solid #ffb3b3; /* 빨간색 테두리 */
+      border-radius: var(--border-radius-default);
+      padding: 15px;
+      margin-bottom: 20px;
+      text-align: center;
+      font-weight: 500;
+    }
+
+    /* 테이블 스타일 */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 30px; /* 아래 버튼과의 간격 */
+      background-color: var(--card-bg-color); /* 테이블 배경색 */
+      border-radius: var(--border-radius-default); /* 테이블 모서리 둥글게 */
+      overflow: hidden; /* 둥근 모서리 적용을 위해 */
+    }
+
+    th, td {
+      border: 1px solid var(--border-color-light); /* 연한 테두리 */
+      padding: 12px 15px; /* 패딩 늘림 */
+      text-align: left;
+    }
+
+    th {
+      background-color: #f8f8f8; /* 헤더 배경색 */
+      color: var(--text-color-dark);
+      font-weight: 600; /* Poppins 세미볼드 */
+      border-bottom: 2px solid var(--primary-color); /* 강조색 하단 테두리 */
+      width: 30%; /* 첫 번째 열 너비 고정 */
+    }
+
+    /* 테이블 행 줄무늬 및 호버 효과 */
+    tbody tr:nth-child(even) {
+      background-color: #fbfbfb; /* 짝수 행 배경색 */
+    }
+
+    tbody tr:hover {
+      background-color: #e6f7ff; /* 호버 시 연한 파란색 */
+      transition: background-color 0.2s ease;
+    }
+
+    /* 특성 목록 스타일 */
+    ul {
+      padding-left: 20px;
+      margin-bottom: 30px;
+    }
+
+    li {
+      margin-bottom: 8px;
+      color: var(--text-color-medium);
+    }
+
+    /* '다시 검색하기' 버튼 스타일 */
+    a.back {
+      display: block; /* 블록 요소로 만들어 가운데 정렬 가능하게 */
+      width: fit-content; /* 내용에 맞는 너비 */
+      margin: 25px auto 0 auto; /* 위쪽 마진 및 좌우 자동 마진으로 가운데 정렬 */
+      padding: 12px 25px;
+      background-color: var(--secondary-color); /* 회색 버튼 */
+      color: #fff;
+      text-decoration: none;
+      border: none;
+      border-radius: var(--border-radius-default);
+      font-size: 17px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color 0.3s ease, transform 0.1s ease;
+    }
+
+    a.back:hover {
+      background-color: #5a6268; /* 호버 시 약간 어두운 회색 */
+      transform: translateY(-2px); /* 약간 위로 떠오르는 효과 */
+    }
+
+    a.back:active {
+      transform: translateY(0); /* 클릭 시 원위치 */
+    }
+
+    /* 반응형 디자인을 위한 미디어 쿼리 */
+    @media (max-width: 768px) {
+      .player-card {
+        padding: 20px;
+      }
+      
+      h1 {
+        font-size: 24px;
+      }
+      
+      h2 {
+        font-size: 20px;
+      }
+      
+      th, td {
+        padding: 10px;
+      }
+      
+      a.back {
+        padding: 10px 20px;
+        font-size: 16px;
+      }
+    }
   </style>
 </head>
 <body>
-  <h1>선수 상세 정보</h1>
+  <div class="player-card">
+    <h1>선수 상세 정보</h1>
 
-  {% if error %}
-    <div class="error">{{ error }}</div>
-    <a href="/" class="back">← 다시 검색하기</a>
-  {% elif player %}
-    <table>
-      <tr><th>클래스</th>      <td>{{ player.className }}</td></tr>
-      <tr><th>이름</th>       <td>{{ player.playerKor }} ({{ player.playerEng }})</td></tr>
-      <tr><th>팀</th>        <td>{{ player.team }}</td></tr>
-      <tr><th>포지션</th>     <td>{{ player.position }}</td></tr>
-      <tr><th>OVR</th>       <td>{{ player.ovr }}</td></tr>
-      <tr><th>키/몸무게</th>  <td>{{ player.height }}cm / {{ player.weight }}kg</td></tr>
-      <tr><th>국적</th>       <td>{{ player.nation }}</td></tr>
-      <tr><th>주발</th>       <td>
-        {% if player.mainFoot == 1 %}왼발{% elif player.mainFoot == 2 %}오른발{% else %}알 수 없음{% endif %}
-      </td></tr>
-      <tr><th>왼발 등급</th>   <td>{{ player.footL }}</td></tr>
-      <tr><th>오른발 등급</th> <td>{{ player.footR }}</td></tr>
-      <tr><th>스킬 부스트</th> <td>{{ player.skillBoostName }} (레벨: {{ player.skillBoostLevel }})</td></tr>
-    </table>
+    {% if error %}
+      <div class="error">{{ error }}</div>
+      <a href="/" class="back">← 다시 검색하기</a>
+    {% elif player %}
+      <table>
+        <tr><th>클래스</th>      <td>{{ player.className }}</td></tr>
+        <tr><th>이름</th>       <td>{{ player.playerKor }} ({{ player.playerEng }})</td></tr>
+        <tr><th>팀</th>        <td>{{ player.team }}</td></tr>
+        <tr><th>포지션</th>     <td>{{ player.position }}</td></tr>
+        <tr><th>OVR</th>       <td>{{ player.ovr }}</td></tr>
+        <tr><th>키/몸무게</th>  <td>{{ player.height }}cm / {{ player.weight }}kg</td></tr>
+        <tr><th>국적</th>       <td>{{ player.nation }}</td></tr>
+        <tr><th>주발</th>       <td>
+          {% if player.mainFoot == 1 %}왼발{% elif player.mainFoot == 2 %}오른발{% else %}알 수 없음{% endif %}
+        </td></tr>
+        <tr><th>왼발 등급</th>   <td>{{ player.footL }}</td></tr>
+        <tr><th>오른발 등급</th> <td>{{ player.footR }}</td></tr>
+        <tr><th>스킬 부스트</th> <td>{{ player.skillBoostName }} (레벨: {{ player.skillBoostLevel }})</td></tr>
+      </table>
 
-    <h2>모든 능력치</h2>
-    <table>
-      <thead>
-        <tr><th>능력치 이름</th><th>수치</th></tr>
-      </thead>
-      <tbody>
-        {% set stat_names = {
-             "ACC":"가속","AGG":"공격성","AGI":"민첩성","AWR":"위치 선정","BAC":"볼 컨트롤",
-             "BAL":"밸런스","CRO":"크로스","CUR":"감아차기","DRI":"드리블","FIN":"결정력",
-             "FRK":"프리킥","GKD":"GK 다이빙","GKK":"GK 킥","GKP":"GK 위치 선정","HAN":"태클",
-             "HEA":"헤딩","JMP":"점프","LPA":"롱패스","LSA":"롱슛","MRK":"수비 마킹","PAS":"패스",
-             "PEN":"페널티 킥","POS":"포지셔닝","REA":"반응도","REF":"반사 신경","SHO":"슈팅력",
-             "SLT":"슬라이딩 태클","SPD":"질주 속도","STA":"체력","STR":"힘","STT":"마크",
-             "VIS":"시야","VOL":"볼 컨트롤","WFA":"약발 정확도","LVO":"로빙 발리 정확도","LVOD":"로빙 발리 데미지"
-          } %}
-        {% for key, value in player.items() %}
-          {% if key.isupper() and value is integer %}
-            <tr>
-              <td>{{ stat_names[key] if key in stat_names else key }}</td>
-              <td>{{ value }}</td>
-            </tr>
-          {% endif %}
-        {% endfor %}
-      </tbody>
-    </table>
+      <h2>모든 능력치</h2>
+      <table>
+        <thead>
+          <tr><th>능력치 이름</th><th>수치</th></tr>
+        </thead>
+        <tbody>
+          {% set stat_names = {
+               "ACC":"가속","AGG":"공격성","AGI":"민첩성","AWR":"위치 선정","BAC":"볼 컨트롤",
+               "BAL":"밸런스","CRO":"크로스","CUR":"감아차기","DRI":"드리블","FIN":"결정력",
+               "FRK":"프리킥","GKD":"GK 다이빙","GKK":"GK 킥","GKP":"GK 위치 선정","HAN":"태클",
+               "HEA":"헤딩","JMP":"점프","LPA":"롱패스","LSA":"롱슛","MRK":"수비 마킹","PAS":"패스",
+               "PEN":"페널티 킥","POS":"포지셔닝","REA":"반응도","REF":"반사 신경","SHO":"슈팅력",
+               "SLT":"슬라이딩 태클","SPD":"질주 속도","STA":"체력","STR":"힘","STT":"마크",
+               "VIS":"시야","VOL":"볼 컨트롤","WFA":"약발 정확도","LVO":"로빙 발리 정확도","LVOD":"로빙 발리 데미지"
+            } %}
+          {% for key, value in player.items() %}
+            {% if key.isupper() and value is integer %}
+              <tr>
+                <td>{{ stat_names[key] if key in stat_names else key }}</td>
+                <td>{{ value }}</td>
+              </tr>
+            {% endif %}
+          {% endfor %}
+        </tbody>
+      </table>
 
-    <h2>가격 (진화 등급: 가격)</h2>
-    <table>
-      <thead>
-        <tr><th>진화</th><th>가격</th></tr>
-      </thead>
-      <tbody>
-        {% for i in range(0, 11) %}
-          {% set price_key = "n8Price" ~ i %}
-          {% if price_key in player %}
-            <tr>
-              <td>{{ i }}진화</td>
-              <td>{{ "{:,}원".format(player[price_key]) }}</td>
-            </tr>
-          {% endif %}
-        {% endfor %}
-      </tbody>
-    </table>
+      <h2>가격 (진화 등급: 가격)</h2>
+      <table>
+        <thead>
+          <tr><th>진화</th><th>가격</th></tr>
+        </thead>
+        <tbody>
+          {% for i in range(0, 11) %}
+            {% set price_key = "n8Price" ~ i %}
+            {% if price_key in player %}
+              <tr>
+                <td>{{ i }}진화</td>
+                <td>{{ "{:,}원".format(player[price_key]) }}</td>
+              </tr>
+            {% endif %}
+          {% endfor %}
+        </tbody>
+      </table>
 
-    {% if player.Trait %}
-      <h2>특성</h2>
-      <ul>
-        {% for t in player.Trait %}
-          <li>{{ t.name }}</li>
-        {% endfor %}
-      </ul>
+      {% if player.Trait %}
+        <h2>특성</h2>
+        <ul>
+          {% for t in player.Trait %}
+            <li>{{ t.name }}</li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+
+      <a href="/" class="back">← 다시 검색하기</a>
     {% endif %}
-
-    <a href="/" class="back">← 다시 검색하기</a>
-  {% endif %}
+  </div>
 </body>
 </html>
