@@ -1,0 +1,9 @@
+# .gitignore 예시
+__pycache__/
+*.pyc
+.venv/
+env/
+instance/
+__pycache__/
+*.sqlite3
+*.log
