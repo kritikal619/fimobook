@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% block body_class %}auth-page{% endblock %}
+{% block title %}로그인 | 피모북{% endblock %}
+{% block extra_head %}
+  {% if google_client_id %}
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+  {% endif %}
+  {% if recaptcha_enabled %}
+    <script src="https://www.google.com/recaptcha/api.js?hl=ko" async defer></script>
+  {% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <h1 class="page-title">로그인</h1>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }}">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    {% include "_recaptcha_widget.html" %}
+
+    {% with google_button_text="signin_with", google_next_url=next_url %}
+      {% include "_google_signin.html" %}
+    {% endwith %}
+
+    <form method="POST" action="{{ url_for('login', next=next_url) if next_url else url_for('login') }}" class="auth-form" onsubmit="return window.fimobookRequireRecaptcha();">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <input type="hidden" name="g-recaptcha-response" data-recaptcha-token>
+        {% if next_url %}
+          <input type="hidden" name="next" value="{{ next_url }}">
+        {% endif %}
+
+        <div class="form-group">
+            <label for="email">이메일 주소</label>
+            <input type="email" class="form-control" id="email" name="email" required>
+        </div>
+        <div class="form-group">
+            <label for="password">비밀번호</label>
+            <input type="password" class="form-control" id="password" name="password" required>
+        </div>
+
+        <button type="submit" class="btn-primary btn-block">로그인</button>
+    </form>
+
+    <div class="auth-switch">
+        계정이 없으신가요? <a href="{{ url_for('register') }}">회원가입</a>
+    </div>
+    <div class="auth-switch auth-switch-secondary">
+        인증 메일을 못 받으셨나요? <a href="{{ url_for('resend_verification') }}">다시 받기</a>
+    </div>
+</div>
+
+<style>
+    .auth-container {
+        width: 100%;
+        max-width: 440px;
+        margin: auto;
+        background: #ffffff;
+        border: 1px solid #dbe3ec;
+        border-radius: 18px;
+        box-shadow: 0 14px 30px rgba(15,23,42,0.05);
+        padding: 28px 24px;
+        box-sizing: border-box;
+    }
+    .auth-form .form-group {
+        margin-bottom: 20px;
+    }
+    .auth-form label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: #495057;
+    }
+    .btn-block {
+        width: 100%;
+        margin-top: 10px;
+    }
+    .auth-switch {
+        text-align: center;
+        margin-top: 20px;
+        font-size: 14px;
+        color: #64748b;
+    }
+    .auth-switch-secondary { margin-top: 10px; }
+    .alert {
+        padding: 15px;
+        margin-bottom: 20px;
+        border: 1px solid transparent;
+        border-radius: 12px;
+    }
+    .alert-success { color: #155724; background-color: #d4edda; border-color: #c3e6cb; }
+    .alert-danger { color: #721c24; background-color: #f8d7da; border-color: #f5c6cb; }
+    .alert-info { color: #0c5460; background-color: #d1ecf1; border-color: #bee5eb; }
+    .alert-warning { color: #856404; background-color: #fff3cd; border-color: #ffeeba; }
+</style>
+{% endblock %}

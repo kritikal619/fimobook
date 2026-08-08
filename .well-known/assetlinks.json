@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "kritikal.fcbook.app",
+      "sha256_cert_fingerprints": [
+        "1D:B9:29:DF:7E:F7:B0:6B:90:7B:75:BC:3E:1B:17:49:92:5E:95:B4:14:C0:61:3B:FA:8B:EB:11:CC:68:89:DA"
+      ]
+    }
+  }
+]

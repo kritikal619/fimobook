@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+  <link rel="icon" type="image/png" sizes="192x192" href="{{ url_for('static', filename='icons/android-launchericon-192-192.png') }}">
+  <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='apple-touch-icon.png') }}">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <title>{% block title %}피모북{% endblock %}</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#132531">
+  {% block seo_description %}{% if meta_description %}<meta name="description" content="{{ meta_description }}">{% endif %}{% endblock %}
+  <meta name="robots" content="{{ robots_meta or 'index,follow' }}">
+  <link rel="canonical" href="{{ canonical_url or request.base_url }}">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="피모북">
+  <meta property="og:locale" content="ko_KR">
+  <meta property="og:title" content="{{ og_title or '피모북 | FC모바일 선수 검색' }}">
+  <meta property="og:description" content="{{ og_description or 'FC모바일 선수 검색, 비교, 스쿼드 메이커, 쿠폰과 갱신시간 정보를 확인하세요.' }}">
+  <meta property="og:url" content="{{ canonical_url or request.base_url }}">
+  <meta property="og:image" content="{{ url_for('static', filename='images/fimobook-og.png', _external=True) }}">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="{{ og_image_alt or '피모북' }}">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="{{ url_for('static', filename='images/fimobook-og.png', _external=True) }}">
+  {% include "_analytics.html" %}
+
+  <style>
+    @font-face {
+      font-family: 'FCOVR';
+      src: url('{{ url_for('static', filename='fonts/FCOVR.otf') }}') format('opentype');
+      font-display: swap;
+    }
+
+    :root {
+      --brand: #10b981;
+      --brand-dark: #059669;
+      --navy: #374151;
+      --ink: #1f2937;
+      --muted: #64748b;
+      --line: #dbe3ec;
+      --panel: #ffffff;
+      --bg-top: #f8fafc;
+      --bg-bottom: #eef2f7;
+    }
+
+    body {
+      background: linear-gradient(180deg, var(--bg-top) 0%, var(--bg-bottom) 100%);
+      margin: 0;
+      min-height: 100vh;
+      font-family: 'IBM Plex Sans KR', 'Apple SD Gothic Neo', sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px 15px; /* ✅ PC 그대로 */
+      box-sizing: border-box;
+    }
+
+    .header {
+      width: 100%;
+      max-width: 860px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .brandbar {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      gap: 12px;
+      color: var(--navy);
+      font-weight: 700;
+      font-size: 20px;
+      letter-spacing: -0.6px;
+      text-decoration: none;
+    }
+
+    .brandbar img {
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      box-shadow: 0 8px 18px rgba(15, 23, 42, 0.06);
+    }
+
+    .navbar {
+      display: flex;
+      gap: 15px;
+    }
+    .header-actions {
+      display: none;
+      align-items: center;
+      gap: 8px;
+    }
+    .mobile-account-shortcut,
+    .notification-shortcut,
+    .nav-user-summary {
+      display: none;
+    }
+    .nav-notification-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 17px;
+      height: 17px;
+      margin-left: 2px;
+      padding: 0 4px;
+      border-radius: 999px;
+      background: #10b981;
+      color: #ffffff;
+      font-size: 10px;
+      font-weight: 900;
+      line-height: 17px;
+      text-align: center;
+      box-sizing: border-box;
+    }
+    .nav-group {
+      display: contents;
+    }
+    .nav-icon {
+      display: none;
+    }
+    .nav-toggle {
+      display: none;
+      border: none;
+      background: #f1f5f9;
+      color: var(--navy);
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(19, 37, 49, 0.08);
+    }
+    .nav-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.35);
+      z-index: 998;
+    }
+
+    .navbar a {
+      color: #41505a;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 15px;
+    }
+
+    .navbar a:hover {
+      color: var(--brand);
+    }
+
+    .main-content {
+      width: 100%;
+      max-width: 800px; /* ✅ PC 그대로 */
+      background: var(--panel);
+      border-radius: 18px;
+      box-shadow: 0 10px 24px rgba(15, 23, 42, 0.04);
+      border: 1px solid var(--line);
+      padding: 30px 40px; /* ✅ PC 그대로 */
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      box-sizing: border-box;
+    }
+
+    .page-title {
+      font-size: 26px;
+      color: var(--navy);
+      margin-bottom: 24px;
+      font-weight: 700;
+      letter-spacing: -1px;
+      text-align: center;
+    }
+
+    a {
+      color: var(--brand);
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    .btn-primary {
+      padding: 12px 20px;
+      background: linear-gradient(90deg, var(--brand-dark) 0%, var(--brand) 100%);
+      color: #fff;
+      font-size: 16px;
+      font-weight: 700;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      text-align: center;
+      text-decoration: none;
+      display: inline-block;
+    }
+
+    .btn-primary:hover {
+      background: linear-gradient(90deg, #0c5f41 0%, var(--brand-dark) 100%);
+      text-decoration: none;
+      color: white;
+    }
+
+    .form-control {
+      width: 100%;
+      font-size: 16px;
+      border-radius: 12px;
+      border: 1.5px solid var(--line);
+      background: #f7faf8;
+      padding: 15px 17px;
+      box-sizing: border-box;
+      transition: border-color 0.23s;
+      outline: none;
+      font-family: inherit;
+      font-weight: 500;
+      color: var(--ink);
+      margin-bottom: 15px;
+    }
+
+    .form-control:focus {
+      border-color: var(--brand);
+      background: #ffffff;
+    }
+
+    textarea.form-control {
+      min-height: 150px;
+    }
+
+    /* ✅ 모바일: 상단바(피모북) 위 여백 추가 + 좌우 여백은 타이트 */
+    @media (max-width: 550px) {
+      body {
+        padding: 18px 8px 10px; /* 🔥 상단 18px로 위 여백 추가 */
+        /* (상단바는 건드리지 않고 body padding으로만 처리) */
+      }
+
+      .header {
+        width: 100%;
+        max-width: 100%;
+        padding: 0 4px;
+        justify-content: space-between;
+        flex-direction: row;
+        align-items: center;
+      }
+
+      .brandbar {
+        margin-right: auto;
+      }
+
+      .header-actions {
+        display: flex;
+        margin-left: auto;
+        gap: 7px;
+      }
+
+      .mobile-account-shortcut {
+        min-height: 38px;
+        padding: 0 11px;
+        border: 1px solid #dbe3ec;
+        border-radius: 10px;
+        background: #ffffff;
+        color: #334155;
+        font-size: 12px;
+        font-weight: 900;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 5px;
+        box-shadow: 0 2px 8px rgba(19, 37, 49, 0.05);
+      }
+
+      .mobile-account-shortcut:hover {
+        border-color: #86efac;
+        color: #047857;
+        text-decoration: none;
+      }
+
+      .notification-shortcut {
+        position: relative;
+        width: 38px;
+        height: 38px;
+        border: 1px solid #dbe3ec;
+        border-radius: 10px;
+        background: #ffffff;
+        color: #475569;
+        font-size: 16px;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 2px 8px rgba(19, 37, 49, 0.05);
+      }
+
+      .notification-shortcut:hover {
+        border-color: #86efac;
+        color: #047857;
+        text-decoration: none;
+      }
+
+      .notification-shortcut .nav-notification-badge {
+        position: absolute;
+        top: -5px;
+        right: -5px;
+        border: 2px solid #f8fafc;
+        line-height: 15px;
+      }
+
+      .nav-toggle {
+        display: inline-flex;
+        margin-left: 0;
+      }
+
+      .nav-overlay.is-open {
+        display: block;
+      }
+
+      .navbar {
+        display: none;
+        position: fixed;
+        top: 66px;
+        right: 10px;
+        width: min(310px, calc(100% - 20px));
+        max-height: calc(100vh - 82px);
+        overflow-y: auto;
+        flex-direction: column;
+        gap: 0;
+        padding: 10px;
+        background: #fff;
+        border: 1px solid #dbe3ec;
+        border-radius: 14px;
+        box-shadow: 0 18px 46px rgba(15, 23, 42, 0.18);
+        z-index: 999;
+        transform: translateY(-6px);
+        opacity: 0;
+        transition: transform 0.2s ease, opacity 0.2s ease;
+      }
+
+      .nav-user-summary {
+        margin-bottom: 8px;
+        padding: 11px 12px;
+        border-radius: 11px;
+        background: #f1f5f9;
+        color: #64748b;
+        font-size: 11px;
+        font-weight: 750;
+        display: flex;
+        align-items: center;
+        gap: 9px;
+      }
+
+      .nav-user-summary i {
+        color: #059669;
+        font-size: 20px;
+      }
+
+      .nav-user-summary strong {
+        display: block;
+        color: #263445;
+        font-size: 13px;
+        font-weight: 900;
+      }
+
+      .nav-group {
+        display: grid;
+        gap: 3px;
+      }
+
+      .nav-group + .nav-group {
+        margin-top: 8px;
+        padding-top: 8px;
+        border-top: 1px solid #e2e8f0;
+      }
+
+      .navbar a {
+        min-height: 43px;
+        padding: 0 11px;
+        border-radius: 9px;
+        color: #334155;
+        font-size: 13px;
+        font-weight: 800;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .navbar a:hover {
+        background: #ecfdf5;
+        color: #047857;
+        text-decoration: none;
+      }
+
+      .nav-icon {
+        width: 20px;
+        color: #64748b;
+        font-size: 16px;
+        display: inline-flex;
+        justify-content: center;
+      }
+
+      .navbar a:hover .nav-icon {
+        color: #059669;
+      }
+
+      .navbar.is-open {
+        display: flex;
+        transform: translateY(0);
+        opacity: 1;
+      }
+
+      body.menu-open {
+        overflow: hidden;
+      }
+
+      .main-content {
+        padding: 5px; /* 기존 그대로 */
+      }
+
+      .page-title {
+        font-size: 22px;
+      }
+
+    }
+  </style>
+
+  {% block extra_head %}{% endblock %}
+  <style>
+    body .main-content {
+      background: transparent !important;
+      border: 0 !important;
+      border-radius: 0 !important;
+      box-shadow: none !important;
+      outline: 0 !important;
+    }
+    body:not(.home-page) .main-content {
+      padding: 12px 40px 36px;
+    }
+    .auth-page .auth-container {
+      width: 100%;
+      max-width: 460px;
+      padding: 26px;
+      background: #ffffff;
+      border-radius: 16px;
+      box-shadow: 0 12px 32px rgba(15, 23, 42, 0.07);
+      box-sizing: border-box;
+    }
+    @media (max-width: 550px) {
+      body:not(.home-page) .main-content {
+        padding: 6px 14px 28px;
+      }
+      .auth-page .auth-container {
+        padding: 22px 18px;
+        border-radius: 14px;
+      }
+    }
+  </style>
+</head>
+
+<body class="{% block body_class %}{% endblock %}">
+  <div class="header">
+    <a class="brandbar" href="{{ url_for('index') }}">
+      <img src="{{ url_for('static', filename='favicon.ico') }}" alt="로고">
+      피모북
+    </a>
+
+    <div class="header-actions">
+      {% if current_user.is_authenticated %}
+        <a class="mobile-account-shortcut" href="{{ url_for('profile') }}" aria-label="프로필로 이동">
+          <i class="bi bi-person-circle" aria-hidden="true"></i><span>프로필</span>
+        </a>
+        <a class="notification-shortcut" href="{{ url_for('notifications') }}" aria-label="알림{% if unread_notification_count %} {{ unread_notification_count }}개{% endif %}">
+          <i class="bi bi-bell" aria-hidden="true"></i>
+          {% if unread_notification_count %}<span class="nav-notification-badge">{{ '99+' if unread_notification_count > 99 else unread_notification_count }}</span>{% endif %}
+        </a>
+      {% else %}
+        <a class="mobile-account-shortcut" href="{{ url_for('login', next=request.full_path) }}" aria-label="로그인 페이지로 이동">
+          <i class="bi bi-person" aria-hidden="true"></i><span>로그인</span>
+        </a>
+      {% endif %}
+      <button class="nav-toggle" type="button" aria-label="메뉴 열기" aria-expanded="false" aria-controls="site-navigation">
+        <i class="bi bi-list" aria-hidden="true"></i>
+      </button>
+    </div>
+
+    <nav class="navbar" id="site-navigation" aria-label="주요 메뉴">
+      <div class="nav-user-summary">
+        <i class="bi bi-person-circle" aria-hidden="true"></i>
+        <span>
+          {% if current_user.is_authenticated %}<strong>{{ current_user.username }}</strong>로그인 중{% else %}<strong>게스트</strong>로그인하면 리뷰와 커뮤니티를 이용할 수 있어요.{% endif %}
+        </span>
+      </div>
+      <div class="nav-group">
+        <a href="{{ url_for('squad_maker') }}"><i class="bi bi-diagram-3 nav-icon" aria-hidden="true"></i>스쿼드 메이커</a>
+        <a href="{{ url_for('player_compare_page') }}"><i class="bi bi-people nav-icon" aria-hidden="true"></i>선수 비교</a>
+        <a href="{{ url_for('traits_selection') }}"><i class="bi bi-sliders2 nav-icon" aria-hidden="true"></i>선수 세부 검색</a>
+        <a href="{{ url_for('times') }}"><i class="bi bi-clock-history nav-icon" aria-hidden="true"></i>갱신시간</a>
+        <a href="{{ url_for('prime_exchange_page') }}"><i class="bi bi-coin nav-icon" aria-hidden="true"></i>프라임 효율</a>
+        <a href="{{ url_for('coupons_page') }}"><i class="bi bi-ticket-perforated nav-icon" aria-hidden="true"></i>쿠폰</a>
+        <a href="{{ url_for('community') }}"><i class="bi bi-chat-square-text nav-icon" aria-hidden="true"></i>커뮤니티</a>
+      </div>
+      <div class="nav-group">
+        {% if current_user.is_authenticated %}
+          {% if is_admin_user %}
+            <a href="{{ url_for('admin_points') }}"><i class="bi bi-shield-check nav-icon" aria-hidden="true"></i>관리자</a>
+          {% endif %}
+          <a href="{{ url_for('notifications') }}"><i class="bi bi-bell nav-icon" aria-hidden="true"></i>알림{% if unread_notification_count %}<span class="nav-notification-badge">{{ '99+' if unread_notification_count > 99 else unread_notification_count }}</span>{% endif %}</a>
+          <a href="{{ url_for('profile') }}"><i class="bi bi-person-circle nav-icon" aria-hidden="true"></i>프로필</a>
+          <a href="{{ url_for('logout') }}"><i class="bi bi-box-arrow-right nav-icon" aria-hidden="true"></i>로그아웃</a>
+        {% else %}
+          <a href="{{ url_for('login', next=request.full_path) }}"><i class="bi bi-box-arrow-in-right nav-icon" aria-hidden="true"></i>로그인</a>
+          <a href="{{ url_for('register') }}"><i class="bi bi-person-plus nav-icon" aria-hidden="true"></i>회원가입</a>
+        {% endif %}
+      </div>
+    </nav>
+  </div>
+
+  <main class="main-content">
+    {% block content %}{% endblock %}
+  </main>
+  {% include "_site_footer.html" %}
+  <div class="nav-overlay" aria-hidden="true"></div>
+  <script>
+    (function () {
+      var toggle = document.querySelector(".nav-toggle");
+      var nav = document.querySelector(".navbar");
+      var overlay = document.querySelector(".nav-overlay");
+      var icon = toggle && toggle.querySelector("i");
+      function setMenuState(open) {
+        nav.classList.toggle("is-open", open);
+        if (overlay) {
+          overlay.classList.toggle("is-open", open);
+          overlay.setAttribute("aria-hidden", open ? "false" : "true");
+        }
+        document.body.classList.toggle("menu-open", open);
+        toggle.setAttribute("aria-expanded", open ? "true" : "false");
+        toggle.setAttribute("aria-label", open ? "메뉴 닫기" : "메뉴 열기");
+        if (icon) {
+          icon.classList.toggle("bi-list", !open);
+          icon.classList.toggle("bi-x-lg", open);
+        }
+      }
+      function closeMenu() {
+        setMenuState(false);
+      }
+      if (!toggle || !nav) return;
+      toggle.addEventListener("click", function () {
+        setMenuState(!nav.classList.contains("is-open"));
+      });
+      if (overlay) {
+        overlay.addEventListener("click", closeMenu);
+      }
+      nav.querySelectorAll("a").forEach(function (link) {
+        link.addEventListener("click", closeMenu);
+      });
+      document.addEventListener("keydown", function (event) {
+        if (event.key === "Escape" && nav.classList.contains("is-open")) {
+          closeMenu();
+          toggle.focus();
+        }
+      });
+      window.addEventListener("resize", function () {
+        if (window.innerWidth > 550 && nav.classList.contains("is-open")) closeMenu();
+      });
+    })();
+  </script>
+</body>
+</html>

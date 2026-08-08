@@ -1,0 +1,3789 @@
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+  <link rel="icon" type="image/png" sizes="192x192" href="{{ url_for('static', filename='icons/android-launchericon-192-192.png') }}">
+  <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='apple-touch-icon.png') }}">
+
+  <!-- 페이지 제목 -->
+  <title>{{ player.className }} - {{ player.playerKor }} 능력치 및 정보 | FC모바일 피모북</title>
+
+  <!-- 기본 SEO -->
+  <meta name="description" content="{{ player.className }} - {{ player.playerKor }}의 상세 능력치, 특성, OVR 정보를 확인하세요. FC모바일 최신 데이터를 제공합니다.">
+  <meta name="keywords" content="{{ player.className }}, {{ player.playerKor }}, FC모바일, 피모, 선수정보, OVR, 능력치, 특성">
+  <meta name="author" content="피모북">
+  <meta name="robots" content="index, follow">
+
+  <!-- Canonical -->
+  <link rel="canonical" href="https://fcbook.info/player/{{ player.cid }}">
+  <meta name="theme-color" content="#4CAF50">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="profile">
+  <meta property="og:site_name" content="피모북">
+  <meta property="og:locale" content="ko_KR">
+  <meta property="og:title" content="{{ player.className }} - {{ player.playerKor }} | FC모바일 선수 정보 | 피모북">
+  <meta property="og:description" content="{{ player.className }} - {{ player.playerKor }}의 상세 능력치, 특성, OVR 정보를 확인하세요.">
+  <meta property="og:url" content="https://fcbook.info/player/{{ player.cid }}">
+  <meta property="og:image" content="{{ url_for('static', filename='images/fimobook-og.png', _external=True) }}">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="{{ player.className }} - {{ player.playerKor }}">
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="{{ player.className }} - {{ player.playerKor }} | FC모바일 선수 정보 | 피모북">
+  {% if player %}
+    {% include "_adsense_head.html" %}
+  {% endif %}
+  <meta name="twitter:description" content="{{ player.className }} - {{ player.playerKor }}의 상세 능력치, 특성, OVR 정보를 확인하세요.">
+  <meta name="twitter:image" content="{{ url_for('static', filename='images/fimobook-og.png', _external=True) }}">
+
+  {% include "_analytics.html" %}
+
+  <!-- Player 정보 Schema (구조화 데이터) -->
+  <script type="application/ld+json">
+  {
+      "@context": "https://schema.org",
+      "@type": "Person",
+      "name": "{{ player.playerKor }}",
+      "description": "FC모바일 선수 정보",
+      "nationality": "{{ player.nation }}",
+      "height": "{{ player.height }}",
+      "weight": "{{ player.weight }}",
+      "sport": "축구",
+      "memberOf": {
+          "@type": "SportsTeam",
+          "name": "{{ player.team }}"
+      },
+      "mainEntityOfPage": {
+          "@type": "WebPage",
+          "@id": "https://fcbook.info/player/{{ player.cid }}"
+      },
+      "image": "https://fcbook.info/images/players/{{ player.cid }}.jpg"
+  }
+  </script>
+
+  <!-- Breadcrumb Schema -->
+  <script type="application/ld+json">
+  {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "홈", "item": "https://fcbook.info/" },
+        { "@type": "ListItem", "position": 2, "name": "선수 검색", "item": "https://fcbook.info/search" },
+        { "@type": "ListItem", "position": 3, "name": "{{ player.className }} - {{ player.playerKor }}", "item": "https://fcbook.info/player/{{ player.cid }}" }
+      ]
+  }
+  </script>
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+
+  <!-- FC모바일 카드 폰트 -->
+  <style>
+    @font-face {
+        font-family: 'FCOVR';
+        src: url('{{ url_for('static', filename='fonts/FCOVR.otf') }}') format('opentype');
+        font-display: swap;
+    }
+    @font-face {
+        font-family: 'FCName';
+        src: url('{{ url_for('static', filename='fonts/NAME.otf') }}') format('opentype');
+        font-display: swap;
+    }
+    @font-face {
+        font-family: 'FCPosition';
+        src: url('{{ url_for('static', filename='fonts/POSITION.otf') }}') format('opentype');
+        font-display: swap;
+    }
+
+    body {
+      background: linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%);
+      margin: 0;
+      min-height: 100vh;
+      font-family: 'IBM Plex Sans KR', 'Apple SD Gothic Neo', sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start; /* Align content to top, allowing it to push down */
+      padding-top: 20px;
+      padding-bottom: 20px;
+      padding-left: 15px;
+      padding-right: 15px;
+      box-sizing: border-box; /* Include padding in width */
+      overflow-x: hidden; /* Prevent horizontal scroll */
+    }
+
+    .page-topbar {
+      width: 100%;
+      max-width: 860px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 9px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .brandbar {
+      margin-bottom: 0;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      gap: 12px;
+      color: #374151;
+      font-weight: 700;
+      font-size: 20px;
+      letter-spacing: -0.6px;
+      text-decoration: none;
+    }
+    .brandbar img {
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      box-shadow: none;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 780px;
+      background: transparent;
+      padding: 12px 0 30px;
+      border-radius: 0;
+      border: 0;
+      box-shadow: none;
+      display: flex; /* Added flex for content alignment */
+      flex-direction: column;
+      align-items: center;
+      box-sizing: border-box; /* Crucial for responsive padding */
+    }
+
+    h1, h2 {
+      text-align: center;
+      color: #23282d; /* Matched search-title color */
+      margin-bottom: 20px;
+      font-weight: 700; /* Increased font-weight for titles */
+      letter-spacing: -1px; /* Matched search-title */
+    }
+    h1 {
+        font-size: 26px; /* Matched search-title font-size */
+        margin-top: 0; /* Remove default top margin */
+    }
+    h2 {
+        font-size: 22px; /* Slightly smaller than h1 */
+        margin-top: 30px; /* Space before new sections */
+    }
+
+    table {
+      width: 100%;
+      border-collapse: separate; /* Changed to separate for rounded corners */
+      border-spacing: 0; /* Remove space between cells */
+      margin-bottom: 30px;
+      border-radius: 10px; /* Apply border-radius to table */
+      overflow: hidden; /* Hide overflowing content for rounded corners */
+      border: 1px solid #dde5ee; /* Unified border around the table */
+    }
+
+    th, td {
+      padding: 14px 18px; /* Adjusted padding */
+      border: none; /* Removed individual cell borders as table has one */
+      text-align: left;
+      font-size: 15px; /* Consistent font-size */
+      color: #475569;
+    }
+
+    th {
+      background-color: #f8fafc;
+      color: #1f2937;
+      font-weight: 600;
+      border-bottom: 1px solid #dde5ee; /* Border between header and first row */
+    }
+    th:first-child { border-top-left-radius: 10px; }
+    th:last-child { border-top-right-radius: 10px; }
+
+
+    tr:nth-child(even) {
+      background-color: #fbfdff;
+    }
+    tr.is-selected-price {
+      background-color: #ecfdf5;
+    }
+    tr:not(:last-child) td {
+      border-bottom: 1px solid #e7edf4;
+    }
+    tr:last-child td:first-child { border-bottom-left-radius: 10px; }
+    tr:last-child td:last-child { border-bottom-right-radius: 10px; }
+
+
+    /* Stats Grid specific styles */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      width: 100%;
+      margin-bottom: 30px;
+    }
+
+    .stat-group-card {
+      min-width: 0;
+      overflow: hidden;
+      border: 1px solid #dbe3ec;
+      border-radius: 12px;
+      background: #f8fafc;
+      box-shadow: none;
+    }
+
+    .stat-group-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 9px 12px;
+      background: #101827;
+      color: #ffffff;
+      font-size: 15px;
+      font-weight: 900;
+    }
+
+    .stat-group-total {
+      font-weight: 950;
+    }
+
+    .stat-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto auto;
+      gap: 7px;
+      align-items: center;
+      padding: 7px 12px;
+      color: #475569;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .stat-row + .stat-row {
+      border-top: 1px solid #edf2f7;
+    }
+
+    .stats-title-row {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 30px;
+      margin-bottom: 20px;
+    }
+
+    .stats-title-row h2 {
+      margin: 0;
+    }
+
+    .stats-title-main {
+      min-width: 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .stat-guide-open {
+      flex: 0 0 auto;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      min-height: 34px;
+      padding: 0 11px;
+      border: 1px solid #cbd5e1;
+      border-radius: 9px;
+      background: #fff;
+      color: #334155;
+      font: inherit;
+      font-size: 12px;
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    .stat-guide-open:hover {
+      border-color: #059669;
+      color: #047857;
+      background: #f0fdf4;
+    }
+
+    .stat-guide-dialog {
+      width: min(780px, calc(100% - 28px));
+      max-height: calc(100vh - 28px);
+      padding: 0;
+      border: 0;
+      border-radius: 18px;
+      background: #fff;
+      color: #172033;
+      box-shadow: none;
+      overflow: auto;
+    }
+
+    .stat-guide-dialog::backdrop {
+      background: rgba(15, 23, 42, .68);
+      backdrop-filter: blur(3px);
+    }
+
+    .stat-guide-head {
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 16px 18px;
+      border-bottom: 1px solid #e2e8f0;
+      background: rgba(255, 255, 255, .97);
+    }
+
+    .stat-guide-title {
+      display: grid;
+      gap: 2px;
+    }
+
+    .stat-guide-title strong {
+      font-size: 18px;
+      font-weight: 950;
+    }
+
+    .stat-guide-title span {
+      color: #64748b;
+      font-size: 11px;
+      font-weight: 750;
+    }
+
+    .stat-guide-close {
+      flex: 0 0 auto;
+      width: 36px;
+      height: 36px;
+      border: 1px solid #dbe3ec;
+      border-radius: 10px;
+      background: #f8fafc;
+      color: #475569;
+      font-size: 21px;
+      cursor: pointer;
+    }
+
+    .stat-guide-body {
+      padding: 16px 18px 20px;
+    }
+
+    .stat-guide-notice {
+      margin: 0 0 14px;
+      padding: 11px 13px;
+      border-radius: 10px;
+      background: #f1f5f9;
+      color: #64748b;
+      font-size: 12px;
+      font-weight: 750;
+      line-height: 1.55;
+    }
+
+    .stat-guide-groups {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .stat-guide-group {
+      min-width: 0;
+      overflow: hidden;
+      border: 1px solid #dbe3ec;
+      border-radius: 12px;
+      background: #fff;
+    }
+
+    .stat-guide-group h3 {
+      margin: 0;
+      padding: 9px 12px;
+      background: #101827;
+      color: #fff;
+      font-size: 14px;
+      font-weight: 950;
+    }
+
+    .stat-guide-list {
+      margin: 0;
+    }
+
+    .stat-guide-item {
+      display: grid;
+      grid-template-columns: 104px minmax(0, 1fr);
+      gap: 10px;
+      padding: 10px 12px;
+    }
+
+    .stat-guide-item + .stat-guide-item {
+      border-top: 1px solid #edf2f7;
+    }
+
+    .stat-guide-item dt {
+      margin: 0;
+      color: #172033;
+      font-size: 12px;
+      font-weight: 950;
+    }
+
+    .stat-guide-code {
+      display: block;
+      margin-top: 2px;
+      color: #059669;
+      font-size: 10px;
+      font-weight: 900;
+    }
+
+    .stat-guide-item dd {
+      margin: 0;
+      color: #64748b;
+      font-size: 12px;
+      font-weight: 700;
+      line-height: 1.5;
+      word-break: keep-all;
+    }
+
+    .max-level-stat {
+      flex: 0 0 auto;
+      display: inline-flex;
+      align-items: center;
+      min-height: 34px;
+      padding: 0 12px;
+      border: 1px solid #d8e2ec;
+      border-radius: 999px;
+      background: #f8fafc;
+      color: #059669;
+      font-size: 14px;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .max-level-stat[hidden] {
+      display: none !important;
+    }
+
+    .stat-label {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      color: #334155;
+    }
+
+    .stat-value {
+      min-width: 3ch;
+      color: #111827;
+      font-weight: 950;
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+
+    .error {
+      background: #ffe0e0;
+      color: #a00;
+      padding: 15px;
+      border: 1px solid #ffb3b3;
+      border-radius: 10px;
+      margin-bottom: 25px;
+      text-align: center;
+      box-shadow: none;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    ul {
+      padding-left: 25px;
+      color: #444;
+      margin-bottom: 30px;
+      list-style-type: none; /* 기본 점 제거 */
+      color: #475569;
+    }
+
+    li {
+      margin-bottom: 8px;
+      font-size: 15px;
+      display: flex; /* 아이콘과 텍스트 정렬을 위해 flex 사용 */
+      align-items: center; /* 세로 중앙 정렬 */
+    }
+
+    a.back {
+      display: block;
+      margin: 20px auto 0 auto;
+      width: 100%;
+      max-width: 250px;
+      padding: 14px 0;
+      background: linear-gradient(90deg,#059669 0%, #10b981 100%);
+      color: #fff;
+      font-size: 19px;
+      font-weight: 700;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      box-shadow: none;
+      letter-spacing: 0.2px;
+      text-align: center;
+      text-decoration: none;
+      transition: background 0.23s;
+      box-sizing: border-box;
+    }
+
+    a.back:hover {
+      background: linear-gradient(90deg,#047857 0%, #059669 100%);
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        body {
+            padding-left: 15px;
+            padding-right: 15px;
+        }
+            .container {
+            max-width: 800px;
+            padding: 12px 0 28px;
+        }
+        h1 { font-size: 24px; margin-bottom: 18px; }
+        h2 { font-size: 20px; margin-top: 25px; margin-bottom: 18px; }
+        th, td { padding: 12px 15px; font-size: 14px; }
+        a.back { font-size: 17px; padding: 12px 0; max-width: 220px; }
+        .trait-icon { width: 1.1em; height: 1.1em; } /* 폰트 크기에 맞춰 아이콘 크기 조정 */
+    }
+
+    @media (max-width: 550px) {
+      body {
+        padding: 18px 14px 10px;
+      }
+      .page-topbar {
+        width: 100%;
+        max-width: 100%;
+        padding: 0 4px;
+        justify-content: space-between;
+        flex-direction: row;
+        align-items: center;
+        margin-bottom: 14px;
+      }
+      .brandbar {
+        margin-right: auto;
+        font-size: 20px;
+        gap: 12px;
+      }
+      .brandbar img { width: 28px; height: 28px; }
+      .detail-header-actions { margin-left: auto; }
+      .back-btn { display: none; }
+      .detail-account-shortcut,
+      .detail-nav-toggle {
+        min-height: 38px;
+        border: 1px solid #dbe3ec;
+        border-radius: 10px;
+        background: #ffffff;
+        color: #334155;
+        font: inherit;
+        font-size: 12px;
+        font-weight: 900;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: none;
+      }
+      .detail-account-shortcut { padding: 0 11px; gap: 5px; }
+      .detail-nav-toggle { width: 38px; padding: 0; cursor: pointer; }
+      .detail-account-shortcut:hover,
+      .detail-nav-toggle:hover {
+        border-color: #86efac;
+        color: #047857;
+        text-decoration: none;
+      }
+      .detail-nav-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, .38);
+        z-index: 998;
+      }
+      .detail-nav-overlay.is-open { display: block; }
+      .detail-mobile-nav {
+        position: fixed;
+        top: 66px;
+        right: 10px;
+        width: min(310px, calc(100% - 20px));
+        max-height: calc(100vh - 82px);
+        overflow-y: auto;
+        padding: 10px;
+        border: 1px solid #dbe3ec;
+        border-radius: 14px;
+        background: #fff;
+        box-shadow: none;
+        z-index: 999;
+        box-sizing: border-box;
+      }
+      .detail-mobile-nav.is-open { display: block; }
+      .detail-nav-user {
+        margin-bottom: 8px;
+        padding: 11px 12px;
+        border-radius: 11px;
+        background: #f1f5f9;
+        color: #64748b;
+        font-size: 11px;
+        font-weight: 750;
+        display: flex;
+        align-items: center;
+        gap: 9px;
+      }
+      .detail-nav-user > i { color: #059669; font-size: 20px; }
+      .detail-nav-user strong {
+        display: block;
+        color: #263445;
+        font-size: 13px;
+        font-weight: 900;
+      }
+      .detail-nav-group { display: grid; gap: 3px; }
+      .detail-nav-group + .detail-nav-group {
+        margin-top: 8px;
+        padding-top: 8px;
+        border-top: 1px solid #e2e8f0;
+      }
+      .detail-mobile-nav a {
+        min-height: 43px;
+        padding: 0 11px;
+        border-radius: 9px;
+        color: #334155;
+        font-size: 13px;
+        font-weight: 800;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .detail-mobile-nav a:hover { background: #ecfdf5; color: #047857; }
+      .detail-mobile-nav a > i {
+        width: 20px;
+        color: #64748b;
+        font-size: 16px;
+        display: inline-flex;
+        justify-content: center;
+      }
+      body.detail-menu-open { overflow: hidden; }
+      .container { padding: 8px 0 22px; border-radius: 0;}
+      h1 { font-size: 20px; margin-bottom: 15px; }
+      h2 { font-size: 18px; margin-top: 20px; margin-bottom: 15px; }
+      th, td { font-size: 13px; padding: 10px 10px; } /* More compact table cells */
+      a.back { font-size: 15px; padding: 10px 0; max-width: 180px; margin-top: 18px; }
+      .error { padding: 12px; font-size: 14px; margin-bottom: 15px; }
+      ul { padding-left: 20px; margin-bottom: 25px; }
+      li { font-size: 14px; margin-bottom: 6px; }
+      .stats-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px; margin-bottom: 25px; }
+      .stat-group-card { border-radius: 10px; }
+      .stat-group-head { padding: 7px 8px; font-size: 12px; }
+      .stat-row { grid-template-columns: minmax(0, 1fr) auto auto; padding: 6px 8px; gap: 4px; font-size: 10px; }
+      .stat-row .stat-bonus { margin-left: 0; font-size: 10px; }
+      .config-controls { grid-template-columns: 1fr; }
+      .skill-config { gap: 7px; }
+      .skill-card-grid { grid-template-columns: 1fr; gap: 7px; }
+      .skill-card { grid-template-columns: 40px minmax(0, 1fr); padding: 8px; gap: 8px; align-items: center; }
+      .skill-card img { width: 40px; height: 40px; border-radius: 8px; }
+      .skill-card > div { grid-template-columns: minmax(0, 1fr) minmax(98px, 38%); gap: 2px 8px; align-items: center; }
+      .skill-name { font-size: 12px; line-height: 1.2; }
+      .skill-meta { margin-top: 0; font-size: 11px; }
+      .skill-point-control { grid-column: 2; grid-row: 1 / span 3; margin-top: 0; }
+      .skill-point-control select { min-height: 32px; padding: 0 6px; font-size: 12px; }
+      .skill-stat-list { display: none; }
+      .skill-stat-toggle { display: inline-flex; align-items: center; justify-content: center; min-height: 25px; padding: 0 8px; font-size: 11px; }
+      .skill-points-summary { font-size: 11px; }
+
+      /* Responsive adjustments for Player Card (update values) */
+      .player-card {
+        width: 160px;
+        padding-bottom: 192px;
+      }
+      .ovr-position-top { top: 10px; left: 18px; } /* # 변경된 부분 */
+      .ovr { font-size: 26px; } /* # 변경된 부분 */
+      .position { font-size: 16px; } /* # 변경된 부분 */
+      .player-name-bottom { bottom: 30px; font-size: 16px; } /* # 변경된 부분 */
+      .other-class-card { flex: 0 0 92px; padding: 5px; }
+      .other-class-image { height: 118px; }
+      .other-rating { top: 12px; left: 14px; font-size: 12px; }
+      .other-position { top: 27px; left: 14px; font-size: 9px; }
+      .other-name { bottom: 26px; font-size: 8px; }
+    }
+
+    @media (max-width: 380px) {
+      body {
+        padding: 18px 12px 12px;
+      }
+      .page-topbar {
+        width: 100%;
+        max-width: 100%;
+        padding: 0 4px;
+        margin-bottom: 12px;
+      }
+      .brandbar {
+        margin-right: auto;
+        font-size: 20px;
+        gap: 12px;
+      }
+      .brandbar img { width: 28px; height: 28px; }
+      .container { padding: 8px 0 18px; border-radius: 0;}
+      h1 { font-size: 18px; margin-bottom: 12px; }
+      h2 { font-size: 16px; margin-top: 18px; margin-bottom: 12px; }
+      th, td { font-size: 12px; padding: 8px 8px; } /* Even more compact */
+      a.back { font-size: 14px; padding: 9px 0; max-width: 160px; margin-top: 15px; }
+      .error { padding: 10px; font-size: 13px; margin-bottom: 12px; }
+      ul { padding-left: 18px; margin-bottom: 20px; }
+      li { font-size: 13px; margin-bottom: 5px; }
+      .stats-grid { gap: 8px; margin-bottom: 20px; }
+      .stat-item { padding: 8px 12px; font-size: 13px; }
+      .stats-title-row {
+        margin-top: 18px;
+        margin-bottom: 12px;
+      }
+      .stats-title-main { gap: 7px; }
+      .stat-guide-open {
+        min-height: 30px;
+        padding: 0 9px;
+        font-size: 11px;
+      }
+      .max-level-stat {
+        min-height: 30px;
+        padding: 0 9px;
+        font-size: 12px;
+      }
+
+      /* Responsive adjustments for Player Card (update values) */
+      .player-card {
+        width: 130px;
+        padding-bottom: 156px;
+      }
+      .ovr-position-top { top: 8px; left: 15px; } /* # 변경된 부분 */
+      .ovr { font-size: 22px; } /* # 변경된 부분 */
+      .position { font-size: 14px; } /* # 변경된 부분 */
+      .player-name-bottom { bottom: 25px; font-size: 14px; } /* # 변경된 부분 */
+      .other-class-card { flex: 0 0 82px; padding: 5px; }
+      .other-class-image { height: 106px; }
+      .other-rating { top: 11px; left: 12px; font-size: 11px; }
+      .other-position { top: 25px; left: 12px; font-size: 8px; }
+      .other-name { bottom: 23px; font-size: 8px; }
+    }
+
+
+    /* Player Card Specific Styles */
+    .player-card-wrapper {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 30px; /* Space between card and table */
+      width: 100%;
+    }
+      .player-card {
+      position: relative;
+      width: 200px; /* Base width of the card */
+      padding-bottom: 240px; /* Fixed height for aspect ratio (e.g., 200px width, 240px height) */
+      background-color: #444; /* Fallback for card background */
+      border-radius: 15px;
+      overflow: hidden; /* Crucial for rounded corners on inner elements */
+      box-shadow: none;
+      box-sizing: content-box; /* Ensures padding/border don't affect computed width/height */
+      /* frame image can go here if provided (e.g., as a pseudo-element or separate img with z-index) */
+    }
+
+    /* Layers for background, player image, and info */
+    .card-background,
+    .player-image,
+    .ovr-position-top,
+    .player-name-bottom {
+      position: absolute;
+    }
+
+    .card-background {
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      z-index: 1; /* Lowest layer for the background texture */
+    }
+
+    .player-image {
+      top: 0;
+      left: 0;
+      width: 105%;
+      height: 105%;
+      background-size: 100% auto; /* 100%로 변경 */
+      background-position: center 5%; /* 선수 이미지를 중앙보다 약간 위로 올려서 머리 잘리지 않게 */
+      background-repeat: no-repeat;
+      z-index: 2; /* Middle layer for the player cutout */
+
+    }
+
+    /* OVR and Position at top-left */
+    .ovr-position-top {
+      top: 25px;
+      left: 35px;
+      z-index: 3; /* Top layer for text */
+      color: white;
+      text-shadow: 0 0 5px rgba(0,0,0,0.7);
+      text-align: left; /* Align OVR and Position text to the left */
+    }
+
+    .ovr {
+      font-family: 'FCOVR', sans-serif; /* # 변경된 부분: FCOVR 폰트 적용 */
+      font-size: 25px;
+      left: 35px;
+      font-weight: 700; /* 폰트 자체에 bold가 내장되어 있다면 제거하거나 normal로 설정 */
+      line-height: 1.1;
+      margin-bottom: 2px;
+    }
+
+    .position {
+      font-family: 'FCPosition', sans-serif; /* # 변경된 부분: FCPosition 폰트 적용 */
+      font-size: 14px;
+      left: 40px;
+      font-weight: 500; /* 폰트 자체에 bold가 내장되어 있다면 제거하거나 normal로 설정 */
+      line-height: 1.1;
+    }
+
+    /* Player Name at bottom-center */
+    .player-name-bottom {
+      bottom: 57px;
+      left: 0;
+      width: 100%;
+      z-index: 3; /* Top layer for text */
+      color: white;
+      text-align: center;
+      font-family: 'FCName', sans-serif; /* # 변경된 부분: FCName 폰트 적용 */
+      font-size: 14px;
+      font-weight: 600; /* 폰트 자체에 bold가 내장되어 있다면 제거하거나 normal로 설정 */
+      text-shadow: 0 0 5px rgba(0,0,0,0.7);
+      padding: 0 10px;
+      box-sizing: border-box;
+    }
+
+    /* REMOVED: Nation Flag, Team Logo, Diamond styles as these elements are removed from HTML */
+    .nation-team-bottom, .nation-flag, .team-logo, .diamond-icon {
+      display: none;
+    }
+
+    /* Removed unused card-info style */
+    .card-info {
+        display: none;
+    }
+
+
+    /* Trait Icon Styles */
+    .trait-icon {
+        width: 1.5em; /* 텍스트 글자 크기에 맞춰 아이콘 크기 설정 */
+        height: 1.5em; /* 너비와 동일하게 설정하여 정방형 유지 */
+        vertical-align: middle; /* 텍스트와 세로 중앙 정렬 */
+        margin-left: 8px; /* 텍스트와 아이콘 사이 간격 */
+        border-radius: 3px; /* 약간 둥근 모서리 */
+        box-shadow: none;
+    }
+
+    .summary-playstyles {
+      margin-top: 14px;
+      padding-top: 12px;
+      border-top: 1px solid #e2e8f0;
+    }
+
+    .summary-playstyles-title {
+      margin-bottom: 9px;
+      color: #475569;
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .summary-playstyles-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 9px;
+    }
+
+    .summary-playstyle {
+      width: 100%;
+      min-width: 0;
+      display: grid;
+      grid-template-columns: 34px minmax(0, 1fr);
+      gap: 9px;
+      align-items: center;
+      padding: 9px 10px;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      background: #f8fafc;
+      color: inherit;
+      text-align: left;
+      font-family: inherit;
+    }
+
+    .summary-playstyle img {
+      width: 34px;
+      height: 34px;
+      object-fit: contain;
+    }
+
+    .summary-playstyle-name {
+      display: block;
+      color: #0f172a;
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .summary-playstyle-desc {
+      display: block;
+      margin-top: 2px;
+      color: #64748b;
+      font-size: 12px;
+      line-height: 1.4;
+    }
+
+    .playstyle-popup {
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      display: none;
+      align-items: flex-end;
+      justify-content: center;
+      padding: 16px;
+      background: rgba(15, 23, 42, 0.45);
+    }
+
+    .playstyle-popup.is-open {
+      display: flex;
+    }
+
+    .playstyle-popup-panel {
+      width: 100%;
+      max-width: 420px;
+      display: grid;
+      grid-template-columns: 48px minmax(0, 1fr) 34px;
+      gap: 12px;
+      align-items: start;
+      padding: 16px;
+      border-radius: 18px;
+      background: #ffffff;
+      box-shadow: none;
+    }
+
+    .playstyle-popup-icon {
+      width: 48px;
+      height: 48px;
+      object-fit: contain;
+    }
+
+    .playstyle-popup-title {
+      color: #0f172a;
+      font-size: 16px;
+      font-weight: 900;
+    }
+
+    .playstyle-popup-desc {
+      margin-top: 5px;
+      color: #475569;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .playstyle-popup-close {
+      width: 34px;
+      height: 34px;
+      border: 1px solid #e2e8f0;
+      border-radius: 999px;
+      background: #f8fafc;
+      color: #334155;
+      font-size: 20px;
+      line-height: 1;
+      cursor: pointer;
+    }
+
+    .skill-stat-popup-list {
+      grid-column: 1 / -1;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 2px;
+    }
+
+    .skill-stat-popup-chip {
+      display: inline-flex;
+      align-items: center;
+      min-height: 28px;
+      padding: 0 9px;
+      border-radius: 999px;
+      background: #e0f2fe;
+      color: #0369a1;
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    /* Player Rating Section Styles */
+    .rating-section {
+      width: 100%;
+      max-width: 600px; /* Adjust as needed */
+      margin-top: 20px;
+      margin-bottom: 30px;
+      padding: 20px;
+      background-color: #f7faff;
+      border: 1px solid #eaf4fd;
+      border-radius: 10px;
+      box-shadow: none;
+      text-align: center;
+    }
+
+    .rating-section h2 {
+      margin-top: 0;
+      margin-bottom: 15px;
+      font-size: 20px;
+      color: #1f2937;
+    }
+
+    .rating-section p {
+      font-size: 16px;
+      color: #475569;
+      margin-bottom: 15px;
+    }
+
+    .rating-form {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .rating-form label {
+      font-size: 15px;
+      color: #475569;
+      cursor: pointer;
+    }
+
+    .rating-form input[type="radio"] {
+      margin-right: 5px;
+    }
+
+    .submit-rating-button {
+      padding: 10px 20px;
+      background: linear-gradient(90deg,#059669 0%, #10b981 100%);
+      color: #fff;
+      font-size: 16px;
+      font-weight: 600;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.23s;
+    }
+
+    .submit-rating-button:hover {
+      background: linear-gradient(90deg,#047857 0%, #059669 100%);
+    }
+
+    /* Detailed Rating Form Styles */
+    .detailed-rating-form {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 15px;
+      margin-top: 20px;
+    }
+
+    .rating-group {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      width: 100%;
+      max-width: 300px;
+    }
+
+    .rating-group label {
+      font-size: 15px;
+      color: #334155;
+      margin-bottom: 5px;
+      font-weight: 500;
+    }
+
+    .rating-group select {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid #d7dee7;
+      border-radius: 8px;
+      font-size: 15px;
+      color: #475569;
+      background-color: #fff;
+      appearance: none; /* Remove default select arrow */
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23475569%22%20d%3D%22M287%2C114.7L159.7%2C242c-3.2%2C3.2-8.3%2C3.2-11.5%2C0L5.4%2C114.7c-3.2-3.2-3.2-8.3%2C0-11.5l11.5-11.5c3.2-3.2%2C8.3-3.2%2C11.5%2C0L148.5%2C190.2c3.2%2C3.2%2C8.3%2C3.2%2C11.5%2C0l119.1-119.1c3.2-3.2%2C8.3-3.2%2C11.5%2C0l11.5%2C11.5C290.2%2C106.4%2C290.2%2C111.5%2C287%2C114.7z%22%2F%3E%3C%2Fsvg%3E');
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+      background-size: 12px;
+    }
+
+    .detailed-ratings-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 15px;
+      width: 100%;
+      margin-top: 10px;
+    }
+
+    .detailed-ratings-grid .rating-group {
+      width: auto; /* Allow grid to manage width */
+    }
+
+    .detail-layout {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .player-title {
+      font-size: clamp(14px, 3.6vw, 20px);
+      font-weight: 800;
+      color: #1f2937;
+      letter-spacing: -0.4px;
+      text-align: center;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: clip;
+    }
+    .stat-summary {
+      width: 100%;
+      margin: 10px 0 18px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 16px;
+      padding: 16px 18px;
+      box-sizing: border-box;
+    }
+    .stat-summary-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px 10px;
+      margin-bottom: 12px;
+    }
+    .stat-gauge {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      color: #1f2a37;
+    }
+    .gauge {
+      position: relative;
+      width: 88px;
+      height: 44px;
+    }
+    .gauge svg {
+      width: 88px;
+      height: 44px;
+      display: block;
+    }
+    .gauge-track {
+      stroke: #d8e2f0;
+      stroke-width: 8;
+      fill: none;
+    }
+    .gauge-fill {
+      stroke: #29a1ff;
+      stroke-width: 8;
+      fill: none;
+      stroke-linecap: butt;
+      stroke-dasharray: 141.37;
+      stroke-dashoffset: calc(141.37 * (1 - (var(--p, 0) / 100)));
+    }
+    .gauge-value {
+      position: absolute;
+      left: 50%;
+      top: 55%;
+      transform: translate(-50%, -50%);
+      font-size: 18px;
+      font-weight: 800;
+      z-index: 1;
+    }
+    .gauge-label {
+      font-size: 14px;
+      font-weight: 700;
+      color: #2f3b4a;
+      letter-spacing: -0.3px;
+    }
+    .stat-pill-row {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+    .stat-pill {
+      background: #eef2f7;
+      color: #334155;
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-weight: 700;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px 14px;
+      align-items: center;
+    }
+    .stat-pill .accent {
+      color: #059669;
+      font-weight: 800;
+    }
+    .stat-pill .foot-pair {
+      display: inline-flex;
+      align-items: center;
+      gap: 2px;
+      white-space: nowrap;
+    }
+    .stat-pill .foot-pair .main-foot {
+      color: #059669;
+      font-weight: 900;
+    }
+    .half-star {
+      display: inline-block;
+      color: transparent;
+      background: linear-gradient(90deg, #059669 0 50%, #d8e2ec 50% 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+    }
+    .player-config-panel {
+      width: 100%;
+      margin: 0 0 18px;
+      padding: 14px;
+      border: 1px solid #e2e8f0;
+      border-radius: 16px;
+      background: #ffffff;
+      box-sizing: border-box;
+      display: grid;
+      gap: 14px;
+    }
+    .config-controls {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+    .config-field {
+      display: grid;
+      gap: 6px;
+      min-width: 0;
+    }
+    .config-field label {
+      color: #64748b;
+      font-size: 12px;
+      font-weight: 800;
+    }
+    .config-field select,
+    .config-readout {
+      min-height: 42px;
+      border: 1px solid #d8e2ec;
+      border-radius: 10px;
+      background: #f8fafc;
+      color: #1f2937;
+      font-size: 14px;
+      font-weight: 800;
+      padding: 0 10px;
+      box-sizing: border-box;
+    }
+    .config-readout {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .price-section {
+      width: 100%;
+      margin: 6px 0 18px;
+      padding: 10px 12px;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      background: #f8fafc;
+      box-sizing: border-box;
+      display: grid;
+      gap: 8px;
+    }
+    .price-section-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      color: #1f2937;
+      font-size: 14px;
+      font-weight: 900;
+    }
+    .price-section-note {
+      color: #64748b;
+      font-size: 12px;
+      font-weight: 800;
+    }
+    .price-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 7px;
+    }
+    .price-chip {
+      min-width: 0;
+      display: grid;
+      gap: 2px;
+      padding: 6px 8px;
+      border: 1px solid #d8e2ec;
+      border-radius: 9px;
+      background: #ffffff;
+      box-sizing: border-box;
+    }
+    .price-chip.is-selected-price {
+      border-color: #10b981;
+      background: #ecfdf5;
+    }
+    .price-chip-level {
+      color: #64748b;
+      font-size: 11px;
+      font-weight: 800;
+    }
+    .price-chip-price {
+      color: #1f2937;
+      font-size: 12px;
+      font-weight: 900;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .price-chip.is-selected-price .price-chip-level,
+    .price-chip.is-selected-price .price-chip-price {
+      color: #047857;
+    }
+    .skill-config {
+      display: grid;
+      gap: 10px;
+    }
+    .skill-config-title {
+      color: #1f2937;
+      font-size: 14px;
+      font-weight: 900;
+    }
+    .skill-card-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+    .skill-card {
+      min-width: 0;
+      display: grid;
+      grid-template-columns: 52px minmax(0, 1fr);
+      gap: 10px;
+      align-items: start;
+      padding: 10px;
+      border-radius: 12px;
+      border: 1px solid #e2e8f0;
+      background: #f8fafc;
+    }
+    .skill-card.no-skill-image {
+      grid-template-columns: 1fr;
+    }
+    .skill-card.is-locked {
+      opacity: 0.55;
+    }
+    .skill-card img {
+      width: 52px;
+      height: 52px;
+      border-radius: 10px;
+      object-fit: contain;
+      background: #0f172a;
+    }
+    .skill-card > div {
+      min-width: 0;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 150px;
+      gap: 4px 10px;
+      align-items: start;
+    }
+    .skill-name {
+      color: #111827;
+      font-weight: 900;
+      font-size: 13px;
+      line-height: 1.25;
+      overflow-wrap: anywhere;
+    }
+    .skill-meta {
+      margin-top: 3px;
+      color: #64748b;
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .skill-point-control {
+      grid-column: 2;
+      grid-row: 1 / span 3;
+      margin-top: 0;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 4px;
+    }
+    .skill-point-control select {
+      min-height: 34px;
+      border: 1px solid #d8e2ec;
+      border-radius: 8px;
+      background: #fff;
+      color: #1f2937;
+      font-size: 13px;
+      font-weight: 800;
+      padding: 0 8px;
+    }
+    .skill-stat-list {
+      grid-column: 1;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-top: 7px;
+    }
+    .skill-stat-chip {
+      display: inline-flex;
+      align-items: center;
+      min-height: 22px;
+      padding: 0 7px;
+      border-radius: 999px;
+      background: #e0f2fe;
+      color: #0369a1;
+      font-size: 11px;
+      font-weight: 900;
+    }
+    .skill-stat-toggle {
+      display: none;
+      width: fit-content;
+      min-height: 30px;
+      padding: 0 10px;
+      border: 1px solid #bae6fd;
+      border-radius: 999px;
+      background: #f0f9ff;
+      color: #0369a1;
+      font: inherit;
+      font-size: 12px;
+      font-weight: 900;
+      cursor: pointer;
+    }
+    .skill-points-summary {
+      color: #64748b;
+      font-size: 12px;
+      font-weight: 800;
+    }
+    .stat-bonus {
+      display: none;
+      margin-left: 0;
+      color: #059669;
+      font-size: 12px;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+    .stat-bonus-group {
+      min-width: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 4px;
+      line-height: 1;
+      white-space: nowrap;
+    }
+    .stat-bonus.is-active {
+      display: inline-flex;
+      align-items: center;
+      gap: 2px;
+    }
+    .stat-bonus.training {
+      color: #b45309;
+      background: #fffbeb;
+      border: 1px solid #fde68a;
+      border-radius: 999px;
+      padding: 1px 5px;
+    }
+    .stat-note {
+      font-size: 12px;
+      color: #64748b;
+      text-align: right;
+      margin-top: 6px;
+    }
+    .back-btn {
+      margin: 0;
+      padding: 10px 14px;
+      border-radius: 10px;
+      border: 1px solid #d7dee7;
+      background: #ffffff;
+      color: #475569;
+      font-weight: 700;
+      font-size: 14px;
+      text-decoration: none;
+      box-shadow: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      animation: backIn 0.35s ease both;
+    }
+    .back-btn:hover {
+      background: #f8fafc;
+      border-color: #cbd5e1;
+      text-decoration: none;
+    }
+    .detail-header-actions {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+    .detail-account-shortcut,
+    .detail-nav-toggle,
+    .detail-mobile-nav,
+    .detail-nav-overlay {
+      display: none;
+    }
+    @media (max-width: 550px) {
+      .back-btn { display: none; }
+      .detail-account-shortcut,
+      .detail-nav-toggle { display: inline-flex; }
+    }
+    .other-classes {
+      width: 100%;
+      box-sizing: border-box;
+      display: flex;
+      gap: 12px;
+      margin-top: 12px;
+      overflow-x: auto;
+      padding-bottom: 6px;
+      scroll-snap-type: x mandatory;
+      -webkit-overflow-scrolling: touch;
+    }
+    .other-classes::-webkit-scrollbar {
+      height: 8px;
+    }
+    .other-classes::-webkit-scrollbar-thumb {
+      background: #d7e3f4;
+      border-radius: 999px;
+    }
+    .other-class-card {
+      flex: 0 0 104px;
+      display: flex;
+      flex-direction: column;
+      padding: 6px;
+      border-radius: 12px;
+      border: 1px solid #e5ecf5;
+      background: #0f172a;
+      text-decoration: none;
+      color: #f8fafc;
+      scroll-snap-align: start;
+    }
+    .other-class-card:hover {
+      border-color: #34d399;
+      text-decoration: none;
+    }
+    .other-class-image {
+      position: relative;
+      width: 100%;
+      height: 134px;
+      border-radius: 8px;
+      background-size: cover;
+      background-position: center;
+      position: relative;
+      overflow: hidden;
+      box-shadow: none;
+    }
+    .other-class-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .other-rating {
+      position: absolute;
+      top: 14px;
+      left: 16px;
+      font-weight: 800;
+      font-size: 14px;
+      color: #f8fafc;
+      text-shadow: 0 2px 6px rgba(0,0,0,0.5);
+    }
+    .other-position {
+      position: absolute;
+      top: 31px;
+      left: 16px;
+      font-weight: 700;
+      font-size: 10px;
+      color: #e2e8f0;
+      text-shadow: 0 2px 6px rgba(0,0,0,0.5);
+    }
+    .other-name {
+      position: absolute;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-weight: 800;
+      font-size: 9px;
+      color: #f8fafc;
+      text-shadow: 0 2px 6px rgba(0,0,0,0.55);
+      white-space: nowrap;
+    }
+    @keyframes backIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .flash-messages {
+      width: 100%;
+      display: grid;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    .flash-message {
+      padding: 11px 13px;
+      border-radius: 10px;
+      border: 1px solid #dbe3ec;
+      background: #f8fafc;
+      color: #334155;
+      font-size: 13px;
+      font-weight: 800;
+    }
+    .flash-message.success {
+      border-color: #a7f3d0;
+      background: #ecfdf5;
+      color: #047857;
+    }
+    .flash-message.danger {
+      border-color: #fecaca;
+      background: #fef2f2;
+      color: #b91c1c;
+    }
+    .review-section {
+      width: 100%;
+      margin-top: 28px;
+      display: grid;
+      gap: 14px;
+    }
+    .admin-summary-section {
+      width: 100%;
+      margin-top: 28px;
+      display: grid;
+      gap: 12px;
+    }
+    .admin-summary-panel {
+      border: 1px solid #cfe3dc;
+      border-radius: 14px;
+      background: #f7fcf9;
+      padding: 16px;
+      box-sizing: border-box;
+      display: grid;
+      gap: 14px;
+    }
+    .admin-summary-lead {
+      color: #1f2937;
+      font-size: 15px;
+      font-weight: 800;
+      line-height: 1.55;
+      white-space: pre-line;
+    }
+    .admin-summary-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+    .admin-summary-box {
+      border: 1px solid #dbe3ec;
+      border-radius: 12px;
+      background: #fff;
+      padding: 13px;
+      min-width: 0;
+    }
+    .admin-summary-label {
+      margin-bottom: 7px;
+      color: #047857;
+      font-size: 12px;
+      font-weight: 900;
+    }
+    .admin-summary-text {
+      color: #334155;
+      font-size: 14px;
+      font-weight: 700;
+      line-height: 1.55;
+      white-space: pre-line;
+      overflow-wrap: anywhere;
+    }
+    .club-career-section {
+      width: 100%;
+      margin-top: 28px;
+    }
+    .club-career-updated {
+      color: #64748b;
+      font-size: 11px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+    .club-career-table {
+      width: 100%;
+      overflow: hidden;
+      border: 1px solid #dbe3ec;
+      border-radius: 14px;
+      background: #fff;
+    }
+    .club-career-row {
+      display: grid;
+      grid-template-columns: minmax(126px, .72fr) minmax(0, 1.28fr);
+      align-items: center;
+      min-height: 48px;
+    }
+    .club-career-row + .club-career-row {
+      border-top: 1px solid #e2e8f0;
+    }
+    .club-career-period,
+    .club-career-club {
+      min-width: 0;
+      padding: 12px 15px;
+      box-sizing: border-box;
+    }
+    .club-career-period {
+      align-self: stretch;
+      border-right: 1px solid #e2e8f0;
+      background: #f8fafc;
+      color: #475569;
+      font-size: 13px;
+      font-weight: 850;
+      display: flex;
+      align-items: center;
+      font-variant-numeric: tabular-nums;
+    }
+    .club-career-club {
+      overflow: hidden;
+      color: #172033;
+      font-size: 14px;
+      font-weight: 850;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .club-career-loan {
+      display: inline-flex;
+      align-items: center;
+      min-height: 22px;
+      margin-left: 7px;
+      padding: 0 7px;
+      border-radius: 999px;
+      background: #fff7ed;
+      color: #b45309;
+      font-size: 10px;
+      font-weight: 900;
+      vertical-align: middle;
+    }
+    .review-panel {
+      border: 1px solid #dbe3ec;
+      border-radius: 14px;
+      background: #ffffff;
+      padding: 16px;
+      box-sizing: border-box;
+    }
+    .review-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+    .review-field {
+      display: grid;
+      gap: 6px;
+      min-width: 0;
+    }
+    .review-field label {
+      color: #64748b;
+      font-size: 12px;
+      font-weight: 900;
+    }
+    .review-field select,
+    .review-field textarea {
+      width: 100%;
+      border: 1px solid #dbe3ec;
+      border-radius: 10px;
+      background: #f8fafc;
+      color: #0f172a;
+      font: inherit;
+      font-size: 13px;
+      font-weight: 750;
+      box-sizing: border-box;
+      outline: none;
+    }
+    .review-field select {
+      min-height: 40px;
+      padding: 0 10px;
+    }
+    .review-field textarea {
+      min-height: 120px;
+      padding: 10px;
+      resize: vertical;
+      line-height: 1.5;
+      grid-column: 1 / -1;
+    }
+    .review-wide {
+      grid-column: 1 / -1;
+    }
+    .review-submit {
+      min-height: 42px;
+      padding: 0 16px;
+      border: none;
+      border-radius: 11px;
+      background: linear-gradient(90deg, #059669, #10b981);
+      color: #fff;
+      font-size: 14px;
+      font-weight: 900;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+    }
+    .review-login {
+      display: inline-flex;
+      align-items: center;
+      min-height: 42px;
+      padding: 0 14px;
+      border-radius: 11px;
+      background: #ecfdf5;
+      color: #047857;
+      font-weight: 900;
+      text-decoration: none;
+    }
+    .review-list {
+      display: grid;
+      gap: 10px;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .review-item {
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      background: #f8fafc;
+      padding: 13px;
+    }
+    .review-preview-card {
+      display: block;
+      color: inherit;
+      transition: border-color .15s ease, background .15s ease, transform .15s ease;
+    }
+    .review-preview-card:hover {
+      border-color: #86efac;
+      background: #ffffff;
+      text-decoration: none;
+      transform: translateY(-1px);
+    }
+    .review-preview-link {
+      display: block;
+      color: inherit;
+      text-decoration: none;
+    }
+    .review-comment-entry {
+      width: fit-content;
+      margin-top: 11px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: #047857;
+      font-size: 12px;
+      font-weight: 900;
+      text-decoration: none;
+    }
+    .review-comment-entry:hover {
+      color: #065f46;
+      text-decoration: underline;
+    }
+    .review-title {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-bottom: 6px;
+      color: #111827;
+      font-size: 14px;
+      font-weight: 950;
+    }
+    .review-badge {
+      display: inline-flex;
+      align-items: center;
+      height: 24px;
+      padding: 0 8px;
+      border-radius: 999px;
+      background: #eef2ff;
+      color: #4338ca;
+      font-size: 12px;
+      font-weight: 900;
+    }
+    .review-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      color: #0f172a;
+      font-size: 13px;
+      font-weight: 900;
+      flex-wrap: wrap;
+    }
+    .review-meta,
+    .review-ratings,
+    .review-skill-config {
+      margin-top: 8px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      color: #475569;
+      font-size: 12px;
+      font-weight: 800;
+    }
+    .review-chip {
+      padding: 5px 8px;
+      border-radius: 999px;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+    }
+    .review-text {
+      margin-top: 10px;
+      color: #263445;
+      font-size: 14px;
+      line-height: 1.65;
+      white-space: pre-wrap;
+    }
+    .review-topline {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .review-average {
+      color: #047857;
+      font-size: 20px;
+      font-weight: 950;
+      letter-spacing: 0;
+    }
+    .review-more {
+      min-height: 38px;
+      padding: 0 13px;
+      border-radius: 10px;
+      border: 1px solid #bfdbfe;
+      background: #eff6ff;
+      color: #1d4ed8;
+      font-size: 13px;
+      font-weight: 900;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .review-actions {
+      margin-top: 10px;
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .review-actions form {
+      margin: 0;
+    }
+    .review-action {
+      min-height: 32px;
+      padding: 0 10px;
+      border-radius: 9px;
+      border: 1px solid #dbe3ec;
+      background: #ffffff;
+      color: #334155;
+      font-size: 12px;
+      font-weight: 900;
+      text-decoration: none;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-family: inherit;
+    }
+    .review-action.danger {
+      border-color: #fecaca;
+      background: #fef2f2;
+      color: #b91c1c;
+    }
+    @media (max-width: 900px) {
+      .stat-summary-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+      .review-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+    @media (max-width: 620px) {
+      .player-config-panel {
+        padding: 10px;
+        gap: 10px;
+        margin-bottom: 12px;
+        border-radius: 12px;
+      }
+      .config-controls {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+      }
+      .config-field.price-field {
+        grid-column: 1 / -1;
+      }
+      .config-field {
+        gap: 4px;
+      }
+      .config-field label {
+        font-size: 11px;
+      }
+      .config-field select,
+      .config-readout {
+        min-height: 34px;
+        border-radius: 8px;
+        font-size: 12px;
+        padding: 0 8px;
+      }
+      .price-section {
+        margin: 4px 0 12px;
+        padding: 8px 9px;
+        border-radius: 10px;
+      }
+      .price-section-head {
+        font-size: 12px;
+      }
+      .price-section-note {
+        font-size: 11px;
+      }
+      .price-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 6px;
+      }
+      .price-chip {
+        padding: 6px 8px;
+      }
+      .price-chip-level {
+        font-size: 10px;
+      }
+      .price-chip-price {
+        font-size: 11px;
+      }
+      .skill-config {
+        gap: 7px;
+      }
+      .skill-config-title {
+        font-size: 13px;
+      }
+      .skill-card-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-rows: repeat(var(--skill-mobile-rows, 3), auto);
+        grid-auto-flow: column;
+        gap: 7px;
+      }
+      .skill-card {
+        grid-template-columns: 30px minmax(0, 1fr);
+        gap: 6px;
+        align-items: start;
+        padding: 7px;
+        border-radius: 10px;
+      }
+      .skill-card.no-skill-image {
+        grid-template-columns: 1fr;
+      }
+      .skill-card img {
+        width: 30px;
+        height: 30px;
+        border-radius: 7px;
+      }
+      .skill-card > div {
+        grid-template-columns: 1fr;
+        gap: 3px;
+      }
+      .skill-name {
+        font-size: 11px;
+        line-height: 1.2;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+      .skill-meta {
+        margin-top: 0;
+        font-size: 10px;
+      }
+      .skill-point-control {
+        grid-column: 1;
+        grid-row: auto;
+        margin-top: 0;
+      }
+      .skill-point-control select {
+        width: 100%;
+        min-height: 28px;
+        border-radius: 7px;
+        font-size: 11px;
+        padding: 0 6px;
+      }
+      .skill-stat-list {
+        display: none;
+      }
+      .skill-stat-toggle {
+        display: inline-flex;
+        width: 100%;
+        min-height: 24px;
+        align-items: center;
+        justify-content: center;
+        padding: 0 6px;
+        font-size: 10px;
+      }
+      .skill-points-summary {
+        font-size: 11px;
+      }
+      .review-list {
+        grid-template-columns: 1fr;
+      }
+      .review-grid {
+        grid-template-columns: 1fr;
+      }
+      .admin-summary-grid {
+        grid-template-columns: 1fr;
+      }
+      .club-career-row {
+        grid-template-columns: 112px minmax(0, 1fr);
+        min-height: 44px;
+      }
+      .club-career-period,
+      .club-career-club {
+        padding: 10px 11px;
+        font-size: 12px;
+      }
+      .summary-playstyles-list {
+        grid-template-columns: 1fr;
+      }
+      .summary-playstyle {
+        cursor: pointer;
+      }
+      .summary-playstyle-desc {
+        display: none;
+      }
+    }
+
+    .player-primary-actions {
+      width: 100%;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin: -10px 0 18px;
+    }
+    .player-primary-action {
+      min-height: 48px;
+      border: 1px solid #dbe3ec;
+      border-radius: 10px;
+      background: #fff;
+      color: #263445;
+      font: inherit;
+      font-size: 14px;
+      font-weight: 800;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      cursor: pointer;
+      box-sizing: border-box;
+      transition: background-color .12s ease, border-color .12s ease;
+    }
+    .player-primary-action.primary {
+      border-color: #cbd5e1;
+      background: #f8fafc;
+      color: #263445;
+      box-shadow: none !important;
+    }
+    .btn-primary,
+    .btn-primary:hover,
+    .btn-primary:focus,
+    .btn-primary:active,
+    .player-primary-action.primary:hover,
+    .player-primary-action.primary:focus,
+    .player-primary-action.primary:active {
+      box-shadow: none !important;
+    }
+    .player-primary-action.primary i {
+      color: #059669;
+    }
+    .player-primary-action:hover {
+      transform: none;
+      border-color: #94a3b8;
+      background: #f8fafc;
+      text-decoration: none;
+    }
+    .tier-section {
+      width: 100%;
+      margin: 24px 0;
+      padding: 20px;
+      border: 1px solid #dbe3ec;
+      border-radius: 16px;
+      background: #fff;
+      box-shadow: none;
+      box-sizing: border-box;
+    }
+    .tier-heading {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+    .tier-kicker {
+      color: #059669;
+      font-size: 11px;
+      font-weight: 950;
+      letter-spacing: .08em;
+    }
+    .tier-heading h2 {
+      margin: 3px 0 0;
+      text-align: left;
+      font-size: 20px;
+    }
+    .tier-consensus {
+      min-width: 82px;
+      padding: 10px 13px;
+      border-radius: 13px;
+      background: #f1f5f9;
+      color: #64748b;
+      text-align: center;
+      font-size: 11px;
+      font-weight: 800;
+    }
+    .tier-consensus strong {
+      display: block;
+      color: #111827;
+      font-size: 24px;
+      line-height: 1.05;
+    }
+    .tier-chart {
+      height: 106px;
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 8px;
+      align-items: end;
+      margin-bottom: 16px;
+    }
+    .tier-column {
+      min-width: 0;
+      display: grid;
+      grid-template-rows: 20px 1fr 18px;
+      gap: 4px;
+      align-items: end;
+      text-align: center;
+      color: #64748b;
+      font-size: 11px;
+      font-weight: 900;
+    }
+    .tier-bar-track {
+      height: 64px;
+      display: flex;
+      align-items: flex-end;
+      border-radius: 8px;
+      background: #f1f5f9;
+      overflow: hidden;
+    }
+    .tier-bar {
+      width: 100%;
+      min-height: 3px;
+      height: max(3px, calc(var(--tier-pct, 0) * .64px));
+      border-radius: 8px 8px 0 0;
+      background: var(--tier-color, #94a3b8);
+      transition: height .25s ease;
+    }
+    .tier-vote-grid {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 8px;
+    }
+    .tier-vote {
+      min-height: 46px;
+      border: 1px solid color-mix(in srgb, var(--tier-color, #94a3b8) 55%, #dbe3ec);
+      border-radius: 11px;
+      background: color-mix(in srgb, var(--tier-color, #94a3b8) 8%, #fff);
+      color: #263445;
+      font: inherit;
+      font-size: 16px;
+      font-weight: 950;
+      cursor: pointer;
+    }
+    .tier-vote.is-selected {
+      border-color: var(--tier-color);
+      box-shadow: none;
+      transform: translateY(-1px);
+    }
+    .tier-help {
+      margin-top: 11px;
+      color: #64748b;
+      font-size: 12px;
+      font-weight: 750;
+      text-align: center;
+    }
+    .tier-help:empty { display: none; }
+    .tier-help a { color: #047857; font-weight: 900; }
+    .tier-actions {
+      display: flex;
+      justify-content: center;
+      margin-top: 11px;
+    }
+    .tier-cancel {
+      min-height: 34px;
+      padding: 0 12px;
+      border: 1px solid #dbe3ec;
+      border-radius: 9px;
+      background: #fff;
+      color: #64748b;
+      font: inherit;
+      font-size: 12px;
+      font-weight: 900;
+      cursor: pointer;
+    }
+    .tier-cancel:hover {
+      border-color: #fca5a5;
+      color: #dc2626;
+    }
+    .stats-export-dialog {
+      width: min(720px, calc(100% - 28px));
+      max-height: calc(100vh - 28px);
+      padding: 0;
+      border: 0;
+      border-radius: 20px;
+      background: #fff;
+      box-shadow: none;
+      overflow: auto;
+    }
+    .stats-export-dialog::backdrop {
+      background: rgba(15, 23, 42, .65);
+      backdrop-filter: blur(4px);
+    }
+    .stats-export-head {
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 17px 20px;
+      border-bottom: 1px solid #e2e8f0;
+      background: rgba(255,255,255,.96);
+      backdrop-filter: blur(10px);
+    }
+    .stats-export-title {
+      color: #172033;
+      font-size: 18px;
+      font-weight: 950;
+    }
+    .stats-export-close {
+      width: 36px;
+      height: 36px;
+      border: 1px solid #dbe3ec;
+      border-radius: 10px;
+      background: #f8fafc;
+      color: #475569;
+      font-size: 21px;
+      cursor: pointer;
+    }
+    .stats-export-body { padding: 18px 20px 22px; }
+    .stats-export-preview {
+      width: 100%;
+      display: block;
+      border-radius: 14px;
+      background: #080d19;
+      box-shadow: none;
+    }
+    .stats-export-modes {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin: 14px 0;
+    }
+    .stats-export-mode {
+      min-height: 52px;
+      border: 1px solid #dbe3ec;
+      border-radius: 12px;
+      background: #f8fafc;
+      color: #475569;
+      font: inherit;
+      font-size: 13px;
+      font-weight: 900;
+      cursor: pointer;
+    }
+    .stats-export-mode.is-selected {
+      border-color: #10b981;
+      background: #ecfdf5;
+      color: #047857;
+      box-shadow: none;
+    }
+    .stats-export-download {
+      width: 100%;
+      min-height: 52px;
+      border: 1px solid #172033;
+      border-radius: 10px;
+      background: #172033;
+      color: #fff;
+      font-size: 15px;
+      font-weight: 800;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: none;
+      box-sizing: border-box;
+    }
+    .stats-export-download:hover {
+      border-color: #263445;
+      background: #263445;
+      color: #fff;
+      text-decoration: none;
+    }
+    @media (max-width: 550px) {
+      .player-primary-actions { margin-top: -4px; }
+      .player-primary-action { min-height: 44px; font-size: 13px; }
+      .tier-section { padding: 15px 12px; }
+      .tier-heading h2 { font-size: 18px; }
+      .tier-consensus { min-width: 66px; padding: 8px 10px; }
+      .tier-consensus strong { font-size: 21px; }
+      .tier-chart, .tier-vote-grid { gap: 5px; }
+      .tier-vote { min-height: 42px; font-size: 14px; }
+      .stats-export-head { padding: 14px 15px; }
+      .stats-export-body { padding: 14px 14px 18px; }
+      .stat-guide-dialog {
+        width: calc(100% - 20px);
+        max-height: calc(100vh - 20px);
+        border-radius: 14px;
+      }
+      .stat-guide-head { padding: 13px 14px; }
+      .stat-guide-body { padding: 12px 12px 16px; }
+      .stat-guide-groups { grid-template-columns: 1fr; gap: 9px; }
+      .stat-guide-item { grid-template-columns: 92px minmax(0, 1fr); padding: 9px 10px; }
+    }
+  </style>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/player-reviews.css') }}">
+</head>
+<body>
+  <div class="page-topbar">
+    <a class="brandbar" href="{{ url_for('index') }}">
+      <img src="{{ url_for('static', filename='favicon.ico') }}" alt="로고">
+      피모북
+    </a>
+    <div class="detail-header-actions">
+      <a class="back-btn" href="javascript:history.back()">← 뒤로가기</a>
+      {% if current_user.is_authenticated %}
+        <a class="detail-account-shortcut" href="{{ url_for('profile') }}"><i class="bi bi-person-circle" aria-hidden="true"></i>프로필</a>
+      {% else %}
+        <a class="detail-account-shortcut" href="{{ url_for('login', next=request.full_path) }}"><i class="bi bi-person" aria-hidden="true"></i>로그인</a>
+      {% endif %}
+      <button class="detail-nav-toggle" type="button" aria-label="메뉴 열기" aria-expanded="false" aria-controls="detail-mobile-navigation">
+        <i class="bi bi-list" aria-hidden="true"></i>
+      </button>
+    </div>
+    <nav class="detail-mobile-nav" id="detail-mobile-navigation" aria-label="주요 메뉴">
+      <div class="detail-nav-user">
+        <i class="bi bi-person-circle" aria-hidden="true"></i>
+        <span>{% if current_user.is_authenticated %}<strong>{{ current_user.username }}</strong>로그인 중{% else %}<strong>게스트</strong>로그인하면 리뷰와 커뮤니티를 이용할 수 있어요.{% endif %}</span>
+      </div>
+      <div class="detail-nav-group">
+        <a href="{{ url_for('squad_maker') }}"><i class="bi bi-diagram-3" aria-hidden="true"></i>스쿼드 메이커</a>
+        <a href="{{ url_for('player_compare_page') }}"><i class="bi bi-people" aria-hidden="true"></i>선수 비교</a>
+        <a href="{{ url_for('traits_selection') }}"><i class="bi bi-sliders2" aria-hidden="true"></i>선수 세부검색</a>
+        <a href="{{ url_for('times') }}"><i class="bi bi-clock-history" aria-hidden="true"></i>갱신시간</a>
+        <a href="{{ url_for('coupons_page') }}"><i class="bi bi-ticket-perforated" aria-hidden="true"></i>쿠폰</a>
+        <a href="{{ url_for('community') }}"><i class="bi bi-chat-square-text" aria-hidden="true"></i>커뮤니티</a>
+      </div>
+      <div class="detail-nav-group">
+        {% if current_user.is_authenticated %}
+          {% if is_admin_user %}<a href="{{ url_for('admin_points') }}"><i class="bi bi-shield-check" aria-hidden="true"></i>관리자</a>{% endif %}
+          <a href="{{ url_for('profile') }}"><i class="bi bi-person-circle" aria-hidden="true"></i>프로필</a>
+          <a href="{{ url_for('logout') }}"><i class="bi bi-box-arrow-right" aria-hidden="true"></i>로그아웃</a>
+        {% else %}
+          <a href="{{ url_for('login', next=request.full_path) }}"><i class="bi bi-box-arrow-in-right" aria-hidden="true"></i>로그인</a>
+          <a href="{{ url_for('register') }}"><i class="bi bi-person-plus" aria-hidden="true"></i>회원가입</a>
+        {% endif %}
+      </div>
+    </nav>
+    <div class="detail-nav-overlay" aria-hidden="true"></div>
+  </div>
+  <div class="container">
+    <h1>선수 상세 정보</h1>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="flash-messages">
+          {% for category, message in messages %}
+            <div class="flash-message {{ category }}">{{ message }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    {% if error %}
+      <div class="error">{{ error }}</div>
+    {% elif player %}
+      <div class="detail-layout">
+        <div class="player-card-wrapper">
+          <div class="player-card">
+              <div class="card-background" style="background-image: url('{{ player.bimage }}');"></div>
+              <div class="player-image" style="background-image: url('{{ player.pimage }}');"></div>
+              <div class="ovr-position-top">
+                  <div class="ovr" data-ovr-value data-base="{{ player.ovr or 0 }}">{{ player.ovr }}</div>
+                  <div class="position">{{ player.position }}</div>
+              </div>
+              <div class="player-name-bottom">{{ player.playerKor }}</div>
+          </div>
+        </div>
+        <div class="player-title">{{ player.playerKor }}</div>
+      </div>
+
+      <div class="player-primary-actions" aria-label="선수 도구">
+        <a class="player-primary-action" href="{{ url_for('player_compare_page', left=player.review_cid or player.cid) }}">
+          <i class="bi bi-arrow-left-right" aria-hidden="true"></i>
+          이 선수 비교하기
+        </a>
+        <button class="player-primary-action primary" type="button" data-open-stats-export>
+          <i class="bi bi-image" aria-hidden="true"></i>
+          통계 이미지
+        </button>
+      </div>
+
+      <dialog class="stats-export-dialog" data-stats-export-dialog>
+        <div class="stats-export-head">
+          <div class="stats-export-title">통계 이미지 다운로드</div>
+          <button class="stats-export-close" type="button" data-close-stats-export aria-label="닫기">×</button>
+        </div>
+        <div class="stats-export-body">
+          <img class="stats-export-preview" data-stats-export-preview alt="{{ player.playerKor }} 통계 이미지 미리보기">
+          <div class="stats-export-modes" role="group" aria-label="이미지에 적용할 선수 상태">
+            <button class="stats-export-mode is-selected" type="button" data-export-variant="current">
+              현재 설정 · <span data-current-enhance-label>{{ player.initialEnhance }}진화</span>
+            </button>
+            <button class="stats-export-mode" type="button" data-export-variant="base">기본 · 0진화</button>
+          </div>
+          <a class="stats-export-download" data-stats-export-download href="#">
+            <i class="bi bi-download" aria-hidden="true"></i>
+            저장
+          </a>
+        </div>
+      </dialog>
+
+      <section class="player-config-panel">
+        <div class="config-controls">
+          <div class="config-field">
+            <label for="detail-enhance">진화 등급</label>
+            <select id="detail-enhance">
+              {% for value in enhance_totals %}
+                <option value="{{ loop.index0 }}" {% if loop.index0 == player.initialEnhance %}selected{% endif %}>
+                  {{ loop.index0 }}진화 (+{{ value }})
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="config-field">
+            <label for="detail-training">훈련 단계</label>
+            <select id="detail-training">
+              {% for level in range(max_training_level + 1) %}
+                <option value="{{ level }}">{{ level }}단계</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="config-field price-field">
+            <label>선택 가격</label>
+            <div class="config-readout" id="detail-selected-price">-</div>
+          </div>
+        </div>
+        {% if player.skillDisplay and player.skillDisplay['items'] %}
+          <div class="skill-config">
+            <div class="skill-config-title">{{ player.skillDisplay['label'] }}</div>
+            <div class="skill-card-grid" style="--skill-mobile-rows: {{ ((player.skillDisplay['items']|length + 1) // 2) if player.skillDisplay['type'] == 'skill' else 1 }};">
+              {% for skill in player.skillDisplay['items'] %}
+                {% set skill_slot = skill._review_slot or skill.slot %}
+                {% set skill_kind = skill._review_kind or skill.kind %}
+                <div class="skill-card" data-skill-card data-skill-index="{{ loop.index0 }}" data-skill-type="{{ player.skillDisplay['type'] }}" data-skill-kind="{{ skill_kind }}" data-skill-slot="{{ skill_slot }}" data-required-base="{{ skill._required_base_slot or '' }}" data-stat-codes="{{ skill.statCodes|join(',') }}">
+                  <img src="{{ skill.imageUrl }}" alt="{{ skill.name }}" loading="lazy" onerror="this.parentElement.classList.add('no-skill-image'); this.remove();">
+                  <div>
+                    <div class="skill-name">{{ skill.name }}</div>
+                    <div class="skill-meta">
+                      {% if skill_slot %}{{ skill_slot }}{% endif %}
+                      {% if skill_kind %}{{ skill_kind }}{% endif %}
+                      {% if skill.level is defined and skill.level is not none %}Lv.{{ skill.level }}{% endif %}
+                    </div>
+                    {% if skill.statCodes %}
+                      <div class="skill-stat-list">
+                        {% for code in skill.statCodes %}
+                          <span class="skill-stat-chip" data-skill-stat-chip="{{ code }}">{{ stat_labels.get(code, code) }}</span>
+                        {% endfor %}
+                      </div>
+                      <button class="skill-stat-toggle" type="button" data-skill-stat-button>상승 스탯 보기</button>
+                    {% endif %}
+                    <div class="skill-point-control">
+                      <select data-skill-level-select></select>
+                    </div>
+                  </div>
+                </div>
+              {% endfor %}
+            </div>
+            <div class="skill-points-summary" id="detail-skill-summary"></div>
+          </div>
+        {% endif %}
+      </section>
+
+      {# 모든 능력치 섹션은 player_data.json에 해당 정보가 있어야 표시 가능 #}
+      {# ACC 필드가 하나라도 있으면 능력치 섹션은 표시하되, 내부 값은 모두 출력 #}
+      {% if player.ACC is not none or player.SPD is not none or player.FIN is not none %} {# 최소한의 능력치라도 있으면 표시 #}
+      <div class="stat-summary">
+        {% set ns = namespace(pace=0, shooting=0, passing=0, agility=0, defense=0, physical=0, gkphysical=0) %}
+        {% set pace_weights = [("ACC", 50), ("SPD", 50)] %}
+        {% set shooting_weights = [("FIN", 35), ("LSA", 20), ("SHO", 20), ("POS", 15), ("VOL", 5), ("PEN", 5)] %}
+        {% set passing_weights = [("SPA", 30), ("LPA", 20), ("VIS", 25), ("CRO", 15), ("CUR", 5), ("FRK", 5)] %}
+        {% set agility_weights = [("DRI", 25), ("BAC", 25), ("AGI", 25), ("REA", 15), ("BAL", 10)] %}
+        {% set defense_weights = [("MRK", 25), ("STT", 20), ("SLT", 20), ("AWR", 20), ("HEA", 15)] %}
+        {% set physical_weights = [("STR", 45), ("AGG", 30), ("JMP", 25)] %}
+        {% set gkphysical_weights = [("REA", 65), ("AGI", 15), ("SPD", 10), ("STR", 10)] %}
+
+        {% set ns.pace = (pace_weights | map(attribute=0) | list) %}
+        {% set pace_total = namespace(val=0) %}
+        {% for key, weight in pace_weights %}
+          {% set pace_total.val = pace_total.val + (player.get(key, 0) * weight) %}
+        {% endfor %}
+        {% set pace_val = ((pace_total.val / 100) | round(0, 'floor')) | int %}
+
+        {% set shooting_total = namespace(val=0) %}
+        {% for key, weight in shooting_weights %}
+          {% set shooting_total.val = shooting_total.val + (player.get(key, 0) * weight) %}
+        {% endfor %}
+        {% set shooting_val = ((shooting_total.val / 100) | round(0, 'floor')) | int %}
+
+        {% set passing_total = namespace(val=0) %}
+        {% for key, weight in passing_weights %}
+          {% set passing_total.val = passing_total.val + (player.get(key, 0) * weight) %}
+        {% endfor %}
+        {% set passing_val = ((passing_total.val / 100) | round(0, 'floor')) | int %}
+
+        {% set agility_total = namespace(val=0) %}
+        {% for key, weight in agility_weights %}
+          {% set agility_total.val = agility_total.val + (player.get(key, 0) * weight) %}
+        {% endfor %}
+        {% set agility_val = ((agility_total.val / 100) | round(0, 'floor')) | int %}
+
+        {% set defense_total = namespace(val=0) %}
+        {% for key, weight in defense_weights %}
+          {% set defense_total.val = defense_total.val + (player.get(key, 0) * weight) %}
+        {% endfor %}
+        {% set defense_val = ((defense_total.val / 100) | round(0, 'floor')) | int %}
+
+        {% set physical_total = namespace(val=0) %}
+        {% for key, weight in physical_weights %}
+          {% set physical_total.val = physical_total.val + (player.get(key, 0) * weight) %}
+        {% endfor %}
+        {% set physical_val = ((physical_total.val / 100) | round(0, 'floor')) | int %}
+
+        {% set gk_total = namespace(val=0) %}
+        {% for key, weight in gkphysical_weights %}
+          {% set gk_total.val = gk_total.val + (player.get(key, 0) * weight) %}
+        {% endfor %}
+        {% set gk_val = ((gk_total.val / 100) | round(0, 'floor')) | int %}
+
+        {% set max_summary = [pace_val, shooting_val, passing_val, agility_val, defense_val, physical_val] | max %}
+        <div class="stat-summary-grid">
+          <div class="stat-gauge" data-summary-gauge="pace" style="--p: {{ (pace_val / max_summary * 100) | round(0, 'floor') if max_summary else 0 }};">
+            <div class="gauge">
+              <svg viewBox="0 0 100 50" aria-hidden="true">
+                <path class="gauge-track" d="M5 50 A45 45 0 0 1 95 50"></path>
+                <path class="gauge-fill" d="M5 50 A45 45 0 0 1 95 50"></path>
+              </svg>
+              <div class="gauge-value" data-summary-value="pace">{{ pace_val }}</div>
+            </div>
+            <div class="gauge-label">페이스</div>
+          </div>
+          <div class="stat-gauge" data-summary-gauge="shooting" style="--p: {{ (shooting_val / max_summary * 100) | round(0, 'floor') if max_summary else 0 }};">
+            <div class="gauge">
+              <svg viewBox="0 0 100 50" aria-hidden="true">
+                <path class="gauge-track" d="M5 50 A45 45 0 0 1 95 50"></path>
+                <path class="gauge-fill" d="M5 50 A45 45 0 0 1 95 50"></path>
+              </svg>
+              <div class="gauge-value" data-summary-value="shooting">{{ shooting_val }}</div>
+            </div>
+            <div class="gauge-label">슈팅</div>
+          </div>
+          <div class="stat-gauge" data-summary-gauge="passing" style="--p: {{ (passing_val / max_summary * 100) | round(0, 'floor') if max_summary else 0 }};">
+            <div class="gauge">
+              <svg viewBox="0 0 100 50" aria-hidden="true">
+                <path class="gauge-track" d="M5 50 A45 45 0 0 1 95 50"></path>
+                <path class="gauge-fill" d="M5 50 A45 45 0 0 1 95 50"></path>
+              </svg>
+              <div class="gauge-value" data-summary-value="passing">{{ passing_val }}</div>
+            </div>
+            <div class="gauge-label">패스</div>
+          </div>
+          <div class="stat-gauge" data-summary-gauge="agility" style="--p: {{ (agility_val / max_summary * 100) | round(0, 'floor') if max_summary else 0 }};">
+            <div class="gauge">
+              <svg viewBox="0 0 100 50" aria-hidden="true">
+                <path class="gauge-track" d="M5 50 A45 45 0 0 1 95 50"></path>
+                <path class="gauge-fill" d="M5 50 A45 45 0 0 1 95 50"></path>
+              </svg>
+              <div class="gauge-value" data-summary-value="agility">{{ agility_val }}</div>
+            </div>
+            <div class="gauge-label">민첩성</div>
+          </div>
+          <div class="stat-gauge" data-summary-gauge="defense" style="--p: {{ (defense_val / max_summary * 100) | round(0, 'floor') if max_summary else 0 }};">
+            <div class="gauge">
+              <svg viewBox="0 0 100 50" aria-hidden="true">
+                <path class="gauge-track" d="M5 50 A45 45 0 0 1 95 50"></path>
+                <path class="gauge-fill" d="M5 50 A45 45 0 0 1 95 50"></path>
+              </svg>
+              <div class="gauge-value" data-summary-value="defense">{{ defense_val }}</div>
+            </div>
+            <div class="gauge-label">수비</div>
+          </div>
+          <div class="stat-gauge" data-summary-gauge="physical" style="--p: {{ (physical_val / max_summary * 100) | round(0, 'floor') if max_summary else 0 }};">
+            <div class="gauge">
+              <svg viewBox="0 0 100 50" aria-hidden="true">
+                <path class="gauge-track" d="M5 50 A45 45 0 0 1 95 50"></path>
+                <path class="gauge-fill" d="M5 50 A45 45 0 0 1 95 50"></path>
+              </svg>
+              <div class="gauge-value" data-summary-value="physical">{{ physical_val }}</div>
+            </div>
+            <div class="gauge-label">피지컬</div>
+          </div>
+        </div>
+        <div class="stat-pill-row">
+          <div class="stat-pill">
+            {% set potential_positions = player.potentialPositions if player.potentialPositions is defined else [] %}
+            {% if potential_positions %}
+              <span>부포지션 <span class="accent">{{ potential_positions|join(', ') }}</span></span>
+            {% elif player.potentialPosition %}
+              <span>부포지션 <span class="accent">{{ player.potentialPosition }}</span></span>
+            {% endif %}
+            {% if player.jerseyNumber is defined and player.jerseyNumber is not none %}
+              <span>등번호 <span class="accent">{{ player.jerseyNumber }}</span></span>
+            {% endif %}
+            {% set left_foot = player.footL|int if player.footL is not none else 0 %}
+            {% set right_foot = player.footR|int if player.footR is not none else 0 %}
+            {% set main_foot = player.mainFoot|int if player.mainFoot is not none else 0 %}
+            {% set is_left_main = main_foot == 2 %}
+            {% set is_right_main = main_foot == 1 %}
+            <span>발: <span class="foot-pair"><span class="{{ 'main-foot' if is_left_main else '' }}">{{ left_foot }}</span><span>/</span><span class="{{ 'main-foot' if is_right_main else '' }}">{{ right_foot }}</span></span></span>
+            {% set sm_level = player.skillMovesLevel if player.skillMovesLevel is not none else player.skillMoves %}
+            {% if sm_level is not none %}
+              <span class="accent">{{ (sm_level | int) + 1 }}성</span>
+            {% endif %}
+            <span>{{ player.skillMovesName or '-' }}</span>
+          </div>
+          <div class="stat-pill">
+            {% set work_rate_map = {0: "보통", 1: "낮음", 2: "높음"} %}
+            {% if player.attWorkRate is not none and player.defWorkRate is not none %}
+              {% set att_wr = work_rate_map[player.attWorkRate] %}
+              {% set def_wr = work_rate_map[player.defWorkRate] %}
+              <span>활동량 <span class="accent">{{ att_wr }}</span> / {{ def_wr }}</span>
+            {% else %}
+              <span>활동량 <span class="accent">-</span></span>
+            {% endif %}
+            {% if player.height is not none %}<span>{{ player.height }}cm</span>{% endif %}
+            {% if player.weight is not none %}<span>{{ player.weight }}kg</span>{% endif %}
+            {% if player.STA is not none %}
+              {% set stamina_blocks = (((player.STA / 10) | round(0, 'floor')) | int) + 1 %}
+              {% set stamina_full = stamina_blocks // 2 %}
+              {% set stamina_half = stamina_blocks % 2 %}
+              <span>체력 <span class="accent">{{ "★" * stamina_full }}{% if stamina_half %}<span class="half-star">★</span>{% endif %}{{ "☆" * (5 - stamina_full - stamina_half) if (5 - stamina_full - stamina_half) > 0 else "" }}</span></span>
+            {% endif %}
+          </div>
+          {% if player.position == 'GK' %}
+          <div class="stat-pill">
+            <span>피지컬(GK) <span class="accent">{{ gk_val }}</span></span>
+          </div>
+          {% endif %}
+        </div>
+        {% if player.playstyles %}
+          <div class="summary-playstyles">
+            <div class="summary-playstyles-title">플레이스타일</div>
+            <div class="summary-playstyles-list">
+              {% for playstyle in player.playstyles %}
+                <button class="summary-playstyle" type="button" data-playstyle-button data-name="{{ playstyle.name }}" data-description="{{ playstyle.description }}" data-image="{{ playstyle.imageUrl }}" aria-label="{{ playstyle.name }} 설명 보기">
+                  <img src="{{ playstyle.imageUrl }}" alt="{{ playstyle.name }} 아이콘" loading="lazy">
+                  <span>
+                    <span class="summary-playstyle-name">{{ playstyle.name }}</span>
+                    {% if playstyle.description %}
+                      <span class="summary-playstyle-desc">{{ playstyle.description }}</span>
+                    {% endif %}
+                  </span>
+                </button>
+              {% endfor %}
+            </div>
+          </div>
+        {% endif %}
+      </div>
+
+      {% set ad_layout = 'horizontal' %}
+      {% include "_adsense_unit.html" %}
+
+      <section class="tier-section" aria-labelledby="community-tier-title" data-tier-section>
+        <div class="tier-heading">
+          <div>
+            <div class="tier-kicker">TIER VOTE</div>
+            <h2 id="community-tier-title">이선수의 티어는?</h2>
+          </div>
+          <div class="tier-consensus">
+            투표
+            <strong data-tier-consensus>{{ tier_summary.dominant_tier or '-' }}</strong>
+            <span data-tier-total>{{ tier_summary.total }}표</span>
+          </div>
+        </div>
+        <div class="tier-chart" aria-label="티어별 투표 결과">
+          {% set tier_colors = {'S':'#fb7185','A':'#fb923c','B':'#facc15','C':'#a3e635','D':'#4ade80','F':'#22d3ee'} %}
+          {% for tier in tier_summary.tiers %}
+            <div class="tier-column" style="--tier-color: {{ tier_colors[tier] }};">
+              <span data-tier-percent="{{ tier }}">{{ tier_summary.percentages[tier] }}%</span>
+              <div class="tier-bar-track">
+                <div class="tier-bar" data-tier-bar="{{ tier }}" style="--tier-pct: {{ tier_summary.percentages[tier] }};"></div>
+              </div>
+              <span>{{ tier }}</span>
+            </div>
+          {% endfor %}
+        </div>
+        <div class="tier-vote-grid" aria-label="티어 선택">
+          {% for tier in tier_summary.tiers %}
+            <button
+              class="tier-vote{% if tier_summary.my_vote == tier %} is-selected{% endif %}"
+              type="button"
+              data-tier-vote="{{ tier }}"
+              style="--tier-color: {{ tier_colors[tier] }};"
+              {% if not current_user.is_authenticated or not tier_summary.available %}disabled{% endif %}
+              aria-pressed="{{ 'true' if tier_summary.my_vote == tier else 'false' }}"
+            >{{ tier }}</button>
+          {% endfor %}
+        </div>
+        {% if current_user.is_authenticated and tier_summary.available %}
+          <div class="tier-actions">
+            <button
+              class="tier-cancel"
+              type="button"
+              data-tier-cancel
+              {% if not tier_summary.my_vote %}hidden{% endif %}
+            >내 투표 취소</button>
+          </div>
+        {% endif %}
+        <div class="tier-help" data-tier-help role="status" aria-live="polite">
+          {% if not tier_summary.available %}
+            현재 투표 서버에 연결할 수 없습니다. 잠시 후 다시 시도해주세요.
+          {% elif not current_user.is_authenticated %}
+            <a href="{{ url_for('login', next=request.full_path) }}">로그인</a>하면 티어 투표에 참여할 수 있습니다.
+          {% endif %}
+        </div>
+      </section>
+
+      {% if player.playstyles %}
+        <div class="playstyle-popup" data-playstyle-popup aria-hidden="true">
+          <div class="playstyle-popup-panel" role="dialog" aria-modal="true" aria-labelledby="playstyle-popup-title">
+            <img class="playstyle-popup-icon" data-playstyle-popup-image alt="">
+            <div>
+              <div class="playstyle-popup-title" id="playstyle-popup-title" data-playstyle-popup-name></div>
+              <div class="playstyle-popup-desc" data-playstyle-popup-description></div>
+            </div>
+            <button class="playstyle-popup-close" type="button" data-playstyle-popup-close aria-label="닫기">×</button>
+          </div>
+        </div>
+      {% endif %}
+      {% if player.skillDisplay and player.skillDisplay['items'] %}
+        <div class="playstyle-popup" data-skill-stat-popup aria-hidden="true">
+          <div class="playstyle-popup-panel" role="dialog" aria-modal="true" aria-labelledby="skill-stat-popup-title">
+            <img class="playstyle-popup-icon" data-skill-stat-popup-image alt="">
+            <div>
+              <div class="playstyle-popup-title" id="skill-stat-popup-title" data-skill-stat-popup-name></div>
+              <div class="playstyle-popup-desc">현재 선택한 포인트 기준으로 올라가는 스탯입니다.</div>
+            </div>
+            <button class="playstyle-popup-close" type="button" data-skill-stat-popup-close aria-label="닫기">×</button>
+            <div class="skill-stat-popup-list" data-skill-stat-popup-list></div>
+          </div>
+        </div>
+      {% endif %}
+
+      {% if club_career %}
+        <section class="club-career-section" id="club-career">
+          <div class="review-content-heading">
+            <div class="review-content-heading-main">
+              <div class="review-content-title-row">
+                <h2 class="review-content-title">클럽 경력</h2>
+              </div>
+            </div>
+            {% if club_career.updated_label %}<span class="club-career-updated">{{ club_career.updated_label }} 기준</span>{% endif %}
+          </div>
+          <div class="club-career-table">
+            {% for career in club_career.rows %}
+              <div class="club-career-row">
+                <div class="club-career-period">
+                  {% if career.start %}{{ career.start }}{% else %}-{% endif %}
+                  &nbsp;-&nbsp;
+                  {% if career.end %}{{ career.end }}{% else %}현재{% endif %}
+                </div>
+                <div class="club-career-club">
+                  {{ career.club }}
+                  {% if career.loan %}<span class="club-career-loan">임대</span>{% endif %}
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        </section>
+      {% endif %}
+
+      {% if admin_review_summary %}
+        <section class="admin-summary-section" id="review-summary">
+          <div class="review-content-heading">
+            <div class="review-content-heading-main">
+              <div class="review-content-title-row">
+                <h2 class="review-content-title">선수 장단점</h2>
+              </div>
+            </div>
+          </div>
+          <div class="admin-review-panel">
+            <div class="admin-review-grid">
+              {% if admin_review_summary.strengths %}
+                <div class="admin-review-box pros">
+                  <div class="admin-review-label">
+                    <span class="admin-review-label-icon"><i class="bi bi-plus-lg" aria-hidden="true"></i></span>
+                    장점
+                  </div>
+                  <div class="admin-review-text">{{ admin_review_summary.strengths }}</div>
+                </div>
+              {% endif %}
+              {% if admin_review_summary.weaknesses %}
+                <div class="admin-review-box cons">
+                  <div class="admin-review-label">
+                    <span class="admin-review-label-icon"><i class="bi bi-dash-lg" aria-hidden="true"></i></span>
+                    단점
+                  </div>
+                  <div class="admin-review-text">{{ admin_review_summary.weaknesses }}</div>
+                </div>
+              {% endif %}
+            </div>
+            {% if admin_review_summary.summary %}
+              <div class="admin-review-verdict">
+                <div class="admin-review-verdict-label">최종 결론</div>
+                <div class="admin-review-verdict-copy">{{ admin_review_summary.summary }}</div>
+              </div>
+            {% endif %}
+          </div>
+        </section>
+      {% endif %}
+
+      <section class="review-section" id="player-reviews">
+        <div class="review-content-heading">
+          <div class="review-content-heading-main">
+            <span class="review-content-kicker">PLAYER REVIEWS</span>
+            <div class="review-content-title-row">
+              <h2 class="review-content-title">사용자 리뷰</h2>
+              <span class="review-content-count">{{ firebase_reviews|length }}개</span>
+            </div>
+          </div>
+          <div class="review-content-actions">
+            {% if firebase_reviews %}
+              <a class="review-content-button" href="{{ url_for('player_reviews', cid=player.review_cid or player.cid) }}">
+                전체 리뷰 <i class="bi bi-chevron-right" aria-hidden="true"></i>
+              </a>
+            {% endif %}
+            {% if current_user_review %}
+              <a class="review-content-button primary" href="{{ url_for('edit_player_firebase_review', cid=player.review_cid or player.cid) }}">내 리뷰 수정</a>
+            {% elif can_write_review %}
+              <a class="review-content-button primary" href="{{ url_for('submit_player_firebase_review', cid=player.review_cid or player.cid) }}">리뷰 작성</a>
+            {% else %}
+              <a class="review-content-button primary" href="{{ url_for('login', next=url_for('submit_player_firebase_review', cid=player.review_cid or player.cid)) }}">로그인 후 작성</a>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="fimo-review-list">
+          {% if firebase_reviews %}
+            {% for review in firebase_review_preview %}
+              {% set review_player_cid = player.review_cid or player.cid %}
+              {% set show_owner_actions = false %}
+              {% include "_player_review_card.html" %}
+            {% endfor %}
+            {% if firebase_reviews|length > review_preview_limit %}
+              <a class="review-content-button" href="{{ url_for('player_reviews', cid=player.review_cid or player.cid) }}">나머지 리뷰 {{ firebase_reviews|length - review_preview_limit }}개 더 보기</a>
+            {% endif %}
+          {% else %}
+            <div class="fimo-review-empty">
+              <i class="bi bi-chat-square-text" aria-hidden="true"></i>
+              <strong>아직 등록된 리뷰가 없습니다.</strong>
+              <span>이 선수를 사용해봤다면 첫 리뷰를 남겨주세요.</span>
+            </div>
+          {% endif %}
+        </div>
+      </section>
+
+      {% set ad_layout = 'horizontal' %}
+      {% include "_adsense_unit.html" %}
+
+      <div class="stats-title-row">
+        <div class="stats-title-main">
+          <h2>모든 능력치</h2>
+          <button class="stat-guide-open" type="button" data-open-stat-guide>
+            <i class="bi bi-info-circle" aria-hidden="true"></i>
+            스탯 설명
+          </button>
+        </div>
+        <span class="max-level-stat" data-max-level-stat {% if player.initialEnhance != 0 %}hidden{% endif %}>만렙스탯: -</span>
+      </div>
+      <dialog class="stat-guide-dialog" data-stat-guide-dialog aria-labelledby="stat-guide-title">
+        <div class="stat-guide-head">
+          <div class="stat-guide-title">
+            <strong id="stat-guide-title">스탯 설명</strong>
+          </div>
+          <button class="stat-guide-close" type="button" data-close-stat-guide aria-label="스탯 설명 닫기">×</button>
+        </div>
+        <div class="stat-guide-body">
+          <div class="stat-guide-groups">
+            <section class="stat-guide-group">
+              <h3>속도</h3>
+              <dl class="stat-guide-list">
+                <div class="stat-guide-item"><dt>가속<span class="stat-guide-code">ACC</span></dt><dd>정지하거나 느린 상태에서 빠르게 속도를 끌어올리는 능력입니다.</dd></div>
+                <div class="stat-guide-item"><dt>질주 속도<span class="stat-guide-code">SPD</span></dt><dd>충분히 가속한 뒤 유지할 수 있는 최고 달리기 속도에 관여합니다.</dd></div>
+              </dl>
+            </section>
+            <section class="stat-guide-group">
+              <h3>슈팅</h3>
+              <dl class="stat-guide-list">
+                <div class="stat-guide-item"><dt>결정력<span class="stat-guide-code">FIN</span></dt><dd>페널티 박스 안에서 일반 슛을 골문으로 마무리하는 정확도와 안정성입니다.</dd></div>
+                <div class="stat-guide-item"><dt>중거리 슛<span class="stat-guide-code">LSA</span></dt><dd>페널티 박스 밖에서 시도한 슈팅의 정확도에 관여합니다.</dd></div>
+                <div class="stat-guide-item"><dt>슈팅력<span class="stat-guide-code">SHO</span></dt><dd>슈팅한 공의 속도와 강도에 영향을 주어 골키퍼의 대응 시간을 줄여줍니다.</dd></div>
+                <div class="stat-guide-item"><dt>위치 선정<span class="stat-guide-code">POS</span></dt><dd>공격 상황에서 패스와 득점 기회를 받을 수 있는 공간을 찾아가는 능력입니다.</dd></div>
+                <div class="stat-guide-item"><dt>발리 슛<span class="stat-guide-code">VOL</span></dt><dd>공중에 떠 있거나 튀어 오른 공을 바로 슈팅할 때의 완성도에 관여합니다.</dd></div>
+                <div class="stat-guide-item"><dt>페널티 킥<span class="stat-guide-code">PEN</span></dt><dd>페널티킥 상황에서 슈팅을 정확하게 보내는 능력입니다.</dd></div>
+              </dl>
+            </section>
+            <section class="stat-guide-group">
+              <h3>패스</h3>
+              <dl class="stat-guide-list">
+                <div class="stat-guide-item"><dt>짧은 패스<span class="stat-guide-code">SPA</span></dt><dd>가까운 동료에게 땅볼 패스를 빠르고 정확하게 연결하는 능력입니다.</dd></div>
+                <div class="stat-guide-item"><dt>긴 패스<span class="stat-guide-code">LPA</span></dt><dd>먼 거리의 동료에게 로빙 패스와 긴 패스를 정확하게 전달하는 능력입니다.</dd></div>
+                <div class="stat-guide-item"><dt>시야<span class="stat-guide-code">VIS</span></dt><dd>주변의 패스 선택지를 인식하고 어려운 패스 경로를 활용하는 능력입니다.</dd></div>
+                <div class="stat-guide-item"><dt>크로스<span class="stat-guide-code">CRO</span></dt><dd>측면이나 세트피스에서 박스 안 목표 지점으로 공을 배달하는 정확도입니다.</dd></div>
+                <div class="stat-guide-item"><dt>감아차기<span class="stat-guide-code">CUR</span></dt><dd>슛과 패스에 회전을 걸어 공의 궤적을 휘게 만드는 능력입니다.</dd></div>
+                <div class="stat-guide-item"><dt>프리킥<span class="stat-guide-code">FRK</span></dt><dd>직접 프리킥을 원하는 방향과 높이로 보내는 정확도에 관여합니다.</dd></div>
+              </dl>
+            </section>
+            <section class="stat-guide-group">
+              <h3>드리블</h3>
+              <dl class="stat-guide-list">
+                <div class="stat-guide-item"><dt>드리블<span class="stat-guide-code">DRI</span></dt><dd>이동 중 공을 발 가까이에 두고 상대 수비를 피해 운반하는 능력입니다.</dd></div>
+                <div class="stat-guide-item"><dt>볼 컨트롤<span class="stat-guide-code">BAC</span></dt><dd>패스를 받은 직후 공을 안정적으로 소유하고 다음 동작으로 연결하는 능력입니다.</dd></div>
+                <div class="stat-guide-item"><dt>민첩성<span class="stat-guide-code">AGI</span></dt><dd>방향 전환과 짧은 움직임을 빠르게 수행하는 능력에 관여합니다.</dd></div>
+                <div class="stat-guide-item"><dt>반응도<span class="stat-guide-code">REA</span></dt><dd>리바운드와 경합 뒤 흐른 공 등 갑작스러운 상황에 빠르게 대응하는 능력입니다.</dd></div>
+                <div class="stat-guide-item"><dt>밸런스<span class="stat-guide-code">BAL</span></dt><dd>방향 전환이나 몸싸움 중 자세를 유지하고 다음 동작을 이어가는 능력입니다.</dd></div>
+              </dl>
+            </section>
+            <section class="stat-guide-group">
+              <h3>수비</h3>
+              <dl class="stat-guide-list">
+                <div class="stat-guide-item"><dt>마크<span class="stat-guide-code">MRK</span></dt><dd>상대 공격수의 움직임을 따라가며 패스와 침투 경로를 제한하는 능력입니다.</dd></div>
+                <div class="stat-guide-item"><dt>태클<span class="stat-guide-code">STT</span></dt><dd>서 있는 상태에서 파울을 줄이며 공을 정확히 빼앗는 능력입니다.</dd></div>
+                <div class="stat-guide-item"><dt>슬라이딩 태클<span class="stat-guide-code">SLT</span></dt><dd>미끄러져 들어가는 태클로 공을 걷어내거나 소유권을 가져오는 능력입니다.</dd></div>
+                <div class="stat-guide-item"><dt>가로채기<span class="stat-guide-code">AWR</span></dt><dd>상대의 패스 길을 예측하고 자동 또는 수동 움직임으로 차단하는 능력입니다.</dd></div>
+                <div class="stat-guide-item"><dt>헤딩<span class="stat-guide-code">HEA</span></dt><dd>머리로 패스하거나 슈팅할 때 공을 목표 방향으로 보내는 정확도입니다.</dd></div>
+              </dl>
+            </section>
+            <section class="stat-guide-group">
+              <h3>피지컬</h3>
+              <dl class="stat-guide-list">
+                <div class="stat-guide-item"><dt>힘<span class="stat-guide-code">STR</span></dt><dd>어깨싸움과 신체 경합에서 상대에게 밀리지 않고 버티는 능력입니다.</dd></div>
+                <div class="stat-guide-item"><dt>공격성<span class="stat-guide-code">AGG</span></dt><dd>루즈볼과 몸싸움, 수비 경합에 적극적으로 참여하는 성향에 관여합니다.</dd></div>
+                <div class="stat-guide-item"><dt>점프<span class="stat-guide-code">JMP</span></dt><dd>공중볼을 향해 뛰어오르는 높이로, 키와 헤딩·힘 능력치가 함께 작용합니다.</dd></div>
+              </dl>
+            </section>
+            <section class="stat-guide-group">
+              <h3>GK</h3>
+              <dl class="stat-guide-list">
+                <div class="stat-guide-item"><dt>GK 다이빙<span class="stat-guide-code">GKD</span></dt><dd>골키퍼가 몸을 날려 골문 구석의 슈팅에 닿는 능력입니다.</dd></div>
+                <div class="stat-guide-item"><dt>킥<span class="stat-guide-code">GKK</span></dt><dd>골킥과 손에 든 공을 발로 배급할 때의 거리와 정확도입니다.</dd></div>
+                <div class="stat-guide-item"><dt>GK 위치선정<span class="stat-guide-code">GKP</span></dt><dd>슈팅 각도와 크로스 상황에 맞춰 골문에서 적절한 자리를 잡는 능력입니다.</dd></div>
+                <div class="stat-guide-item"><dt>반사신경<span class="stat-guide-code">REF</span></dt><dd>가까운 거리의 슈팅과 급작스러운 방향 변화에 빠르게 반응하는 능력입니다.</dd></div>
+                <div class="stat-guide-item"><dt>핸들링<span class="stat-guide-code">HAN</span></dt><dd>슈팅과 크로스를 쳐내지 않고 안정적으로 잡아 소유하는 능력입니다.</dd></div>
+              </dl>
+            </section>
+          </div>
+        </div>
+      </dialog>
+      <div class="stats-grid">
+        {% set stat_groups = [
+          ("속도", "pace", [("ACC", "가속"), ("SPD", "질주 속도")]),
+          ("슈팅", "shooting", [("FIN", "결정력"), ("LSA", "중거리 슛"), ("SHO", "슈팅력"), ("POS", "위치 선정"), ("VOL", "발리 슛"), ("PEN", "페널티 킥")]),
+          ("패스", "passing", [("SPA", "짧은 패스"), ("LPA", "긴 패스"), ("VIS", "시야"), ("CRO", "크로스"), ("CUR", "감아차기"), ("FRK", "프리킥")]),
+          ("드리블", "agility", [("DRI", "드리블"), ("BAC", "볼 컨트롤"), ("AGI", "민첩성"), ("REA", "반응도"), ("BAL", "밸런스")]),
+          ("수비", "defense", [("MRK", "마크"), ("STT", "태클"), ("SLT", "슬라이딩 태클"), ("AWR", "가로채기"), ("HEA", "헤딩")]),
+          ("피지컬", "physical", [("STR", "힘"), ("AGG", "공격성"), ("JMP", "점프")])
+        ] %}
+        {% for group_label, group_key, rows in stat_groups %}
+          <section class="stat-group-card">
+            <div class="stat-group-head">
+              <span>{{ group_label }}</span>
+              <span class="stat-group-total" data-summary-value="{{ group_key }}">0</span>
+            </div>
+            {% for key, label in rows %}
+              {% if player.get(key) is not none %}
+                <div class="stat-row">
+                  <span class="stat-label">{{ label }}</span>
+                  <span class="stat-bonus-group">
+                    <span class="stat-bonus training" data-training-bonus="{{ key }}" title="훈련 상승"></span>
+                  </span>
+                  <span class="stat-value" data-stat-value data-stat-code="{{ key }}" data-base="{{ player[key]|default(0) }}">{{ player[key]|default('-') }}</span>
+                </div>
+              {% endif %}
+            {% endfor %}
+          </section>
+        {% endfor %}
+        {% if player.position == "GK" and (player.get("GKD") is not none or player.get("GKK") is not none or player.get("GKP") is not none or player.get("REF") is not none or player.get("HAN") is not none) %}
+          <section class="stat-group-card">
+            <div class="stat-group-head">
+              <span>GK</span>
+              <span class="stat-group-total">{{ player.ovr or '-' }}</span>
+            </div>
+            {% for key, label in [("GKD", "GK다이빙"), ("GKK", "킥"), ("GKP", "GK위치선정"), ("REF", "반사신경"), ("HAN", "핸들링")] %}
+              {% if player.get(key) is not none %}
+                <div class="stat-row">
+                  <span class="stat-label">{{ label }}</span>
+                  <span class="stat-bonus-group">
+                    <span class="stat-bonus training" data-training-bonus="{{ key }}" title="훈련 상승"></span>
+                  </span>
+                  <span class="stat-value" data-stat-value data-stat-code="{{ key }}" data-base="{{ player[key]|default(0) }}">{{ player[key]|default('-') }}</span>
+                </div>
+              {% endif %}
+            {% endfor %}
+          </section>
+        {% endif %}
+      </div>
+      {% endif %}
+
+      {# 가격 정보 섹션도 player_data.json에 해당 정보가 있어야 표시 가능 #}
+      {% if player.priceRows %}
+      <section class="price-section" aria-label="진화별 가격">
+        <div class="price-section-head">
+          <span>진화별 가격</span>
+          <span class="price-section-note">전체 표시</span>
+        </div>
+        <div class="price-grid">
+          {% for row in player.priceRows %}
+            <div class="price-chip" data-price-row="{{ row.level }}">
+              <span class="price-chip-level">{{ row.level }}진화</span>
+              <span class="price-chip-price">{{ "{:,} {}".format(row.price, price_unit) }}</span>
+            </div>
+          {% endfor %}
+        </div>
+      </section>
+      {% endif %}
+
+      {% if other_classes %}
+        <h2>다른 클래스</h2>
+        <div class="other-classes">
+          {% for oc in other_classes %}
+            <a class="other-class-card" href="{{ url_for('player_detail', cid=oc.cid) }}">
+              <div class="other-class-image" style="background-image: url('{{ oc.bimage if oc.bimage else url_for('static', filename='favicon.ico') }}');">
+                <img src="{{ oc.pimage if oc.pimage else url_for('static', filename='favicon.ico') }}" alt="{{ oc.playerKor }}">
+                <div class="other-rating">{{ oc.ovr or '-' }}</div>
+                <div class="other-position">{{ oc.position or '-' }}</div>
+                <div class="other-name">{{ oc.playerKor or '-' }}</div>
+              </div>
+            </a>
+          {% endfor %}
+        </div>
+      {% endif %}
+
+      {% if player.traits %}
+        <h2>특성</h2>
+        {# 특성 아이콘 맵 정의 #}
+        {% set trait_icon_map = {
+            "예리한 감아차기": "https://fco.vod.nexoncdn.co.kr/assets/traits/ICN_TRAIT_FINESSESHOT.png",
+            "중거리 슛 선호": "https://fco.vod.nexoncdn.co.kr/assets/traits/ICN_TRAIT_LONGSHOTTAKER.png",
+            "강력한 헤더": "https://fco.vod.nexoncdn.co.kr/assets/traits/ICN_TRAIT_POWERHEADER.png",
+            "패스 마스터": "https://fco.vod.nexoncdn.co.kr/assets/traits/ICN_TRAIT_SWERVE.png",
+            "아웃사이드 슈팅": "https://fco.vod.nexoncdn.co.kr/assets/traits/ICN_TRAIT_OUTSIDEFOOTSHOT.png",
+            "화려한 개인기": "https://fco.vod.nexoncdn.co.kr/assets/traits/ICN_TRAIT_FLAIR.png",
+            "슬라이딩 태클 선호": "https://fco.vod.nexoncdn.co.kr/assets/traits/ICN_TRAIT_DIVESINTOTACKLES.png",
+            "강력한 프리킥": "https://fco.vod.nexoncdn.co.kr/assets/traits/ICN_TRAIT_TAKESPOWERFULDRIVENFREEKICKS.png",
+            "두 번째 활력": "https://fco.vod.nexoncdn.co.kr/assets/traits/ICN_TRAIT_SECONDWIND.png",
+            "빠른 드리블": "https://fco.vod.nexoncdn.co.kr/assets/traits/ICN_TRAIT_SPEEDDRIDDLER.png",
+            "플레이메이커": "https://fco.vod.nexoncdn.co.kr/assets/traits/ICN_TRAIT_PLAYMAKER.png",
+            "긴 패스 선호": "https://fco.vod.nexoncdn.co.kr/assets/traits/ICN_TRAIT_LONGPASSER.png",
+            "강철몸": "https://fco.vod.nexoncdn.co.kr/assets/traits/ICN_TRAIT_SOLIDPLAYER.png",
+            "얼리 크로스 선호": "https://fco.vod.nexoncdn.co.kr/assets/traits/ICN_TRAIT_EARLYCROSSER.png",
+            "주발 선호": "https://fco.vod.nexoncdn.co.kr/assets/traits/ICN_TRAIT_AVOIDSUSINGWEAKERFOOT.png",
+            "장거리 스로인": "https://fco.vod.nexoncdn.co.kr/assets/traits/ICN_TRAIT_LONGTHROWIN.png",
+            "초장거리 스로인": "https://fco.vod.nexoncdn.co.kr/assets/traits/ICN_TRAIT_GIANTTHROWIN.png",
+            "화려한 걷어내기": "https://fco.vod.nexoncdn.co.kr/assets/traits/ICN_TRAIT_ACROBATICCLEARANCE.png",
+            "라인 브레이커": "https://fco.vod.nexoncdn.co.kr/assets/traits/ICN_TRAIT_TRIESTODEATOFFSIDETRAP.png",
+            "유리몸": "https://fco.vod.nexoncdn.co.kr/assets/traits/ICN_TRAIT_INJURYPRONE.png",
+            "리더십": "https://fco.vod.nexoncdn.co.kr/assets/traits/ICN_TRAIT_LEADERSHIP.png",
+            "GK 침착한 1:1 수비": "https://fco.vod.nexoncdn.co.kr/assets/traits/ICN_TRAIT_GKONEONONES.png",
+            "GK 공격 가담": "https://fco.vod.nexoncdn.co.kr/assets/traits/ICN_TRAIT_PUSHESUPFORCORNERS.png",
+            "GK 능숙한 펀칭": "https://fco.vod.nexoncdn.co.kr/assets/traits/ICN_TRAIT_PUNCHER.png",
+            "GK 스위퍼": "https://fco.vod.nexoncdn.co.kr/assets/traits/ICN_TRAIT_SWEEPERKEEPER.png",
+            "GK 멀리 던지기" : "https://fco.vod.nexoncdn.co.kr/assets/traits/ICN_TRAIT_GKLONGTHROWER.png"
+        } %} {# 필요한 다른 특성과 이미지 링크를 여기에 추가 #}
+        <ul>
+          {% for t_name in player.traits %}
+            <li>
+              {{ t_name }}
+              {% set icon_url = trait_icon_map.get(t_name) %}
+              {% if icon_url %}
+                <img src="{{ icon_url }}" alt="{{ t_name }} 아이콘" class="trait-icon">
+              {% endif %}
+            </li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+
+
+
+    {% endif %}
+  </div>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('from') === 'squad_maker') {
+            const backButtons = document.querySelectorAll('.back-button');
+            backButtons.forEach(button => {
+                button.classList.add('hidden-by-query');
+            });
+        }
+        {% if player %}
+        const enhanceTotals = {{ enhance_totals|tojson }};
+        const skillBoostValues = {{ skill_boost_values|tojson }};
+        const priceByEnhance = {{ player.priceByEnhance|tojson }};
+        const priceUnit = {{ price_unit|tojson }};
+        const statLabels = {{ stat_labels|tojson }};
+        const trainingLevelBonuses = {{ training_level_bonuses|tojson }};
+        const enhanceSelect = document.getElementById('detail-enhance');
+        const trainingSelect = document.getElementById('detail-training');
+        const priceReadout = document.getElementById('detail-selected-price');
+        const maxLevelStat = document.querySelector('[data-max-level-stat]');
+        const skillSummary = document.getElementById('detail-skill-summary');
+        const statValues = Array.from(document.querySelectorAll('[data-stat-value]'));
+        const trainingBonusEls = Array.from(document.querySelectorAll('[data-training-bonus]'));
+        const ovrValues = Array.from(document.querySelectorAll('[data-ovr-value]'));
+        const summaryValues = Array.from(document.querySelectorAll('[data-summary-value]'));
+        const summaryGauges = Array.from(document.querySelectorAll('[data-summary-gauge]'));
+        const priceRows = Array.from(document.querySelectorAll('[data-price-row]'));
+        const skillCards = Array.from(document.querySelectorAll('[data-skill-card]'));
+        const playstyleButtons = Array.from(document.querySelectorAll('[data-playstyle-button]'));
+        const playstylePopup = document.querySelector('[data-playstyle-popup]');
+        const playstylePopupName = document.querySelector('[data-playstyle-popup-name]');
+        const playstylePopupDescription = document.querySelector('[data-playstyle-popup-description]');
+        const playstylePopupImage = document.querySelector('[data-playstyle-popup-image]');
+        const playstylePopupClose = document.querySelector('[data-playstyle-popup-close]');
+        const skillStatButtons = Array.from(document.querySelectorAll('[data-skill-stat-button]'));
+        const skillStatPopup = document.querySelector('[data-skill-stat-popup]');
+        const skillStatPopupName = document.querySelector('[data-skill-stat-popup-name]');
+        const skillStatPopupImage = document.querySelector('[data-skill-stat-popup-image]');
+        const skillStatPopupList = document.querySelector('[data-skill-stat-popup-list]');
+        const skillStatPopupClose = document.querySelector('[data-skill-stat-popup-close]');
+        const mobilePlaystyleQuery = window.matchMedia('(max-width: 620px)');
+        const skillType = {{ (player.skillDisplay['type'] if player.skillDisplay else '')|tojson }};
+        const skillPointSteps = {
+            base: { normal: [4, 6], gk: [5, 7] },
+            ultimate: { normal: [6, 5, 5, 4], gk: [7, 6, 6, 5] },
+        };
+        const enhanceStatBonusPerOvr = 1;
+
+        function openPlaystylePopup(button) {
+            if (!playstylePopup || !mobilePlaystyleQuery.matches) return;
+            const name = button.dataset.name || "";
+            const description = button.dataset.description || "";
+            const image = button.dataset.image || "";
+            if (playstylePopupName) playstylePopupName.textContent = name;
+            if (playstylePopupDescription) playstylePopupDescription.textContent = description || "설명 정보가 없습니다.";
+            if (playstylePopupImage) {
+                playstylePopupImage.src = image;
+                playstylePopupImage.alt = name ? `${name} 아이콘` : "";
+            }
+            playstylePopup.classList.add("is-open");
+            playstylePopup.setAttribute("aria-hidden", "false");
+            playstylePopupClose?.focus();
+        }
+
+        function closePlaystylePopup() {
+            if (!playstylePopup) return;
+            playstylePopup.classList.remove("is-open");
+            playstylePopup.setAttribute("aria-hidden", "true");
+        }
+
+        function openSkillStatPopup(button) {
+            if (!skillStatPopup || !mobilePlaystyleQuery.matches) return;
+            const card = button.closest('[data-skill-card]');
+            if (!card) return;
+            const skillName = card.querySelector('.skill-name')?.textContent?.trim() || "상승 스탯";
+            const skillImage = card.querySelector('img')?.getAttribute('src') || "";
+            const chipTexts = Array.from(card.querySelectorAll('[data-skill-stat-chip]'))
+                .map(chip => chip.textContent.trim())
+                .filter(Boolean);
+            if (skillStatPopupName) skillStatPopupName.textContent = skillName;
+            if (skillStatPopupImage) {
+                skillStatPopupImage.src = skillImage;
+                skillStatPopupImage.alt = skillName ? `${skillName} 아이콘` : "";
+            }
+            if (skillStatPopupList) {
+                skillStatPopupList.innerHTML = chipTexts.length
+                    ? chipTexts.map(text => `<span class="skill-stat-popup-chip">${text}</span>`).join("")
+                    : `<span class="skill-stat-popup-chip">상승 스탯 없음</span>`;
+            }
+            skillStatPopup.classList.add("is-open");
+            skillStatPopup.setAttribute("aria-hidden", "false");
+            skillStatPopupClose?.focus();
+        }
+
+        function closeSkillStatPopup() {
+            if (!skillStatPopup) return;
+            skillStatPopup.classList.remove("is-open");
+            skillStatPopup.setAttribute("aria-hidden", "true");
+        }
+
+        playstyleButtons.forEach(button => {
+            button.addEventListener("click", () => openPlaystylePopup(button));
+        });
+        playstylePopupClose?.addEventListener("click", closePlaystylePopup);
+        playstylePopup?.addEventListener("click", event => {
+            if (event.target === playstylePopup) closePlaystylePopup();
+        });
+        document.addEventListener("keydown", event => {
+            if (event.key === "Escape") closePlaystylePopup();
+        });
+        skillStatButtons.forEach(button => {
+            button.addEventListener("click", () => openSkillStatPopup(button));
+        });
+        skillStatPopupClose?.addEventListener("click", closeSkillStatPopup);
+        skillStatPopup?.addEventListener("click", event => {
+            if (event.target === skillStatPopup) closeSkillStatPopup();
+        });
+        document.addEventListener("keydown", event => {
+            if (event.key === "Escape") closeSkillStatPopup();
+        });
+
+        function numberWithUnit(value) {
+            const numeric = Number(value);
+            if (!Number.isFinite(numeric) || numeric <= 0) return '-';
+            return `${numeric.toLocaleString()} ${priceUnit}`;
+        }
+
+        function maxLevelStatForOvr(ovr) {
+            const numeric = Number(ovr);
+            if (!Number.isFinite(numeric) || numeric < 118) return null;
+            return 210 + (2 * (numeric - 118));
+        }
+
+        function isGoalkeeper() {
+            return {{ (player.position == 'GK')|tojson }};
+        }
+
+        function skillKindForCard(card) {
+            return String(card.dataset.skillKind || "").toUpperCase();
+        }
+
+        function maxPointsForCard(card) {
+            if (skillType === 'boost') return Number(enhanceSelect?.value || 0);
+            const kind = skillKindForCard(card);
+            if (kind === "BASE") return 2;
+            if (kind === "ULTIMATE") return 4;
+            return (card.dataset.skillType === "boost") ? Number(enhanceSelect?.value || 0) : 2;
+        }
+
+        function baseSlotForUltimate(slot) {
+            const normalized = String(slot || "").toUpperCase();
+            if (normalized === "U1") return "B1";
+            if (normalized === "U2") return "B2";
+            if (normalized === "U3") return "B1";
+            if (normalized === "U4") return "B2";
+            return "";
+        }
+
+        function pointsForSlot(slot) {
+            const card = skillCards.find(item => String(item.dataset.skillSlot || "").toUpperCase() === String(slot || "").toUpperCase());
+            const select = card?.querySelector('[data-skill-level-select]');
+            return Number(select?.value || 0);
+        }
+
+        function isSkillUnlocked(card) {
+            if (skillType !== "skill") return true;
+            if (skillKindForCard(card) !== "ULTIMATE") return true;
+            const requiredBase = card.dataset.requiredBase || baseSlotForUltimate(card.dataset.skillSlot);
+            return !requiredBase || pointsForSlot(requiredBase) >= 2;
+        }
+
+        function pointValueForCard(card, points) {
+            const value = Math.max(0, Number(points || 0));
+            if (skillType === 'boost') {
+                return Number(skillBoostValues[value] || 0);
+            }
+            const kind = skillKindForCard(card) === "ULTIMATE" ? "ultimate" : "base";
+            const table = skillPointSteps[kind][isGoalkeeper() ? "gk" : "normal"];
+            return table.slice(0, value).reduce((sum, next) => sum + next, 0);
+        }
+
+        function selectedSkillPoints() {
+            return skillCards.reduce((sum, card) => {
+                const select = card.querySelector('[data-skill-level-select]');
+                return sum + Number(select?.value || 0);
+            }, 0);
+        }
+
+        function buildSkillSelectors() {
+            const enhance = Number(enhanceSelect?.value || 0);
+            skillCards.forEach(card => {
+                const select = card.querySelector('[data-skill-level-select]');
+                if (!select) return;
+                const current = Math.min(Number(select.value || 0), enhance);
+                const unlocked = isSkillUnlocked(card);
+                const max = unlocked ? (skillType === 'boost' ? enhance : Math.min(maxPointsForCard(card), enhance)) : 0;
+                select.innerHTML = Array.from({ length: max + 1 }, (_, level) => {
+                    const label = skillType === 'boost' ? `${level}레벨 (+${Number(skillBoostValues[level] || 0)})` : `${level}pt (+${pointValueForCard(card, level)})`;
+                    return `<option value="${level}">${label}</option>`;
+                }).join('');
+                select.value = String(Math.min(current, max));
+                select.disabled = enhance === 0 || !unlocked;
+                card.classList.toggle("is-locked", !unlocked);
+            });
+        }
+
+        function getSkillBonuses() {
+            const enhance = Number(enhanceSelect?.value || 0);
+            const bonuses = {};
+            let spent = 0;
+
+            skillCards.forEach(card => {
+                const select = card.querySelector('[data-skill-level-select]');
+                let points = Number(select?.value || 0);
+                if (skillType !== 'boost') {
+                    if (!isSkillUnlocked(card)) {
+                        points = 0;
+                        if (select) select.value = "0";
+                    }
+                    const remaining = Math.max(0, enhance - spent);
+                    const max = Math.min(maxPointsForCard(card), remaining);
+                    if (points > max) {
+                        points = max;
+                        if (select) select.value = String(points);
+                    }
+                    spent += points;
+                }
+                const amount = pointValueForCard(card, points);
+                const codes = (card.dataset.statCodes || '').split(',').map(code => code.trim()).filter(Boolean);
+                codes.forEach(code => {
+                    bonuses[code] = (bonuses[code] || 0) + amount;
+                });
+                card.querySelectorAll('[data-skill-stat-chip]').forEach(chip => {
+                    const code = chip.dataset.skillStatChip;
+                    chip.textContent = `${statLabels[code] || code} +${amount}`;
+                });
+            });
+
+            if (skillSummary) {
+                if (skillType === 'skill') {
+                    skillSummary.textContent = `스킬 포인트 ${spent} / ${enhance}`;
+                } else if (skillType === 'boost') {
+                    const level = Number(skillCards[0]?.querySelector('[data-skill-level-select]')?.value || 0);
+                    skillSummary.textContent = `스킬부스트 ${level}레벨`;
+                }
+            }
+            return bonuses;
+        }
+
+        function getTrainingBonuses() {
+            const level = Math.max(0, Math.min(Number(trainingSelect?.value || 0), {{ max_training_level }}));
+            return trainingLevelBonuses[level] || {};
+        }
+
+        const summaryWeights = {
+            pace: [["ACC", 50], ["SPD", 50]],
+            shooting: [["FIN", 35], ["LSA", 20], ["SHO", 20], ["POS", 15], ["VOL", 5], ["PEN", 5]],
+            passing: [["SPA", 30], ["LPA", 20], ["VIS", 25], ["CRO", 15], ["CUR", 5], ["FRK", 5]],
+            agility: [["DRI", 25], ["BAC", 25], ["AGI", 25], ["REA", 15], ["BAL", 10]],
+            defense: [["MRK", 25], ["STT", 20], ["SLT", 20], ["AWR", 20], ["HEA", 15]],
+            physical: [["STR", 45], ["AGG", 30], ["JMP", 25]],
+        };
+
+        function readStat(code) {
+            const el = statValues.find(item => item.dataset.statCode === code);
+            const value = Number(el?.textContent || 0);
+            return Number.isFinite(value) ? value : 0;
+        }
+
+        function calculateSummary(group) {
+            const weights = summaryWeights[group] || [];
+            const total = weights.reduce((sum, [code, weight]) => sum + (readStat(code) * weight), 0);
+            return Math.floor(total / 100);
+        }
+
+        function updateSummaryStats() {
+            const values = {};
+            Object.keys(summaryWeights).forEach(group => {
+                values[group] = calculateSummary(group);
+            });
+            const maxValue = Math.max(...Object.values(values), 0);
+            summaryValues.forEach(el => {
+                const group = el.dataset.summaryValue;
+                el.textContent = values[group] ?? 0;
+            });
+            summaryGauges.forEach(el => {
+                const group = el.dataset.summaryGauge;
+                const value = values[group] || 0;
+                const percent = maxValue > 0 ? Math.floor(value / maxValue * 100) : 0;
+                el.style.setProperty("--p", String(percent));
+            });
+        }
+
+        function updateDetailConfig() {
+            const enhance = Number(enhanceSelect?.value || 0);
+            const enhanceOvrBonus = Number(enhanceTotals[enhance] || 0);
+            const enhanceStatBonus = enhanceOvrBonus * enhanceStatBonusPerOvr;
+            buildSkillSelectors();
+            const skillBonuses = getSkillBonuses();
+            const trainingBonuses = getTrainingBonuses();
+
+            statValues.forEach(el => {
+                const base = Number(el.dataset.base || 0);
+                const code = el.dataset.statCode;
+                const skillBonus = Number(skillBonuses[code] || 0);
+                const trainingBonus = Number(trainingBonuses[code] || 0);
+                el.textContent = Number.isFinite(base) ? base + enhanceStatBonus + skillBonus + trainingBonus : '-';
+            });
+            trainingBonusEls.forEach(el => {
+                const code = el.dataset.trainingBonus;
+                const trainingBonus = Number(trainingBonuses[code] || 0);
+                if (trainingBonus > 0) {
+                    el.textContent = `+${trainingBonus}`;
+                    el.classList.add('is-active');
+                } else {
+                    el.textContent = "";
+                    el.classList.remove('is-active');
+                }
+            });
+            ovrValues.forEach(el => {
+                const base = Number(el.dataset.base || 0);
+                el.textContent = Number.isFinite(base) ? base + enhanceOvrBonus : '-';
+            });
+            if (maxLevelStat) {
+                const baseOvr = Number(ovrValues[0]?.dataset.base || 0);
+                const maxStat = maxLevelStatForOvr(baseOvr);
+                maxLevelStat.textContent = `만렙스탯: ${maxStat ?? '-'}`;
+                maxLevelStat.hidden = enhance !== 0 || maxStat === null;
+            }
+            updateSummaryStats();
+            if (priceReadout) {
+                const priceText = numberWithUnit(priceByEnhance[String(enhance)]);
+                priceReadout.textContent = priceText;
+            }
+            priceRows.forEach(row => {
+                row.classList.toggle('is-selected-price', Number(row.dataset.priceRow) === enhance);
+            });
+        }
+
+        enhanceSelect?.addEventListener('change', updateDetailConfig);
+        trainingSelect?.addEventListener('change', updateDetailConfig);
+        skillCards.forEach(card => {
+            card.querySelector('[data-skill-level-select]')?.addEventListener('change', updateDetailConfig);
+        });
+        updateDetailConfig();
+        {% endif %}
+    });
+  </script>
+  {% if player %}
+  <script>
+    (function () {
+      const dialog = document.querySelector('[data-stat-guide-dialog]');
+      const openButton = document.querySelector('[data-open-stat-guide]');
+      const closeButton = document.querySelector('[data-close-stat-guide]');
+
+      function closeStatGuide() {
+        if (typeof dialog?.close === 'function') dialog.close();
+        else dialog?.removeAttribute('open');
+      }
+
+      openButton?.addEventListener('click', function () {
+        if (typeof dialog?.showModal === 'function') dialog.showModal();
+        else dialog?.setAttribute('open', '');
+      });
+      closeButton?.addEventListener('click', closeStatGuide);
+      dialog?.addEventListener('click', function (event) {
+        if (event.target === dialog) closeStatGuide();
+      });
+    })();
+  </script>
+  <script>
+    (function () {
+      const dialog = document.querySelector('[data-stats-export-dialog]');
+      const openButton = document.querySelector('[data-open-stats-export]');
+      const closeButton = document.querySelector('[data-close-stats-export]');
+      const preview = document.querySelector('[data-stats-export-preview]');
+      const download = document.querySelector('[data-stats-export-download]');
+      const enhanceSelect = document.getElementById('detail-enhance');
+      const trainingSelect = document.getElementById('detail-training');
+      const skillLevelSelects = Array.from(document.querySelectorAll('[data-skill-level-select]'));
+      const currentLabel = document.querySelector('[data-current-enhance-label]');
+      const modeButtons = Array.from(document.querySelectorAll('[data-export-variant]'));
+      const statsCardUrl = {{ url_for('player_stats_card', cid=player.review_cid or player.cid)|tojson }};
+      let exportVariant = 'current';
+
+      function exportUrl(downloadImage) {
+        const url = new URL(statsCardUrl, window.location.origin);
+        const enhance = exportVariant === 'base' ? 0 : Number(enhanceSelect?.value || 0);
+        const training = exportVariant === 'base' ? 0 : Number(trainingSelect?.value || 0);
+        const skillLevels = exportVariant === 'base'
+          ? skillLevelSelects.map(() => 0)
+          : skillLevelSelects.map(select => Number(select.value || 0));
+        url.searchParams.set('variant', exportVariant);
+        url.searchParams.set('enhance', String(enhance));
+        url.searchParams.set('training', String(training));
+        url.searchParams.set('skill_levels', skillLevels.join(','));
+        if (downloadImage) url.searchParams.set('download', '1');
+        return url.toString();
+      }
+
+      function refreshExport() {
+        const enhance = Number(enhanceSelect?.value || 0);
+        const training = Number(trainingSelect?.value || 0);
+        if (currentLabel) currentLabel.textContent = `${enhance}진화 · 훈련 ${training}단계`;
+        if (preview) {
+          preview.style.opacity = '.45';
+          preview.src = exportUrl(false);
+        }
+        if (download) download.href = exportUrl(true);
+      }
+
+      preview?.addEventListener('load', function () {
+        preview.style.opacity = '1';
+      });
+      openButton?.addEventListener('click', function () {
+        refreshExport();
+        if (typeof dialog?.showModal === 'function') dialog.showModal();
+        else dialog?.setAttribute('open', '');
+      });
+      closeButton?.addEventListener('click', function () { dialog?.close(); });
+      dialog?.addEventListener('click', function (event) {
+        if (event.target === dialog) dialog.close();
+      });
+      modeButtons.forEach(function (button) {
+        button.addEventListener('click', function () {
+          exportVariant = button.dataset.exportVariant || 'current';
+          modeButtons.forEach(function (candidate) {
+            candidate.classList.toggle('is-selected', candidate === button);
+          });
+          refreshExport();
+        });
+      });
+      enhanceSelect?.addEventListener('change', function () {
+        if (exportVariant === 'current') refreshExport();
+      });
+
+      const tierSection = document.querySelector('[data-tier-section]');
+      if (!tierSection) return;
+      const tierButtons = Array.from(tierSection.querySelectorAll('[data-tier-vote]'));
+      const tierCancel = tierSection.querySelector('[data-tier-cancel]');
+      const tierHelp = tierSection.querySelector('[data-tier-help]');
+      const tierEndpoint = {{ url_for('player_tier_vote', cid=player.review_cid or player.cid)|tojson }};
+      const csrfToken = {{ csrf_token|tojson }};
+
+      function renderTierSummary(summary) {
+        const consensus = tierSection.querySelector('[data-tier-consensus]');
+        const total = tierSection.querySelector('[data-tier-total]');
+        if (consensus) consensus.textContent = summary.dominant_tier || '-';
+        if (total) total.textContent = `${summary.total || 0}표`;
+        (summary.tiers || []).forEach(function (tier) {
+          const percent = Number(summary.percentages?.[tier] || 0);
+          const percentElement = tierSection.querySelector(`[data-tier-percent="${tier}"]`);
+          const bar = tierSection.querySelector(`[data-tier-bar="${tier}"]`);
+          if (percentElement) percentElement.textContent = `${percent}%`;
+          if (bar) bar.style.setProperty('--tier-pct', String(percent));
+        });
+        tierButtons.forEach(function (button) {
+          const selected = button.dataset.tierVote === summary.my_vote;
+          button.classList.toggle('is-selected', selected);
+          button.setAttribute('aria-pressed', selected ? 'true' : 'false');
+        });
+        if (tierCancel) tierCancel.hidden = !summary.my_vote;
+      }
+
+      function setTierBusy(busy) {
+        tierButtons.forEach(function (button) { button.disabled = busy; });
+        if (tierCancel) tierCancel.disabled = busy;
+      }
+
+      tierButtons.forEach(function (button) {
+        button.addEventListener('click', async function () {
+          if (button.disabled) return;
+          setTierBusy(true);
+          if (tierHelp) tierHelp.textContent = '투표를 반영하고 있습니다...';
+          try {
+            const response = await fetch(tierEndpoint, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken,
+                'Accept': 'application/json'
+              },
+              body: JSON.stringify({ tier: button.dataset.tierVote })
+            });
+            const payload = await response.json();
+            if (!response.ok || !payload.ok) throw new Error(payload.error || '투표에 실패했습니다.');
+            renderTierSummary(payload.summary);
+            if (tierHelp) tierHelp.textContent = '';
+          } catch (error) {
+            if (tierHelp) tierHelp.textContent = error.message || '잠시 후 다시 시도해주세요.';
+          } finally {
+            setTierBusy(false);
+          }
+        });
+      });
+
+      tierCancel?.addEventListener('click', async function () {
+        if (tierCancel.disabled) return;
+        setTierBusy(true);
+        if (tierHelp) tierHelp.textContent = '투표를 취소하고 있습니다...';
+        try {
+          const response = await fetch(tierEndpoint, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRFToken': csrfToken,
+              'Accept': 'application/json'
+            },
+            body: JSON.stringify({ action: 'cancel' })
+          });
+          const payload = await response.json();
+          if (!response.ok || !payload.ok) throw new Error(payload.error || '투표 취소에 실패했습니다.');
+          renderTierSummary(payload.summary);
+          if (tierHelp) tierHelp.textContent = '';
+        } catch (error) {
+          if (tierHelp) tierHelp.textContent = error.message || '잠시 후 다시 시도해주세요.';
+        } finally {
+          setTierBusy(false);
+        }
+      });
+    })();
+  </script>
+  {% endif %}
+  <script>
+    (function () {
+      var toggle = document.querySelector('.detail-nav-toggle');
+      var nav = document.querySelector('.detail-mobile-nav');
+      var overlay = document.querySelector('.detail-nav-overlay');
+      var icon = toggle && toggle.querySelector('i');
+      if (!toggle || !nav) return;
+
+      function setMenuState(open) {
+        nav.classList.toggle('is-open', open);
+        if (overlay) {
+          overlay.classList.toggle('is-open', open);
+          overlay.setAttribute('aria-hidden', open ? 'false' : 'true');
+        }
+        document.body.classList.toggle('detail-menu-open', open);
+        toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+        toggle.setAttribute('aria-label', open ? '메뉴 닫기' : '메뉴 열기');
+        if (icon) {
+          icon.classList.toggle('bi-list', !open);
+          icon.classList.toggle('bi-x-lg', open);
+        }
+      }
+
+      function closeMenu() { setMenuState(false); }
+      toggle.addEventListener('click', function () {
+        setMenuState(!nav.classList.contains('is-open'));
+      });
+      if (overlay) overlay.addEventListener('click', closeMenu);
+      nav.querySelectorAll('a').forEach(function (link) { link.addEventListener('click', closeMenu); });
+      document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape' && nav.classList.contains('is-open')) {
+          closeMenu();
+          toggle.focus();
+        }
+      });
+      window.addEventListener('resize', function () {
+        if (window.innerWidth > 550 && nav.classList.contains('is-open')) closeMenu();
+      });
+    })();
+  </script>
+  {% include "_site_footer.html" %}
+</body>
+</html>

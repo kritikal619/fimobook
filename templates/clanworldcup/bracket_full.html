@@ -1,0 +1,804 @@
+{% extends "base.html" %}
+
+{% block title %}머니리그 브라켓 전체보기 | 피모북{% endblock %}
+
+{% block extra_head %}
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="피모북">
+<meta property="og:locale" content="ko_KR">
+<meta property="og:title" content="머니리그 브라켓 전체보기 | 피모북">
+<meta property="og:description" content="월드컵 스타일 토너먼트 브라켓으로 머니리그 전체 대진을 확인하세요.">
+<meta property="og:url" content="{{ url_for('clanworldcup_bracket_full', _external=True) }}">
+<meta property="og:image" content="{{ url_for('static', filename='images/clanworldcup-logo.jpg', _external=True) }}">
+<meta property="og:image:alt" content="머니리그 대회 로고">
+<style>
+  html, body { overflow-x: hidden; }
+  body{
+    background: linear-gradient(120deg, #eef4fb 0%, #fafdff 100%);
+    padding: 0;
+  }
+  .header{ display:none; }
+  .main-content{
+    max-width:none;
+    width:100%;
+    padding:0;
+    background:transparent;
+    box-shadow:none;
+    border-radius:0;
+  }
+  .wc-page, .wc-page * { box-sizing: border-box; }
+
+  .wc-page{
+    min-height:100vh;
+    width:100%;
+    display:flex;
+    justify-content:center;
+    padding: 4px 0 8px;
+    color:#1f2937;
+  }
+
+  .wc-container{
+    width:100%;
+    max-width:none;
+    padding: 0 12px;
+    display:flex;
+    flex-direction:column;
+    gap:16px;
+  }
+
+  .wc-header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+  }
+  .wc-title{
+    font-size:20px;
+    font-weight:800;
+    letter-spacing:-0.4px;
+  }
+  .wc-subtitle{
+    font-size:13px;
+    color:#64748b;
+  }
+  .wc-actions{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+  }
+  .wc-btn{
+    padding:8px 14px;
+    border-radius:999px;
+    border:1px solid #cbd5e1;
+    color:#1f2937;
+    text-decoration:none;
+    font-weight:700;
+    font-size:12px;
+    background:#f8fafc;
+    transition: background .2s, transform .2s;
+  }
+  .wc-btn:hover{
+    background:#eef2f7;
+    transform:translateY(-1px);
+  }
+  .wc-btn.primary{
+    background:linear-gradient(135deg, #60a5fa, #2563eb);
+    border-color:transparent;
+    color:#fff;
+  }
+
+  .wc-scroll{
+    width:100%;
+    overflow:hidden;
+    padding-bottom:6px;
+  }
+
+  .wc-fit{
+    width:100%;
+    display:flex;
+    justify-content:center;
+    overflow:hidden;
+    margin:0 auto;
+  }
+
+  .wc-scale{
+    transform-origin: top center;
+    position: relative;
+  }
+
+  .wc-bracket{
+    --slot: 118px;
+    --card-height: 92px;
+    min-width:1200px;
+    display:grid;
+    grid-template-columns: 240px 200px 180px 260px 180px 200px 240px;
+    gap:18px;
+    align-items:center;
+    position: relative;
+    z-index: 2;
+  }
+
+  .wc-column{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    min-height:calc(var(--slot) * 8);
+  }
+
+  .wc-col-title{
+    text-transform:uppercase;
+    font-size:12px;
+    letter-spacing:1px;
+    color:rgba(226,232,240,0.8);
+    text-align:center;
+  }
+
+  .wc-col-body{
+    display:grid;
+    grid-template-rows: repeat(8, var(--slot));
+    align-content:center;
+    gap:0;
+    min-height:calc(var(--slot) * 8);
+  }
+
+  .wc-match{
+    position:relative;
+    padding:12px 14px;
+    border-radius:14px;
+    background:#fff;
+    border:1px solid #dbe7f6;
+    box-shadow:0 12px 26px rgba(33,51,87,0.12);
+    cursor:pointer;
+    transition: transform .2s, box-shadow .2s, border-color .2s;
+    height:var(--card-height);
+    align-self:center;
+    --connector-gap: 18px;
+    width:100%;
+  }
+  .wc-match:hover{
+    transform:translateY(-2px);
+    border-color:#93c5fd;
+    box-shadow:0 14px 28px rgba(33,51,87,0.18);
+  }
+  .wc-match.left::after{
+    content:"";
+    position:absolute;
+    right:calc(var(--connector-gap) * -1);
+    top:50%;
+    width:var(--connector-gap);
+    height:2px;
+    background:#cbd5e1;
+  }
+  .wc-match.right::before{
+    content:"";
+    position:absolute;
+    left:calc(var(--connector-gap) * -1);
+    top:50%;
+    width:var(--connector-gap);
+    height:2px;
+    background:#cbd5e1;
+  }
+  .wc-match.phase-qf.left::before{
+    content:"";
+    position:absolute;
+    left:calc(var(--connector-gap) * -1);
+    top:50%;
+    width:var(--connector-gap);
+    height:calc(var(--slot) * 2);
+    transform:translateY(-50%);
+    background: linear-gradient(#cbd5e1,#cbd5e1) calc(100% - 2px) 0 / 2px 100% no-repeat;
+  }
+  .wc-match.phase-qf.right::after{
+    content:"";
+    position:absolute;
+    right:calc(var(--connector-gap) * -1);
+    top:50%;
+    width:var(--connector-gap);
+    height:calc(var(--slot) * 2);
+    transform:translateY(-50%);
+    background: linear-gradient(#cbd5e1,#cbd5e1) 0 0 / 2px 100% no-repeat;
+  }
+  .wc-match.phase-sf.left::before{
+    content:"";
+    position:absolute;
+    left:calc(var(--connector-gap) * -1);
+    top:50%;
+    width:var(--connector-gap);
+    height:calc(var(--slot) * 4);
+    transform:translateY(-50%);
+    background: linear-gradient(#cbd5e1,#cbd5e1) calc(100% - 2px) 0 / 2px 100% no-repeat;
+  }
+  .wc-match.phase-sf.right::after{
+    content:"";
+    position:absolute;
+    right:calc(var(--connector-gap) * -1);
+    top:50%;
+    width:var(--connector-gap);
+    height:calc(var(--slot) * 4);
+    transform:translateY(-50%);
+    background: linear-gradient(#cbd5e1,#cbd5e1) 0 0 / 2px 100% no-repeat;
+  }
+  .wc-match.phase-f::before,
+  .wc-match.phase-f::after{
+    content:"";
+    position:absolute;
+    top:50%;
+    width:var(--connector-gap);
+    height:2px;
+    background:#cbd5e1;
+  }
+  .wc-match.phase-f::before{ left:calc(var(--connector-gap) * -1); }
+  .wc-match.phase-f::after{ right:calc(var(--connector-gap) * -1); }
+
+  .wc-team{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:10px;
+    font-size:14px;
+  }
+  .wc-name{
+    font-weight:700;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+  .wc-score{
+    font-weight:800;
+    color:#1d4ed8;
+    flex:0 0 auto;
+  }
+  .wc-sub{
+    margin-top:8px;
+    font-size:12px;
+    color:#6b7280;
+    display:flex;
+    justify-content:space-between;
+  }
+
+  .wc-placeholder{
+    padding:12px 14px;
+    border-radius:14px;
+    border:1px dashed #cbd5e1;
+    color:#6b7280;
+    text-align:center;
+    background:#f8fafc;
+    height:var(--card-height);
+    align-self:center;
+    width:100%;
+  }
+
+  .wc-center{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:12px;
+  }
+  #wcFinal{
+    width:100%;
+  }
+  #wcFinal .wc-match{
+    width:220px;
+    margin:0 auto;
+  }
+
+  .wc-watermark{
+    position:absolute;
+    inset:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    pointer-events:none;
+    z-index:1;
+  }
+  .wc-watermark-inner{
+    display:flex;
+    align-items:center;
+    gap:28px;
+    opacity:0.26;
+    transform:none;
+    translate: 0 -270px;
+  }
+  .wc-watermark-item{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:10px 16px;
+    border-radius:999px;
+    background:rgba(255,255,255,0.6);
+    border:none;
+    box-shadow:none;
+  }
+  .wc-watermark-item.fimobook{
+    gap:6px;
+  }
+  .wc-watermark-img{
+    width:90px;
+    height:90px;
+    object-fit:cover;
+    border-radius:8px;
+  }
+  .wc-watermark-text{
+    font-size:30px;
+    font-weight:800;
+    letter-spacing:-0.3px;
+    color:#1f2937;
+    white-space:nowrap;
+  }
+  .wc-watermark-item.logo-only{
+    padding:18px 24px;
+  }
+  .wc-watermark-item.logo-only .wc-watermark-img{
+    width:150px;
+    height:auto;
+    object-fit:contain;
+    border-radius:6px;
+  }
+  .wc-watermark-img.fimobook{
+    width:92px;
+    height:92px;
+    clip-path: inset(10% 10% 10% 10%);
+  }
+  .wc-trophy{
+    width:66px;
+    height:66px;
+    border-radius:50%;
+    background:#fff;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    border:1px solid #dbe7f6;
+    box-shadow:0 16px 30px rgba(33,51,87,0.18);
+  }
+  .wc-champion{
+    padding:8px 12px;
+    border-radius:999px;
+    background:rgba(37,99,235,0.08);
+    border:1px solid rgba(37,99,235,0.25);
+    font-size:12px;
+    font-weight:700;
+  }
+
+  .wc-overlay{
+    position:fixed;
+    inset:0;
+    background:rgba(15,23,42,0.45);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    padding:16px;
+    z-index:50;
+  }
+  .wc-overlay.show{ display:flex; }
+  .wc-overlay-card{
+    background:#fff;
+    border-radius:18px;
+    padding:20px 22px;
+    text-align:center;
+    box-shadow:0 18px 40px rgba(15,23,42,0.25);
+    max-width:320px;
+    width:100%;
+  }
+  .wc-overlay-title{
+    font-size:16px;
+    font-weight:800;
+    margin-bottom:6px;
+  }
+  .wc-overlay-sub{
+    font-size:12px;
+    color:#64748b;
+    margin-bottom:14px;
+  }
+  .wc-overlay-actions{
+    display:flex;
+    gap:8px;
+    justify-content:center;
+  }
+
+  @media (max-width: 900px){
+    .wc-header{ flex-direction:column; align-items:flex-start; }
+    .wc-bracket{
+      --slot: 110px;
+      --card-height: 88px;
+      min-width:980px;
+      grid-template-columns: 220px 180px 160px 240px 160px 180px 220px;
+    }
+  }
+
+  @media (max-width: 640px){
+    .wc-bracket{
+      --slot: 104px;
+      --card-height: 84px;
+      min-width:860px;
+      gap:12px;
+      grid-template-columns: 200px 160px 140px 220px 140px 160px 200px;
+    }
+    .wc-scroll{
+      overflow-y:auto;
+    }
+  }
+
+  @media (max-width: 900px) and (orientation: landscape){
+    .wc-page{ padding: 6px 0 10px; }
+    .wc-header{ flex-direction:row; align-items:center; }
+    .wc-title{ font-size:16px; }
+    .wc-subtitle{ display:none; }
+    .wc-actions{ gap:6px; }
+    .wc-btn{ padding:6px 10px; font-size:11px; }
+    .wc-scroll{
+      max-height: calc(100vh - 64px);
+      overflow-y:auto;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="wc-page">
+  <div class="wc-container">
+    <div class="wc-header">
+      <div>
+        <div class="wc-title">머니리그 브라켓 전체보기</div>
+        <div class="wc-subtitle" id="wcSyncStatus">실시간 동기화 준비중</div>
+      </div>
+      <div class="wc-actions">
+        <button class="wc-btn" id="wcFullscreenBtn" type="button">전체화면</button>
+        <a class="wc-btn primary" href="{{ url_for('clanworldcup_bracket') }}">기본 브라켓</a>
+        <a class="wc-btn" href="{{ url_for('clanworldcup_home') }}">홈</a>
+      </div>
+    </div>
+
+    <div class="wc-scroll" id="wcScroll">
+      <div class="wc-fit" id="wcFit">
+        <div class="wc-scale" id="wcScale">
+          <div class="wc-watermark" aria-hidden="true">
+            <div class="wc-watermark-inner">
+              <div class="wc-watermark-item logo-only">
+                <img class="wc-watermark-img moneyleague" src="{{ url_for('static', filename='images/clanworldcup-logo.jpg') }}" alt="">
+              </div>
+              <div class="wc-watermark-item fimobook">
+                <img class="wc-watermark-img fimobook" src="{{ url_for('static', filename='icons/android-launchericon-192-192.png') }}" alt="">
+                <span class="wc-watermark-text">피모북</span>
+              </div>
+            </div>
+          </div>
+          <div class="wc-bracket" id="wcBracket">
+        <div class="wc-column" data-col="QF-left">
+          <div class="wc-col-title">8강</div>
+          <div class="wc-col-body"></div>
+        </div>
+        <div class="wc-column" data-col="SF-left">
+          <div class="wc-col-title">4강</div>
+          <div class="wc-col-body"></div>
+        </div>
+        <div class="wc-center">
+          <div class="wc-trophy" aria-hidden="true">
+            <svg width="34" height="34" viewBox="0 0 24 24" fill="none">
+              <path d="M7 4h10v2a4 4 0 0 1-4 4h-2a4 4 0 0 1-4-4V4Z" stroke="#f8fafc" stroke-width="1.5"/>
+              <path d="M9 14h6v2a3 3 0 0 1-3 3 3 3 0 0 1-3-3v-2Z" stroke="#f8fafc" stroke-width="1.5"/>
+              <path d="M5 6h2a3 3 0 0 1-3 3V7a1 1 0 0 1 1-1Z" stroke="#f8fafc" stroke-width="1.5"/>
+              <path d="M19 6h-2a3 3 0 0 0 3 3V7a1 1 0 0 0-1-1Z" stroke="#f8fafc" stroke-width="1.5"/>
+              <path d="M10 18h4v2H10v-2Z" stroke="#f8fafc" stroke-width="1.5"/>
+            </svg>
+          </div>
+          <div class="wc-col-title">결승</div>
+          <div id="wcFinal"></div>
+          <div class="wc-champion" id="wcChampion">우승: 미정</div>
+        </div>
+        <div class="wc-column" data-col="SF-right">
+          <div class="wc-col-title">4강</div>
+          <div class="wc-col-body"></div>
+        </div>
+        <div class="wc-column" data-col="QF-right">
+          <div class="wc-col-title">8강</div>
+          <div class="wc-col-body"></div>
+        </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="wc-overlay" id="wcOverlay" aria-hidden="true">
+  <div class="wc-overlay-card">
+    <div class="wc-overlay-title">전체화면으로 보기</div>
+    <div class="wc-overlay-sub">브라우저 전체화면은 버튼 클릭이 필요해요.</div>
+    <div class="wc-overlay-actions">
+      <button class="wc-btn primary" id="wcOverlayGo" type="button">전체화면 시작</button>
+      <button class="wc-btn" id="wcOverlaySkip" type="button">그냥 보기</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const bracketColumns = {
+    "QF-left": { ids: ["QF-1","QF-2"], rows: [2,4], side: "left" },
+    "SF-left": { ids: ["SF-1"], rows: [4], side: "left" },
+    "SF-right": { ids: ["SF-2"], rows: [4], side: "right" },
+    "QF-right": { ids: ["QF-3","QF-4"], rows: [2,4], side: "right" },
+  };
+  let clanMap = {};
+  let standingsMap = {};
+  const overlay = document.getElementById("wcOverlay");
+  const bracket = document.getElementById("wcBracket");
+  const scaleWrap = document.getElementById("wcScale");
+  const fitWrap = document.getElementById("wcFit");
+  const scrollWrap = document.getElementById("wcScroll");
+  const header = document.querySelector(".wc-header");
+  const fullscreenBtn = document.getElementById("wcFullscreenBtn");
+  const overlayGo = document.getElementById("wcOverlayGo");
+  const overlaySkip = document.getElementById("wcOverlaySkip");
+  let fullBracketPollTimer = null;
+  let fullBracketLoading = false;
+
+  function setSyncStatus(text) {
+    const el = document.getElementById("wcSyncStatus");
+    if (el) el.textContent = text;
+  }
+
+  async function loadFullBracket(opts = {}) {
+    if (fullBracketLoading) return;
+    fullBracketLoading = true;
+    const silent = !!opts.silent;
+    if (!silent) setSyncStatus("불러오는 중...");
+    try {
+      const [matchesRes, clansRes, standingsRes] = await Promise.all([
+        fetch("/clanworldcup/api/matches"),
+        fetch("/clanworldcup/api/clans"),
+        fetch("/clanworldcup/api/standings"),
+      ]);
+      const [matchesData, clansData, standingsData] = await Promise.all([
+        matchesRes.json(), clansRes.json(), standingsRes.json()
+      ]);
+      if (!matchesData.ok) {
+        renderError("불러오기 실패");
+        setSyncStatus("동기화 실패 · 재시도중");
+        return;
+      }
+      if (clansData.ok && Array.isArray(clansData.clans)) {
+        clanMap = {};
+        clansData.clans.forEach(c => { clanMap[c.clanId] = c.name || c.clanId; });
+      }
+      if (standingsData.ok && Array.isArray(standingsData.standings)) {
+        standingsMap = {};
+        standingsData.standings.forEach(s => { standingsMap[(s.groupId || "").toUpperCase()] = s; });
+      }
+
+      const matchMap = {};
+      matchesData.matches.forEach(m => {
+        if (m.phase && String(m.phase).toUpperCase() !== "GROUP") {
+          matchMap[m.id] = m;
+        }
+      });
+
+      Object.entries(bracketColumns).forEach(([key, cfg]) => {
+        const col = document.querySelector(`[data-col="${key}"] .wc-col-body`);
+        if (!col) return;
+        col.innerHTML = "";
+      cfg.ids.forEach((id, idx) => {
+        const m = matchMap[id];
+        if (m) {
+          const card = renderMatchCard(m, cfg.side);
+          card.style.gridRow = String(cfg.rows[idx] || "auto");
+          col.appendChild(card);
+        } else {
+          const ph = renderPlaceholder(id);
+          ph.style.gridRow = String(cfg.rows[idx] || "auto");
+          col.appendChild(ph);
+        }
+      });
+      });
+
+      const finalMatch = matchMap["F-1"];
+      const finalWrap = document.getElementById("wcFinal");
+      finalWrap.innerHTML = "";
+      if (finalMatch) {
+        finalWrap.appendChild(renderMatchCard(finalMatch, "left"));
+        updateChampion(finalMatch);
+      } else {
+        finalWrap.appendChild(renderPlaceholder("F-1"));
+        updateChampion(null);
+      }
+      setSyncStatus(`실시간 동기화 · ${new Date().toLocaleTimeString("ko-KR")}`);
+    } catch (err) {
+      if (!silent) {
+        renderError("불러오기 실패");
+      }
+      setSyncStatus("동기화 실패 · 재시도중");
+    } finally {
+      fullBracketLoading = false;
+    }
+  }
+
+  function renderError(msg) {
+    const bracket = document.getElementById("wcBracket");
+    if (bracket) {
+      bracket.innerHTML = `<div class="wc-placeholder">${msg}</div>`;
+    }
+  }
+
+  function renderMatchCard(m, side) {
+    const div = document.createElement("div");
+    const phase = String(m.phase || "").toLowerCase();
+    div.className = `wc-match ${side} ${phase ? `phase-${phase}` : ""}`.trim();
+
+    const homeScore = m.homeWins ?? "-";
+    const awayScore = m.awayWins ?? "-";
+    const homeName = resolveName(m.homeClanId);
+    const awayName = resolveName(m.awayClanId);
+
+    div.innerHTML = `
+      <div class="wc-team">
+        <span class="wc-name" title="${escapeHtml(homeName)}">${escapeHtml(homeName)}</span>
+        <span class="wc-score">${homeScore}</span>
+      </div>
+      <div class="wc-team" style="margin-top:6px;">
+        <span class="wc-name" title="${escapeHtml(awayName)}">${escapeHtml(awayName)}</span>
+        <span class="wc-score">${awayScore}</span>
+      </div>
+      <div class="wc-sub">
+        <span>${escapeHtml(m.id || "-")}</span>
+        <span>${escapeHtml(statusLabel(m.status) ? `${statusLabel(m.status)} · ${modeLabel(m.bestOfMode)}` : `${modeLabel(m.bestOfMode)}`)}</span>
+      </div>
+    `;
+
+    div.addEventListener("click", () => {
+      if (m.id) window.location.href = `/clanworldcup/match/${encodeURIComponent(m.id)}`;
+    });
+    return div;
+  }
+
+  function renderPlaceholder(id) {
+    const div = document.createElement("div");
+    div.className = "wc-placeholder";
+    div.textContent = `${id} 대진 미정`;
+    return div;
+  }
+
+  function resolveName(clanId) {
+    if (!clanId) return "미정";
+    if (clanMap[clanId]) return clanMap[clanId];
+
+    const seedMatch = String(clanId).match(/^([A-D])([12])$/);
+    if (seedMatch) {
+      const gid = seedMatch[1];
+      const rank = Number(seedMatch[2]);
+      const rows = getGroupRows(gid);
+      const seededClanId = rows[rank - 1]?.clanId;
+      if (seededClanId && clanMap[seededClanId]) return clanMap[seededClanId];
+      if (seededClanId) return seededClanId;
+      return `미정 (${gid}조 ${rank}위)`;
+    }
+
+    if (String(clanId).startsWith("WIN-")) {
+      return "미정 (" + clanId.replace("WIN-", "") + ")";
+    }
+
+    return clanId;
+  }
+
+  function getGroupRows(groupId) {
+    const g = standingsMap[groupId];
+    if (!g || !Array.isArray(g.rows)) return [];
+    const rows = g.rows.slice();
+    rows.sort((a,b) => {
+      const aPts = (a.PTS ?? ((a.W || 0) * 3));
+      const bPts = (b.PTS ?? ((b.W || 0) * 3));
+      if (bPts !== aPts) return bPts - aPts;
+      if ((b.GD||0)!==(a.GD||0)) return (b.GD||0)-(a.GD||0);
+      return (b.GW||0)-(a.GW||0);
+    });
+    return rows;
+  }
+
+  function updateChampion(finalMatch) {
+    const label = document.getElementById("wcChampion");
+    if (!label) return;
+    if (!finalMatch || !finalMatch.winnerClanId) {
+      label.textContent = "우승: 미정";
+      return;
+    }
+    const name = resolveName(finalMatch.winnerClanId);
+    label.textContent = `우승: ${name}`;
+  }
+
+  function escapeHtml(str) {
+    return String(str)
+      .replaceAll("&","&amp;")
+      .replaceAll("<","&lt;")
+      .replaceAll(">","&gt;")
+      .replaceAll('"',"&quot;")
+      .replaceAll("'","&#039;");
+  }
+
+  function statusLabel(status) {
+    const key = String(status || "").toUpperCase();
+    const map = {
+      "FINAL": "종료",
+      "NOT_PLAYED": "미진행",
+    };
+    if (key === "PENDING" || key === "IN_PROGRESS") return "";
+    return map[key] || status || "-";
+  }
+
+  function modeLabel(mode) {
+    const key = String(mode || "").toUpperCase();
+    const map = {
+      "ALL5": "5판제",
+      "FIRST3": "3선승",
+    };
+    return map[key] || mode || "-";
+  }
+
+  function requestFullscreen() {
+    const target = document.documentElement;
+    if (!document.fullscreenEnabled || !target.requestFullscreen) {
+      return false;
+    }
+    target.requestFullscreen().catch(() => {});
+    return true;
+  }
+
+  function showOverlay() {
+    if (sessionStorage.getItem("cwFullscreenDismissed")) return;
+    if (!document.fullscreenEnabled) return;
+    overlay.classList.add("show");
+    overlay.setAttribute("aria-hidden", "false");
+  }
+
+  function hideOverlay() {
+    overlay.classList.remove("show");
+    overlay.setAttribute("aria-hidden", "true");
+    sessionStorage.setItem("cwFullscreenDismissed", "1");
+  }
+
+  fullscreenBtn.addEventListener("click", () => {
+    requestFullscreen();
+  });
+  overlayGo.addEventListener("click", () => {
+    if (!requestFullscreen()) return;
+    hideOverlay();
+  });
+  overlaySkip.addEventListener("click", hideOverlay);
+  document.addEventListener("fullscreenchange", () => {
+    document.body.classList.toggle("cw-fullscreen", !!document.fullscreenElement);
+    fitToViewport();
+  });
+
+  function fitToViewport() {
+    if (!bracket || !fitWrap || !scaleWrap) return;
+    scaleWrap.style.transform = "scale(1)";
+    const baseWidth = bracket.scrollWidth;
+    const baseHeight = bracket.scrollHeight;
+    const headerHeight = header ? header.offsetHeight : 0;
+    const availableWidth = scrollWrap ? scrollWrap.clientWidth : window.innerWidth;
+    const availableHeight = window.innerHeight - headerHeight - 40;
+    const isLandscapeMobile = window.innerWidth <= 900 && window.innerWidth > window.innerHeight;
+    const isSmallMobile = window.innerWidth <= 640;
+    const widthScale = availableWidth / baseWidth;
+    const heightScale = availableHeight / baseHeight;
+    const maxScale = isSmallMobile ? 1.2 : 1.55;
+    let scale = isLandscapeMobile ? Math.min(maxScale, widthScale) : Math.min(maxScale, widthScale, heightScale);
+    if (isSmallMobile) {
+      scale = Math.min(maxScale, Math.max(0.95, widthScale));
+    }
+    scaleWrap.style.transform = `scale(${scale})`;
+    fitWrap.style.width = `${Math.ceil(baseWidth * scale)}px`;
+    fitWrap.style.height = `${Math.ceil(baseHeight * scale)}px`;
+  }
+
+  loadFullBracket();
+  fullBracketPollTimer = window.setInterval(() => loadFullBracket({ silent: true }), 3000);
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) loadFullBracket({ silent: true });
+  });
+  window.addEventListener("beforeunload", () => {
+    if (fullBracketPollTimer) clearInterval(fullBracketPollTimer);
+  });
+  showOverlay();
+  window.addEventListener("resize", fitToViewport);
+  window.addEventListener("orientationchange", fitToViewport);
+  setTimeout(fitToViewport, 0);
+</script>
+{% endblock %}

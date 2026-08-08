@@ -1,0 +1,40 @@
+<article class="fimo-review-card">
+  <a class="fimo-review-card-main" href="{{ url_for('player_review_detail', cid=review_player_cid, review_id=review.id) }}">
+    <div class="fimo-review-card-head">
+      <div class="fimo-review-card-title-wrap">
+        <div class="fimo-review-card-title">{{ review.title }}</div>
+        <div class="fimo-review-card-author">
+          <strong>{{ review.username or '익명' }}</strong>
+          <span> · {{ review.created_at_display }}</span>
+        </div>
+      </div>
+      {% if review.average_rating %}<span class="fimo-review-card-score">★ {{ review.average_rating }}</span>{% endif %}
+    </div>
+    <p class="fimo-review-card-copy">{{ review.excerpt or review.review_text or '작성자가 남긴 상세 리뷰를 확인해보세요.' }}</p>
+    <div class="fimo-review-card-chips">
+      <span class="fimo-review-card-chip">{{ review.formation or '포메이션 미입력' }}</span>
+      <span class="fimo-review-card-chip">{{ review.used_position or '포지션 미입력' }}</span>
+      <span class="fimo-review-card-chip">{{ review.enhance_level if review.enhance_level is not none else '-' }}진</span>
+      {% if review.tier %}<span class="fimo-review-card-chip tier">{{ review.tier }}</span>{% endif %}
+    </div>
+  </a>
+  <div class="fimo-review-card-footer">
+    <a class="fimo-review-comment-link" href="{{ url_for('player_review_detail', cid=review_player_cid, review_id=review.id, _anchor='review-comments') }}">
+      <i class="bi bi-chat-dots" aria-hidden="true"></i>
+      댓글 {{ review.comment_count or 0 }}개 · 댓글 달기
+    </a>
+    <a class="fimo-review-read-link" href="{{ url_for('player_review_detail', cid=review_player_cid, review_id=review.id) }}">
+      리뷰 보기 <i class="bi bi-chevron-right" aria-hidden="true"></i>
+    </a>
+  </div>
+  {% if show_owner_actions|default(false) and current_user.is_authenticated and (review.user_id|string) == (current_user.id|string) %}
+    <div class="fimo-review-owner-actions">
+      <a class="fimo-review-owner-button" href="{{ url_for('edit_player_firebase_review', cid=review_player_cid) }}">수정</a>
+      <form method="post" action="{{ url_for('delete_player_firebase_review', cid=review_player_cid) }}" onsubmit="return confirm('이 리뷰를 삭제할까요?');">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <input type="hidden" name="next" value="{{ url_for('player_reviews', cid=review_player_cid) }}">
+        <button class="fimo-review-owner-button danger" type="submit">삭제</button>
+      </form>
+    </div>
+  {% endif %}
+</article>

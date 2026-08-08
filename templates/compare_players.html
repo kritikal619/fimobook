@@ -1,0 +1,1415 @@
+{% extends "base.html" %}
+
+{% block body_class %}compare-page-body{% endblock %}
+
+{% block title %}선수 비교 | 피모북{% endblock %}
+
+{% block extra_head %}
+<meta name="description" content="FC 모바일 선수의 진화 단계, 스킬, 스킬부스트를 반영해 능력치를 비교합니다.">
+<style>
+  .main-content{
+    max-width:1200px;
+    background:transparent;
+    border:none;
+    box-shadow:none;
+    padding:0;
+    align-items:stretch;
+  }
+  .compare-page-body .header{
+    max-width:1200px;
+    margin-bottom:12px;
+  }
+  .compare-page{
+    width:100%;
+    display:flex;
+    flex-direction:column;
+    gap:9px;
+  }
+  .compare-hero{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:12px;
+    padding:12px 15px;
+    border:1px solid #dbe3ec;
+    border-radius:14px;
+    background:#ffffff;
+    box-shadow:0 4px 14px rgba(15,23,42,0.04);
+  }
+  .compare-hero h1{
+    margin:0;
+    color:#172033;
+    font-size:23px;
+    font-weight:900;
+    letter-spacing:-.5px;
+  }
+  .compare-title-wrap{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    min-width:0;
+  }
+  .compare-hero-actions{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+  }
+  .compare-tool{
+    min-height:36px;
+    padding:0 11px;
+    border:1px solid #dbe3ec;
+    border-radius:9px;
+    background:#f8fafc;
+    color:#334155;
+    font:inherit;
+    font-size:12px;
+    font-weight:900;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:6px;
+    cursor:pointer;
+  }
+  .compare-tool:hover{ border-color:#6ee7b7; color:#047857; }
+  .compare-builder{
+    display:grid;
+    grid-template-columns:minmax(0, 1fr) 44px minmax(0, 1fr);
+    gap:6px;
+    align-items:start;
+  }
+  .player-panel,
+  .stats-panel{
+    border:1px solid #dbe3ec;
+    border-radius:14px;
+    background:#ffffff;
+    box-shadow:0 4px 14px rgba(15,23,42,0.04);
+  }
+  .player-panel{
+    padding:12px;
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    min-width:0;
+  }
+  .compare-rail{
+    align-self:stretch;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:6px;
+  }
+  .rail-line{
+    width:1px;
+    flex:1 1 auto;
+    min-height:16px;
+    background:linear-gradient(180deg, transparent, #cbd5e1, transparent);
+  }
+  .rail-button{
+    width:38px;
+    height:38px;
+    border:1px solid #a7f3d0;
+    border-radius:10px;
+    background:#ecfdf5;
+    color:#047857;
+    font-size:17px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    box-shadow:none;
+  }
+  .rail-button:disabled{ opacity:.38; cursor:not-allowed; box-shadow:none; }
+  .slot-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+  }
+  .slot-title{
+    display:flex;
+    align-items:center;
+    gap:7px;
+    font-size:13px;
+    font-weight:900;
+    color:#172033;
+  }
+  .slot-title::before{
+    content:"";
+    width:6px;
+    height:6px;
+    border-radius:999px;
+    background:#10b981;
+  }
+  .search-row{
+    display:grid;
+    grid-template-columns:minmax(0, 1fr) 40px;
+    gap:6px;
+  }
+  .search-row input,
+  .control-select{
+    width:100%;
+    height:40px;
+    border:1.5px solid #dbe3ec;
+    border-radius:10px;
+    background:#f8fafc;
+    color:#172033;
+    font-family:inherit;
+    font-weight:800;
+    box-sizing:border-box;
+    outline:none;
+  }
+  .search-row input{
+    padding:0 11px;
+    font-size:14px;
+  }
+  .search-row input:focus,
+  .control-select:focus{
+    border-color:#10b981;
+    background:#ffffff;
+    box-shadow:0 0 0 3px rgba(16,185,129,0.13);
+  }
+  .icon-btn{
+    width:40px;
+    height:40px;
+    border:0;
+    border-radius:10px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    background:#10b981;
+    color:#ffffff;
+    cursor:pointer;
+    font-size:17px;
+    box-shadow:none;
+  }
+  .result-list{
+    display:none;
+    flex-direction:column;
+    gap:6px;
+    max-height:270px;
+    overflow:auto;
+    padding:4px;
+    border:1px solid #e2e8f0;
+    border-radius:11px;
+    background:#f8fafc;
+  }
+  .result-list.open{ display:flex; }
+  .result-item{
+    width:100%;
+    border:1px solid #e2e8f0;
+    border-radius:9px;
+    background:#ffffff;
+    padding:7px;
+    display:grid;
+    grid-template-columns:46px minmax(0, 1fr) auto;
+    gap:8px;
+    align-items:center;
+    text-align:left;
+    cursor:pointer;
+    font-family:inherit;
+  }
+  .result-item:hover{
+    border-color:#10b981;
+    background:#f0fdf4;
+  }
+  .mini-thumb{
+    position:relative;
+    width:46px;
+    height:59px;
+    border-radius:8px;
+    overflow:hidden;
+    background-size:cover;
+    background-position:center;
+    background-color:#e2e8f0;
+    flex-shrink:0;
+  }
+  .mini-thumb img{
+    position:absolute;
+    inset:0;
+    width:100%;
+    height:100%;
+    object-fit:contain;
+    object-position:center top;
+    filter:drop-shadow(0 4px 6px rgba(0,0,0,0.22));
+    z-index:1;
+  }
+  .result-name{
+    color:#172033;
+    font-size:14px;
+    font-weight:900;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+  .result-sub{
+    color:#64748b;
+    font-size:12px;
+    font-weight:800;
+    margin-top:2px;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+  .result-ovr{
+    color:#059669;
+    font-family:'FCOVR', 'IBM Plex Sans KR', sans-serif;
+    font-size:21px;
+    min-width:34px;
+    text-align:right;
+  }
+  .selected-card{
+    min-height:142px;
+    border:1px solid #e2e8f0;
+    border-radius:12px;
+    background:#f8fafc;
+    padding:9px;
+    display:grid;
+    grid-template-columns:94px minmax(0, 1fr);
+    gap:10px;
+    align-items:center;
+  }
+  .empty-card{
+    grid-column:1 / -1;
+    color:#94a3b8;
+    font-weight:900;
+    text-align:center;
+    padding:34px 8px;
+  }
+  .card-art{
+    position:relative;
+    width:94px;
+    aspect-ratio:110 / 145;
+    border-radius:10px;
+    overflow:hidden;
+    background:#dbeafe;
+    box-shadow:0 6px 14px rgba(15,23,42,0.10);
+  }
+  .card-bg,
+  .card-face{
+    position:absolute;
+    inset:0;
+    background-size:cover;
+    background-position:center;
+  }
+  .card-face{
+    background-size:contain;
+    background-position:center top;
+    background-repeat:no-repeat;
+  }
+  .card-ovr,
+  .card-pos{
+    position:absolute;
+    left:10px;
+    color:#ffffff;
+    text-shadow:0 2px 4px rgba(0,0,0,0.75);
+  }
+  .card-ovr{
+    top:14%;
+    left:14%;
+    font-family:'FCOVR', 'IBM Plex Sans KR', sans-serif;
+    font-size:19px;
+    line-height:1;
+  }
+  .card-pos{
+    top:calc(14% + 22px);
+    left:14%;
+    width:34px;
+    transform:translateX(-2px);
+    text-align:center;
+    font-family:'FCOVR', 'IBM Plex Sans KR', sans-serif;
+    font-size:11px;
+    font-weight:900;
+    line-height:1;
+  }
+  .player-summary{
+    min-width:0;
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+  }
+  .player-name{
+    color:#172033;
+    font-size:19px;
+    font-weight:900;
+    line-height:1.15;
+    overflow-wrap:anywhere;
+  }
+  .player-class{
+    color:#64748b;
+    font-size:12px;
+    font-weight:800;
+  }
+  .summary-grid{
+    display:grid;
+    grid-template-columns:repeat(2, minmax(0, 1fr));
+    gap:5px;
+  }
+  .summary-chip{
+    border:1px solid #dbe3ec;
+    border-radius:8px;
+    padding:5px 7px;
+    background:#ffffff;
+    color:#334155;
+    font-size:11px;
+    font-weight:900;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+  .selected-actions{
+    display:flex;
+    flex-wrap:wrap;
+    gap:5px;
+  }
+  .selected-action{
+    min-height:28px;
+    padding:0 8px;
+    border:1px solid #dbe3ec;
+    border-radius:8px;
+    background:#ffffff;
+    color:#475569;
+    font:inherit;
+    font-size:11px;
+    font-weight:900;
+    text-decoration:none;
+    display:inline-flex;
+    align-items:center;
+    gap:5px;
+    cursor:pointer;
+  }
+  .selected-action:hover{ color:#6ee7b7; border-color:#047857; }
+  .controls{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:7px;
+  }
+  .control label{
+    display:block;
+    margin:0 0 4px;
+    color:#475569;
+    font-size:11px;
+    font-weight:900;
+  }
+  .control-select{
+    padding:0 9px;
+    font-size:13px;
+  }
+  .boost-targets{
+    display:flex;
+    flex-wrap:wrap;
+    gap:5px;
+    min-height:0;
+  }
+  .boost-targets:empty{ display:none; }
+  .boost-targets.has-skill-config{
+    display:grid;
+    grid-template-columns:1fr;
+    gap:6px;
+  }
+  .boost-target{
+    border:1px solid #dbe3ec;
+    border-radius:999px;
+    padding:4px 8px;
+    background:#f8fafc;
+    color:#475569;
+    font-size:11px;
+    font-weight:900;
+  }
+  .boost-control.is-hidden{
+    display:none;
+  }
+  .compare-skill-card{
+    display:grid;
+    grid-template-columns:38px minmax(0, 1fr) 96px;
+    gap:7px;
+    align-items:center;
+    padding:6px;
+    border:1px solid #e2e8f0;
+    border-radius:9px;
+    background:#f8fafc;
+  }
+  .compare-skill-card.is-locked{
+    opacity:0.55;
+  }
+  .compare-skill-card img{
+    width:38px;
+    height:38px;
+    border-radius:8px;
+    object-fit:contain;
+    background:#0f172a;
+  }
+  .compare-skill-card.no-skill-image{
+    grid-template-columns:minmax(0, 1fr) 96px;
+  }
+  .compare-skill-card.is-playstyle{
+    grid-template-columns:38px minmax(0, 1fr);
+  }
+  .compare-skill-card.is-playstyle.no-skill-image{
+    grid-template-columns:minmax(0, 1fr);
+  }
+  .compare-skill-name{
+    color:#172033;
+    font-size:12px;
+    font-weight:900;
+    line-height:1.25;
+    overflow-wrap:anywhere;
+  }
+  .compare-skill-meta{
+    margin-top:2px;
+    color:#64748b;
+    font-size:11px;
+    font-weight:800;
+  }
+  .compare-skill-select{
+    height:32px;
+    min-width:0;
+    border:1px solid #dbe3ec;
+    border-radius:8px;
+    background:#ffffff;
+    color:#172033;
+    font-family:inherit;
+    font-size:12px;
+    font-weight:900;
+    padding:0 7px;
+  }
+  .skill-summary{
+    color:#64748b;
+    font-size:12px;
+    font-weight:900;
+  }
+  .stats-panel{
+    overflow:hidden;
+  }
+  .stats-toolbar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:8px;
+    padding:10px 14px;
+    border-bottom:1px solid #e2e8f0;
+  }
+  .stats-toolbar-copy{ min-width:0; }
+  .stats-toolbar-actions{ display:flex; gap:7px; }
+  .stats-title{
+    color:#172033;
+    font-size:15px;
+    font-weight:900;
+  }
+  .compare-table{
+    width:100%;
+    display:flex;
+    flex-direction:column;
+  }
+  .compare-names{
+    position:sticky;
+    top:0;
+    z-index:4;
+    display:grid;
+    grid-template-columns:minmax(0,1fr) 130px minmax(0,1fr);
+    gap:8px;
+    align-items:center;
+    padding:9px 14px;
+    border-bottom:1px solid #dbe3ec;
+    background:rgba(255,255,255,.96);
+    backdrop-filter:blur(10px);
+  }
+  .compare-name{
+    min-width:0;
+    color:#172033;
+    font-size:14px;
+    font-weight:950;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+  .compare-name.left{text-align:right;}
+  .compare-name.right{text-align:left;}
+  .compare-versus{
+    color:#94a3b8;
+    text-align:center;
+    font-size:11px;
+    font-weight:950;
+    letter-spacing:.12em;
+  }
+  .group-title{
+    background:#f1f5f9;
+    color:#334155;
+    padding:7px 14px;
+    font-size:12px;
+    font-weight:900;
+    border-top:1px solid #e2e8f0;
+    border-bottom:1px solid #e2e8f0;
+  }
+  .stat-row{
+    display:grid;
+    grid-template-columns:minmax(0, 1fr) 130px minmax(0, 1fr);
+    min-height:36px;
+    align-items:center;
+    border-bottom:1px solid #eef2f7;
+    padding:0 14px;
+    gap:8px;
+  }
+  .stat-label{
+    color:#64748b;
+    text-align:center;
+    font-size:12px;
+    font-weight:900;
+  }
+  .stat-value{
+    display:flex;
+    align-items:center;
+    gap:5px;
+    color:#172033;
+    font-size:15px;
+    font-weight:900;
+    min-width:0;
+  }
+  .stat-value.left{
+    justify-content:flex-end;
+    text-align:right;
+  }
+  .stat-value.right{
+    justify-content:flex-start;
+    text-align:left;
+  }
+  .stat-main.higher{
+    color:#059669;
+  }
+  .diff{
+    color:#ef4444;
+    font-size:12px;
+    font-weight:900;
+    white-space:nowrap;
+  }
+  .foot-pair,
+  .stamina-stars{
+    display:inline-flex;
+    align-items:center;
+    gap:2px;
+    white-space:nowrap;
+  }
+  .foot-pair .main-foot{
+    color:#059669;
+  }
+  .stamina-stars{
+    letter-spacing:0;
+  }
+  .stamina-stars .star{
+    color:#f59e0b;
+    font-size:14px;
+    line-height:1;
+  }
+  .stamina-stars .stamina-text{
+    color:#64748b;
+    font-size:11px;
+    font-weight:900;
+    margin-left:4px;
+  }
+  .muted-stat{
+    color:#94a3b8;
+  }
+  .empty-compare{
+    padding:30px 16px;
+    color:#94a3b8;
+    font-weight:900;
+    text-align:center;
+  }
+  @media (max-width: 900px){
+    .compare-builder{
+      grid-template-columns:1fr;
+    }
+    .compare-rail{
+      min-height:38px;
+      flex-direction:row;
+    }
+    .rail-line{ width:auto; height:1px; min-height:0; min-width:24px; }
+  }
+  @media (max-width: 620px){
+    .compare-page{ gap:7px; }
+    .compare-hero,
+    .player-panel{
+      border-radius:12px;
+      padding:10px;
+    }
+    .compare-hero h1{ font-size:20px; }
+    .compare-tool{ min-height:34px; }
+    .selected-card{
+      grid-template-columns:78px minmax(0, 1fr);
+      min-height:124px;
+      padding:8px;
+      gap:8px;
+    }
+    .card-art{ width:78px; }
+    .card-ovr{ font-size:15px; top:14%; left:14%; }
+    .card-pos{ top:calc(14% + 18px); left:14%; width:28px; font-size:9px; }
+    .player-name{ font-size:17px; }
+    .summary-chip{ font-size:10px; padding:4px 6px; }
+    .stats-toolbar{
+      padding:9px 10px;
+    }
+    .compare-names{
+      grid-template-columns:minmax(0,1fr) 76px minmax(0,1fr);
+      gap:4px;
+      padding:8px 7px;
+    }
+    .compare-name{ font-size:11px; }
+    .stat-row{
+      grid-template-columns:minmax(0, 1fr) 76px minmax(0, 1fr);
+      gap:4px;
+      padding:0 7px;
+    }
+    .stat-label{ font-size:11px; }
+    .stat-value{ gap:3px; font-size:13px; }
+    .diff{ display:inline; font-size:10px; }
+    .compare-skill-card{
+      grid-template-columns:34px minmax(0, 1fr) 78px;
+      gap:5px;
+      padding:5px;
+    }
+    .compare-skill-card img{ width:34px; height:34px; }
+    .compare-skill-card.no-skill-image{
+      grid-template-columns:minmax(0, 1fr) 78px;
+    }
+    .compare-skill-card.is-playstyle{
+      grid-template-columns:34px minmax(0, 1fr);
+    }
+    .compare-skill-card.is-playstyle.no-skill-image{
+      grid-template-columns:minmax(0, 1fr);
+    }
+    .compare-skill-select{ font-size:11px; padding:0 5px; }
+  }
+  @media (max-width: 390px){
+    .summary-grid{ grid-template-columns:1fr; }
+    .controls{ grid-template-columns:1fr; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="compare-page">
+  <section class="compare-hero">
+    <div class="compare-title-wrap">
+      <h1>선수 비교</h1>
+    </div>
+    <div class="compare-hero-actions">
+      <button class="compare-tool" type="button" data-reset-compare><i class="bi bi-arrow-counterclockwise"></i>초기화</button>
+    </div>
+  </section>
+
+  <section class="compare-builder">
+    <article class="player-panel" data-slot="0">
+      <div class="slot-head">
+        <div class="slot-title">왼쪽 선수</div>
+      </div>
+      <div class="search-row">
+        <input type="search" class="player-search" placeholder="선수 이름 검색" autocomplete="off">
+        <button class="icon-btn search-btn" type="button" aria-label="검색"><i class="bi bi-search"></i></button>
+      </div>
+      <div class="result-list"></div>
+      <div class="selected-card"></div>
+      <div class="controls">
+        <div class="control">
+          <label>진화 단계</label>
+          <select class="control-select enhance-select"></select>
+        </div>
+        <div class="control boost-control">
+          <label class="boost-label">스킬부스트</label>
+          <select class="control-select boost-select"></select>
+        </div>
+      </div>
+      <div class="boost-targets"></div>
+    </article>
+
+    <div class="compare-rail" aria-label="선수 위치 바꾸기">
+      <span class="rail-line" aria-hidden="true"></span>
+      <button class="rail-button" type="button" data-swap-players aria-label="양쪽 선수 바꾸기" disabled>
+        <i class="bi bi-arrow-left-right" aria-hidden="true"></i>
+      </button>
+      <span class="rail-line" aria-hidden="true"></span>
+    </div>
+
+    <article class="player-panel" data-slot="1">
+      <div class="slot-head">
+        <div class="slot-title">오른쪽 선수</div>
+      </div>
+      <div class="search-row">
+        <input type="search" class="player-search" placeholder="선수 이름 검색" autocomplete="off">
+        <button class="icon-btn search-btn" type="button" aria-label="검색"><i class="bi bi-search"></i></button>
+      </div>
+      <div class="result-list"></div>
+      <div class="selected-card"></div>
+      <div class="controls">
+        <div class="control">
+          <label>진화 단계</label>
+          <select class="control-select enhance-select"></select>
+        </div>
+        <div class="control boost-control">
+          <label class="boost-label">스킬부스트</label>
+          <select class="control-select boost-select"></select>
+        </div>
+      </div>
+      <div class="boost-targets"></div>
+    </article>
+  </section>
+
+  <section class="stats-panel">
+    <div class="stats-toolbar">
+      <div class="stats-toolbar-copy">
+        <div class="stats-title">능력치 비교</div>
+      </div>
+      <div class="stats-toolbar-actions">
+        <button class="compare-tool" type="button" data-scroll-top><i class="bi bi-sliders2"></i>설정으로</button>
+      </div>
+    </div>
+    <div class="compare-table" id="compareTable">
+      <div class="empty-compare">두 선수를 선택하면 비교표가 표시됩니다.</div>
+    </div>
+  </section>
+</div>
+
+<script>
+  const STAT_GROUPS = {{ stat_groups|tojson }};
+  const FIELD_GROUP_ORDER = ["기본", "속도", "슈팅", "패스", "드리블", "수비", "피지컬"];
+  const GK_GROUP_ORDER = ["기본", "골키퍼", "기본 능력"];
+  const ENHANCE_TOTALS = {{ enhance_totals|tojson }};
+  const SKILL_BOOST_VALUES = {{ skill_boost_values|tojson }};
+  const SKILL_BOOSTS = {{ skill_boost_stats|tojson }};
+  const STAT_LABELS = Object.assign(
+    {},
+    ...Object.values(STAT_GROUPS.field).concat(Object.values(STAT_GROUPS.gk))
+  );
+  const SKILL_POINT_STEPS = {
+    base: { normal: [4, 6], gk: [5, 7] },
+    ultimate: { normal: [6, 5, 5, 4], gk: [7, 6, 6, 5] },
+  };
+  const ENHANCE_STAT_MULTIPLIER = 1;
+  const ALL_STAT_CODES = new Set(Object.values(STAT_GROUPS.field).flatMap(group => Object.keys(group))
+    .concat(Object.values(STAT_GROUPS.gk).flatMap(group => Object.keys(group)))
+    .filter(code => !["height", "weight", "footPair", "mainFootLabel", "WFA", "skillMovesLevel"].includes(code)));
+  const state = [
+    { player: null, groups: null, enhance: 0, boost: 0, skillLevels: {} },
+    { player: null, groups: null, enhance: 0, boost: 0, skillLevels: {} },
+  ];
+  const swapButton = document.querySelector("[data-swap-players]");
+  const builder = document.querySelector(".compare-builder");
+
+  function panels() {
+    return Array.from(document.querySelectorAll(".player-panel"));
+  }
+
+  function syncCompareUrl() {
+    const url = new URL(window.location.href);
+    ["left", "right", "le", "re"].forEach(key => url.searchParams.delete(key));
+    if (state[0].player?.cid) url.searchParams.set("left", state[0].player.cid);
+    if (state[1].player?.cid) url.searchParams.set("right", state[1].player.cid);
+    if (state[0].enhance) url.searchParams.set("le", state[0].enhance);
+    if (state[1].enhance) url.searchParams.set("re", state[1].enhance);
+    window.history.replaceState({}, "", url);
+    const titlePlayers = state
+      .map(slot => slot.player)
+      .filter(Boolean)
+      .map(player => [player.className, player.playerKor].filter(Boolean).join(" "));
+    document.title = titlePlayers.length
+      ? `${titlePlayers.join(" vs ")} 선수 비교 | 피모북`
+      : "선수 비교 | 피모북";
+  }
+
+  function updateSwapState() {
+    if (swapButton) swapButton.disabled = !state.some(slot => slot.player);
+  }
+
+  function escapeHtml(value) {
+    return String(value ?? "")
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+  function isNumber(value) {
+    return typeof value === "number" && Number.isFinite(value);
+  }
+
+  function shouldEnhance(code) {
+    return code === "ovr" || ALL_STAT_CODES.has(code);
+  }
+
+  function getSkillDisplay(player) {
+    return player?.skillDisplay || {};
+  }
+
+  function isSkillPlayer(player) {
+    return getSkillDisplay(player).type === "skill" && Array.isArray(getSkillDisplay(player).items);
+  }
+
+  function isBoostPlayer(player) {
+    return getSkillDisplay(player).type === "boost" || Boolean(player?.skillBoostName);
+  }
+
+  function boostCodesFor(player) {
+    if (!player) return [];
+    const display = getSkillDisplay(player);
+    if (Array.isArray(display.items) && display.items.length) {
+      return [...new Set(display.items.flatMap(item => item.statCodes || []))];
+    }
+    return SKILL_BOOSTS[player.skillBoostName] || [];
+  }
+
+  function isGoalkeeper(player) {
+    return String(player?.position || "").toUpperCase() === "GK";
+  }
+
+  function maxPointsForSkillItem(item) {
+    const kind = skillKind(item);
+    if (kind === "ULTIMATE") return 4;
+    return 2;
+  }
+
+  function skillKind(item) {
+    return String(item?._review_kind || item?.kind || "").toUpperCase();
+  }
+
+  function skillSlot(item) {
+    return String(item?._review_slot || item?.slot || "").toUpperCase();
+  }
+
+  function baseSlotForUltimate(slot) {
+    const normalized = String(slot || "").toUpperCase();
+    if (normalized === "U1" || normalized === "U3") return "B1";
+    if (normalized === "U2" || normalized === "U4") return "B2";
+    return "";
+  }
+
+  function pointsForSlot(slot, slotState) {
+    const items = getSkillDisplay(slotState.player).items || [];
+    const index = items.findIndex(item => skillSlot(item) === String(slot || "").toUpperCase());
+    return index >= 0 ? Number(slotState.skillLevels[index] || 0) : 0;
+  }
+
+  function isSkillUnlocked(item, slotState) {
+    if (skillKind(item) !== "ULTIMATE") return true;
+    const requiredBase = String(item?._required_base_slot || "").toUpperCase() || baseSlotForUltimate(skillSlot(item));
+    return !requiredBase || pointsForSlot(requiredBase, slotState) >= 2;
+  }
+
+  function pointValueForSkillItem(item, points, player) {
+    const value = Math.max(0, Number(points || 0));
+    const kind = skillKind(item) === "ULTIMATE" ? "ultimate" : "base";
+    const table = SKILL_POINT_STEPS[kind][isGoalkeeper(player) ? "gk" : "normal"];
+    return table.slice(0, value).reduce((sum, next) => sum + next, 0);
+  }
+
+  function skillBonusesFor(slotState) {
+    const player = slotState.player;
+    if (!player) return {};
+    const display = getSkillDisplay(player);
+    const bonuses = {};
+
+    if (display.type === "boost") {
+      const amount = Number(SKILL_BOOST_VALUES[slotState.boost] || 0);
+      (boostCodesFor(player) || []).forEach(code => {
+        bonuses[code] = (bonuses[code] || 0) + amount;
+      });
+      return bonuses;
+    }
+
+    if (display.type !== "skill" || !Array.isArray(display.items)) return bonuses;
+
+    let spent = 0;
+    display.items.forEach((item, index) => {
+      let points = Number(slotState.skillLevels[index] || 0);
+      if (!isSkillUnlocked(item, slotState)) points = 0;
+      const remaining = Math.max(0, slotState.enhance - spent);
+      points = Math.min(points, maxPointsForSkillItem(item), remaining);
+      spent += points;
+      const amount = pointValueForSkillItem(item, points, player);
+      (item.statCodes || []).forEach(code => {
+        bonuses[code] = (bonuses[code] || 0) + amount;
+      });
+    });
+
+    return bonuses;
+  }
+
+  function getPlayerSkillText(player) {
+    if (!player) return "";
+    const display = getSkillDisplay(player);
+    if (Array.isArray(display.items) && display.items.length) {
+      return display.items.map(item => item.name).filter(Boolean).join(", ");
+    }
+    if (player.skillBoostName) return player.skillBoostName;
+    if (Array.isArray(player.skillLabels) && player.skillLabels.length) return player.skillLabels.join(", ");
+    if (Array.isArray(player.skills) && player.skills.length) return player.skills.join(", ");
+    if (Array.isArray(player.playstyles) && player.playstyles.length) {
+      const names = player.playstyles.map(item => item?.name).filter(Boolean);
+      if (names.length) return `플레이스타일 · ${names.join(", ")}`;
+    }
+    if (String(player.skillStyleId || "").startsWith("30")) return "스킬트리 정보 미제공";
+    return "";
+  }
+
+  function adjustedValue(slot, code) {
+    const player = slot.player;
+    if (!player) return "-";
+    const base = player[code];
+    if (!isNumber(base)) return base || "-";
+    let total = base;
+    if (code === "ovr") {
+      total += ENHANCE_TOTALS[slot.enhance] || 0;
+    } else if (shouldEnhance(code)) {
+      total += (ENHANCE_TOTALS[slot.enhance] || 0) * ENHANCE_STAT_MULTIPLIER;
+    }
+    total += skillBonusesFor(slot)[code] || 0;
+    return total;
+  }
+
+  function adjustedOvr(slot) {
+    return adjustedValue(slot, "ovr");
+  }
+
+  function getMainFootSide(player) {
+    const left = Number(player?.footL || 0);
+    const right = Number(player?.footR || 0);
+    if (right > left) return "right";
+    if (left > right) return "left";
+    if (Number(player?.mainFoot) === 1) return "right";
+    if (Number(player?.mainFoot) === 2) return "left";
+    return "";
+  }
+
+  function footPairHtml(player) {
+    if (!player) return `<span class="muted-stat">-</span>`;
+    const left = player.footL ?? "-";
+    const right = player.footR ?? "-";
+    const mainSide = getMainFootSide(player);
+    return `
+      <span class="foot-pair">
+        <span class="${mainSide === "left" ? "main-foot" : ""}">${escapeHtml(left)}</span>
+        <span>/</span>
+        <span class="${mainSide === "right" ? "main-foot" : ""}">${escapeHtml(right)}</span>
+      </span>
+    `;
+  }
+
+  function staminaBlockCount(slot) {
+    const raw = adjustedValue(slot, "STA");
+    if (!isNumber(raw)) return null;
+    return Math.max(1, Math.min(10, Math.floor(raw / 10) + 1));
+  }
+
+  function staminaHtml(slot) {
+    const blocks = staminaBlockCount(slot);
+    if (!blocks) return `<span class="muted-stat">-</span>`;
+    const fullStars = Math.floor(blocks / 2);
+    const hasHalf = blocks % 2 === 1;
+    const stars = "★".repeat(fullStars) + (hasHalf ? "½" : "");
+    return `
+      <span class="stamina-stars" aria-label="체력 ${blocks}칸">
+        ${stars.split("").map(char => `<span class="star">${char}</span>`).join("")}
+        <span class="stamina-text">${blocks}칸</span>
+      </span>
+    `;
+  }
+
+  function renderSelects(panel, index) {
+    const enhanceSelect = panel.querySelector(".enhance-select");
+    const boostSelect = panel.querySelector(".boost-select");
+    enhanceSelect.innerHTML = ENHANCE_TOTALS.map((value, level) => (
+      `<option value="${level}">${level}진 (+${value})</option>`
+    )).join("");
+    boostSelect.innerHTML = SKILL_BOOST_VALUES.map((value, level) => (
+      `<option value="${level}">${level}레벨 (+${value})</option>`
+    )).join("");
+    boostSelect.disabled = true;
+    enhanceSelect.addEventListener("change", () => {
+      state[index].enhance = Number(enhanceSelect.value) || 0;
+      if (isBoostPlayer(state[index].player)) {
+        state[index].boost = state[index].enhance;
+      }
+      renderBoostOptions(panel, index);
+      renderSkillConfig(panel, index);
+      renderSelected(panel, index);
+      renderCompareTable();
+      syncCompareUrl();
+    });
+    boostSelect.addEventListener("change", () => {
+      state[index].boost = Number(boostSelect.value) || 0;
+      renderSelected(panel, index);
+      renderCompareTable();
+      syncCompareUrl();
+    });
+  }
+
+  function renderBoostOptions(panel, index) {
+    const boostControl = panel.querySelector(".boost-control");
+    const boostSelect = panel.querySelector(".boost-select");
+    const player = state[index].player;
+    const useBoost = Boolean(player) && isBoostPlayer(player) && !isSkillPlayer(player);
+    boostControl.classList.toggle("is-hidden", !useBoost);
+    if (!useBoost) {
+      boostSelect.disabled = true;
+      boostSelect.innerHTML = `<option value="0">스킬 선택</option>`;
+      return;
+    }
+    const maxLevel = state[index].enhance;
+    boostSelect.innerHTML = SKILL_BOOST_VALUES.map((value, level) => {
+      const disabled = level > maxLevel ? "disabled" : "";
+      return `<option value="${level}" ${disabled}>${level}레벨 (+${value})</option>`;
+    }).join("");
+    boostSelect.disabled = maxLevel === 0 || !player;
+    state[index].boost = Math.min(state[index].boost, maxLevel);
+    boostSelect.value = String(state[index].boost);
+  }
+
+  function labelForCode(code) {
+    return STAT_LABELS[code] || code;
+  }
+
+  function renderSkillConfig(panel, index) {
+    const wrap = panel.querySelector(".boost-targets");
+    const player = state[index].player;
+    const slotState = state[index];
+    wrap.classList.remove("has-skill-config");
+    if (!player) {
+      wrap.innerHTML = "";
+      return;
+    }
+    const display = getSkillDisplay(player);
+    if (display.type === "skill" && Array.isArray(display.items) && display.items.length) {
+      wrap.classList.add("has-skill-config");
+      let spent = 0;
+      const cards = display.items.map((item, itemIndex) => {
+        const unlocked = isSkillUnlocked(item, slotState);
+        const remaining = Math.max(0, slotState.enhance - spent);
+        const max = unlocked ? Math.min(maxPointsForSkillItem(item), remaining) : 0;
+        const current = Math.min(Number(slotState.skillLevels[itemIndex] || 0), max);
+        slotState.skillLevels[itemIndex] = current;
+        spent += current;
+        const options = Array.from({ length: max + 1 }, (_, level) => {
+          const amount = pointValueForSkillItem(item, level, player);
+          const selected = level === current ? "selected" : "";
+          return `<option value="${level}" ${selected}>${level}pt (+${amount})</option>`;
+        }).join("");
+        const statText = (item.statCodes || []).map(labelForCode).join(", ");
+        const meta = [skillSlot(item), skillKind(item), statText].filter(Boolean).join(" · ");
+        return `
+          <div class="compare-skill-card ${unlocked ? "" : "is-locked"}" data-skill-index="${itemIndex}">
+            ${item.imageUrl ? `<img src="${escapeHtml(item.imageUrl)}" alt="${escapeHtml(item.name || "")}" loading="lazy" onerror="this.parentElement.classList.add('no-skill-image'); this.remove();">` : ""}
+            <div>
+              <div class="compare-skill-name">${escapeHtml(item.name || "-")}</div>
+              <div class="compare-skill-meta">${escapeHtml(meta || "스탯 정보 없음")}</div>
+            </div>
+            <select class="compare-skill-select" data-skill-select="${itemIndex}" ${slotState.enhance === 0 || !unlocked ? "disabled" : ""}>
+              ${options}
+            </select>
+          </div>
+        `;
+      }).join("");
+      wrap.innerHTML = `${cards}<div class="skill-summary">스킬 포인트 ${spent} / ${slotState.enhance}</div>`;
+      wrap.querySelectorAll("[data-skill-select]").forEach(select => {
+        select.addEventListener("change", () => {
+          slotState.skillLevels[select.dataset.skillSelect] = Number(select.value) || 0;
+          renderSkillConfig(panel, index);
+          renderSelected(panel, index);
+          renderCompareTable();
+        });
+      });
+      return;
+    }
+
+    const playstyles = Array.isArray(player.playstyles) ? player.playstyles : [];
+    const hasSkillOrBoostItems = Array.isArray(display.items) && display.items.length > 0;
+    if (!hasSkillOrBoostItems && playstyles.length) {
+      wrap.classList.add("has-skill-config");
+      const cards = playstyles.map(item => `
+        <div class="compare-skill-card is-playstyle">
+          ${item.imageUrl ? `<img src="${escapeHtml(item.imageUrl)}" alt="${escapeHtml(item.name || "")}" loading="lazy" onerror="this.parentElement.classList.add('no-skill-image'); this.remove();">` : ""}
+          <div>
+            <div class="compare-skill-name">${escapeHtml(item.name || "-")}</div>
+            <div class="compare-skill-meta">${escapeHtml([item.category, item.level ? `Lv.${item.level}` : ""].filter(Boolean).join(" · ") || "플레이스타일")}</div>
+          </div>
+        </div>
+      `).join("");
+      const missingTree = String(player.skillStyleId || "").startsWith("30")
+        ? `<div class="skill-summary">공식 스쿼드메이커가 이 카드의 스킬트리를 아직 제공하지 않아 플레이스타일만 표시합니다.</div>`
+        : "";
+      wrap.innerHTML = `${cards}${missingTree}`;
+      return;
+    }
+
+    const codes = boostCodesFor(player);
+    if (!codes.length) {
+      const message = String(player.skillStyleId || "").startsWith("30")
+        ? "공식 스킬트리 정보 미제공"
+        : "스킬 데이터 없음";
+      wrap.innerHTML = `<span class="boost-target">${message}</span>`;
+      return;
+    }
+    const labels = codes.map(labelForCode);
+    wrap.innerHTML = labels.map(label => `<span class="boost-target">${escapeHtml(label)}</span>`).join("");
+  }
+
+  function renderSelected(panel, index) {
+    const target = panel.querySelector(".selected-card");
+    const slot = state[index];
+    const player = slot.player;
+    if (!player) {
+      target.innerHTML = `<div class="empty-card">선수를 선택하세요.</div>`;
+      renderSkillConfig(panel, index);
+      return;
+    }
+    const ovr = adjustedOvr(slot);
+    const skillText = getPlayerSkillText(player) || "스킬 없음";
+    const potentialText = (player.potentialPositions && player.potentialPositions.length)
+      ? ` · 부 ${player.potentialPositions.join(", ")}`
+      : (player.potentialPosition ? ` · 부 ${player.potentialPosition}` : "");
+    const jerseyText = player.jerseyNumber !== undefined && player.jerseyNumber !== null
+      ? ` · #${player.jerseyNumber}`
+      : "";
+    target.innerHTML = `
+      <div class="card-art">
+        <div class="card-bg" style="background-image:url('${escapeHtml(player.bimage || "")}')"></div>
+        <div class="card-face" style="background-image:url('${escapeHtml(player.pimage || "")}')"></div>
+        <div class="card-ovr">${escapeHtml(ovr)}</div>
+        <div class="card-pos">${escapeHtml(player.position || "-")}</div>
+      </div>
+      <div class="player-summary">
+        <div class="player-name">${escapeHtml(player.playerKor || "-")}</div>
+        <div class="player-class">${escapeHtml(player.className || "-")}</div>
+        <div class="summary-grid">
+          <div class="summary-chip">OVR ${escapeHtml(ovr)}</div>
+          <div class="summary-chip">${escapeHtml(skillText)}</div>
+          <div class="summary-chip">${escapeHtml((player.position || "-") + potentialText + jerseyText + " · " + (player.mainFootLabel || "-"))}</div>
+          <div class="summary-chip">${escapeHtml(player.height || "-")}cm / ${escapeHtml(player.weight || "-")}kg</div>
+        </div>
+        <div class="selected-actions">
+          <a class="selected-action" href="/player/${encodeURIComponent(player.cid)}"><i class="bi bi-person-vcard"></i>상세 보기</a>
+          <button class="selected-action" type="button" data-remove-player><i class="bi bi-x-lg"></i>선택 해제</button>
+        </div>
+      </div>
+    `;
+    target.querySelector("[data-remove-player]")?.addEventListener("click", () => {
+      state[index] = { player: null, groups: null, enhance: 0, boost: 0, skillLevels: {} };
+      panel.querySelector(".enhance-select").value = "0";
+      panel.querySelector(".player-search").value = "";
+      renderBoostOptions(panel, index);
+      renderSelected(panel, index);
+      renderCompareTable();
+      syncCompareUrl();
+    });
+    renderSkillConfig(panel, index);
+  }
+
+  function renderResults(panel, index, players) {
+    const list = panel.querySelector(".result-list");
+    if (!players.length) {
+      list.innerHTML = `<div class="empty-compare">검색 결과가 없습니다.</div>`;
+      list.classList.add("open");
+      return;
+    }
+    list.innerHTML = players.map(player => `
+      <button class="result-item" type="button" data-cid="${player.cid}">
+        <span class="mini-thumb" style="background-image:url('${escapeHtml(player.bimage || "")}')">
+          <img src="${escapeHtml(player.pimage || "")}" alt="${escapeHtml(player.playerKor || "")}">
+        </span>
+        <span>
+          <span class="result-name">${escapeHtml(player.playerKor || "-")}</span>
+          <span class="result-sub">${escapeHtml(player.className || "-")} · ${escapeHtml(player.position || "-")} · ${escapeHtml(getPlayerSkillText(player) || "-")}</span>
+        </span>
+        <span class="result-ovr">${escapeHtml(player.ovr || "-")}</span>
+      </button>
+    `).join("");
+    list.classList.add("open");
+    list.querySelectorAll(".result-item").forEach(button => {
+      button.addEventListener("click", () => selectPlayer(panel, index, button.dataset.cid));
+    });
+  }
+
+  async function searchPlayers(panel, index) {
+    const input = panel.querySelector(".player-search");
+    const list = panel.querySelector(".result-list");
+    const q = input.value.trim();
+    if (!q) {
+      list.innerHTML = `<div class="empty-compare">검색어를 입력하세요.</div>`;
+      list.classList.add("open");
+      return;
+    }
+    list.innerHTML = `<div class="empty-compare">검색 중...</div>`;
+    list.classList.add("open");
+    const url = new URL("/api/squad_players", window.location.origin);
+    url.searchParams.set("q", q);
+    url.searchParams.set("limit", "12");
+    try {
+      const response = await fetch(url);
+      const players = await response.json();
+      renderResults(panel, index, Array.isArray(players) ? players : []);
+    } catch (error) {
+      list.innerHTML = `<div class="empty-compare">검색 중 오류가 발생했습니다.</div>`;
+    }
+  }
+
+  async function selectPlayer(panel, index, cid) {
+    const list = panel.querySelector(".result-list");
+    list.innerHTML = `<div class="empty-compare">선수 정보를 불러오는 중...</div>`;
+    try {
+      const response = await fetch(`/api/player_compare?cid=${encodeURIComponent(cid)}`);
+      if (!response.ok) throw new Error("failed");
+      const payload = await response.json();
+      state[index].player = payload.player;
+      state[index].groups = payload.stat_groups;
+      state[index].boost = state[index].enhance;
+      state[index].skillLevels = {};
+      list.classList.remove("open");
+      panel.querySelector(".player-search").value = payload.player.playerKor || "";
+      renderBoostOptions(panel, index);
+      renderSkillConfig(panel, index);
+      renderAllSelected();
+      renderCompareTable();
+      syncCompareUrl();
+    } catch (error) {
+      list.innerHTML = `<div class="empty-compare">선수 정보를 불러오지 못했습니다.</div>`;
+    }
+  }
+
+  function getActiveGroups() {
+    const leftGk = state[0].player && (state[0].player.position || "").toUpperCase() === "GK";
+    const rightGk = state[1].player && (state[1].player.position || "").toUpperCase() === "GK";
+    return leftGk && rightGk ? STAT_GROUPS.gk : STAT_GROUPS.field;
+  }
+
+  function getActiveGroupOrder() {
+    const groups = getActiveGroups();
+    const preferred = groups === STAT_GROUPS.gk ? GK_GROUP_ORDER : FIELD_GROUP_ORDER;
+    const extras = Object.keys(groups).filter(groupName => !preferred.includes(groupName));
+    return preferred.filter(groupName => groups[groupName]).concat(extras);
+  }
+
+  function valueHtml(slot, otherSlot, code, side) {
+    if (!slot.player) return `<span class="muted-stat">-</span>`;
+    if (code === "footPair") return footPairHtml(slot.player);
+    if (code === "STA") return staminaHtml(slot);
+    const value = adjustedValue(slot, code);
+    const other = adjustedValue(otherSlot, code);
+    const numeric = isNumber(value) && isNumber(other);
+    const higher = numeric && value > other;
+    const diff = numeric ? value - other : 0;
+    const diffHtml = diff > 0 ? `<span class="diff">+${diff}</span>` : "";
+    if (side === "left") {
+      return `${diffHtml}<span class="stat-main ${higher ? "higher" : ""}">${escapeHtml(value)}</span>`;
+    }
+    return `<span class="stat-main ${higher ? "higher" : ""}">${escapeHtml(value)}</span>${diffHtml}`;
+  }
+
+  function renderCompareTable() {
+    const table = document.getElementById("compareTable");
+    updateSwapState();
+    if (!state[0].player || !state[1].player) {
+      table.innerHTML = `<div class="empty-compare">두 선수를 선택하면 비교표가 표시됩니다.</div>`;
+      return;
+    }
+    const groups = getActiveGroups();
+    const html = getActiveGroupOrder().map(groupName => {
+      const stats = groups[groupName];
+      const rows = Object.entries(stats).map(([code, label]) => `
+        <div class="stat-row">
+          <div class="stat-value left">${valueHtml(state[0], state[1], code, "left")}</div>
+          <div class="stat-label">${escapeHtml(label)}</div>
+          <div class="stat-value right">${valueHtml(state[1], state[0], code, "right")}</div>
+        </div>
+      `).join("");
+      return `<div class="group-title">${escapeHtml(groupName)}</div>${rows}`;
+    }).join("");
+    table.innerHTML = `
+      <div class="compare-names">
+        <div class="compare-name left">${escapeHtml(state[0].player.playerKor || "-")} · ${escapeHtml(adjustedOvr(state[0]))}</div>
+        <div class="compare-versus">VS</div>
+        <div class="compare-name right">${escapeHtml(state[1].player.playerKor || "-")} · ${escapeHtml(adjustedOvr(state[1]))}</div>
+      </div>
+      ${html}
+    `;
+  }
+
+  function renderAllSelected() {
+    document.querySelectorAll(".player-panel").forEach((panel, index) => {
+      renderSelected(panel, index);
+    });
+  }
+
+  panels().forEach((panel, index) => {
+    renderSelects(panel, index);
+    renderBoostOptions(panel, index);
+    renderSelected(panel, index);
+    panel.querySelector(".search-btn").addEventListener("click", () => searchPlayers(panel, index));
+    panel.querySelector(".player-search").addEventListener("keydown", event => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        searchPlayers(panel, index);
+      }
+    });
+    let searchTimer = null;
+    panel.querySelector(".player-search").addEventListener("input", event => {
+      window.clearTimeout(searchTimer);
+      const value = event.target.value.trim();
+      if (value.length < 2) return;
+      searchTimer = window.setTimeout(() => searchPlayers(panel, index), 260);
+    });
+  });
+
+  swapButton?.addEventListener("click", () => {
+    [state[0], state[1]] = [state[1], state[0]];
+    panels().forEach((panel, index) => {
+      panel.querySelector(".enhance-select").value = String(state[index].enhance || 0);
+      panel.querySelector(".player-search").value = state[index].player?.playerKor || "";
+      renderBoostOptions(panel, index);
+      renderSelected(panel, index);
+    });
+    renderCompareTable();
+    syncCompareUrl();
+  });
+
+  document.querySelector("[data-reset-compare]")?.addEventListener("click", () => {
+    panels().forEach((panel, index) => {
+      state[index] = { player: null, groups: null, enhance: 0, boost: 0, skillLevels: {} };
+      panel.querySelector(".enhance-select").value = "0";
+      panel.querySelector(".player-search").value = "";
+      panel.querySelector(".result-list").classList.remove("open");
+      renderBoostOptions(panel, index);
+      renderSelected(panel, index);
+    });
+    renderCompareTable();
+    syncCompareUrl();
+    builder?.scrollIntoView({ behavior: "smooth", block: "start" });
+  });
+
+  document.querySelector("[data-scroll-top]")?.addEventListener("click", () => {
+    builder?.scrollIntoView({ behavior: "smooth", block: "start" });
+  });
+
+  document.addEventListener("click", event => {
+    panels().forEach(panel => {
+      if (!panel.contains(event.target)) panel.querySelector(".result-list").classList.remove("open");
+    });
+  });
+
+  (async function hydrateFromUrl() {
+    const params = new URLSearchParams(window.location.search);
+    const requested = [
+      { cid: params.get("left"), enhance: Number(params.get("le") || 0) },
+      { cid: params.get("right"), enhance: Number(params.get("re") || 0) },
+    ];
+    const tasks = requested.map(async (entry, index) => {
+      if (!entry.cid) return;
+      const level = Math.max(0, Math.min(entry.enhance, ENHANCE_TOTALS.length - 1));
+      state[index].enhance = level;
+      panels()[index].querySelector(".enhance-select").value = String(level);
+      await selectPlayer(panels()[index], index, entry.cid);
+    });
+    await Promise.all(tasks);
+    renderAllSelected();
+    renderCompareTable();
+    syncCompareUrl();
+  })();
+</script>
+{% endblock %}

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>500 - 서버 오류 | 피모북</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(120deg, #eef4fb 0%, #fafdff 100%);
+            margin: 0; min-height: 100vh;
+            font-family: 'Poppins', 'Apple SD Gothic Neo', sans-serif;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            padding: 0 15px; overflow-x: hidden;
+        }
+        .brandbar {
+            position: absolute; top: 30px; left: 50%; transform: translateX(-50%);
+            display: flex; align-items: center; gap: 11px;
+            color: #1971c2; font-weight: 700; font-size: 18px; opacity: 0.88;
+        }
+        .brandbar img { width: 24px; height: 24px; border-radius: 6px; box-shadow: 0 1px 8px rgba(0,0,0,0.07); }
+        .error-container {
+            background-color: #fff; padding: 40px 30px 35px 30px; border-radius: 18px;
+            box-shadow: 0 7px 30px rgba(33,51,87,0.12); width: 100%; max-width: 500px;
+            display: flex; flex-direction: column; align-items: center;
+            animation: popIn .5s cubic-bezier(0.25, 1.2, 0.5, 1.2);
+        }
+        @keyframes popIn { from { transform: translateY(30px) scale(0.97); opacity: 0.2;} to { transform: none; opacity: 1;} }
+        .error-code {
+            font-size: 100px; font-weight: 900; color: #e74c3c;
+            margin-bottom: 10px; text-shadow: 2px 2px 4px rgba(231, 76, 60, 0.2);
+            animation: shake 1s infinite;
+        }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); } 20%, 40%, 60%, 80% { transform: translateX(5px); } }
+        h1 { color: #23282d; font-size: 24px; font-weight: 700; margin-bottom: 15px; text-align: center; letter-spacing: -1px; }
+        .error-message { color: #666; font-size: 15px; margin-bottom: 25px; line-height: 1.6; text-align: center; }
+        .action-buttons { display: flex; gap: 15px; justify-content: center; flex-wrap: wrap; margin-top: 15px; }
+        .btn { display: inline-block; padding: 12px 30px; border: none; border-radius: 10px; font-size: 15px; font-weight: 600; text-decoration: none; cursor: pointer; transition: all 0.23s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        .btn-primary { background: #228be6; color: white; }
+        .btn-primary:hover { background: #1c7ed6; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(34,139,230,0.2); }
+        .btn-secondary { background: #e9ecef; color: #495057; }
+        .btn-secondary:hover { background: #dee2e6; transform: translateY(-2px); }
+        @media (max-width: 560px) {
+            .error-code { font-size: 80px; }
+            h1 { font-size: 20px; }
+            .error-message { font-size: 14px; }
+            .action-buttons { flex-direction: column; width: 100%; gap: 10px; }
+            .btn { width: 100%; text-align: center; }
+        }
+    </style>
+</head>
+<body>
+    <div class="brandbar">
+        <a href="{{ url_for('index') }}" style="display: flex; align-items: center; text-decoration: none; color: inherit;">
+            <img src="{{ url_for('static', filename='favicon.ico') }}" alt="로고">
+            <span>피모북</span>
+        </a>
+    </div>
+    
+    <div class="error-container">
+        <div class="error-code">500</div>
+        <h1>서버에 문제가 발생했습니다</h1>
+        <p class="error-message">
+            죄송합니다, 요청을 처리하는 중 내부 오류가 발생했습니다.<br>
+            잠시 후 다시 시도해 주시거나 관리자에게 문의해주세요.
+        </p>
+        <div class="action-buttons">
+            <a href="{{ url_for('index') }}" class="btn btn-primary">홈으로 돌아가기</a>
+            <a href="javascript:location.reload()" class="btn btn-secondary">새로고침</a>
+        </div>
+    </div>
+</body>
+</html>

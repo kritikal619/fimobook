@@ -1,0 +1,288 @@
+{% extends "base.html" %}
+{% block title %}머니리그 접수 수정 | 피모북{% endblock %}
+
+{% block extra_head %}
+<style>
+  :root {
+    --mf-navy: #0f172a;
+    --mf-blue: #1d4ed8;
+    --mf-sky: #2563eb;
+    --mf-ink: #1f2937;
+    --mf-muted: #64748b;
+    --mf-line: #dbe5f2;
+  }
+  .mf-shell {
+    width: 100%;
+    display: block;
+  }
+  .mf-main {
+    border: 1px solid var(--mf-line);
+    border-radius: 16px;
+    background: #fff;
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.07);
+    padding: 16px;
+    box-sizing: border-box;
+  }
+  .mf-title {
+    margin: 0 0 6px 0;
+    font-size: 24px;
+    color: var(--mf-navy);
+    font-weight: 900;
+    letter-spacing: -0.4px;
+  }
+  .mf-sub {
+    color: var(--mf-muted);
+    font-size: 14px;
+    margin-bottom: 14px;
+  }
+  .mf-label {
+    display: block;
+    font-size: 14px;
+    font-weight: 800;
+    color: var(--mf-ink);
+    margin-bottom: 8px;
+  }
+  .mf-field {
+    margin-bottom: 12px;
+  }
+  .mf-control {
+    width: 100%;
+    border: 1px solid #cbd5e1;
+    border-radius: 12px;
+    padding: 12px 13px;
+    box-sizing: border-box;
+    font-size: 15px;
+    font-family: inherit;
+    color: var(--mf-ink);
+    background: #fff;
+  }
+  .mf-control:focus {
+    outline: none;
+    border-color: var(--mf-blue);
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.14);
+  }
+  .mf-textarea {
+    min-height: 120px;
+    resize: vertical;
+  }
+  .mf-helper {
+    margin-top: 6px;
+    color: var(--mf-muted);
+    font-size: 12px;
+  }
+  .mf-error {
+    margin-top: 6px;
+    color: #b91c1c;
+    font-size: 12px;
+    font-weight: 700;
+  }
+  .mf-actions {
+    margin-top: 10px;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .mf-btn-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    border-radius: 12px;
+    padding: 11px 16px;
+    color: #fff;
+    background: linear-gradient(135deg, var(--mf-blue), var(--mf-sky));
+    box-shadow: 0 12px 22px rgba(37, 99, 235, 0.24);
+    font-size: 14px;
+    font-weight: 800;
+    cursor: pointer;
+  }
+  .mf-btn-primary:hover {
+    filter: brightness(1.05);
+  }
+  .mf-btn-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #cbd5e1;
+    border-radius: 12px;
+    padding: 10px 14px;
+    text-decoration: none;
+    color: var(--mf-ink);
+    font-size: 14px;
+    font-weight: 700;
+    background: #fff;
+  }
+  .mf-shot {
+    margin-top: 6px;
+  }
+  .mf-file-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+  .mf-file-wrap {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border: 1px solid #cbd5e1;
+    border-radius: 12px;
+    padding: 10px;
+    background: #fff;
+  }
+  .mf-file-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 12px;
+    border-radius: 10px;
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    color: #1d4ed8;
+    font-size: 13px;
+    font-weight: 800;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .mf-file-name {
+    color: #64748b;
+    font-size: 13px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  @media (max-width: 520px) {
+    .mf-main {
+      padding: 12px;
+      border-radius: 14px;
+    }
+    .mf-title {
+      font-size: 20px;
+    }
+    .mf-sub {
+      font-size: 13px;
+      margin-bottom: 10px;
+    }
+    .mf-label {
+      font-size: 13px;
+      margin-bottom: 6px;
+    }
+    .mf-control {
+      font-size: 14px;
+      border-radius: 10px;
+      padding: 11px 11px;
+    }
+    .mf-textarea {
+      min-height: 100px;
+    }
+    .mf-file-wrap {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 8px;
+      border-radius: 10px;
+      padding: 9px;
+    }
+    .mf-file-btn {
+      width: 100%;
+      padding: 9px 10px;
+      font-size: 12px;
+      box-sizing: border-box;
+    }
+    .mf-file-name {
+      font-size: 12px;
+      text-align: center;
+    }
+    .mf-actions {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 6px;
+    }
+    .mf-btn-primary,
+    .mf-btn-link {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 10px 10px;
+      font-size: 13px;
+      justify-content: center;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="mf-shell">
+  <form method="POST" class="mf-main" enctype="multipart/form-data">
+    {{ form.hidden_tag() }}
+    <h1 class="mf-title">머니리그 접수 수정</h1>
+    <div class="mf-sub">작성한 접수 내용을 최신 정보로 업데이트할 수 있습니다.</div>
+
+    <div class="mf-field">
+      <label class="mf-label">{{ form.clan_name.label.text }}</label>
+      {{ form.clan_name(class_="mf-control", placeholder="예: 피모북 FC", required=True) }}
+      {% for err in form.clan_name.errors %}
+        <div class="mf-error">{{ err }}</div>
+      {% endfor %}
+    </div>
+
+    <div class="mf-field">
+      <label class="mf-label">{{ form.participant_count.label.text }}</label>
+      {{ form.participant_count(class_="mf-control", placeholder="예: 5", required=True) }}
+      {% for err in form.participant_count.errors %}
+        <div class="mf-error">{{ err }}</div>
+      {% endfor %}
+    </div>
+
+    <div class="mf-field">
+      <label class="mf-label">{{ form.participant_roster.label.text }}</label>
+      {{ form.participant_roster(class_="mf-control mf-textarea", rows="6", placeholder="예: 홍길동, 김철수, 박영희", required=True) }}
+      <div class="mf-helper">쉼표 또는 줄바꿈으로 명단을 구분해 주세요.</div>
+      {% for err in form.participant_roster.errors %}
+        <div class="mf-error">{{ err }}</div>
+      {% endfor %}
+    </div>
+
+    <div class="mf-field">
+      <label class="mf-label">{{ form.resolve_message.label.text }}</label>
+      {{ form.resolve_message(class_="mf-control mf-textarea", rows="5", placeholder="예: 우승까지 최선을 다하겠습니다.", required=True) }}
+      {% for err in form.resolve_message.errors %}
+        <div class="mf-error">{{ err }}</div>
+      {% endfor %}
+    </div>
+
+    <div class="mf-field">
+      <label class="mf-label">{{ form.clan_screenshot.label.text }}</label>
+      <div class="mf-file-wrap mf-shot">
+        {{ form.clan_screenshot(id="clanShotEditInput", class_="mf-file-hidden") }}
+        <label class="mf-file-btn" for="clanShotEditInput">파일 선택</label>
+        <span class="mf-file-name" id="clanShotEditName">선택된 파일 없음</span>
+      </div>
+      <div class="mf-helper">새 이미지 업로드 시 기존 스크린샷이 교체됩니다.</div>
+      {% for err in form.clan_screenshot.errors %}
+        <div class="mf-error">{{ err }}</div>
+      {% endfor %}
+    </div>
+
+    <div class="mf-actions">
+      <button type="submit" class="mf-btn-primary">수정 저장</button>
+      <a class="mf-btn-link" href="{{ url_for('moneyleague_registration_detail', registration_id=registration_id) }}">취소</a>
+    </div>
+  </form>
+</section>
+<script>
+  (function () {
+    const input = document.getElementById("clanShotEditInput");
+    const name = document.getElementById("clanShotEditName");
+    if (!input || !name) return;
+    input.addEventListener("change", function () {
+      const file = input.files && input.files[0];
+      name.textContent = file ? file.name : "선택된 파일 없음";
+    });
+  })();
+</script>
+{% endblock %}

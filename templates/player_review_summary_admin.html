@@ -1,0 +1,380 @@
+{% extends "base.html" %}
+
+{% block title %}선수 리뷰 요약 관리 | 피모북{% endblock %}
+
+{% block extra_head %}
+<style>
+  .admin-wrap {
+    width: 100%;
+    display: grid;
+    gap: 18px;
+  }
+  .admin-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .admin-title {
+    margin: 0;
+    color: #1f2937;
+    font-size: 24px;
+    font-weight: 800;
+  }
+  .admin-sub {
+    margin: 6px 0 0;
+    color: #64748b;
+    font-size: 13px;
+    font-weight: 700;
+  }
+  .admin-panel {
+    border: 1px solid #dbe3ec;
+    border-radius: 14px;
+    background: #fff;
+    padding: 16px;
+    box-sizing: border-box;
+    display: grid;
+    gap: 12px;
+  }
+  .flash-messages {
+    display: grid;
+    gap: 8px;
+  }
+  .flash-message {
+    padding: 11px 13px;
+    border-radius: 10px;
+    border: 1px solid #dbe3ec;
+    background: #f8fafc;
+    color: #334155;
+    font-size: 13px;
+    font-weight: 800;
+  }
+  .flash-message.success {
+    border-color: #a7f3d0;
+    background: #ecfdf5;
+    color: #047857;
+  }
+  .flash-message.danger {
+    border-color: #fecaca;
+    background: #fef2f2;
+    color: #b91c1c;
+  }
+  .flash-message.info {
+    border-color: #bfdbfe;
+    background: #eff6ff;
+    color: #1d4ed8;
+  }
+  .admin-form {
+    display: grid;
+    gap: 12px;
+  }
+  .admin-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 10px;
+    align-items: end;
+  }
+  .admin-field {
+    display: grid;
+    gap: 6px;
+    min-width: 0;
+  }
+  .admin-field label {
+    color: #64748b;
+    font-size: 12px;
+    font-weight: 900;
+  }
+  .admin-field input,
+  .admin-field textarea {
+    width: 100%;
+    border: 1px solid #dbe3ec;
+    border-radius: 10px;
+    background: #f8fafc;
+    color: #0f172a;
+    font: inherit;
+    font-size: 14px;
+    font-weight: 700;
+    box-sizing: border-box;
+    outline: none;
+  }
+  .admin-field input {
+    min-height: 42px;
+    padding: 0 12px;
+  }
+  .admin-field textarea {
+    min-height: 110px;
+    padding: 11px 12px;
+    resize: vertical;
+    line-height: 1.5;
+  }
+  .admin-button {
+    min-height: 42px;
+    padding: 0 16px;
+    border: 0;
+    border-radius: 10px;
+    background: #059669;
+    color: #fff;
+    font: inherit;
+    font-size: 14px;
+    font-weight: 900;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .admin-button.secondary {
+    border: 1px solid #dbe3ec;
+    background: #fff;
+    color: #475569;
+  }
+  .admin-button.danger {
+    background: #dc2626;
+  }
+  .admin-results {
+    display: grid;
+    gap: 8px;
+  }
+  .admin-player-link,
+  .saved-item {
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    background: #f8fafc;
+    padding: 12px;
+    text-decoration: none;
+    color: #1f2937;
+    display: grid;
+    gap: 4px;
+  }
+  .admin-player-link:hover {
+    border-color: #10b981;
+    text-decoration: none;
+  }
+  .admin-player-link.is-selected {
+    border-color: #10b981;
+    background: #ecfdf5;
+  }
+  .admin-meta {
+    color: #64748b;
+    font-size: 12px;
+    font-weight: 800;
+  }
+  .selected-player {
+    display: grid;
+    grid-template-columns: 72px minmax(0, 1fr);
+    gap: 12px;
+    align-items: center;
+  }
+  .selected-player img {
+    width: 72px;
+    height: 72px;
+    object-fit: contain;
+    border-radius: 12px;
+    background: #eef2f7;
+  }
+  .weekly-admin-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+  }
+  .weekly-admin-card {
+    min-width: 0;
+    display: grid;
+    gap: 8px;
+    padding: 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    background: #f8fafc;
+  }
+  .weekly-admin-player {
+    display: grid;
+    grid-template-columns: 52px minmax(0, 1fr);
+    gap: 9px;
+    align-items: center;
+  }
+  .weekly-admin-player img {
+    width: 52px;
+    height: 68px;
+    object-fit: contain;
+  }
+  .weekly-admin-name {
+    min-width: 0;
+    color: #1f2937;
+    font-size: 13px;
+    font-weight: 900;
+    word-break: keep-all;
+  }
+  @media (max-width: 620px) {
+    .admin-row {
+      grid-template-columns: 1fr;
+    }
+    .admin-button {
+      width: 100%;
+    }
+    .weekly-admin-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="admin-wrap">
+  <div class="admin-head">
+    <div>
+      <h1 class="admin-title">선수 리뷰 요약 관리</h1>
+      <p class="admin-sub">비공개 관리자 페이지</p>
+    </div>
+    {% if is_authenticated %}
+      <form method="post">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <input type="hidden" name="action" value="logout">
+        <button class="admin-button secondary" type="submit">나가기</button>
+      </form>
+    {% endif %}
+  </div>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div class="flash-messages">
+        {% for category, message in messages %}
+          <div class="flash-message {{ category }}">{{ message }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+
+  {% if not is_authenticated %}
+    <section class="admin-panel">
+      {% if not admin_password_configured %}
+        <div class="flash-message danger">서버 환경변수 PLAYER_SUMMARY_ADMIN_PASSWORD가 설정되어야 접속할 수 있습니다.</div>
+      {% endif %}
+      <form class="admin-form" method="post">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <input type="hidden" name="action" value="login">
+        <div class="admin-field">
+          <label for="admin-password">관리자 비밀번호</label>
+          <input id="admin-password" name="admin_password" type="password" autocomplete="current-password">
+        </div>
+        <button class="admin-button" type="submit" {% if not admin_password_configured %}disabled{% endif %}>접속</button>
+      </form>
+    </section>
+  {% else %}
+    <section class="admin-panel">
+      <div>
+        <strong>이주의 선수 설정</strong>
+        <div class="admin-meta">홈에 표시할 서로 다른 카드 3장의 CID 또는 PID를 입력하세요.</div>
+      </div>
+      <form class="admin-form" method="post">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <input type="hidden" name="action" value="save_weekly_players">
+        <div class="weekly-admin-grid">
+          {% for player_id in weekly_player_ids %}
+            {% set weekly_player = weekly_players[loop.index0] %}
+            <div class="weekly-admin-card">
+              {% if weekly_player %}
+                <div class="weekly-admin-player">
+                  <img src="{{ weekly_player.pimage }}" alt="{{ weekly_player.playerKor }}">
+                  <div>
+                    <div class="weekly-admin-name">{{ weekly_player.className }} {{ weekly_player.playerKor }}</div>
+                    <div class="admin-meta">OVR {{ weekly_player.ovr }} · {{ weekly_player.position }}</div>
+                  </div>
+                </div>
+              {% endif %}
+              <div class="admin-field">
+                <label for="weekly-player-{{ loop.index }}">슬롯 {{ loop.index }} CID/PID</label>
+                <input id="weekly-player-{{ loop.index }}" name="weekly_player_{{ loop.index }}" inputmode="numeric" value="{{ player_id }}" required>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+        <button class="admin-button" type="submit">이주의 선수 저장</button>
+      </form>
+    </section>
+
+    <section class="admin-panel">
+      <form class="admin-row" method="get">
+        <div class="admin-field">
+          <label for="q">선수 검색</label>
+          <input id="q" name="q" value="{{ q or '' }}" placeholder="선수명, 클래스, CID">
+        </div>
+        <button class="admin-button" type="submit">검색</button>
+      </form>
+
+      {% if matches %}
+        <div class="admin-results">
+          {% for player in matches %}
+            <a class="admin-player-link {% if selected_player and selected_player.cid == player.cid %}is-selected{% endif %}" href="{{ url_for('player_review_summary_admin', q=q, cid=player.cid) }}">
+              <strong>{{ player.className }} {{ player.playerKor }}</strong>
+              <span class="admin-meta">CID {{ player.cid }} · OVR {{ player.ovr }} · {{ player.position }}</span>
+            </a>
+          {% endfor %}
+        </div>
+      {% elif q %}
+        <div class="flash-message info">검색 결과가 없습니다.</div>
+      {% endif %}
+    </section>
+
+    {% if selected_player %}
+      <section class="admin-panel">
+        <div class="selected-player">
+          <img src="{{ selected_player.pimage }}" alt="{{ selected_player.playerKor }}">
+          <div>
+            <strong>{{ selected_player.className }} {{ selected_player.playerKor }}</strong>
+            <div class="admin-meta">CID {{ selected_player.cid }} · OVR {{ selected_player.ovr }} · {{ selected_player.position }}</div>
+          </div>
+        </div>
+        <form class="admin-form" method="post">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+          <input type="hidden" name="action" value="save">
+          <input type="hidden" name="cid" value="{{ selected_player.cid }}">
+          <div class="admin-field">
+            <label for="review-summary-json">JSON 한 번에 입력</label>
+            <textarea id="review-summary-json" name="review_summary_json" placeholder='{"pros":["장점 1"],"cons":["단점 1"],"final_verdict":"최종 결론"}'></textarea>
+            <div class="admin-meta">입력 후 저장하면 pros는 장점, cons는 단점, final_verdict는 결론으로 자동 분리됩니다. JSON을 비워두면 아래 개별 입력값이 저장됩니다.</div>
+          </div>
+          <div class="admin-field">
+            <label for="summary">결론</label>
+            <textarea id="summary" name="summary">{{ selected_summary.get('summary', '') }}</textarea>
+          </div>
+          <div class="admin-field">
+            <label for="strengths">장점</label>
+            <textarea id="strengths" name="strengths">{{ selected_summary.get('strengths', '') }}</textarea>
+          </div>
+          <div class="admin-field">
+            <label for="weaknesses">단점</label>
+            <textarea id="weaknesses" name="weaknesses">{{ selected_summary.get('weaknesses', '') }}</textarea>
+          </div>
+          <div class="admin-row">
+            <button class="admin-button" type="submit">저장</button>
+            <a class="admin-button secondary" href="{{ url_for('player_detail', cid=selected_player.cid) }}">상세 보기</a>
+          </div>
+        </form>
+        {% if selected_summary %}
+          <form method="post" onsubmit="return confirm('이 선수 리뷰 요약을 삭제할까요?');">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <input type="hidden" name="action" value="delete">
+            <input type="hidden" name="cid" value="{{ selected_player.cid }}">
+            <button class="admin-button danger" type="submit">삭제</button>
+          </form>
+        {% endif %}
+      </section>
+    {% endif %}
+
+    {% if saved_summaries %}
+      <section class="admin-panel">
+        <strong>최근 저장된 요약</strong>
+        <div class="admin-results">
+          {% for item in saved_summaries %}
+            <a class="saved-item" href="{{ url_for('player_review_summary_admin', q=item.player_name, cid=item.player_cid) }}">
+              <strong>{{ item.player_class }} {{ item.player_name }}</strong>
+              <span class="admin-meta">CID {{ item.player_cid }} · {{ item.updated_at_iso }}</span>
+            </a>
+          {% endfor %}
+        </div>
+      </section>
+    {% endif %}
+  {% endif %}
+</div>
+{% endblock %}
