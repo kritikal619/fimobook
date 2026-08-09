@@ -370,7 +370,7 @@
   {% else %}
     <div class="grid">
       {% for player in players %}
-      <a class="player-card" href="{{ url_for('player_detail', cid=player.cid) }}" target="_blank" rel="noopener">
+      <a class="player-card" href="{{ url_for('player_detail', cid=player.cid) }}">
         <div class="thumb" style="background-image:url('{{ player.bimage or '' }}')">
           <img src="{{ player.pimage or '' }}" alt="{{ player.playerKor or '-' }}">
         </div>
