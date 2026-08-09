@@ -926,20 +926,10 @@ html[data-theme="dark"] .rating-section {
 }
 
 html[data-theme="dark"] .container > ul {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  padding: 0 !important;
   color: var(--dark-text) !important;
 }
 
 html[data-theme="dark"] .container > ul > li {
-  min-height: 34px;
-  margin: 0 !important;
-  padding: 5px 10px;
-  border: 1px solid var(--dark-line);
-  border-radius: 10px;
-  background: var(--dark-panel-soft);
   color: var(--dark-text) !important;
 }
 
