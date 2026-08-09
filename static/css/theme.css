@@ -6,9 +6,9 @@
   --dark-panel-soft: #1c273a;
   --dark-line: #334155;
   --dark-line-soft: #29364a;
-  --dark-text: #e5e7eb;
+  --dark-text: #e4eaf2;
   --dark-heading: #f8fafc;
-  --dark-muted: #9aa8ba;
+  --dark-muted: #aeb9c9;
   --dark-green: #34d399;
 }
 
@@ -424,6 +424,453 @@ html[data-theme="dark"] :is(.site-policy-section p, .site-policy-section li, .si
 
 html[data-theme="dark"] :is(.fimo-ad-shell, .adsbygoogle) {
   background-color: transparent !important;
+}
+
+/* Component-level dark surfaces.
+   These selectors intentionally pair background and foreground colors so a
+   light component can never inherit only half of the dark theme. */
+html[data-theme="dark"] :is(
+  .main-content,
+  .home-notice,
+  .weekly-card,
+  .quick-card,
+  .tool-glyph,
+  .coupon-card,
+  .recent-pill,
+  .latest-review-empty,
+  .notification-list,
+  .notification-empty,
+  .read-all-button,
+  .ranking-tab,
+  .review-hero,
+  .related-review,
+  .comment-form,
+  .comment-login,
+  .review-action,
+  .review-content-button,
+  .fimo-review-card-footer,
+  .fimo-review-owner-actions,
+  .fimo-review-owner-button,
+  .fimo-review-empty,
+  .admin-review-verdict,
+  .post-shell,
+  .reply-form,
+  .auth-switch,
+  .filter-section,
+  .filter-section-head,
+  .option-item,
+  .selected-list,
+  .search-summary,
+  .pagination,
+  .player-card,
+  .result-card
+) {
+  border-color: var(--dark-line) !important;
+  background: var(--dark-panel) !important;
+  color: var(--dark-text) !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] :is(
+  .review-section,
+  .latest-review-section,
+  .weekly-panel,
+  .coupon-panel
+) {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] :is(
+  .latest-review-item,
+  .review-rating-card,
+  .comment-item,
+  .stat-group-card,
+  .stat-row,
+  .review-chip,
+  .review-badge,
+  .notification-item,
+  .notification-icon,
+  .point-tile
+) {
+  border-color: var(--dark-line) !important;
+  background: var(--dark-panel-soft) !important;
+  color: var(--dark-text) !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] :is(
+  .quick-card:hover,
+  .home-notice:hover,
+  .coupon-card:hover,
+  .related-review:hover,
+  .fimo-review-card:hover,
+  .review-content-button:hover,
+  .review-action:hover
+) {
+  border-color: #3f806c !important;
+  background: #202d42 !important;
+}
+
+html[data-theme="dark"] :is(
+  .tool-coupon,
+  .tool-traits,
+  .tool-times,
+  .tool-community,
+  .tool-squad,
+  .tool-coupon .tool-glyph,
+  .tool-traits .tool-glyph,
+  .tool-times .tool-glyph,
+  .tool-community .tool-glyph,
+  .tool-squad .tool-glyph
+) {
+  border-color: #3f806c !important;
+  background: var(--dark-panel) !important;
+  color: #dce6f1 !important;
+}
+
+html[data-theme="dark"] :is(
+  .latest-review-post-title,
+  .latest-review-name,
+  .weekly-player-name,
+  .weekly-player-price,
+  .code-chip,
+  .review-detail-title,
+  .review-section-title,
+  .review-author,
+  .rating-label,
+  .related-title,
+  .fimo-review-card-title,
+  .fimo-review-card-author strong,
+  .admin-review-verdict-label,
+  .admin-review-verdict-copy,
+  .admin-review-text,
+  .review-title a,
+  .notification-message,
+  .post-title,
+  .post-content,
+  .comments-title,
+  .comment-user,
+  .comment-content,
+  .stat-label,
+  .stat-value,
+  .stat-group-total,
+  .compare-stat-name,
+  .compare-stat-value
+) {
+  color: var(--dark-text) !important;
+}
+
+html[data-theme="dark"] :is(
+  .latest-review-excerpt,
+  .latest-review-side,
+  .latest-review-author,
+  .review-player-class,
+  .review-byline,
+  .rating-note,
+  .related-meta,
+  .fimo-review-card-author,
+  .fimo-review-card-copy,
+  .fimo-review-comment-link,
+  .review-meta,
+  .review-text,
+  .post-meta,
+  .comment-meta,
+  .notification-time,
+  .ranking-period,
+  .ranking-count
+) {
+  color: var(--dark-muted) !important;
+}
+
+html[data-theme="dark"] :is(.review-position, .latest-review-kind, .fimo-review-card-chip.tier) {
+  background: #123b31 !important;
+  color: #6ee7b7 !important;
+}
+
+html[data-theme="dark"] :is(.latest-review-kind.summary, .review-badge) {
+  background: #17344d !important;
+  color: #93c5fd !important;
+}
+
+html[data-theme="dark"] :is(.review-action.danger, .comment-tool.danger, .fimo-review-owner-button.danger) {
+  border-color: #7f3f46 !important;
+  background: #3b2028 !important;
+  color: #fca5a5 !important;
+}
+
+html[data-theme="dark"] :is(.comment-tool, .reply-toggle) {
+  border-color: var(--dark-line) !important;
+  background: #243149 !important;
+  color: #cbd5e1 !important;
+}
+
+html[data-theme="dark"] :is(.notification-item.is-unread, .notification-item.is-unread:hover) {
+  background: #15362f !important;
+}
+
+html[data-theme="dark"] .unread-dot {
+  box-shadow: 0 0 0 3px #254a40 !important;
+}
+
+html[data-theme="dark"] :is(.admin-review-box.pros, .admin-review-box.cons) {
+  background: var(--dark-panel-soft) !important;
+}
+
+html[data-theme="dark"] :is(.admin-review-box + .admin-review-box, .admin-review-verdict, .fimo-review-card-footer, .fimo-review-owner-actions) {
+  border-color: var(--dark-line) !important;
+}
+
+html[data-theme="dark"] :is(.stat-group-head, .stats-title-row) {
+  border-color: var(--dark-line) !important;
+  color: var(--dark-heading) !important;
+}
+
+html[data-theme="dark"] .stat-row:nth-child(odd),
+html[data-theme="dark"] .stat-row:nth-child(even) {
+  background: var(--dark-panel-soft) !important;
+}
+
+html[data-theme="dark"] :is(.stat-bonus, .stat-bonus-group:empty) {
+  color: #6ee7b7 !important;
+}
+
+html[data-theme="dark"] :is(.review-player-art, .related-art, .latest-review-art, .weekly-player-art) {
+  background-color: #101827 !important;
+}
+
+html[data-theme="dark"] :is(.alert-success, .flash-message.success) {
+  border-color: #286452 !important;
+  background: #123b31 !important;
+  color: #a7f3d0 !important;
+}
+
+html[data-theme="dark"] :is(.alert-danger, .alert-error, .flash-message.error) {
+  border-color: #7f3f46 !important;
+  background: #3b2028 !important;
+  color: #fecaca !important;
+}
+
+html[data-theme="dark"] :is(.alert-info, .alert-warning) {
+  border-color: #66522d !important;
+  background: #332b1d !important;
+  color: #fde68a !important;
+}
+
+/* Remaining application surfaces (community, editors, comparison and tools). */
+html[data-theme="dark"] :is(
+  .editor-shell,
+  .admin-shell,
+  .admin-summary-box,
+  .club-career-table,
+  .review-preview-card,
+  .review-login,
+  .review-comment-entry,
+  .search-modal-content,
+  .compare-content,
+  .compare-head,
+  .compare-hero,
+  .compare-names,
+  .mf-main,
+  .mf-control,
+  .mf-btn-link,
+  .mf-file-wrap,
+  .md-btn,
+  .cm-wrap,
+  .md-shot-wrap,
+  .community-post,
+  .autocomplete-box,
+  .home-promo-nav,
+  .formation-pill,
+  .status-pill,
+  .detail-btn,
+  .mobile-overlay-select,
+  .modal-head,
+  .modal-controls,
+  .prime-search input,
+  .prime-group-select,
+  .coupon-input-btn,
+  .cw-badge,
+  .cw-link,
+  .cw-match-card,
+  .cw-rule-item,
+  .cw-sync,
+  .cw-topbar-btn,
+  .round,
+  .wc-match,
+  .wc-trophy
+) {
+  border-color: var(--dark-line) !important;
+  background: var(--dark-panel) !important;
+  color: var(--dark-text) !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] :is(
+  .ranking-panel-head,
+  .ranking-row,
+  .community-post:hover,
+  .autocomplete-item:hover,
+  .result-item:hover,
+  .review-preview-card:hover,
+  .cw-link:hover,
+  .cw-topbar-btn:hover
+) {
+  border-color: var(--dark-line) !important;
+  background: var(--dark-panel-soft) !important;
+  color: var(--dark-text) !important;
+}
+
+html[data-theme="dark"] :is(
+  .editor-title,
+  .editor-form .form-label,
+  .review-write-title,
+  .rating-name,
+  .skill-summary,
+  .profile-name,
+  .section-title,
+  .stats-number,
+  .class-tag,
+  .result-name,
+  .result-ovr,
+  .player-name,
+  .compare-name,
+  .group-title,
+  .slot-title,
+  .compare-group-title,
+  .compare-skill-name,
+  .review-board-title,
+  .rank-user,
+  .times-title,
+  .card-name,
+  .time-text,
+  .summary-playstyle-name,
+  .playstyle-popup-title,
+  .rating-section h2,
+  .rating-group label,
+  .price-chip-price,
+  .admin-summary-lead,
+  .admin-summary-label,
+  .admin-summary-text,
+  .club-career-club,
+  .review-title,
+  .review-head,
+  .review-text,
+  .stats-export-title,
+  .prime-result-title,
+  .prime-player-name,
+  .player-reviews-title,
+  .group-header,
+  .group-table,
+  .cw-card h3,
+  .cw-table th,
+  .cw-table td,
+  .cw-list,
+  .round h4,
+  .team,
+  .wc-score,
+  .wc-watermark-text
+) {
+  color: var(--dark-text) !important;
+}
+
+html[data-theme="dark"] :is(
+  .autocomplete-item,
+  .player-reviews-breadcrumb,
+  .review-board-author,
+  .review-board-meta,
+  .ranking-subtitle,
+  .prime-result-meta,
+  .coupon-sub,
+  .weekly-sub,
+  .home-notice-preview,
+  .result-meta,
+  .player-meta,
+  .compare-meta
+) {
+  color: var(--dark-muted) !important;
+}
+
+html[data-theme="dark"] :is(
+  .field select,
+  .field input,
+  .field textarea,
+  .admin-field input,
+  .admin-field textarea,
+  .search-row input,
+  .compare-skill-select,
+  .review-field select,
+  .review-field textarea,
+  .comment-form textarea
+) {
+  border-color: var(--dark-line) !important;
+  background: var(--dark-bg-soft) !important;
+  color: var(--dark-text) !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] :is(.pager a, .pager span, .summary-chip, .playstyle-pill) {
+  border-color: var(--dark-line) !important;
+  background: #243149 !important;
+  color: #d7e0eb !important;
+}
+
+html[data-theme="dark"] :is(.cw-alert, .cw-tag) {
+  border-color: #31577c !important;
+  background: #17344d !important;
+  color: #bfdbfe !important;
+}
+
+html[data-theme="dark"] :is(.cw-alert.error, .cw-btn.danger) {
+  border-color: #7f3f46 !important;
+  background: #3b2028 !important;
+  color: #fecaca !important;
+}
+
+html[data-theme="dark"] :is(.filter-section-head strong, .filter-section-head span) {
+  color: var(--dark-text) !important;
+}
+
+html[data-theme="dark"] :is(.fimo-ad-label, .data-source) {
+  color: var(--dark-muted) !important;
+}
+
+html[data-theme="dark"] :is(.post-badge, .ranking-more, .review-page-link:not(.active)) {
+  border-color: var(--dark-line) !important;
+  background: #243149 !important;
+  color: #d7e0eb !important;
+}
+
+html[data-theme="dark"] .post-badge.is-pinned {
+  background: #123b31 !important;
+  color: #6ee7b7 !important;
+}
+
+html[data-theme="dark"] :is(.summary-playstyles, .summary-playstyle) {
+  border-color: var(--dark-line) !important;
+}
+
+html[data-theme="dark"] .summary-playstyle {
+  background: var(--dark-panel-soft) !important;
+  color: var(--dark-text) !important;
+}
+
+html[data-theme="dark"] :is(.summary-playstyles-title, .summary-playstyle-desc, .tier-column, .tier-help) {
+  color: var(--dark-muted) !important;
+}
+
+html[data-theme="dark"] .tier-bar-track {
+  background: #243149 !important;
+}
+
+html[data-theme="dark"] .tier-vote {
+  background: color-mix(in srgb, var(--tier-color, #94a3b8) 12%, var(--dark-panel-soft)) !important;
+  color: var(--dark-text) !important;
+}
+
+html[data-theme="dark"] ::selection {
+  background: #0f766e;
+  color: #ffffff;
 }
 
 html[data-theme="dark"] :is(.error-container, .flash-message) {
