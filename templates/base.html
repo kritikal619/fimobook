@@ -461,6 +461,7 @@
       }
     }
   </style>
+  {% include "_theme_head.html" %}
 </head>
 
 <body class="{% block body_class %}{% endblock %}">
@@ -518,6 +519,10 @@
           <a href="{{ url_for('register') }}"><i class="bi bi-person-plus nav-icon" aria-hidden="true"></i>회원가입</a>
         {% endif %}
       </div>
+      <button class="theme-toggle theme-toggle--nav" type="button" data-theme-toggle aria-label="다크 모드로 전환" aria-pressed="false">
+        <i class="bi bi-moon-stars" data-theme-icon aria-hidden="true"></i>
+        <span class="theme-toggle__sr" data-theme-label>다크 모드</span>
+      </button>
     </nav>
   </div>
 

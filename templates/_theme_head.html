@@ -1,0 +1,20 @@
+<script>
+  (function () {
+    var storageKey = "fimobook-theme";
+    var theme = "light";
+    try {
+      var saved = localStorage.getItem(storageKey);
+      if (saved === "dark" || saved === "light") {
+        theme = saved;
+      } else if (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) {
+        theme = "dark";
+      }
+    } catch (error) {
+      theme = "light";
+    }
+    document.documentElement.dataset.theme = theme;
+    document.documentElement.style.colorScheme = theme;
+  })();
+</script>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}">
+<script defer src="{{ url_for('static', filename='js/theme.js') }}"></script>

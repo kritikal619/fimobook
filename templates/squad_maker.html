@@ -2233,6 +2233,7 @@
         }
     </style>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/player-art-ratio.css') }}">
+    {% include "_theme_head.html" %}
 </head>
 <body>
     <div class="app-shell">
@@ -2243,6 +2244,10 @@
             </a>
             <div class="topbar-actions">
                 <a class="ghost-link" href="{{ url_for('index') }}">홈</a>
+                <button class="theme-toggle" type="button" data-theme-toggle aria-label="다크 모드로 전환" aria-pressed="false">
+                    <span data-theme-icon aria-hidden="true">☾</span>
+                    <span class="theme-toggle__sr" data-theme-label>다크 모드</span>
+                </button>
                 <button id="save-image-btn" class="ghost-btn" type="button">이미지 저장</button>
             </div>
         </header>
