@@ -523,21 +523,32 @@
     .top-grid,.career-grid { padding:14px; border-radius:14px; }
     .filter-section-head { align-items:flex-start; flex-direction:column; gap:4px; }
   }
-  /* Flat, utility-first detail search */
+  /* Player-detail aligned search interface */
   .detail-search-wrap {
-    gap: 14px;
+    max-width: 860px;
+    gap: 16px;
   }
   .hero {
-    padding: 0 0 14px;
-    border-bottom: 2px solid #1f2937;
+    padding: 8px 0 4px;
+    border-bottom: 0;
+  }
+  .hero-copy {
+    max-width: none;
+    text-align: center;
   }
   .hero h1 {
     font-family: 'IBM Plex Sans KR', 'Apple SD Gothic Neo', sans-serif;
-    font-size: 27px;
-    font-weight: 800;
-    letter-spacing: -0.7px;
+    font-size: 26px;
+    font-weight: 700;
+    letter-spacing: -1px;
   }
-  .panel,
+  .panel {
+    padding: 14px;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    background: #ffffff;
+    box-shadow: none;
+  }
   .top-grid,
   .career-grid,
   .multi-box {
@@ -545,26 +556,26 @@
   }
   .section-title,
   .filter-section-head strong {
-    font-size: 16px;
-    font-weight: 800;
-    letter-spacing: -0.25px;
+    font-size: 14px;
+    font-weight: 900;
+    letter-spacing: -0.3px;
   }
   .section-title {
-    margin-bottom: 8px;
-    padding: 0 0 8px;
-    border-bottom: 1px solid #cbd5e1;
+    margin: 0 0 10px;
+    padding: 0;
+    border-bottom: 0;
   }
   .filter-section-head {
-    margin: 20px 0 8px;
-    padding-bottom: 8px;
-    border-bottom-color: #cbd5e1;
+    margin: 20px 0 10px;
+    padding: 0;
+    border-bottom: 0;
   }
   .top-grid,
   .career-grid {
-    padding: 14px;
-    border: 1px solid #d7e0e8;
-    border-radius: 12px;
-    background: #ffffff;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
   }
   .top-grid {
     gap: 10px;
@@ -574,7 +585,7 @@
   }
   .field label,
   .filter-label {
-    color: #475569;
+    color: #64748b;
     font-size: 12px;
     font-weight: 700;
   }
@@ -583,16 +594,17 @@
     min-height: 42px;
     padding: 0 11px;
     border-color: #cbd5e1;
-    border-radius: 9px;
-    background: #ffffff;
-    font-size: 13px;
-    font-weight: 700;
+    border-radius: 10px;
+    background: #f8fafc;
+    color: #1f2937;
+    font-size: 14px;
+    font-weight: 800;
     transition: border-color .15s ease;
   }
   .control:focus,
   .control-select:focus {
     border-color: #087f5b;
-    background: #ffffff;
+    background: #f8fafc;
     box-shadow: none;
   }
   .filter-grid {
@@ -600,11 +612,11 @@
   }
   .multi-box {
     border-color: #d7e0e8;
-    border-radius: 11px;
-    background: #ffffff;
+    border-radius: 12px;
+    background: #f8fafc;
   }
   .multi-head {
-    min-height: 42px;
+    min-height: 44px;
     padding: 0 10px;
     border-bottom-color: #e5eaf0;
   }
@@ -623,9 +635,9 @@
     min-width: 22px;
     height: 22px;
     padding: 0 6px;
-    border: 1px solid #bbf7d0;
-    border-radius: 8px;
-    background: #ffffff;
+    border: 0;
+    border-radius: 999px;
+    background: #ecfdf5;
     font-size: 11px;
     font-weight: 800;
   }
@@ -635,6 +647,7 @@
     margin: 9px 10px 7px;
     border-color: #d7e0e8;
     border-radius: 8px;
+    background: #ffffff;
     font-weight: 600;
   }
   .option-list {
@@ -657,8 +670,8 @@
     min-height: 42px;
     padding: 0 12px;
     border-color: #cbd5e1;
-    border-radius: 9px;
-    background: #ffffff;
+    border-radius: 10px;
+    background: #f8fafc;
     color: #334155;
     font-weight: 800;
   }
@@ -672,7 +685,7 @@
   .btn {
     min-height: 42px;
     padding: 0 16px;
-    border-radius: 9px;
+    border-radius: 10px;
     background: #ffffff;
     font-size: 13px;
     font-weight: 800;
@@ -693,10 +706,11 @@
 
   @media (max-width: 720px) {
     .detail-search-wrap { gap: 12px; }
-    .hero { padding: 0 0 11px; }
-    .hero h1 { font-size: 23px; }
+    .hero { padding: 4px 0; }
+    .hero h1 { font-size: 24px; }
+    .panel { padding: 12px; border-radius: 14px; }
     .top-grid,
-    .career-grid { padding: 11px; border-radius: 10px; }
+    .career-grid { padding: 0; border-radius: 0; }
     .filter-section-head { margin-top: 17px; }
     .actions { gap: 8px; }
   }
