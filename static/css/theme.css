@@ -846,6 +846,168 @@ html[data-theme="dark"] .post-badge.is-pinned {
   color: #6ee7b7 !important;
 }
 
+/* Player detail: stat guide, popups, traits and supporting controls. */
+html[data-theme="dark"] :is(
+  .stat-guide-open,
+  .stat-guide-close,
+  .playstyle-popup-close,
+  .stats-export-close
+) {
+  border-color: var(--dark-line) !important;
+  background: var(--dark-panel-soft) !important;
+  color: var(--dark-text) !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] :is(.stat-guide-open:hover, .stat-guide-close:hover, .playstyle-popup-close:hover) {
+  border-color: #3f806c !important;
+  background: #243149 !important;
+  color: #6ee7b7 !important;
+}
+
+html[data-theme="dark"] .stat-guide-dialog {
+  border: 1px solid var(--dark-line) !important;
+  background: var(--dark-bg-soft) !important;
+  color: var(--dark-text) !important;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, .5) !important;
+  color-scheme: dark;
+}
+
+html[data-theme="dark"] .stat-guide-head {
+  border-color: var(--dark-line) !important;
+  background: rgba(17, 26, 43, .97) !important;
+  color: var(--dark-heading) !important;
+}
+
+html[data-theme="dark"] :is(.stat-guide-title strong, .stat-guide-group h3, .stat-guide-item dt) {
+  color: var(--dark-heading) !important;
+}
+
+html[data-theme="dark"] :is(.stat-guide-title span, .stat-guide-item dd) {
+  color: var(--dark-muted) !important;
+}
+
+html[data-theme="dark"] :is(.stat-guide-notice, .stat-guide-group, .stat-guide-item) {
+  border-color: var(--dark-line) !important;
+  background: var(--dark-panel) !important;
+  color: var(--dark-text) !important;
+}
+
+html[data-theme="dark"] .stat-guide-group h3 {
+  border-bottom: 1px solid var(--dark-line) !important;
+  background: #101827 !important;
+}
+
+html[data-theme="dark"] .stat-guide-item + .stat-guide-item {
+  border-color: var(--dark-line-soft) !important;
+}
+
+html[data-theme="dark"] :is(.playstyle-popup-desc, .skill-stat-popup-list) {
+  color: var(--dark-muted) !important;
+}
+
+html[data-theme="dark"] .skill-stat-popup-chip {
+  border: 1px solid #31577c !important;
+  background: #17344d !important;
+  color: #bfdbfe !important;
+}
+
+html[data-theme="dark"] .rating-section {
+  border-color: var(--dark-line) !important;
+  background: var(--dark-panel) !important;
+  color: var(--dark-text) !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] .container > ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 0 !important;
+  color: var(--dark-text) !important;
+}
+
+html[data-theme="dark"] .container > ul > li {
+  min-height: 34px;
+  margin: 0 !important;
+  padding: 5px 10px;
+  border: 1px solid var(--dark-line);
+  border-radius: 10px;
+  background: var(--dark-panel-soft);
+  color: var(--dark-text) !important;
+}
+
+html[data-theme="dark"] .other-classes::-webkit-scrollbar-thumb {
+  background: #40516a !important;
+}
+
+/* Home carousel: the light career banner needs a true dark counterpart. */
+html[data-theme="dark"] .career-home-banner {
+  border-color: #2f8065 !important;
+  background:
+    radial-gradient(circle at 84% 22%, rgba(52, 211, 153, .18), transparent 32%),
+    linear-gradient(118deg, #12251f 0%, #153329 55%, #173743 100%) !important;
+  color: var(--dark-text) !important;
+}
+
+html[data-theme="dark"] .career-home-banner::before {
+  background: repeating-linear-gradient(135deg, transparent 0 24px, rgba(110, 231, 183, .04) 24px 25px) !important;
+}
+
+html[data-theme="dark"] :is(.career-home-banner .prime-home-title, .career-home-banner .prime-home-kicker) {
+  color: #d1fae5 !important;
+}
+
+html[data-theme="dark"] .career-home-banner .prime-home-desc {
+  color: #a7c7bb !important;
+}
+
+html[data-theme="dark"] .career-home-banner .prime-home-cta {
+  border-color: #3f806c !important;
+  background: #193c32 !important;
+  color: #a7f3d0 !important;
+}
+
+html[data-theme="dark"] .career-home-visual::before {
+  border-color: #3f806c !important;
+  background: #162d27 !important;
+}
+
+html[data-theme="dark"] :is(.fimo-ad-shell.is-horizontal, .fimo-ad-shell.is-grid-card, .fimo-ad-shell.is-compact) {
+  border-color: var(--dark-line) !important;
+  background: var(--dark-panel) !important;
+}
+
+html[data-theme="dark"] :is(.price-chip-level, .fimo-review-empty strong) {
+  color: var(--dark-text) !important;
+}
+
+html[data-theme="dark"] :is(.tier-help a, .review-login a, .comment-login a, .review-breadcrumb a) {
+  color: #6ee7b7 !important;
+}
+
+html[data-theme="dark"] .count-pill {
+  border-color: #3f806c !important;
+  background: #123b31 !important;
+  color: #6ee7b7 !important;
+}
+
+html[data-theme="dark"] :is(
+  .community-search-button,
+  .review-page-link.active,
+  .write-button,
+  .comment-submit,
+  .btn-primary
+) {
+  border-color: #047857 !important;
+  background: #047857 !important;
+  color: #ffffff !important;
+}
+
+html[data-theme="dark"] .prime-result-count strong {
+  color: #6ee7b7 !important;
+}
+
 html[data-theme="dark"] :is(.summary-playstyles, .summary-playstyle) {
   border-color: var(--dark-line) !important;
 }
