@@ -367,14 +367,29 @@
     text-align:center;
   }
 
-  /* ===== 프라임 교환 효율 배너 ===== */
+  /* ===== 홈 프로모션 스와이프 배너 ===== */
+  .home-promo-rail{
+    width:100%;
+    max-width:800px;
+    margin-top:16px;
+    padding:0 0 4px;
+    display:flex;
+    gap:10px;
+    overflow-x:auto;
+    overscroll-behavior-x:contain;
+    scroll-snap-type:x mandatory;
+    scrollbar-width:none;
+    -webkit-overflow-scrolling:touch;
+  }
+  .home-promo-rail::-webkit-scrollbar{ display:none; }
   .prime-home-banner{
     position:relative;
     isolation:isolate;
-    width:100%;
-    max-width:800px;
+    flex:0 0 calc(100% - 36px);
+    width:auto;
+    max-width:none;
     min-height:132px;
-    margin-top:16px;
+    margin:0;
     overflow:hidden;
     display:grid;
     grid-template-columns:minmax(0, 1fr) 170px;
@@ -385,11 +400,12 @@
       radial-gradient(circle at 83% 23%, rgba(225,111,230,.35), transparent 27%),
       radial-gradient(circle at 68% 115%, rgba(61,210,200,.27), transparent 41%),
       linear-gradient(118deg, #12182c 0%, #1a1940 56%, #302063 100%);
-    box-shadow:0 14px 28px rgba(27,24,68,.16);
+    box-shadow:none;
     color:#fff;
     text-decoration:none;
     box-sizing:border-box;
-    transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+    scroll-snap-align:start;
+    transition:transform .18s ease, border-color .18s ease;
   }
   .prime-home-banner::before{
     position:absolute;
@@ -402,8 +418,8 @@
   }
   .prime-home-banner:hover{
     border-color:rgba(138,255,238,.62);
-    box-shadow:0 18px 34px rgba(27,24,68,.22);
-    transform:translateY(-2px);
+    box-shadow:none;
+    transform:translateY(-1px);
     text-decoration:none;
   }
   .prime-home-content{
@@ -424,7 +440,7 @@
     height:6px;
     border-radius:50%;
     background:#69f4df;
-    box-shadow:0 0 0 4px rgba(105,244,223,.12);
+    box-shadow:none;
     content:"";
   }
   .prime-home-title{
@@ -480,11 +496,51 @@
     width:126px;
     height:auto;
     margin-top:3px;
-    filter:drop-shadow(0 8px 10px rgba(7,5,29,.38));
+    filter:none;
     transform:rotate(3deg);
     transition:transform .2s ease;
   }
   .prime-home-banner:hover .prime-home-logo{ transform:rotate(0) scale(1.035); }
+  .career-home-banner{
+    border-color:#86efac;
+    background:
+      radial-gradient(circle at 84% 22%, rgba(52,211,153,.16), transparent 31%),
+      linear-gradient(118deg, #f0fdf4 0%, #ecfdf5 55%, #ecfeff 100%);
+    color:#16352c;
+  }
+  .career-home-banner::before{
+    background:repeating-linear-gradient(135deg, transparent 0 24px, rgba(5,150,105,.035) 24px 25px);
+  }
+  .career-home-banner:hover{ border-color:#10b981; }
+  .career-home-banner .prime-home-kicker{ color:#047857; }
+  .career-home-banner .prime-home-kicker::before{ background:#10b981; }
+  .career-home-banner .prime-home-title{ color:#16352c; }
+  .career-home-banner .prime-home-desc{ color:#4b635b; }
+  .career-home-banner .prime-home-cta{
+    border-color:#6ee7b7;
+    background:#ffffff;
+    color:#047857;
+  }
+  .career-home-visual::before{
+    width:112px;
+    height:112px;
+    border:1px solid #a7f3d0;
+    background:#ffffff;
+    filter:none;
+  }
+  .career-home-icon{
+    position:relative;
+    width:70px;
+    height:70px;
+    border:1px solid #34d399;
+    border-radius:22px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:#ffffff;
+    color:#059669;
+    font-size:34px;
+  }
 
   /* ===== 추천 툴 ===== */
   .tools-wrap{
@@ -652,10 +708,14 @@
       margin-top:-3px;
     }
     .latest-review-score{ font-size:11px; }
+    .home-promo-rail{
+      gap:8px;
+      margin-top:13px;
+    }
     .prime-home-banner{
+      flex-basis:calc(100% - 22px);
       min-height:118px;
       grid-template-columns:minmax(0, 1fr) 112px;
-      margin-top:13px;
       border-radius:15px;
     }
     .prime-home-content{ padding:15px 0 15px 16px; }
@@ -664,6 +724,7 @@
     .prime-home-cta{ margin-top:8px; }
     .prime-home-logo{ width:94px; }
     .prime-home-visual::before{ width:96px; height:96px; }
+    .career-home-icon{ width:58px; height:58px; border-radius:18px; font-size:28px; }
   }
 
   .data-source{
@@ -1091,17 +1152,30 @@
       </div>
     </section>
 
-    <a class="prime-home-banner" href="{{ url_for('prime_exchange_page') }}" aria-label="프라임 교환 효율 순위 보기">
-      <span class="prime-home-content">
-        <span class="prime-home-kicker">PRIME EXCHANGE</span>
-        <strong class="prime-home-title">프라임 교환 효율</strong>
-     
-        <span class="prime-home-cta">효율 순위 보기 <i class="bi bi-arrow-right" aria-hidden="true"></i></span>
-      </span>
-      <span class="prime-home-visual" aria-hidden="true">
-        <img class="prime-home-logo" src="{{ url_for('static', filename='images/prime-token-mark.svg') }}" alt="">
-      </span>
-    </a>
+    <div class="home-promo-rail" aria-label="추천 기능" tabindex="0">
+      <a class="prime-home-banner" href="{{ url_for('prime_exchange_page') }}" aria-label="프라임 교환 효율 순위 보기">
+        <span class="prime-home-content">
+          <span class="prime-home-kicker">PRIME EXCHANGE</span>
+          <strong class="prime-home-title">프라임 교환 효율</strong>
+          <span class="prime-home-cta">효율 순위 보기 <i class="bi bi-arrow-right" aria-hidden="true"></i></span>
+        </span>
+        <span class="prime-home-visual" aria-hidden="true">
+          <img class="prime-home-logo" src="{{ url_for('static', filename='images/prime-token-mark.svg') }}" alt="">
+        </span>
+      </a>
+
+      <a class="prime-home-banner career-home-banner" href="{{ url_for('traits_selection') }}" aria-label="전체경력을 포함해 선수 세부검색하기">
+        <span class="prime-home-content">
+          <span class="prime-home-kicker">ALL CAREER SEARCH</span>
+          <strong class="prime-home-title">전체경력으로 선수검색</strong>
+          <span class="prime-home-desc">현재 팀뿐 아니라 이전 소속팀 경력까지 포함해서 찾아보세요.</span>
+          <span class="prime-home-cta">선수 세부검색 열기 <i class="bi bi-arrow-right" aria-hidden="true"></i></span>
+        </span>
+        <span class="prime-home-visual career-home-visual" aria-hidden="true">
+          <span class="career-home-icon"><i class="bi bi-clock-history"></i></span>
+        </span>
+      </a>
+    </div>
 
     <div class="tools-wrap">
       <div class="tools-title">바로가기</div>
