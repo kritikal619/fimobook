@@ -3410,14 +3410,63 @@
             }, 0);
         }
 
-        function buildSkillSelectors() {
+        function normalizeSkillSelections(changedCard) {
+            if (skillType !== 'skill') return;
             const enhance = Number(enhanceSelect?.value || 0);
+
+            // Clear selections that are no longer unlocked and cap each card at
+            // its own limit before applying the shared enhancement-point budget.
             skillCards.forEach(card => {
                 const select = card.querySelector('[data-skill-level-select]');
                 if (!select) return;
-                const current = Math.min(Number(select.value || 0), enhance);
                 const unlocked = isSkillUnlocked(card);
-                const max = unlocked ? (skillType === 'boost' ? enhance : Math.min(maxPointsForCard(card), enhance)) : 0;
+                const current = Math.max(0, Number(select.value || 0));
+                select.value = String(unlocked ? Math.min(current, maxPointsForCard(card)) : 0);
+            });
+
+            let spent = selectedSkillPoints();
+            if (spent <= enhance) return;
+
+            // When a skill select caused the overflow, trim that new choice only.
+            // Previously the DOM-order calculation reduced a different skill.
+            if (changedCard && skillCards.includes(changedCard)) {
+                const changedSelect = changedCard.querySelector('[data-skill-level-select]');
+                if (changedSelect) {
+                    const changedPoints = Number(changedSelect.value || 0);
+                    const otherSpent = spent - changedPoints;
+                    changedSelect.value = String(Math.min(changedPoints, Math.max(0, enhance - otherSpent)));
+                    spent = selectedSkillPoints();
+                }
+            }
+
+            // Enhancement can also be lowered directly. Reconcile that case in
+            // a stable order so the final selection always fits the new budget.
+            if (spent > enhance) {
+                let remaining = enhance;
+                skillCards.forEach(card => {
+                    const select = card.querySelector('[data-skill-level-select]');
+                    if (!select) return;
+                    const points = Math.min(Number(select.value || 0), Math.max(0, remaining));
+                    select.value = String(points);
+                    remaining -= points;
+                });
+            }
+        }
+
+        function buildSkillSelectors(changedCard = null) {
+            const enhance = Number(enhanceSelect?.value || 0);
+            normalizeSkillSelections(changedCard);
+            const selectedTotal = selectedSkillPoints();
+            skillCards.forEach(card => {
+                const select = card.querySelector('[data-skill-level-select]');
+                if (!select) return;
+                const current = Number(select.value || 0);
+                const unlocked = isSkillUnlocked(card);
+                const otherSpent = Math.max(0, selectedTotal - current);
+                const remainingForCard = Math.max(0, enhance - otherSpent);
+                const max = unlocked
+                    ? (skillType === 'boost' ? enhance : Math.min(maxPointsForCard(card), remainingForCard))
+                    : 0;
                 select.innerHTML = Array.from({ length: max + 1 }, (_, level) => {
                     const label = skillType === 'boost' ? `${level}레벨 (+${Number(skillBoostValues[level] || 0)})` : `${level}pt (+${pointValueForCard(card, level)})`;
                     return `<option value="${level}">${label}</option>`;
@@ -3515,11 +3564,11 @@
             });
         }
 
-        function updateDetailConfig() {
+        function updateDetailConfig(changedSkillCard = null) {
             const enhance = Number(enhanceSelect?.value || 0);
             const enhanceOvrBonus = Number(enhanceTotals[enhance] || 0);
             const enhanceStatBonus = enhanceOvrBonus * enhanceStatBonusPerOvr;
-            buildSkillSelectors();
+            buildSkillSelectors(changedSkillCard);
             const skillBonuses = getSkillBonuses();
             const trainingBonuses = getTrainingBonuses();
 
@@ -3561,10 +3610,10 @@
             });
         }
 
-        enhanceSelect?.addEventListener('change', updateDetailConfig);
-        trainingSelect?.addEventListener('change', updateDetailConfig);
+        enhanceSelect?.addEventListener('change', () => updateDetailConfig());
+        trainingSelect?.addEventListener('change', () => updateDetailConfig());
         skillCards.forEach(card => {
-            card.querySelector('[data-skill-level-select]')?.addEventListener('change', updateDetailConfig);
+            card.querySelector('[data-skill-level-select]')?.addEventListener('change', () => updateDetailConfig(card));
         });
         updateDetailConfig();
         {% endif %}
