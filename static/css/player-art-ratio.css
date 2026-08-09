@@ -1,0 +1,46 @@
+/*
+ * Keep every player-card face layer aligned with the compact "다른 클래스"
+ * cards on the player detail page. The frame and face share the exact same
+ * box, so cards render consistently instead of shrinking or dropping the face.
+ */
+.other-class-image > img,
+.thumb > img,
+.card-image > img,
+.player-reviews-art > img,
+.review-player-art > img,
+.related-art > img,
+.prime-player-art > img,
+.review-board-art > img,
+.latest-review-art > img,
+.weekly-player-art > img,
+.mini-thumb > img,
+.result-thumb > img,
+.compare-thumb > img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  transform: none;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+}
+
+/* The detail, comparison and squad pages paint the face as a background. */
+.player-image,
+.card-face {
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border-radius: 0;
+  box-sizing: border-box;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+body:not(.mobile-layout) .player-image {
+  background-position: center;
+}

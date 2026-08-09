@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>500 - 서버 오류 | 피모북</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(120deg, #eef4fb 0%, #fafdff 100%);
+            margin: 0;
+            min-height: 100vh;
+            font-family: 'Poppins', 'Apple SD Gothic Neo', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 0 15px;
+            overflow-x: hidden;
+        }
+
+        .brandbar {
+            margin-top: 30px;
+            display: flex;
+            align-items: center;
+            gap: 11px;
+            color: #1971c2;
+            font-weight: 700;
+            font-size: 18px;
+            opacity: 0.88;
+            letter-spacing: -0.6px;
+        }
+
+        .brandbar img {
+            width: 24px;
+            height: 24px;
+            border-radius: 6px;
+            box-shadow: 0 1px 8px rgba(0,0,0,0.07);
+        }
+
+        .error-container {
+            background-color: #fff;
+            padding: 35px 30px 27px 30px;
+            border-radius: 18px;
+            box-shadow: 0 7px 30px rgba(33,51,87,0.12);
+            width: 100%;
+            max-width: 900px;
+            margin: 38px 0 0 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            animation: popIn .5s cubic-bezier(0.25, 1.2, 0.5, 1.2);
+        }
+
+        @keyframes popIn {
+            from { 
+                transform: translateY(30px) scale(0.97); 
+                opacity: 0.2;
+            }
+            to { 
+                transform: none; 
+                opacity: 1;
+            }
+        }
+
+        .error-code {
+            font-size: 120px;
+            font-weight: 900;
+            color: #e74c3c;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(231, 76, 60, 0.2);
+            animation: shake 1s infinite;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+            20%, 40%, 60%, 80% { transform: translateX(5px); }
+        }
+
+        h1 {
+            color: #23282d;
+            font-size: 25px;
+            font-weight: 700;
+            margin-bottom: 22px;
+            text-align: center;
+            letter-spacing: -1px;
+        }
+
+        .error-message {
+            color: #666;
+            font-size: 16px;
+            margin-bottom: 25px;
+            line-height: 1.6;
+            text-align: center;
+        }
+
+        .warning-emoji {
+            font-size: 40px;
+            margin: 20px 0;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .status-info {
+            color: #e74c3c;
+            background: #ffefee;
+            border: 1.5px solid #ffd4d1;
+            border-radius: 10px;
+            padding: 17px;
+            margin-bottom: 18px;
+            text-align: center;
+            font-weight: 500;
+            font-size: 15px;
+            width: 100%;
+            line-height: 1.5;
+        }
+
+        .status-info strong {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 16px;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 25px;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 13px 34px;
+            border: none;
+            border-radius: 11px;
+            font-size: 16px;
+            font-weight: 600;
+            text-decoration: none;
+            cursor: pointer;
+            letter-spacing: 0.2px;
+            transition: all 0.23s ease;
+            box-shadow: 0 2px 10px 0 rgba(46,130,255,0.06);
+        }
+
+        .btn-refresh {
+            background: linear-gradient(90deg, #e6f5ff, #cce6ff);
+            color: #228be6;
+        }
+
+        .btn-refresh:hover {
+            background: linear-gradient(90deg, #bee3ff, #d2e4f7);
+            color: #1864ab;
+            transform: translateY(-2px) scale(1.04);
+            box-shadow: 0 4px 18px 0 rgba(46,130,255,0.11);
+        }
+
+        .btn-primary {
+            background: linear-gradient(90deg, #e6f5ff, #cce6ff);
+            color: #228be6;
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(90deg, #bee3ff, #d2e4f7);
+            color: #1864ab;
+            transform: translateY(-2px) scale(1.04);
+            box-shadow: 0 4px 18px 0 rgba(46,130,255,0.11);
+        }
+
+        .btn-secondary {
+            background: #adb5bd;
+            color: #fff;
+            opacity: 0.89;
+        }
+
+        .btn-secondary:hover {
+            background: #868e96;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 18px 0 rgba(46,130,255,0.11);
+        }
+
+        .footer-text {
+            margin-top: 30px;
+            font-size: 14px;
+            color: #999;
+            opacity: 0.7;
+        }
+
+        /* 모바일 최적화 */
+        @media (max-width: 960px) {
+            .error-container {
+                max-width: 95vw;
+                padding: 3vw 3vw 2.5vw 3vw;
+            }
+        }
+
+        @media (max-width: 560px) {
+            .brandbar {
+                margin-top: 24px;
+                font-size: 16px;
+                gap: 8px;
+            }
+            
+            .brandbar img {
+                width: 22px;
+                height: 22px;
+            }
+            
+            .error-container {
+                margin: 28px 0 0 0;
+                padding: 30px 4vw 25px 4vw;
+                border-radius: 14px;
+            }
+            
+            .error-code {
+                font-size: 80px;
+            }
+            
+            h1 {
+                font-size: 20px;
+                margin-bottom: 15px;
+            }
+            
+            .error-message {
+                font-size: 15px;
+                margin-bottom: 20px;
+            }
+            
+            .status-info {
+                font-size: 14px;
+                padding: 12px;
+                margin-bottom: 15px;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .btn {
+                padding: 10px 25px;
+                font-size: 14px;
+                border-radius: 9px;
+                width: 100%;
+                text-align: center;
+            }
+        }
+
+        @media (max-width: 380px) {
+            .brandbar {
+                margin-top: 20px;
+                font-size: 14px;
+                gap: 6px;
+            }
+            
+            .brandbar img {
+                width: 20px;
+                height: 20px;
+            }
+            
+            .error-container {
+                margin: 24px 0 0 0;
+                padding: 25px 3vw 20px 3vw;
+                border-radius: 12px;
+            }
+            
+            h1 {
+                font-size: 18px;
+                margin-bottom: 12px;
+            }
+            
+            .error-message {
+                font-size: 14px;
+                margin-bottom: 18px;
+            }
+            
+            .status-info {
+                font-size: 13px;
+                padding: 10px;
+                margin-bottom: 12px;
+            }
+            
+            .btn {
+                padding: 9px 20px;
+                font-size: 13px;
+                border-radius: 8px;
+            }
+        }
+    </style>
+  {% include "_theme_head.html" %}
+</head>
+<body>
+    <div class="brandbar">
+        <span></span>
+        피모북
+    </div>
+    
+    <div class="error-container">
+        <div class="error-code">500</div>
+        
+        <h1>서버에 문제가 발생했습니다!</h1>
+        
+        <p class="error-message">
+            일시적인 서버 오류로 인해 요청을 처리할 수 없습니다.<br>
+            잠시 후 다시 시도해주세요.
+        </p>
+        
+        <div class="warning-emoji">⚠️</div>
+        
+        <div class="status-info">
+            <strong>해결 방법:</strong>
+            • 페이지를 새로고침해보세요<br>
+            • 잠시 후 다시 접속해보세요<br>
+            • 현재 공식 웹사이트가 점검 중
+        </div>
+        
+        <div class="action-buttons">
+            <a href="javascript:location.reload()" class="btn btn-refresh">
+                새로고침
+            </a>
+            <a href="/" class="btn btn-primary">
+                홈으로 돌아가기
+            </a>
+            <a href="javascript:history.back()" class="btn btn-secondary">
+                이전 페이지
+            </a>
+        </div>
+        
+        <div class="footer-text">
+            Data based on NEXON
+        </div>
+    </div>
+</body>
+</html>

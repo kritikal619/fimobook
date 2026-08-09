@@ -1,0 +1,1348 @@
+:root {
+  --theme-toggle-size: 36px;
+  --dark-bg: #0b1220;
+  --dark-bg-soft: #111a2b;
+  --dark-panel: #172033;
+  --dark-panel-soft: #1c273a;
+  --dark-line: #334155;
+  --dark-line-soft: #29364a;
+  --dark-text: #e4eaf2;
+  --dark-heading: #f8fafc;
+  --dark-muted: #aeb9c9;
+  --dark-green: #34d399;
+}
+
+html {
+  color-scheme: light;
+}
+
+html[data-theme="dark"] {
+  color-scheme: dark;
+  --brand: #34d399;
+  --brand-dark: #10b981;
+  --navy: #e5e7eb;
+  --ink: #e5e7eb;
+  --text: #e5e7eb;
+  --sub: #9aa8ba;
+  --muted: #9aa8ba;
+  --line: #334155;
+  --line-strong: #475569;
+  --panel: #172033;
+  --card: #172033;
+  --surface: #1c273a;
+  --bg-top: #0b1220;
+  --bg-bottom: #111827;
+  --shadow: 0 16px 38px rgba(0, 0, 0, 0.28);
+}
+
+html[data-theme="dark"] body {
+  background: linear-gradient(180deg, var(--dark-bg) 0%, #111827 100%) !important;
+  color: var(--dark-text);
+}
+
+body,
+.theme-toggle,
+input,
+select,
+textarea,
+dialog {
+  transition: background-color .18s ease, border-color .18s ease, color .18s ease;
+}
+
+.theme-toggle {
+  width: var(--theme-toggle-size);
+  height: var(--theme-toggle-size);
+  flex: 0 0 var(--theme-toggle-size);
+  padding: 0;
+  border: 1px solid #dbe3ec;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #475569;
+  font: inherit;
+  font-size: 16px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+.theme-toggle:hover,
+.theme-toggle:focus-visible {
+  border-color: #86efac;
+  color: #047857;
+  outline: none;
+}
+
+.theme-toggle__sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.theme-toggle--nav {
+  margin-left: 1px;
+}
+
+.theme-toggle--floating {
+  position: fixed;
+  right: 18px;
+  bottom: calc(18px + env(safe-area-inset-bottom));
+  z-index: 1002;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, .18);
+}
+
+html[data-theme="dark"] .theme-toggle {
+  border-color: #3b4a60;
+  background: #1c273a;
+  color: #fbbf24;
+}
+
+html[data-theme="dark"] .theme-toggle:hover,
+html[data-theme="dark"] .theme-toggle:focus-visible {
+  border-color: #34d399;
+  color: #fde68a;
+}
+
+html[data-theme="dark"] :is(h1, h2, h3, h4, h5, h6, .page-title, .section-title, .panel-title, .stats-title, .player-title) {
+  color: var(--dark-heading) !important;
+}
+
+html[data-theme="dark"] :is(p, small, label, .helper, .subtitle, .description, .meta, .section-subtitle, .filter-note, .stats-label) {
+  color: var(--dark-muted);
+}
+
+html[data-theme="dark"] :is(.brandbar, .navbar a, .detail-mobile-nav a, .site-policy-open) {
+  color: #d6deea;
+}
+
+html[data-theme="dark"] :is([class$="-title"], [class$="-name"], .skill-config-title, .skill-name, .gauge-value, .gauge-label) {
+  color: var(--dark-heading) !important;
+}
+
+html[data-theme="dark"] :is([class$="-subtitle"], [class$="-copy"], [class$="-meta"], [class$="-note"], .skill-meta, .config-field label) {
+  color: var(--dark-muted) !important;
+}
+
+html[data-theme="dark"] :is(.navbar a:hover, .detail-mobile-nav a:hover, a:not(.btn):hover) {
+  color: var(--dark-green);
+}
+
+html[data-theme="dark"] :is(.nav-toggle, .mobile-account-shortcut, .notification-shortcut, .detail-account-shortcut, .detail-nav-toggle, .back-btn, .ghost-link, .ghost-btn) {
+  border-color: var(--dark-line) !important;
+  background: var(--dark-panel-soft) !important;
+  color: #dbe4ef !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] .detail-mobile-nav {
+  border-color: var(--dark-line) !important;
+  background: #131d2e !important;
+  box-shadow: 0 18px 46px rgba(0, 0, 0, .4) !important;
+}
+
+html[data-theme="dark"] .navbar {
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] :is(.nav-user-summary, .detail-nav-user) {
+  background: #1c273a !important;
+  color: var(--dark-muted) !important;
+}
+
+html[data-theme="dark"] :is(.nav-user-summary strong, .detail-nav-user strong) {
+  color: var(--dark-heading) !important;
+}
+
+html[data-theme="dark"] .nav-group + .nav-group,
+html[data-theme="dark"] .detail-nav-group + .detail-nav-group {
+  border-color: var(--dark-line-soft) !important;
+}
+
+html[data-theme="dark"] :is(input:not([type="checkbox"]):not([type="radio"]), select, textarea, .form-control, .control, .control-select, .config-readout, .form-select) {
+  border-color: var(--dark-line) !important;
+  background-color: #111a2b !important;
+  color: var(--dark-text) !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] :is(input, textarea)::placeholder {
+  color: #718096 !important;
+}
+
+html[data-theme="dark"] :is(input:not([type="checkbox"]):not([type="radio"]), select, textarea):focus {
+  border-color: #34d399 !important;
+  outline-color: #34d399;
+}
+
+html[data-theme="dark"] option {
+  background: #111a2b;
+  color: var(--dark-text);
+}
+
+html[data-theme="dark"] :is(
+  .auth-container,
+  .panel,
+  .admin-panel,
+  .admin-shell,
+  .editor-shell,
+  .post-shell,
+  .profile-section,
+  .review-item,
+  .review-panel,
+  .review-section,
+  .review-rating-card,
+  .comment-item,
+  .comment-box,
+  .reply-box,
+  .ranking-panel,
+  .ranking-row,
+  .notification-item,
+  .coupon-settings-panel,
+  .coupon-card,
+  .notify-modal-card,
+  .table-shell,
+  .prime-result-row,
+  .player-panel,
+  .stats-panel,
+  .empty-card,
+  .top-grid,
+  .career-grid,
+  .multi-box,
+  .player-config-panel,
+  .skill-card,
+  .stat-summary,
+  .stat-pill,
+  .tier-section,
+  .club-career-section,
+  .admin-summary-section,
+  .admin-review-panel,
+  .admin-review-box,
+  .stat-group-card,
+  .price-section,
+  .playstyle-popup-panel,
+  .stats-export-dialog,
+  .stats-container,
+  .ml-shell,
+  .ml-card,
+  .ml-item,
+  .mf-shell,
+  .md-shell,
+  .md-card,
+  .cm-item,
+  .weekly-admin-card,
+  .saved-item,
+  .fimo-review-card
+) {
+  border-color: var(--dark-line) !important;
+  background: var(--dark-panel) !important;
+  color: var(--dark-text) !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] :is(
+  .profile-header,
+  .point-tile,
+  .community-tab:not(.active),
+  .community-search,
+  .review-board-item,
+  .times-overview,
+  .table-row,
+  .times-empty,
+  .prime-controls,
+  .prime-level-tabs,
+  .prime-empty,
+  .prime-more,
+  .coupon-hero,
+  .coupon-settings,
+  .empty,
+  .copy-btn,
+  .modal-close,
+  .cw-card,
+  .group-card,
+  .cw-hero,
+  .cw-topbar,
+  .cw-table-wrap,
+  .cw-link-btn,
+  .cw-btn.ghost,
+  .wc-header,
+  .wc-column,
+  .wc-team,
+  .wc-champion,
+  .wc-overlay-card,
+  .wc-btn:not(.primary),
+  .bracket,
+  .team
+) {
+  border-color: var(--dark-line) !important;
+  background: var(--dark-panel) !important;
+  color: var(--dark-text) !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] :is(.times-overview, .coupon-settings, .prime-controls, .community-search) {
+  background: var(--dark-panel-soft) !important;
+}
+
+html[data-theme="dark"] :is(.cw-subtext, .cw-small, .cw-muted, .cw-meta, .cw-label, .wc-subtitle, .wc-sub, .group-sub) {
+  color: var(--dark-muted) !important;
+}
+
+html[data-theme="dark"] :is(.cw-input, .cw-select) {
+  border-color: var(--dark-line) !important;
+  background: var(--dark-bg-soft) !important;
+  color: var(--dark-text) !important;
+}
+
+html[data-theme="dark"] :is(
+  .search-section,
+  .latest-review-section,
+  .latest-review-item,
+  .home-promo-shell,
+  .home-promo-card,
+  .quick-card,
+  .coupon-panel,
+  .weekly-panel,
+  .weekly-card,
+  .coupon-card-main,
+  .filter-row,
+  .rating-card,
+  .summary-card,
+  .panel-card,
+  .control-panel,
+  .compare-panel,
+  .modal-content,
+  .popup
+) {
+  border-color: var(--dark-line) !important;
+  background-color: var(--dark-panel) !important;
+  color: var(--dark-text) !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] :is(.card-body, .player-card .card-body, .result-item, .modal-result-item, .search-result-item) {
+  border-color: var(--dark-line) !important;
+  background-color: var(--dark-panel) !important;
+  color: var(--dark-text) !important;
+}
+
+html[data-theme="dark"] :is(.multi-box, .skill-card, .stat-pill, .review-rating-card, .rating-card, .summary-card, .ml-item) {
+  background: var(--dark-panel-soft) !important;
+}
+
+html[data-theme="dark"] :is(.career-toggle, .filter-search) {
+  border-color: #66522d !important;
+}
+
+html[data-theme="dark"] .career-toggle {
+  background: #2a2418 !important;
+  color: #f7c96b !important;
+}
+
+html[data-theme="dark"] :is(table, th, td) {
+  border-color: var(--dark-line) !important;
+  color: var(--dark-text);
+}
+
+html[data-theme="dark"] :is(th, thead td) {
+  background-color: #1c273a !important;
+  color: #dbe4ef !important;
+}
+
+html[data-theme="dark"] :is(tbody tr, .user-row, .club-career-row) {
+  border-color: var(--dark-line-soft) !important;
+}
+
+html[data-theme="dark"] :is(tbody tr:hover, .notification-item:hover, .prime-result-row:hover, .latest-review-item:hover) {
+  background-color: #202d42 !important;
+}
+
+html[data-theme="dark"] :is(.btn:not(.btn-primary), .secondary-btn, .back-button, .compare-tool, .selected-action) {
+  border-color: var(--dark-line) !important;
+  background: var(--dark-panel-soft) !important;
+  color: var(--dark-text) !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] :is(.player-primary-action, .player-primary-action.primary, .stats-export-mode, .stats-export-download) {
+  border-color: var(--dark-line) !important;
+  background: var(--dark-panel-soft) !important;
+  color: var(--dark-text) !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] :is(.stats-export-head, .stats-export-body, .price-section-head) {
+  border-color: var(--dark-line) !important;
+  background: var(--dark-panel) !important;
+  color: var(--dark-text) !important;
+}
+
+html[data-theme="dark"] :is(.skill-points-summary, .stat-row, .review-content-title-row, .tier-heading, .price-section-note) {
+  color: var(--dark-text) !important;
+}
+
+html[data-theme="dark"] :is(.badge, .chip, .tag, .fimo-review-card-chip, .skill-stat-chip, .price-chip) {
+  border-color: #40516a !important;
+  background-color: #243149 !important;
+  color: #cbd5e1 !important;
+}
+
+html[data-theme="dark"] :is(.site-footer, .site-policy-dialog__header, .site-policy-dialog__date) {
+  border-color: var(--dark-line) !important;
+}
+
+html[data-theme="dark"] :is(.site-footer, .site-footer__notices, .site-footer__notices p, .site-footer__copyright) {
+  color: var(--dark-muted) !important;
+}
+
+html[data-theme="dark"] :is(.site-policy-dialog, .site-policy-dialog__header) {
+  background: var(--dark-panel) !important;
+  color: var(--dark-text) !important;
+}
+
+html[data-theme="dark"] .site-policy-close {
+  border-color: var(--dark-line) !important;
+  background: var(--dark-panel-soft) !important;
+  color: var(--dark-text) !important;
+}
+
+html[data-theme="dark"] .site-policy-dialog__intro {
+  background: #123328 !important;
+  color: #a7f3d0 !important;
+}
+
+html[data-theme="dark"] :is(.site-policy-section h3, .site-policy-dialog__header h2) {
+  color: var(--dark-heading) !important;
+}
+
+html[data-theme="dark"] :is(.site-policy-section p, .site-policy-section li, .site-policy-dialog__date) {
+  color: #b4c0cf !important;
+}
+
+html[data-theme="dark"] :is(.fimo-ad-shell, .adsbygoogle) {
+  background-color: transparent !important;
+}
+
+/* Component-level dark surfaces.
+   These selectors intentionally pair background and foreground colors so a
+   light component can never inherit only half of the dark theme. */
+html[data-theme="dark"] :is(
+  .main-content,
+  .home-notice,
+  .weekly-card,
+  .quick-card,
+  .tool-glyph,
+  .coupon-card,
+  .recent-pill,
+  .latest-review-empty,
+  .notification-list,
+  .notification-empty,
+  .read-all-button,
+  .ranking-tab,
+  .review-hero,
+  .related-review,
+  .comment-form,
+  .comment-login,
+  .review-action,
+  .review-content-button,
+  .fimo-review-card-footer,
+  .fimo-review-owner-actions,
+  .fimo-review-owner-button,
+  .fimo-review-empty,
+  .admin-review-verdict,
+  .post-shell,
+  .reply-form,
+  .auth-switch,
+  .filter-section,
+  .filter-section-head,
+  .option-item,
+  .selected-list,
+  .search-summary,
+  .pagination,
+  .player-card,
+  .result-card
+) {
+  border-color: var(--dark-line) !important;
+  background: var(--dark-panel) !important;
+  color: var(--dark-text) !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] :is(
+  .review-section,
+  .latest-review-section,
+  .weekly-panel,
+  .coupon-panel
+) {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] :is(
+  .latest-review-item,
+  .review-rating-card,
+  .comment-item,
+  .stat-group-card,
+  .stat-row,
+  .review-chip,
+  .review-badge,
+  .notification-item,
+  .notification-icon,
+  .point-tile
+) {
+  border-color: var(--dark-line) !important;
+  background: var(--dark-panel-soft) !important;
+  color: var(--dark-text) !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] :is(
+  .quick-card:hover,
+  .home-notice:hover,
+  .coupon-card:hover,
+  .related-review:hover,
+  .fimo-review-card:hover,
+  .review-content-button:hover,
+  .review-action:hover
+) {
+  border-color: #3f806c !important;
+  background: #202d42 !important;
+}
+
+html[data-theme="dark"] :is(
+  .tool-coupon,
+  .tool-traits,
+  .tool-times,
+  .tool-community,
+  .tool-squad,
+  .tool-coupon .tool-glyph,
+  .tool-traits .tool-glyph,
+  .tool-times .tool-glyph,
+  .tool-community .tool-glyph,
+  .tool-squad .tool-glyph
+) {
+  border-color: #3f806c !important;
+  background: var(--dark-panel) !important;
+  color: #dce6f1 !important;
+}
+
+html[data-theme="dark"] :is(
+  .latest-review-post-title,
+  .latest-review-name,
+  .weekly-player-name,
+  .weekly-player-price,
+  .code-chip,
+  .review-detail-title,
+  .review-section-title,
+  .review-author,
+  .rating-label,
+  .related-title,
+  .fimo-review-card-title,
+  .fimo-review-card-author strong,
+  .admin-review-verdict-label,
+  .admin-review-verdict-copy,
+  .admin-review-text,
+  .review-title a,
+  .notification-message,
+  .post-title,
+  .post-content,
+  .comments-title,
+  .comment-user,
+  .comment-content,
+  .stat-label,
+  .stat-value,
+  .stat-group-total,
+  .compare-stat-name,
+  .compare-stat-value
+) {
+  color: var(--dark-text) !important;
+}
+
+html[data-theme="dark"] :is(
+  .latest-review-excerpt,
+  .latest-review-side,
+  .latest-review-author,
+  .review-player-class,
+  .review-byline,
+  .rating-note,
+  .related-meta,
+  .fimo-review-card-author,
+  .fimo-review-card-copy,
+  .fimo-review-comment-link,
+  .review-meta,
+  .review-text,
+  .post-meta,
+  .comment-meta,
+  .notification-time,
+  .ranking-period,
+  .ranking-count
+) {
+  color: var(--dark-muted) !important;
+}
+
+html[data-theme="dark"] :is(.review-position, .latest-review-kind, .fimo-review-card-chip.tier) {
+  background: #123b31 !important;
+  color: #6ee7b7 !important;
+}
+
+html[data-theme="dark"] :is(.latest-review-kind.summary, .review-badge) {
+  background: #17344d !important;
+  color: #93c5fd !important;
+}
+
+html[data-theme="dark"] :is(.review-action.danger, .comment-tool.danger, .fimo-review-owner-button.danger) {
+  border-color: #7f3f46 !important;
+  background: #3b2028 !important;
+  color: #fca5a5 !important;
+}
+
+html[data-theme="dark"] :is(.comment-tool, .reply-toggle) {
+  border-color: var(--dark-line) !important;
+  background: #243149 !important;
+  color: #cbd5e1 !important;
+}
+
+html[data-theme="dark"] :is(.notification-item.is-unread, .notification-item.is-unread:hover) {
+  background: #15362f !important;
+}
+
+html[data-theme="dark"] .unread-dot {
+  box-shadow: 0 0 0 3px #254a40 !important;
+}
+
+html[data-theme="dark"] :is(.admin-review-box.pros, .admin-review-box.cons) {
+  background: var(--dark-panel-soft) !important;
+}
+
+html[data-theme="dark"] :is(.admin-review-box + .admin-review-box, .admin-review-verdict, .fimo-review-card-footer, .fimo-review-owner-actions) {
+  border-color: var(--dark-line) !important;
+}
+
+html[data-theme="dark"] :is(.stat-group-head, .stats-title-row) {
+  border-color: var(--dark-line) !important;
+  color: var(--dark-heading) !important;
+}
+
+html[data-theme="dark"] .stat-row:nth-child(odd),
+html[data-theme="dark"] .stat-row:nth-child(even) {
+  background: var(--dark-panel-soft) !important;
+}
+
+html[data-theme="dark"] :is(.stat-bonus, .stat-bonus-group:empty) {
+  color: #6ee7b7 !important;
+}
+
+html[data-theme="dark"] :is(.review-player-art, .related-art, .latest-review-art, .weekly-player-art) {
+  background-color: #101827 !important;
+}
+
+html[data-theme="dark"] :is(.alert-success, .flash-message.success) {
+  border-color: #286452 !important;
+  background: #123b31 !important;
+  color: #a7f3d0 !important;
+}
+
+html[data-theme="dark"] :is(.alert-danger, .alert-error, .flash-message.error) {
+  border-color: #7f3f46 !important;
+  background: #3b2028 !important;
+  color: #fecaca !important;
+}
+
+html[data-theme="dark"] :is(.alert-info, .alert-warning) {
+  border-color: #66522d !important;
+  background: #332b1d !important;
+  color: #fde68a !important;
+}
+
+/* Remaining application surfaces (community, editors, comparison and tools). */
+html[data-theme="dark"] :is(
+  .editor-shell,
+  .admin-shell,
+  .admin-summary-box,
+  .club-career-table,
+  .review-preview-card,
+  .review-login,
+  .review-comment-entry,
+  .search-modal-content,
+  .compare-content,
+  .compare-head,
+  .compare-hero,
+  .compare-names,
+  .mf-main,
+  .mf-control,
+  .mf-btn-link,
+  .mf-file-wrap,
+  .md-btn,
+  .cm-wrap,
+  .md-shot-wrap,
+  .community-post,
+  .autocomplete-box,
+  .home-promo-nav,
+  .formation-pill,
+  .status-pill,
+  .detail-btn,
+  .mobile-overlay-select,
+  .modal-head,
+  .modal-controls,
+  .prime-search input,
+  .prime-group-select,
+  .coupon-input-btn,
+  .cw-badge,
+  .cw-link,
+  .cw-match-card,
+  .cw-rule-item,
+  .cw-sync,
+  .cw-topbar-btn,
+  .round,
+  .wc-match,
+  .wc-trophy
+) {
+  border-color: var(--dark-line) !important;
+  background: var(--dark-panel) !important;
+  color: var(--dark-text) !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] :is(
+  .ranking-panel-head,
+  .ranking-row,
+  .community-post:hover,
+  .autocomplete-item:hover,
+  .result-item:hover,
+  .review-preview-card:hover,
+  .cw-link:hover,
+  .cw-topbar-btn:hover
+) {
+  border-color: var(--dark-line) !important;
+  background: var(--dark-panel-soft) !important;
+  color: var(--dark-text) !important;
+}
+
+html[data-theme="dark"] :is(
+  .editor-title,
+  .editor-form .form-label,
+  .review-write-title,
+  .rating-name,
+  .skill-summary,
+  .profile-name,
+  .section-title,
+  .stats-number,
+  .class-tag,
+  .result-name,
+  .result-ovr,
+  .player-name,
+  .compare-name,
+  .group-title,
+  .slot-title,
+  .compare-group-title,
+  .compare-skill-name,
+  .review-board-title,
+  .rank-user,
+  .times-title,
+  .card-name,
+  .time-text,
+  .summary-playstyle-name,
+  .playstyle-popup-title,
+  .rating-section h2,
+  .rating-group label,
+  .price-chip-price,
+  .admin-summary-lead,
+  .admin-summary-label,
+  .admin-summary-text,
+  .club-career-club,
+  .review-title,
+  .review-head,
+  .review-text,
+  .stats-export-title,
+  .prime-result-title,
+  .prime-player-name,
+  .player-reviews-title,
+  .group-header,
+  .group-table,
+  .cw-card h3,
+  .cw-table th,
+  .cw-table td,
+  .cw-list,
+  .round h4,
+  .team,
+  .wc-score,
+  .wc-watermark-text
+) {
+  color: var(--dark-text) !important;
+}
+
+html[data-theme="dark"] :is(
+  .autocomplete-item,
+  .player-reviews-breadcrumb,
+  .review-board-author,
+  .review-board-meta,
+  .ranking-subtitle,
+  .prime-result-meta,
+  .coupon-sub,
+  .weekly-sub,
+  .home-notice-preview,
+  .result-meta,
+  .player-meta,
+  .compare-meta
+) {
+  color: var(--dark-muted) !important;
+}
+
+html[data-theme="dark"] :is(
+  .field select,
+  .field input,
+  .field textarea,
+  .admin-field input,
+  .admin-field textarea,
+  .search-row input,
+  .compare-skill-select,
+  .review-field select,
+  .review-field textarea,
+  .comment-form textarea
+) {
+  border-color: var(--dark-line) !important;
+  background: var(--dark-bg-soft) !important;
+  color: var(--dark-text) !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] :is(.pager a, .pager span, .summary-chip, .playstyle-pill) {
+  border-color: var(--dark-line) !important;
+  background: #243149 !important;
+  color: #d7e0eb !important;
+}
+
+html[data-theme="dark"] :is(.cw-alert, .cw-tag) {
+  border-color: #31577c !important;
+  background: #17344d !important;
+  color: #bfdbfe !important;
+}
+
+html[data-theme="dark"] :is(.cw-alert.error, .cw-btn.danger) {
+  border-color: #7f3f46 !important;
+  background: #3b2028 !important;
+  color: #fecaca !important;
+}
+
+html[data-theme="dark"] :is(.filter-section-head strong, .filter-section-head span) {
+  color: var(--dark-text) !important;
+}
+
+html[data-theme="dark"] :is(.fimo-ad-label, .data-source) {
+  color: var(--dark-muted) !important;
+}
+
+html[data-theme="dark"] :is(.post-badge, .ranking-more, .review-page-link:not(.active)) {
+  border-color: var(--dark-line) !important;
+  background: #243149 !important;
+  color: #d7e0eb !important;
+}
+
+html[data-theme="dark"] .post-badge.is-pinned {
+  background: #123b31 !important;
+  color: #6ee7b7 !important;
+}
+
+/* Player detail: stat guide, popups, traits and supporting controls. */
+html[data-theme="dark"] :is(
+  .stat-guide-open,
+  .stat-guide-close,
+  .playstyle-popup-close,
+  .stats-export-close
+) {
+  border-color: var(--dark-line) !important;
+  background: var(--dark-panel-soft) !important;
+  color: var(--dark-text) !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] :is(.stat-guide-open:hover, .stat-guide-close:hover, .playstyle-popup-close:hover) {
+  border-color: #3f806c !important;
+  background: #243149 !important;
+  color: #6ee7b7 !important;
+}
+
+html[data-theme="dark"] .stat-guide-dialog {
+  border: 1px solid var(--dark-line) !important;
+  background: var(--dark-bg-soft) !important;
+  color: var(--dark-text) !important;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, .5) !important;
+  color-scheme: dark;
+}
+
+html[data-theme="dark"] .stat-guide-head {
+  border-color: var(--dark-line) !important;
+  background: rgba(17, 26, 43, .97) !important;
+  color: var(--dark-heading) !important;
+}
+
+html[data-theme="dark"] :is(.stat-guide-title strong, .stat-guide-group h3, .stat-guide-item dt) {
+  color: var(--dark-heading) !important;
+}
+
+html[data-theme="dark"] :is(.stat-guide-title span, .stat-guide-item dd) {
+  color: var(--dark-muted) !important;
+}
+
+html[data-theme="dark"] :is(.stat-guide-notice, .stat-guide-group, .stat-guide-item) {
+  border-color: var(--dark-line) !important;
+  background: var(--dark-panel) !important;
+  color: var(--dark-text) !important;
+}
+
+html[data-theme="dark"] .stat-guide-group h3 {
+  border-bottom: 1px solid var(--dark-line) !important;
+  background: #101827 !important;
+}
+
+html[data-theme="dark"] .stat-guide-item + .stat-guide-item {
+  border-color: var(--dark-line-soft) !important;
+}
+
+html[data-theme="dark"] :is(.playstyle-popup-desc, .skill-stat-popup-list) {
+  color: var(--dark-muted) !important;
+}
+
+html[data-theme="dark"] .skill-stat-popup-chip {
+  border: 1px solid #31577c !important;
+  background: #17344d !important;
+  color: #bfdbfe !important;
+}
+
+html[data-theme="dark"] .rating-section {
+  border-color: var(--dark-line) !important;
+  background: var(--dark-panel) !important;
+  color: var(--dark-text) !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] .container > ul {
+  color: var(--dark-text) !important;
+}
+
+html[data-theme="dark"] .container > ul > li {
+  color: var(--dark-text) !important;
+}
+
+html[data-theme="dark"] .other-classes::-webkit-scrollbar-thumb {
+  background: #40516a !important;
+}
+
+/* Home carousel: the light career banner needs a true dark counterpart. */
+html[data-theme="dark"] .career-home-banner {
+  border-color: #2f8065 !important;
+  background:
+    radial-gradient(circle at 84% 22%, rgba(52, 211, 153, .18), transparent 32%),
+    linear-gradient(118deg, #12251f 0%, #153329 55%, #173743 100%) !important;
+  color: var(--dark-text) !important;
+}
+
+html[data-theme="dark"] .career-home-banner::before {
+  background: repeating-linear-gradient(135deg, transparent 0 24px, rgba(110, 231, 183, .04) 24px 25px) !important;
+}
+
+html[data-theme="dark"] :is(.career-home-banner .prime-home-title, .career-home-banner .prime-home-kicker) {
+  color: #d1fae5 !important;
+}
+
+html[data-theme="dark"] .career-home-banner .prime-home-desc {
+  color: #a7c7bb !important;
+}
+
+html[data-theme="dark"] .career-home-banner .prime-home-cta {
+  border-color: #3f806c !important;
+  background: #193c32 !important;
+  color: #a7f3d0 !important;
+}
+
+html[data-theme="dark"] .career-home-visual::before {
+  border-color: #3f806c !important;
+  background: #162d27 !important;
+}
+
+html[data-theme="dark"] :is(.fimo-ad-shell.is-horizontal, .fimo-ad-shell.is-grid-card, .fimo-ad-shell.is-compact) {
+  border-color: var(--dark-line) !important;
+  background: var(--dark-panel) !important;
+}
+
+html[data-theme="dark"] :is(.price-chip-level, .fimo-review-empty strong) {
+  color: var(--dark-text) !important;
+}
+
+html[data-theme="dark"] :is(.tier-help a, .review-login a, .comment-login a, .review-breadcrumb a) {
+  color: #6ee7b7 !important;
+}
+
+html[data-theme="dark"] .count-pill {
+  border-color: #3f806c !important;
+  background: #123b31 !important;
+  color: #6ee7b7 !important;
+}
+
+html[data-theme="dark"] :is(
+  .community-search-button,
+  .review-page-link.active,
+  .write-button,
+  .comment-submit,
+  .btn-primary
+) {
+  border-color: #047857 !important;
+  background: #047857 !important;
+  color: #ffffff !important;
+}
+
+html[data-theme="dark"] .prime-result-count strong {
+  color: #6ee7b7 !important;
+}
+
+html[data-theme="dark"] :is(.summary-playstyles, .summary-playstyle) {
+  border-color: var(--dark-line) !important;
+}
+
+html[data-theme="dark"] .summary-playstyle {
+  background: var(--dark-panel-soft) !important;
+  color: var(--dark-text) !important;
+}
+
+html[data-theme="dark"] :is(.summary-playstyles-title, .summary-playstyle-desc, .tier-column, .tier-help) {
+  color: var(--dark-muted) !important;
+}
+
+html[data-theme="dark"] .tier-bar-track {
+  background: #243149 !important;
+}
+
+html[data-theme="dark"] .tier-vote {
+  background: color-mix(in srgb, var(--tier-color, #94a3b8) 12%, var(--dark-panel-soft)) !important;
+  color: var(--dark-text) !important;
+}
+
+/* Page-specific dark surfaces. Keep these explicit so stateful components do not
+   inherit a light inline style from their templates. */
+html[data-theme="dark"] :is(
+  .club-career-table,
+  .tier-section,
+  .profile-hero,
+  .profile-stat,
+  .profile-section,
+  .profile-page .review-item,
+  .community-page .review-board-item,
+  .community-page .ranking-panel,
+  .post-detail-page .post-shell,
+  .post-detail-page .comment-card,
+  .ranking-page-body .ranking-panel-head,
+  .ranking-page-body .ranking-row,
+  .compare-page-body .compare-hero,
+  .compare-page-body .player-panel,
+  .compare-page-body .stats-panel,
+  .compare-page-body .result-item
+) {
+  border-color: var(--dark-line) !important;
+  background: var(--dark-panel) !important;
+  color: var(--dark-text) !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] :is(
+  .club-career-period,
+  .tier-consensus,
+  .profile-badge,
+  .profile-stat-icon,
+  .profile-page .point-tile,
+  .community-page .review-filter-control,
+  .community-page .review-filter-reset,
+  .community-page .ranking-more,
+  .post-detail-page .post-poll,
+  .post-detail-page .reply-card,
+  .post-detail-page .comment-action,
+  .post-detail-page .comment-empty,
+  .post-detail-page .comment-login,
+  .compare-page-body .compare-tool,
+  .compare-page-body .result-list,
+  .compare-page-body .selected-card,
+  .compare-page-body .summary-chip,
+  .compare-page-body .selected-action,
+  .compare-page-body .boost-target,
+  .compare-page-body .compare-skill-card,
+  .compare-page-body .group-title,
+  .ranking-page-body .rank-index,
+  .editor-option-box
+) {
+  border-color: var(--dark-line) !important;
+  background: var(--dark-panel-soft) !important;
+  color: var(--dark-text) !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] .club-career-row + .club-career-row,
+html[data-theme="dark"] .club-career-period,
+html[data-theme="dark"] :is(.profile-form, .post-header, .post-reaction-row, .stats-toolbar, .compare-names, .group-title, .stat-row) {
+  border-color: var(--dark-line-soft) !important;
+}
+
+html[data-theme="dark"] :is(
+  .club-career-period,
+  .club-career-updated,
+  .tier-consensus,
+  .tier-consensus span,
+  .profile-stat-label,
+  .profile-badge,
+  .profile-label,
+  .account-email,
+  .profile-page .point-label,
+  .community-page .review-filter-control span,
+  .community-page .review-results-meta,
+  .community-page .review-board-class,
+  .community-page .review-board-excerpt,
+  .community-page .review-board-scoreline,
+  .community-page .review-board-side,
+  .post-detail-page .post-breadcrumb,
+  .post-detail-page .post-meta,
+  .post-detail-page .post-poll-result,
+  .post-detail-page .post-poll-count,
+  .post-detail-page .post-poll-login,
+  .post-detail-page .like-status,
+  .post-detail-page .comment-meta,
+  .compare-page-body .result-sub,
+  .compare-page-body .player-class,
+  .compare-page-body .compare-skill-meta,
+  .compare-page-body .skill-summary,
+  .compare-page-body .stat-label,
+  .compare-page-body .stamina-stars .stamina-text,
+  .ranking-page-body .ranking-period,
+  .ranking-page-body .ranking-count
+) {
+  color: var(--dark-muted) !important;
+}
+
+html[data-theme="dark"] :is(
+  .club-career-club,
+  .tier-consensus strong,
+  .profile-stat-value,
+  .profile-page .review-title,
+  .community-page .review-board-title,
+  .community-page .review-board-author,
+  .community-page .ranking-row,
+  .community-page .rank-user,
+  .post-detail-page .post-content,
+  .post-detail-page .post-poll-option-content,
+  .post-detail-page .comment-copy,
+  .compare-page-body .slot-title,
+  .compare-page-body .player-name,
+  .compare-page-body .compare-skill-name,
+  .compare-page-body .compare-name,
+  .compare-page-body .stat-value,
+  .ranking-page-body .rank-user
+) {
+  color: var(--dark-text) !important;
+}
+
+html[data-theme="dark"] .club-career-loan {
+  background: #3b2a18 !important;
+  color: #fdba74 !important;
+}
+
+html[data-theme="dark"] body .max-level-stat {
+  border-color: #286452 !important;
+  background: #123b31 !important;
+  color: #6ee7b7 !important;
+}
+
+html[data-theme="dark"] :is(.tier-cancel, .post-action-button, .like-button, .comment-cancel, .poll-remove, .poll-add) {
+  border-color: var(--dark-line) !important;
+  background: #202c40 !important;
+  color: #dbe4ef !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] :is(.post-action-button.danger, .comment-action.danger) {
+  border-color: #7f3f46 !important;
+  background: #3b2028 !important;
+  color: #fecaca !important;
+}
+
+html[data-theme="dark"] :is(.post-badge, .post-board-badge) {
+  border: 1px solid #286452 !important;
+  background: #123b31 !important;
+  color: #6ee7b7 !important;
+}
+
+html[data-theme="dark"] .post-badge:not(.is-pinned) {
+  border-color: var(--dark-line) !important;
+  background: #243149 !important;
+  color: #cbd5e1 !important;
+}
+
+html[data-theme="dark"] .post-detail-page .post-poll-option {
+  border-color: var(--dark-line) !important;
+  background: #111a2b !important;
+}
+
+html[data-theme="dark"] .post-detail-page .post-poll-progress {
+  background: rgba(16, 185, 129, .2) !important;
+}
+
+html[data-theme="dark"] :is(.like-button:hover, .like-button.is-liked) {
+  border-color: #3f806c !important;
+  background: #123b31 !important;
+  color: #6ee7b7 !important;
+}
+
+html[data-theme="dark"] .post-detail-page .reply-list {
+  border-color: #286452 !important;
+}
+
+html[data-theme="dark"] :is(.comment-textarea, .compare-skill-select) {
+  border-color: var(--dark-line) !important;
+  background: #111a2b !important;
+  color: var(--dark-text) !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] .community-page :is(.community-search, .community-search:focus-within) {
+  border-color: var(--dark-line) !important;
+  background: #111a2b !important;
+}
+
+html[data-theme="dark"] .community-page .review-filter-control select {
+  background: transparent !important;
+  color: var(--dark-text) !important;
+}
+
+html[data-theme="dark"] .community-page .review-board-art,
+html[data-theme="dark"] .profile-page .review-art,
+html[data-theme="dark"] .compare-page-body .mini-thumb {
+  background-color: #111a2b !important;
+}
+
+html[data-theme="dark"] .compare-page-body .compare-names {
+  background: rgba(23, 32, 51, .96) !important;
+}
+
+html[data-theme="dark"] .compare-page-body .rail-line {
+  background: linear-gradient(180deg, transparent, #475569, transparent) !important;
+}
+
+html[data-theme="dark"] .compare-page-body .stat-main.higher,
+html[data-theme="dark"] :is(.review-results-meta strong, .comments-count, .rank-points, .point-value) {
+  color: #6ee7b7 !important;
+}
+
+html[data-theme="dark"] :is(.remain, .remain.soon, .remain.is-updating) {
+  border: 1px solid #286452 !important;
+  background: #123b31 !important;
+  color: #6ee7b7 !important;
+}
+
+html[data-theme="dark"] .remain.soon {
+  border-color: #7f3f46 !important;
+  background: #3b2028 !important;
+  color: #fda4af !important;
+}
+
+html[data-theme="dark"] .remain.is-updating {
+  border-color: #31577c !important;
+  background: #17344d !important;
+  color: #7dd3fc !important;
+}
+
+html[data-theme="dark"] :is(.editor-check, .editor-form .form-label) {
+  color: var(--dark-text) !important;
+}
+
+html[data-theme="dark"] .ranking-page-body .ranking-row:nth-child(-n+3) .rank-index {
+  border: 1px solid #286452 !important;
+  background: #123b31 !important;
+  color: #6ee7b7 !important;
+}
+
+html[data-theme="dark"] :is(.community-mobile-tab, .ranking-tab) {
+  border-color: var(--dark-line) !important;
+  background: var(--dark-panel-soft) !important;
+  color: #dbe4ef !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] :is(.community-mobile-tab.active, .ranking-tab.active) {
+  border-color: #059669 !important;
+  background: #059669 !important;
+  color: #ffffff !important;
+}
+
+/* The source asset contains a baked checkerboard. Circular clipping keeps only
+   the actual MP token visible on both themes. */
+.price-icon {
+  border-radius: 50% !important;
+  clip-path: circle(43% at 50% 50%);
+}
+
+html[data-theme="dark"] ::selection {
+  background: #0f766e;
+  color: #ffffff;
+}
+
+html[data-theme="dark"] :is(.error-container, .flash-message) {
+  border-color: var(--dark-line) !important;
+  background-color: var(--dark-panel) !important;
+  color: var(--dark-text) !important;
+}
+
+@media (max-width: 550px) {
+  html[data-theme="dark"] .navbar {
+    border: 1px solid var(--dark-line) !important;
+    background: #131d2e !important;
+    box-shadow: 0 18px 46px rgba(0, 0, 0, .4) !important;
+  }
+
+  .theme-toggle--nav {
+    width: 100%;
+    height: 43px;
+    justify-content: flex-start;
+    gap: 10px;
+    padding: 0 11px;
+    border: 0;
+    border-radius: 9px;
+    background: transparent;
+    font-size: 13px;
+    font-weight: 800;
+  }
+
+  .theme-toggle--nav .theme-toggle__sr {
+    position: static;
+    width: auto;
+    height: auto;
+    margin: 0;
+    overflow: visible;
+    clip: auto;
+    white-space: normal;
+  }
+
+  html[data-theme="dark"] .theme-toggle--nav {
+    background: transparent;
+  }
+
+  .theme-toggle--floating {
+    right: 12px;
+    bottom: calc(12px + env(safe-area-inset-bottom));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body,
+  .theme-toggle,
+  input,
+  select,
+  textarea,
+  dialog {
+    transition: none;
+  }
+}

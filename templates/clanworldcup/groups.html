@@ -1,0 +1,176 @@
+{% extends "base.html" %}
+
+{% block title %}머니리그 조별리그 | 피모북{% endblock %}
+
+{% block extra_head %}
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="피모북">
+<meta property="og:locale" content="ko_KR">
+<meta property="og:title" content="머니리그 조별리그 | 피모북">
+<meta property="og:description" content="머니리그 조별리그 순위와 진행 현황을 확인하세요.">
+<meta property="og:url" content="{{ url_for('clanworldcup_groups', _external=True) }}">
+<meta property="og:image" content="{{ url_for('static', filename='images/clanworldcup-logo.jpg', _external=True) }}">
+<meta property="og:image:alt" content="머니리그 대회 로고">
+<style>
+  .cw-container { width: 100%; display: flex; flex-direction: column; gap: 18px; }
+  .cw-hero { width: 100%; background: linear-gradient(135deg,#1d4ed8 0%,#2563eb 55%,#4dabf7 100%); color: #fff; border-radius: 16px; padding: 20px 18px; box-shadow: 0 12px 30px rgba(28,71,155,0.24); box-sizing: border-box; }
+  .cw-hero-top { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .cw-logo { width: 180px; max-width: 100%; height: auto; border-radius: 12px; border: 1px solid rgba(255,255,255,0.35); box-shadow: 0 10px 22px rgba(15,23,42,0.2); }
+  .cw-hero h1 { margin: 0 0 6px; font-size: 23px; letter-spacing: -0.4px; }
+  .cw-hero p { margin: 4px 0 10px; color: rgba(255,255,255,0.9); font-weight: 600; }
+  .cw-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+  .cw-link { padding: 9px 12px; background: rgba(255,255,255,0.12); color: #fff; border-radius: 10px; font-weight: 700; text-decoration: none; border: 1px solid rgba(255,255,255,0.18); }
+  .cw-link:hover { background: rgba(255,255,255,0.2); }
+  .cw-card { width: 100%; background: transparent; border: none; box-shadow: none; padding: 0; }
+  .group-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(280px,1fr)); gap: 12px; width: 100%; }
+  .group-card { background: #fff; border: 1px solid #e6edf5; border-radius: 14px; padding: 14px; box-shadow: 0 10px 24px rgba(33,51,87,0.1); cursor: pointer; transition: transform .2s, box-shadow .2s, border-color .2s; }
+  .group-card:hover { transform: translateY(-2px); border-color: #bcd3ff; box-shadow: 0 12px 26px rgba(33,51,87,0.14); }
+  .group-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 15px; font-weight: 800; color: #1f2d3d; }
+  .group-table { width: 100%; border-collapse: collapse; font-size: 13px; color: #1f2937; }
+  .group-table th, .group-table td { padding: 8px 6px; text-align: center; border-bottom: 1px solid #e9eef5; }
+  .group-table th:first-child, .group-table td:first-child { text-align: left; }
+  .group-table tr:last-child td { border-bottom: none; }
+  .group-team { font-weight: 700; }
+  .group-sub { color: #6b7280; font-size: 12px; font-weight: 600; }
+  .group-empty { padding: 10px 8px; text-align: center; color: #6b7280; font-weight: 700; border: 1px dashed #e2e8f0; border-radius: 10px; }
+  @media (max-width: 640px) { .cw-hero h1 { font-size: 21px; } .cw-logo { width: 160px; } }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="cw-container">
+  <div class="cw-hero">
+    <div class="cw-hero-top">
+      <img class="cw-logo" src="{{ url_for('static', filename='images/clanworldcup-logo.jpg') }}" alt="머니리그 로고">
+    </div>
+    <h1>머니리그 조별리그</h1>
+    <p>4개 조(A~D), 1조 6팀·2~4조 5팀 / 각 조 상위 2팀이 8강 진출</p>
+  </div>
+
+  <div class="cw-card">
+    <div class="group-grid" id="groupGrid">
+      <div class="group-empty">조별리그 데이터를 불러오는 중...</div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const groupGrid = document.getElementById("groupGrid");
+  const groups = ["A","B","C","D"];
+  let clanMap = {};
+  let clanGroups = {};
+  let standingsMap = {};
+
+  async function loadData() {
+    groupGrid.innerHTML = '<div class="group-empty">조별리그 데이터를 불러오는 중...</div>';
+    try {
+      const [clansRes, standingsRes] = await Promise.all([
+        fetch("/clanworldcup/api/clans"),
+        fetch("/clanworldcup/api/standings")
+      ]);
+      const [clansData, standingsData] = await Promise.all([clansRes.json(), standingsRes.json()]);
+      if (clansData.ok && Array.isArray(clansData.clans)) {
+        clanGroups = {};
+        clansData.clans.forEach(c => {
+          const clanId = c.clanId || c.id;
+          if (!clanId) return;
+          clanMap[clanId] = c.name || clanId;
+          const groupId = String(c.group || "").toUpperCase();
+          if (groupId) {
+            if (!clanGroups[groupId]) clanGroups[groupId] = [];
+            clanGroups[groupId].push(clanId);
+          }
+        });
+      }
+      if (standingsData.ok && Array.isArray(standingsData.standings)) {
+        standingsData.standings.forEach(s => { standingsMap[(s.groupId || "").toUpperCase()] = s; });
+      }
+      renderGroups();
+    } catch (e) {
+      groupGrid.innerHTML = '<div class="group-empty">불러오기 실패</div>';
+    }
+  }
+
+  function renderGroups() {
+    groupGrid.innerHTML = "";
+    groups.forEach(g => {
+      const card = document.createElement("div");
+      card.className = "group-card";
+      const header = document.createElement("div");
+      header.className = "group-header";
+      header.innerHTML = `<span>${g}조</span><span class="group-sub">상위 2팀 8강</span>`;
+      card.appendChild(header);
+
+      const table = document.createElement("table");
+      table.className = "group-table";
+      table.innerHTML = `
+        <thead>
+          <tr>
+            <th>팀</th><th>경기</th><th>승점</th><th>승</th><th>패</th><th>GW</th><th>GL</th><th>GD</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      `;
+      const tbody = table.querySelector("tbody");
+      const rows = getGroupRows(g);
+      if (rows.length) {
+        rows.forEach((r, idx) => {
+          const name = clanMap[r.clanId] || r.clanId;
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td><span class="group-team">${idx+1}. ${name}</span></td>
+            <td>${r.MP ?? 0}</td>
+            <td>${(r.PTS ?? ((r.W ?? 0) * 3))}</td>
+            <td>${r.W ?? 0}</td>
+            <td>${r.L ?? 0}</td>
+            <td>${r.GW ?? 0}</td>
+            <td>${r.GL ?? 0}</td>
+            <td>${r.GD ?? 0}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+      } else {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td colspan="8" class="group-sub">데이터 없음</td>`;
+        tbody.appendChild(tr);
+      }
+      card.appendChild(table);
+      card.addEventListener("click", () => {
+        window.location.href = `{{ url_for('clanworldcup_home') }}?phase=GROUP&group=${encodeURIComponent(g)}`;
+      });
+      groupGrid.appendChild(card);
+    });
+  }
+
+  function getGroupRows(groupId) {
+    const g = standingsMap[groupId];
+    const rows = (g && Array.isArray(g.rows)) ? g.rows.slice() : [];
+    const known = new Set(rows.map(r => r.clanId));
+    const groupClans = clanGroups[groupId] || [];
+    groupClans.forEach(clanId => {
+      if (!known.has(clanId)) {
+        rows.push({
+          "clanId": clanId,
+          "MP": 0,
+          "W": 0,
+          "L": 0,
+          "GW": 0,
+          "GL": 0,
+          "GD": 0,
+          "PTS": 0,
+        });
+      }
+    });
+    rows.sort((a,b) => {
+      const aPts = (a.PTS ?? ((a.W || 0) * 3));
+      const bPts = (b.PTS ?? ((b.W || 0) * 3));
+      if (bPts !== aPts) return bPts - aPts;
+      if ((b.GD||0)!==(a.GD||0)) return (b.GD||0)-(a.GD||0);
+      return (b.GW||0)-(a.GW||0);
+    });
+    return rows;
+  }
+
+  loadData();
+</script>
+{% endblock %}

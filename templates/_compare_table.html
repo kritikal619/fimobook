@@ -1,0 +1,59 @@
+{# templates/_compare_table.html #}
+
+{% if players and players|length >= 2 and stat_groups %}
+<div class="table-responsive-wrapper">
+    <table>
+        <thead>
+            <tr>
+                <th style="text-align: left; padding-left: 20px;">항목</th>
+                {% for p in players %}
+                <th>{{ p.playerKor }}<br><small>({{ p.className }})</small></th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for group_name, stats in stat_groups.items() %}
+            <tr>
+                <td colspan="{{ players|length + 1 }}" style="background-color: #e9f5ff; font-weight: bold; text-align: left; padding: 10px 20px;">{{ group_name }}</td>
+            </tr>
+            {% for stat_code, stat_ko in stats.items() %}
+            <tr>
+                <td style="text-align: left; font-weight: 500; padding-left: 20px;">{{ stat_ko }}</td>
+
+                {# 숫자 스탯 값을 미리 리스트에 저장 #}
+                {% set numeric_values = [] %}
+                {% for p in players %}
+                    {% if p.get(stat_code) is number %}
+                        {% set _ = numeric_values.append(p.get(stat_code)) %}
+                    {% endif %}
+                {% endfor %}
+                {% set max_val = numeric_values | max if numeric_values else none %}
+
+                {# 각 선수 데이터 출력 #}
+                {% for p in players %}
+                    {% set val = p.get(stat_code) %}
+                    <td class="{% if val is number and val == max_val and numeric_values|length > 1 %}highlight{% endif %}">
+                        {% if stat_code == 'traits' %}
+                            <ul style="list-style: none; padding: 0; margin: 0; font-size: 13px; text-align: left;">
+                                {% for trait in val or [] %}
+                                    <li>- {{ trait }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% elif val is number %}
+                            {{ val | int }}
+                        {% else %}
+                            {{ val | default('-', true) }}
+                        {% endif %}
+                    </td>
+                {% endfor %}
+            </tr>
+            {% endfor %}
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div style="text-align: center; padding: 20px; color: #888;">
+    선택된 선수들의 비교 정보를 불러오지 못했습니다.
+</div>
+{% endif %}

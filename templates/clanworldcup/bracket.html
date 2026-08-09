@@ -1,0 +1,553 @@
+{% extends "base.html" %}
+
+{% block title %}머니리그 브라켓 | 피모북{% endblock %}
+
+{% block extra_head %}
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="피모북">
+<meta property="og:locale" content="ko_KR">
+<meta property="og:title" content="머니리그 브라켓 | 피모북">
+<meta property="og:description" content="머니리그 토너먼트 브라켓과 경기 진행 현황을 확인하세요.">
+<meta property="og:url" content="{{ url_for('clanworldcup_bracket', _external=True) }}">
+<meta property="og:image" content="{{ url_for('static', filename='images/clanworldcup-logo.jpg', _external=True) }}">
+<meta property="og:image:alt" content="머니리그 대회 로고">
+<style>
+  /* ✅ 페이지 전체 가로 overflow 방지 */
+  html, body { overflow-x: hidden; }
+
+  /* ✅ 이 페이지 내부 box model 안정화 */
+  .cw-page, .cw-page * { box-sizing: border-box; }
+
+  /* ✅ base.html 영향 줄이고 중앙정렬 */
+  .cw-page{
+    width:100%;
+    display:flex;
+    justify-content:center;
+    padding: 14px 0;
+  }
+
+  .cw-container{
+    width:100%;
+    max-width:1680px;
+    margin:0 auto;
+    padding: 0 14px;
+    display:flex;
+    flex-direction:column;
+    gap:18px;
+    min-width:0;
+  }
+
+  .cw-hero { display:none; }
+  .cw-card { background:transparent; border:none; box-shadow:none; padding:0; }
+
+  .cw-topbar{
+    width:100%;
+    border-radius:16px;
+    padding:12px 14px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    background: linear-gradient(135deg,#1d4ed8 0%,#2563eb 55%,#38bdf8 100%);
+    color:#fff;
+    box-shadow: 0 12px 30px rgba(28,71,155,0.22);
+  }
+  .cw-topbar-actions{
+    display:flex;
+    gap:8px;
+    align-items:center;
+    flex-wrap:wrap;
+  }
+  .cw-sync{
+    font-size:12px;
+    font-weight:700;
+    padding:7px 10px;
+    border-radius:999px;
+    background:rgba(255,255,255,0.18);
+    border:1px solid rgba(255,255,255,0.35);
+    white-space:nowrap;
+  }
+  .cw-topbar-btn{
+    padding:8px 12px;
+    border-radius:999px;
+    border:1px solid rgba(255,255,255,0.6);
+    color:#fff;
+    font-weight:700;
+    text-decoration:none;
+    font-size:12px;
+    background:rgba(255,255,255,0.12);
+    transition: background .2s, transform .2s;
+    white-space:nowrap;
+  }
+  .cw-topbar-btn:hover{
+    background:rgba(255,255,255,0.22);
+    transform:translateY(-1px);
+  }
+  .cw-topbar-title{
+    font-weight:800;
+    font-size:18px;
+    letter-spacing:-0.3px;
+  }
+  .cw-logo{
+    width: 160px;
+    max-width: 100%;
+    height: auto;
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.35);
+    box-shadow: 0 10px 22px rgba(15,23,42,0.2);
+  }
+
+  /* ✅ 브라켓 영역만 가로 스크롤 (페이지는 절대 안 튀어나오게) */
+  .bracket{
+    width:100%;
+    max-width:100%;
+    overflow-x:auto;
+    overflow-y:hidden;
+    padding: 8px 2px 12px;
+    scroll-snap-type: x proximity;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* ✅ grid가 컨테이너 밖으로 밀지 않도록 min-width:0 */
+  .bracket-inner{
+    display:grid;
+    grid-auto-flow: column;
+    /* 모바일~PC에서 자연스러운 카드 폭 */
+    grid-auto-columns: clamp(220px, 26vw, 360px);
+    gap:12px;
+    min-width:0;
+    width:max-content; /* ✅ 내부는 길어져도, 스크롤은 bracket 안에서만 */
+  }
+
+  .round{
+    background:#fff;
+    border:1px solid #e6edf5;
+    border-radius:14px;
+    padding:12px;
+    box-shadow:0 10px 24px rgba(33,51,87,0.1);
+    min-height:280px;
+    scroll-snap-align:start;
+
+    min-width:0;
+    max-width:100%;
+    overflow:hidden; /* ✅ 내부 요소가 삐져나오면 컷 */
+  }
+
+  .round h4{
+    margin:0 0 12px;
+    font-size:16px;
+    color:#1f2d3d;
+    text-align:center;
+    letter-spacing:-0.2px;
+  }
+
+  .match{
+    border:1px solid #e5ecf5;
+    border-radius:12px;
+    padding:12px;
+    margin-bottom:10px;
+    background:linear-gradient(180deg,#fdfefe 0%,#f7fbff 100%);
+    cursor:pointer;
+    transition:border-color .2s, box-shadow .2s, transform .1s;
+
+    min-width:0;
+    max-width:100%;
+    overflow:hidden;
+  }
+  .match:hover{
+    border-color:#b5c7ff;
+    box-shadow:0 6px 18px rgba(33,51,87,0.12);
+    transform:translateY(-1px);
+  }
+
+  .team{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    font-size:14px;
+    color:#1f2937;
+    gap:10px;
+    min-width:0;
+  }
+  .team .name{
+    font-weight:700;
+    min-width:0;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap; /* ✅ 긴 클랜명도 삐져나오지 않게 */
+  }
+  .team .score{
+    font-weight:800;
+    color:#1d4ed8;
+    flex:0 0 auto;
+  }
+
+  .match .meta{
+    font-size:12px;
+    color:#6b7280;
+    margin-top:8px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    min-width:0;
+  }
+
+  .placeholder{
+    border:1px dashed #e2e8f0;
+    border-radius:10px;
+    padding:12px;
+    margin-bottom:10px;
+    background:#f9fbff;
+    color:#6b7280;
+    font-weight:700;
+    text-align:center;
+    max-width:100%;
+  }
+
+  .group-card{
+    border:1px solid #e5ecf5;
+    border-radius:12px;
+    padding:12px;
+    margin-bottom:12px;
+    background:#fff;
+    box-shadow:0 6px 18px rgba(33,51,87,0.08);
+
+    min-width:0;
+    max-width:100%;
+    overflow:hidden;
+  }
+
+  .group-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    font-weight:800;
+    font-size:15px;
+    margin-bottom:6px;
+    gap:10px;
+    min-width:0;
+  }
+
+  /* ✅ 테이블이 부모 폭을 넘지 않게 */
+  .group-table{
+    width:100%;
+    max-width:100%;
+    border-collapse:collapse;
+    font-size:13px;
+    color:#1f2937;
+    table-layout:fixed; /* ✅ 셀 폭 고정해서 overflow 방지 */
+  }
+  .group-table th, .group-table td{
+    padding:8px 6px;
+    text-align:center;
+    border-bottom:1px solid #e9eef5;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+  .group-table th:first-child, .group-table td:first-child{
+    text-align:left;
+  }
+  .group-table tr:last-child td{ border-bottom:none; }
+
+  .group-team{ font-weight:700; }
+  .group-sub{ color:#6b7280; font-size:12px; font-weight:600; }
+
+  /* ✅ 데스크탑: 굳이 스크롤 없이 꽉 차게 보이고 싶으면(선택) */
+  @media (min-width: 980px){
+    /* 스크롤 유지해도 되고, 아래처럼 풀어도 됨 */
+    /* .bracket { overflow-x: auto; } */
+    .bracket-inner { grid-auto-columns: minmax(260px, 1fr); width: 100%; }
+  }
+
+  @media (max-width: 640px){
+    .cw-container{ padding: 0 10px; }
+    .bracket{ padding: 6px 0 10px; }
+    .round{ padding:10px; }
+    .round h4{ font-size:15px; }
+    .match{ padding:10px; }
+    .team{ font-size:13px; }
+    .cw-topbar{ flex-direction:column; align-items:flex-start; }
+    .cw-topbar-actions{ width:100%; justify-content:flex-start; flex-wrap:wrap; }
+    .cw-logo{ width: 150px; }
+
+    .group-table th, .group-table td{
+      padding:6px 4px;
+      font-size:12px;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="cw-page">
+  <div class="cw-container">
+    <div class="cw-topbar">
+      <div class="cw-topbar-title">머니리그 브라켓</div>
+      <div class="cw-topbar-actions">
+        <span class="cw-sync" id="cwSyncStatus">동기화 준비중</span>
+        <a class="cw-topbar-btn" href="{{ url_for('clanworldcup_bracket_full') }}">브라켓 전체 보기</a>
+        <a class="cw-topbar-btn" href="{{ url_for('clanworldcup_home') }}">홈</a>
+      </div>
+      <img class="cw-logo" src="{{ url_for('static', filename='images/clanworldcup-logo.jpg') }}" alt="머니리그 로고">
+    </div>
+    <div class="bracket">
+      <div class="bracket-inner" id="bracketWrap">
+        <div class="cw-status">불러오는 중...</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const phaseOrder = ["GROUP","QF","SF","F"];
+  let clanMap = {};
+  let standingsMap = {};
+  let bracketPollTimer = null;
+  let bracketLoading = false;
+
+  function setSyncStatus(text) {
+    const el = document.getElementById("cwSyncStatus");
+    if (el) el.textContent = text;
+  }
+
+  async function loadBracket(opts = {}) {
+    if (bracketLoading) return;
+    bracketLoading = true;
+    const silent = !!opts.silent;
+    const wrap = document.getElementById("bracketWrap");
+    if (!silent) {
+      wrap.innerHTML = '<div class="cw-status">불러오는 중...</div>';
+      setSyncStatus("불러오는 중...");
+    }
+    try {
+      const [matchesRes, clansRes, standingsRes] = await Promise.all([
+        fetch("/clanworldcup/api/matches"),
+        fetch("/clanworldcup/api/clans"),
+        fetch("/clanworldcup/api/standings"),
+      ]);
+      const [matchesData, clansData, standingsData] = await Promise.all([
+        matchesRes.json(), clansRes.json(), standingsRes.json()
+      ]);
+      if (!matchesData.ok) throw new Error(matchesData.error || "매치 불러오기 실패");
+
+      if (clansData.ok && Array.isArray(clansData.clans)) {
+        clanMap = {};
+        clansData.clans.forEach(c => { clanMap[c.clanId] = c.name || c.clanId; });
+      }
+      if (standingsData.ok && Array.isArray(standingsData.standings)) {
+        standingsMap = {};
+        standingsData.standings.forEach(s => { standingsMap[(s.groupId || "").toUpperCase()] = s; });
+      }
+
+      const byPhase = {};
+      matchesData.matches.forEach(m => {
+        const p = (m.phase || "GROUP").toUpperCase();
+        if (!byPhase[p]) byPhase[p] = [];
+        byPhase[p].push(m);
+      });
+
+      wrap.innerHTML = "";
+      phaseOrder.forEach(phase => {
+        const col = document.createElement("div");
+        col.className = "round";
+        col.innerHTML = `<h4>${phaseLabel(phase)}</h4>`;
+
+        if (phase === "GROUP") {
+          col.appendChild(renderGroups());
+        } else {
+          const list = (byPhase[phase] || []).sort((a,b) => (a.id||"").localeCompare(b.id||""));
+          if (!list.length) {
+            const ph = document.createElement("div");
+            ph.className = "placeholder";
+            ph.textContent = "매치가 없습니다.";
+            col.appendChild(ph);
+          } else {
+            list.forEach(m => col.appendChild(renderMatch(m)));
+          }
+        }
+        wrap.appendChild(col);
+      });
+      setSyncStatus(`실시간 동기화 · ${new Date().toLocaleTimeString("ko-KR")}`);
+    } catch (e) {
+      if (!silent) {
+        wrap.innerHTML = '<div class="cw-status">불러오기 실패</div>';
+      }
+      setSyncStatus("동기화 실패 · 재시도중");
+    } finally {
+      bracketLoading = false;
+    }
+  }
+
+  function renderGroups() {
+    const container = document.createElement("div");
+    const groups = ["A","B","C","D"];
+    groups.forEach(g => {
+      const card = document.createElement("div");
+      card.className = "group-card";
+
+      const header = document.createElement("div");
+      header.className = "group-header";
+      header.innerHTML = `<span>${g}조</span><span class="group-sub">클릭 시 상세</span>`;
+      card.appendChild(header);
+
+      const table = document.createElement("table");
+      table.className = "group-table";
+      table.innerHTML = `
+        <thead>
+          <tr>
+            <th style="width:42%;">팀</th>
+            <th style="width:9%;">경기</th>
+            <th style="width:10%;">승점</th>
+            <th style="width:9%;">승</th>
+            <th style="width:9%;">패</th>
+            <th style="width:10%;">GW</th>
+            <th style="width:10%;">GL</th>
+            <th style="width:11%;">GD</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      `;
+      const tbody = table.querySelector("tbody");
+      const rows = getGroupRows(g);
+
+      if (rows.length) {
+        rows.forEach((r, idx) => {
+          const name = clanMap[r.clanId] || r.clanId;
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td title="${escapeHtml(name)}"><span class="group-team">${idx+1}. ${escapeHtml(name)}</span></td>
+            <td>${r.MP ?? 0}</td>
+            <td>${(r.PTS ?? ((r.W ?? 0) * 3))}</td>
+            <td>${r.W ?? 0}</td>
+            <td>${r.L ?? 0}</td>
+            <td>${r.GW ?? 0}</td>
+            <td>${r.GL ?? 0}</td>
+            <td>${r.GD ?? 0}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+      } else {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td colspan="8" class="group-sub">데이터 없음</td>`;
+        tbody.appendChild(tr);
+      }
+
+      card.appendChild(table);
+      card.addEventListener("click", () => {
+        window.location.href = "{{ url_for('clanworldcup_groups') }}";
+      });
+      container.appendChild(card);
+    });
+    return container;
+  }
+
+  function getGroupRows(groupId) {
+    const g = standingsMap[groupId];
+    if (!g || !Array.isArray(g.rows)) return [];
+    const rows = g.rows.slice();
+    rows.sort((a,b) => {
+      const aPts = (a.PTS ?? ((a.W || 0) * 3));
+      const bPts = (b.PTS ?? ((b.W || 0) * 3));
+      if (bPts !== aPts) return bPts - aPts;
+      if ((b.GD||0)!==(a.GD||0)) return (b.GD||0)-(a.GD||0);
+      return (b.GW||0)-(a.GW||0);
+    });
+    return rows;
+  }
+
+  function renderMatch(m) {
+    const div = document.createElement("div");
+    div.className = "match";
+
+    const homeScore = m.homeWins ?? "-";
+    const awayScore = m.awayWins ?? "-";
+    const title = `${nameOf(m.homeClanId)} 대 ${nameOf(m.awayClanId)}`;
+
+    div.innerHTML = `
+      <div class="team">
+        <span class="name" title="${escapeHtml(title)}">${escapeHtml(title)}</span>
+        <span class="score">${homeScore} - ${awayScore}</span>
+      </div>
+      <div class="meta">
+        <span>${escapeHtml(statusLabel(m.status) ? `${statusLabel(m.status)} / ${modeLabel(m.bestOfMode)}` : `${modeLabel(m.bestOfMode)}`)}</span>
+      </div>
+    `;
+
+    div.addEventListener("click", () => {
+      if (m.id) window.location.href = `/clanworldcup/match/${encodeURIComponent(m.id)}`;
+    });
+    return div;
+  }
+
+  function escapeHtml(str) {
+    return String(str)
+      .replaceAll("&","&amp;")
+      .replaceAll("<","&lt;")
+      .replaceAll(">","&gt;")
+      .replaceAll('"',"&quot;")
+      .replaceAll("'","&#039;");
+  }
+
+  function nameOf(clanId) {
+    if (!clanId) return "미정";
+    if (clanMap[clanId]) return clanMap[clanId];
+
+    const seedMatch = String(clanId).match(/^([A-D])([12])$/);
+    if (seedMatch) {
+      const gid = seedMatch[1];
+      const rank = Number(seedMatch[2]);
+      const rows = getGroupRows(gid);
+      const seededClanId = rows[rank - 1]?.clanId;
+      if (seededClanId && clanMap[seededClanId]) return clanMap[seededClanId];
+      if (seededClanId) return seededClanId;
+      return `미정 (${gid}조 ${rank}위)`;
+    }
+
+    if (String(clanId).startsWith("WIN-")) {
+      return "미정 (" + clanId.replace("WIN-", "") + ")";
+    }
+
+    return clanId;
+  }
+
+  function statusLabel(status) {
+    const key = String(status || "").toUpperCase();
+    const map = {
+      "FINAL": "종료",
+      "NOT_PLAYED": "미진행",
+    };
+    if (key === "PENDING" || key === "IN_PROGRESS") return "";
+    return map[key] || status || "-";
+  }
+
+  function phaseLabel(phase) {
+    const key = String(phase || "").toUpperCase();
+    const map = {
+      "GROUP": "조별리그",
+      "QF": "8강",
+      "SF": "4강",
+      "F": "결승",
+    };
+    return map[key] || phase || "-";
+  }
+
+  function modeLabel(mode) {
+    const key = String(mode || "").toUpperCase();
+    const map = {
+      "ALL5": "5판제",
+      "FIRST3": "3선승",
+    };
+    return map[key] || mode || "-";
+  }
+
+  loadBracket();
+  bracketPollTimer = window.setInterval(() => loadBracket({ silent: true }), 3000);
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) loadBracket({ silent: true });
+  });
+  window.addEventListener("beforeunload", () => {
+    if (bracketPollTimer) clearInterval(bracketPollTimer);
+  });
+</script>
+{% endblock %}

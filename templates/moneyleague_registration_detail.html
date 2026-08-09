@@ -1,0 +1,422 @@
+{% extends "base.html" %}
+{% block title %}머니리그 접수 상세 | 피모북{% endblock %}
+
+{% block extra_head %}
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="피모북">
+<meta property="og:locale" content="ko_KR">
+<meta property="og:title" content="{{ post.clan_name }} 접수 상세 | 피모북">
+<meta property="og:description" content="머니리그 접수 상세 정보와 참가 명단을 확인하세요.">
+<meta property="og:url" content="{{ url_for('moneyleague_registration_detail', registration_id=post.id, _external=True) }}">
+<meta property="og:image" content="{{ url_for('static', filename='images/fimobook-og.png', _external=True) }}">
+<meta property="og:image:alt" content="머니리그 접수 상세">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{{ post.clan_name }} 접수 상세 | 피모북">
+<meta name="twitter:description" content="머니리그 접수 상세 정보와 참가 명단을 확인하세요.">
+<meta name="twitter:image" content="{{ url_for('static', filename='images/fimobook-og.png', _external=True) }}">
+<style>
+  :root {
+    --md-navy: #0f172a;
+    --md-blue: #1d4ed8;
+    --md-sky: #2563eb;
+    --md-ink: #1f2937;
+    --md-muted: #64748b;
+    --md-line: #d9e3f1;
+    --md-soft: #f8fbff;
+  }
+  .md-shell {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .md-hero {
+    width: 100%;
+    border-radius: 18px;
+    padding: 20px;
+    box-sizing: border-box;
+    color: #fff;
+    background:
+      radial-gradient(circle at 82% 22%, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0) 42%),
+      linear-gradient(128deg, #0b1c44 0%, #12337d 44%, #1d4ed8 100%);
+    box-shadow: 0 16px 30px rgba(15, 23, 42, 0.18);
+  }
+  .md-clan {
+    margin: 0;
+    font-size: 28px;
+    line-height: 1.2;
+    font-weight: 900;
+    letter-spacing: -0.5px;
+  }
+  .md-meta {
+    margin-top: 8px;
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.9);
+  }
+  .md-grid {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  .md-card {
+    width: 100%;
+    border: 1px solid var(--md-line);
+    border-radius: 16px;
+    background: #fff;
+    box-shadow: 0 8px 22px rgba(15, 23, 42, 0.06);
+    padding: 14px;
+    box-sizing: border-box;
+  }
+  .md-label {
+    display: block;
+    font-size: 12px;
+    font-weight: 800;
+    color: var(--md-muted);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .md-value {
+    color: var(--md-ink);
+    font-size: 15px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  .md-actions {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .md-left,
+  .md-right {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .md-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 14px;
+    border-radius: 10px;
+    border: 1px solid #cbd5e1;
+    background: #fff;
+    color: #0f172a;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 800;
+  }
+  .md-btn:hover {
+    text-decoration: none;
+    background: #f8fafc;
+  }
+  .md-btn-primary {
+    color: #fff;
+    background: linear-gradient(135deg, var(--md-blue), var(--md-sky));
+    border-color: transparent;
+    box-shadow: 0 10px 20px rgba(37, 99, 235, 0.24);
+  }
+  .md-btn-primary:hover {
+    filter: brightness(1.05);
+    background: linear-gradient(135deg, var(--md-blue), var(--md-sky));
+  }
+  .md-btn-danger {
+    border: 1px solid #fecaca;
+    background: #fff1f2;
+    color: #b91c1c;
+    cursor: pointer;
+  }
+  .md-btn-danger:hover {
+    background: #ffe4e6;
+  }
+  .cm-wrap {
+    width: 100%;
+    border: 1px solid var(--md-line);
+    border-radius: 16px;
+    background: #fff;
+    padding: 14px;
+    box-sizing: border-box;
+  }
+  .cm-title-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+  .cm-title {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 900;
+    color: var(--md-navy);
+  }
+  .cm-count {
+    font-size: 12px;
+    color: var(--md-muted);
+    background: var(--md-soft);
+    border: 1px solid #e2e8f0;
+    border-radius: 999px;
+    padding: 4px 10px;
+    font-weight: 800;
+  }
+  .cm-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .cm-item {
+    border: 1px solid #e8eff8;
+    border-radius: 12px;
+    background: var(--md-soft);
+    padding: 10px;
+  }
+  .cm-meta {
+    font-size: 12px;
+    color: var(--md-muted);
+    margin-bottom: 6px;
+    font-weight: 700;
+  }
+  .cm-content {
+    white-space: pre-wrap;
+    word-break: break-word;
+    color: var(--md-ink);
+    font-size: 14px;
+    line-height: 1.55;
+  }
+  .cm-delete-row {
+    margin-top: 8px;
+    display: flex;
+    justify-content: flex-end;
+  }
+  .cm-empty {
+    border: 1px dashed #c9d8ea;
+    border-radius: 12px;
+    background: #fcfdff;
+    padding: 20px 10px;
+    text-align: center;
+    color: var(--md-muted);
+    font-size: 14px;
+  }
+  .cm-form {
+    margin-top: 12px;
+    border-top: 1px solid #e8eff8;
+    padding-top: 12px;
+  }
+  .cm-nickname {
+    width: 100%;
+    box-sizing: border-box;
+    border: 1px solid #cbd5e1;
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-family: inherit;
+    font-size: 14px;
+    margin-bottom: 8px;
+  }
+  .cm-textarea {
+    width: 100%;
+    min-height: 110px;
+    box-sizing: border-box;
+    border: 1px solid #cbd5e1;
+    border-radius: 12px;
+    padding: 12px;
+    resize: vertical;
+    font-family: inherit;
+    font-size: 14px;
+    margin-bottom: 8px;
+  }
+  .cm-login {
+    margin-top: 10px;
+    font-size: 14px;
+    color: var(--md-muted);
+  }
+  .md-shot-wrap {
+    width: 100%;
+    border: 1px solid var(--md-line);
+    border-radius: 16px;
+    background: #fff;
+    padding: 14px;
+    box-sizing: border-box;
+  }
+  .md-shot-title {
+    margin: 0 0 10px 0;
+    font-size: 16px;
+    font-weight: 900;
+    color: var(--md-navy);
+  }
+  .md-shot {
+    width: 100%;
+    max-height: 560px;
+    object-fit: contain;
+    border: 1px solid #dbe5f2;
+    border-radius: 12px;
+    background: #f8fbff;
+  }
+  @media (max-width: 720px) {
+    .md-hero {
+      border-radius: 16px;
+      padding: 16px;
+    }
+    .md-clan {
+      font-size: 24px;
+    }
+  }
+  @media (max-width: 520px) {
+    .md-shell {
+      gap: 10px;
+    }
+    .md-hero {
+      padding: 14px;
+    }
+    .md-clan {
+      font-size: 21px;
+    }
+    .md-meta {
+      font-size: 12px;
+      margin-top: 6px;
+    }
+    .md-card,
+    .md-shot-wrap,
+    .cm-wrap {
+      padding: 12px;
+      border-radius: 14px;
+    }
+    .md-value {
+      font-size: 14px;
+      line-height: 1.5;
+    }
+    .md-actions {
+      flex-direction: column;
+      align-items: stretch;
+    }
+    .md-left,
+    .md-right {
+      width: 100%;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 6px;
+    }
+    .md-btn {
+      width: 100%;
+      box-sizing: border-box;
+      font-size: 13px;
+      padding: 10px 10px;
+    }
+    .cm-title {
+      font-size: 16px;
+    }
+    .cm-count {
+      font-size: 11px;
+    }
+    .cm-item {
+      padding: 9px;
+      border-radius: 10px;
+    }
+    .cm-meta {
+      font-size: 11px;
+    }
+    .cm-content {
+      font-size: 13px;
+    }
+    .cm-textarea,
+    .cm-nickname {
+      font-size: 13px;
+      border-radius: 10px;
+      padding: 10px;
+    }
+    .cm-textarea {
+      min-height: 96px;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="md-shell">
+  <div class="md-hero">
+    <h1 class="md-clan">{{ post.clan_name }}</h1>
+    <div class="md-meta">{{ post.author_display or post.author_name }} · {{ post.created_at_display }}</div>
+  </div>
+
+  <section class="md-grid">
+    <article class="md-card">
+      <span class="md-label">참가 인원</span>
+      <div class="md-value">{{ post.participant_count }}명</div>
+    </article>
+    <article class="md-card">
+      <span class="md-label">참가 인원 명단</span>
+      <div class="md-value">{{ post.participant_roster }}</div>
+    </article>
+    <article class="md-card">
+      <span class="md-label">각오 한마디</span>
+      <div class="md-value">{{ post.resolve_message }}</div>
+    </article>
+  </section>
+
+  <div class="md-actions">
+    <div class="md-left">
+      <a class="md-btn" href="{{ url_for('moneyleague_registration_board') }}">목록으로</a>
+    </div>
+    {% if registration_open and can_manage %}
+      <div class="md-right">
+        <a class="md-btn md-btn-primary" href="{{ url_for('moneyleague_registration_edit', registration_id=post.id) }}">수정</a>
+        <form method="POST" action="{{ url_for('moneyleague_registration_delete', registration_id=post.id) }}" onsubmit="return confirm('이 접수 글을 삭제하시겠습니까?');">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+          <button type="submit" class="md-btn md-btn-danger">삭제</button>
+        </form>
+      </div>
+    {% endif %}
+  </div>
+
+  {% if post.clan_screenshot_path %}
+    <section class="md-shot-wrap">
+      <h3 class="md-shot-title">클랜 페이지 스크린샷</h3>
+      <img class="md-shot" src="{{ url_for('static', filename=post.clan_screenshot_path) }}" alt="클랜 페이지 스크린샷">
+    </section>
+  {% endif %}
+
+  <section class="cm-wrap" id="comments">
+    <div class="cm-title-row">
+      <h3 class="cm-title">댓글</h3>
+      <div class="cm-count">{{ comments|length }}개</div>
+    </div>
+
+    <div class="cm-list">
+      {% for comment in comments %}
+        <article class="cm-item">
+          <div class="cm-meta">{{ comment.author_display }} · {{ comment.created_at_display }}</div>
+          <div class="cm-content">{{ comment.content }}</div>
+          {% if registration_open and current_user.is_authenticated and (comment.author_id|string) == (current_user.id|string) %}
+            <form class="cm-delete-row" method="POST" action="{{ url_for('moneyleague_registration_delete_comment', registration_id=post.id, comment_id=comment.id) }}" onsubmit="return confirm('댓글을 삭제하시겠습니까?');">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+              <button class="md-btn md-btn-danger" type="submit">댓글 삭제</button>
+            </form>
+          {% endif %}
+        </article>
+      {% else %}
+        <div class="cm-empty">아직 댓글이 없습니다.</div>
+      {% endfor %}
+    </div>
+
+    {% if registration_open %}
+      <form class="cm-form" method="POST" action="{{ url_for('moneyleague_registration_add_comment', registration_id=post.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        {% if not current_user.is_authenticated %}
+          <input class="cm-nickname" type="text" name="nickname" placeholder="닉네임 (최대 20자)" maxlength="20" required>
+        {% endif %}
+        <textarea class="cm-textarea" name="content" placeholder="응원, 안내, 문의 내용을 남겨주세요." required></textarea>
+        <button type="submit" class="md-btn md-btn-primary">댓글 작성</button>
+      </form>
+      {% if not current_user.is_authenticated %}
+        <div class="cm-login">닉네임과 IP 앞부분이 함께 표시됩니다.</div>
+      {% endif %}
+    {% else %}
+      <div class="cm-login">접수 마감으로 댓글 작성은 비활성화되었습니다.</div>
+    {% endif %}
+  </section>
+</section>
+{% endblock %}

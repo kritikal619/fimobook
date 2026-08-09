@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}관리자 설정 | 피모북{% endblock %}
+
+{% block extra_head %}
+<style>
+  .admin-shell{width:100%;max-width:560px;background:#fff;border:1px solid var(--line);border-radius:16px;padding:24px;box-sizing:border-box;}
+  .admin-title{margin:0 0 10px;color:var(--ink);font-size:24px;font-weight:900;}
+  .admin-desc{margin:0 0 18px;color:var(--muted);font-size:14px;line-height:1.55;}
+  .admin-actions{display:flex;justify-content:flex-end;}
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="admin-shell">
+  <h1 class="admin-title">관리자 설정</h1>
+  {% if setup_enabled %}
+    <p class="admin-desc">관리자 설정 비밀번호를 입력하면 현재 로그인 계정이 관리자로 등록됩니다.</p>
+    <form method="POST">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <input class="form-control" type="password" name="password" placeholder="관리자 설정 비밀번호" required>
+      <div class="admin-actions">
+        <button class="btn-primary" type="submit">관리자로 등록</button>
+      </div>
+    </form>
+  {% else %}
+    <p class="admin-desc">서버에 관리자 설정 비밀번호가 설정되어 있지 않습니다.</p>
+  {% endif %}
+</section>
+{% endblock %}

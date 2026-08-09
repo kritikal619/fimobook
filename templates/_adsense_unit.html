@@ -1,0 +1,48 @@
+<aside class="fimo-ad-shell{% if ad_layout|default('') == 'grid-card' %} is-grid-card{% elif ad_layout|default('') == 'horizontal' %} is-horizontal{% elif ad_layout|default('') == 'compact' %} is-compact{% endif %}" aria-label="광고">
+  <span class="fimo-ad-label">광고</span>
+  <ins class="adsbygoogle"
+       {% if ad_layout|default('') == 'grid-card' %}
+       style="display:block;width:100%;height:102px"
+       {% elif ad_layout|default('') == 'horizontal' %}
+       style="display:block;width:100%"
+       {% elif ad_layout|default('') == 'compact' %}
+       style="display:block;width:100%;height:50px"
+       {% else %}
+       style="display:block"
+       {% endif %}
+       data-ad-client="ca-pub-4347323294488780"
+       data-ad-slot="8520020783"
+       {% if ad_layout|default('') == 'horizontal' %}
+       data-ad-format="horizontal"
+       data-full-width-responsive="true"
+       {% elif ad_layout|default('') not in ('grid-card', 'compact') %}
+       data-ad-format="auto"
+       data-full-width-responsive="true"
+       {% endif %}></ins>
+</aside>
+<script>
+  (() => {
+    const script = document.currentScript;
+    const shell = script && script.previousElementSibling;
+    const ad = shell && shell.querySelector('.adsbygoogle');
+    if (!shell || !ad) return;
+
+    const syncAdState = () => {
+      const status = ad.getAttribute('data-ad-status') || '';
+      const isUnfilled = status === 'unfilled' || status.startsWith('unfill-');
+      shell.classList.toggle('is-unfilled', isUnfilled);
+      shell.hidden = isUnfilled;
+    };
+
+    const observer = new MutationObserver(syncAdState);
+    observer.observe(ad, { attributes: true, attributeFilter: ['data-ad-status'] });
+    syncAdState();
+
+    try {
+      (window.adsbygoogle = window.adsbygoogle || []).push({});
+    } catch (error) {
+      shell.classList.add('is-unfilled');
+      shell.hidden = true;
+    }
+  })();
+</script>

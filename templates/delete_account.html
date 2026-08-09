@@ -1,0 +1,202 @@
+{% extends "base.html" %}
+{% block body_class %}delete-account-page{% endblock %}
+{% block title %}회원탈퇴 | 피모북{% endblock %}
+
+{% block extra_head %}
+<style>
+  .delete-account-shell {
+    width: 100%;
+    max-width: 620px;
+  }
+  .delete-account-head {
+    margin-bottom: 22px;
+  }
+  .delete-account-title {
+    margin: 0;
+    color: #172033;
+    font-size: 27px;
+    font-weight: 950;
+    letter-spacing: -.7px;
+  }
+  .delete-account-lead {
+    margin: 8px 0 0;
+    color: #64748b;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+  .delete-warning {
+    padding: 17px;
+    border: 1px solid #fecaca;
+    border-radius: 14px;
+    background: #fff7f7;
+  }
+  .delete-warning strong {
+    display: block;
+    margin-bottom: 8px;
+    color: #991b1b;
+    font-size: 14px;
+  }
+  .delete-warning ul {
+    margin: 0;
+    padding-left: 19px;
+    color: #7f1d1d;
+    font-size: 13px;
+    line-height: 1.75;
+  }
+  .delete-error {
+    margin: 16px 0 0;
+    padding: 12px 14px;
+    border: 1px solid #fca5a5;
+    border-radius: 11px;
+    background: #fef2f2;
+    color: #b91c1c;
+    font-size: 13px;
+    font-weight: 800;
+  }
+  .delete-account-form {
+    display: grid;
+    gap: 16px;
+    margin-top: 22px;
+  }
+  .delete-field {
+    display: grid;
+    gap: 7px;
+  }
+  .delete-label {
+    color: #334155;
+    font-size: 13px;
+    font-weight: 850;
+  }
+  .delete-help {
+    color: #64748b;
+    font-size: 11px;
+    line-height: 1.45;
+  }
+  .delete-input {
+    width: 100%;
+    min-height: 46px;
+    padding: 0 13px;
+    border: 1px solid #cbd5e1;
+    border-radius: 11px;
+    background: #fff;
+    color: #172033;
+    font: inherit;
+    box-sizing: border-box;
+    outline: none;
+  }
+  .delete-input:focus {
+    border-color: #dc2626;
+  }
+  .delete-confirm {
+    display: flex;
+    align-items: flex-start;
+    gap: 9px;
+    color: #475569;
+    font-size: 12px;
+    line-height: 1.55;
+  }
+  .delete-confirm input {
+    flex: 0 0 auto;
+    margin-top: 3px;
+  }
+  .delete-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 9px;
+  }
+  .delete-submit,
+  .delete-cancel {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 46px;
+    padding: 0 15px;
+    border-radius: 11px;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 900;
+    text-decoration: none;
+    cursor: pointer;
+    box-sizing: border-box;
+  }
+  .delete-submit {
+    border: 1px solid #b91c1c;
+    background: #b91c1c;
+    color: #fff;
+  }
+  .delete-submit:hover {
+    background: #991b1b;
+  }
+  .delete-cancel {
+    border: 1px solid #cbd5e1;
+    background: #fff;
+    color: #334155;
+  }
+  .delete-cancel:hover {
+    border-color: #94a3b8;
+    color: #172033;
+    text-decoration: none;
+  }
+  @media (max-width: 520px) {
+    .delete-account-title { font-size: 24px; }
+    .delete-actions { grid-template-columns: 1fr; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="delete-account-shell">
+  <header class="delete-account-head">
+    <h1 class="delete-account-title">회원탈퇴</h1>
+    <p class="delete-account-lead">탈퇴 전에 아래 내용을 확인해주세요. 완료된 탈퇴는 되돌릴 수 없습니다.</p>
+  </header>
+
+  <div class="delete-warning">
+    <strong><i class="bi bi-exclamation-triangle" aria-hidden="true"></i> 탈퇴하면 다음과 같이 처리됩니다.</strong>
+    <ul>
+      <li>계정 이메일, 감독명, 로그인 연결 정보가 삭제됩니다.</li>
+      <li>선수 리뷰, 평점, 리뷰 포인트와 알림이 삭제됩니다.</li>
+      <li>기존 게시글과 댓글은 커뮤니티 흐름을 위해 작성자만 익명 처리됩니다.</li>
+    </ul>
+  </div>
+
+  {% if error %}
+    <div class="delete-error" role="alert">{{ error }}</div>
+  {% endif %}
+
+  <form class="delete-account-form" method="POST" action="{{ url_for('delete_account') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
+    <label class="delete-field">
+      <span class="delete-label">계정 이메일 확인</span>
+      <input class="delete-input" type="email" name="confirm_email" autocomplete="email" required>
+      <span class="delete-help">{{ current_user.email }} 주소를 정확히 입력해주세요.</span>
+    </label>
+
+    {% if current_user.password_hash %}
+      <label class="delete-field">
+        <span class="delete-label">현재 비밀번호</span>
+        <input class="delete-input" type="password" name="current_password" autocomplete="current-password" required>
+      </label>
+    {% else %}
+      <p class="delete-help">이 계정은 Google 로그인 계정입니다. 위 이메일과 아래 확인 문구로 본인 계정을 확인합니다.</p>
+    {% endif %}
+
+    <label class="delete-field">
+      <span class="delete-label">확인 문구</span>
+      <input class="delete-input" type="text" name="confirm_text" autocomplete="off" placeholder="회원탈퇴" required>
+      <span class="delete-help">회원탈퇴라고 정확히 입력해주세요.</span>
+    </label>
+
+    <label class="delete-confirm">
+      <input type="checkbox" name="confirm_delete" value="yes" required>
+      <span>위 안내를 확인했으며 계정 삭제 후 복구할 수 없다는 점에 동의합니다.</span>
+    </label>
+
+    <div class="delete-actions">
+      <button class="delete-submit" type="submit">계정 영구 삭제</button>
+      <a class="delete-cancel" href="{{ url_for('profile') }}">취소하고 돌아가기</a>
+    </div>
+  </form>
+</section>
+{% endblock %}

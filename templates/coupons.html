@@ -1,0 +1,1335 @@
+{% extends "base.html" %}
+
+{% block body_class %}coupon-page-body{% endblock %}
+
+{% block title %}쿠폰 | 피모북{% endblock %}
+
+{% block extra_head %}
+{% include "_adsense_head.html" %}
+<style>
+  :root{
+    --brand:#10b981;
+    --brand-dark:#059669;
+    --navy:#374151;
+    --bg:#f8fafc;
+    --surface:#f6f8fb;
+    --card:#ffffff;
+    --line:#dbe3ec;
+    --line2:#e2e8f0;
+    --text:#1f2937;
+    --sub:#64748b;
+    --radius:10px;
+    --shadow:none;
+    --touch:44px;
+  }
+
+  .main-content{
+    max-width:1100px;
+    background:transparent;
+    box-shadow:none;
+    border:none;
+    padding:0;
+    overflow:visible;
+  }
+
+  .coupon-page-outer{
+    width:100%;
+    padding:0 0 34px;
+    padding-left:max(0px, env(safe-area-inset-left));
+    padding-right:max(0px, env(safe-area-inset-right));
+    padding-bottom:max(20px, env(safe-area-inset-bottom));
+    box-sizing:border-box;
+    overflow-x:hidden;
+  }
+
+  .coupon-page{
+    width:100%;
+    max-width:1100px;
+    margin:0 auto;
+    padding:0;
+    box-sizing:border-box;
+    min-width:0;
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+  }
+
+  .coupon-hero{
+    width:100%;
+    background:#ffffff;
+    border:1px solid var(--line);
+    border-radius:12px;
+    box-shadow:var(--shadow);
+    padding:16px;
+    box-sizing:border-box;
+  }
+
+  .coupon-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:18px;
+    min-width:0;
+  }
+
+  .coupon-copy{
+    min-width:0;
+  }
+
+  .coupon-eyebrow{
+    display:none;
+    padding:6px 10px;
+    border-radius:999px;
+    background:#ecfdf5;
+    color:var(--brand-dark);
+    font-size:11px;
+    font-weight:900;
+    letter-spacing:0.08em;
+    margin-bottom:10px;
+  }
+
+  .coupon-title{
+    margin:0;
+    color:var(--text);
+    font-size:26px;
+    font-weight:900;
+    letter-spacing:-0.8px;
+  }
+
+  .coupon-subtitle{
+    margin:6px 0 0;
+    color:var(--sub);
+    font-size:13px;
+    line-height:1.45;
+    max-width:640px;
+  }
+
+  .coupon-actions{
+    display:flex;
+    gap:10px;
+    align-items:center;
+    flex:0 0 auto;
+  }
+
+  .coupon-input-btn{
+    padding:6px 9px;
+    min-height:30px;
+    border-radius:8px;
+    font-size:12px;
+  }
+
+  .ghost-btn{
+    padding:8px 11px;
+    border:1px solid var(--line);
+    background:#f8fafc;
+    color:var(--navy);
+    border-radius:8px;
+    font-weight:800;
+    text-decoration:none;
+    transition:background 0.2s, transform 0.2s, border-color 0.2s;
+    min-height:34px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    -webkit-tap-highlight-color:transparent;
+    touch-action:manipulation;
+    white-space:nowrap;
+    font-size:13px;
+  }
+
+  .ghost-btn:hover{
+    background:#f1f5f9;
+    border-color:#cbd5e1;
+    text-decoration:none;
+    transform:translateY(-1px);
+  }
+
+  .notify-btn{
+    padding:8px 12px;
+    border:1px solid var(--brand);
+    background:var(--brand);
+    color:#ffffff;
+    border-radius:8px;
+    font-weight:800;
+    cursor:pointer;
+    transition:background 0.2s, transform 0.2s, box-shadow 0.2s;
+    min-height:var(--touch);
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    -webkit-tap-highlight-color:transparent;
+    touch-action:manipulation;
+    box-shadow:none;
+  }
+
+  .notify-btn:hover{
+    background:var(--brand-dark);
+    transform:translateY(-1px);
+    box-shadow:none;
+  }
+
+  .coupon-settings{
+    width:100%;
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:0;
+    box-sizing:border-box;
+    min-width:0;
+    box-shadow:var(--shadow);
+    overflow:hidden;
+  }
+
+  .coupon-settings-toggle{
+    width:100%;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    padding:10px 12px;
+    border:none;
+    background:transparent;
+    color:inherit;
+    text-align:left;
+    font:inherit;
+    cursor:pointer;
+    min-width:0;
+    box-sizing:border-box;
+  }
+
+  .coupon-settings-panel{
+    width:100%;
+    display:none;
+    justify-content:space-between;
+    align-items:center;
+    gap:16px;
+    min-width:0;
+    padding:0 12px 12px;
+    box-sizing:border-box;
+  }
+
+  .coupon-settings.is-open .coupon-settings-panel{
+    display:flex;
+  }
+
+  .settings-copy{
+    display:flex;
+    gap:14px;
+    align-items:flex-start;
+    min-width:0;
+    flex:1 1 auto;
+  }
+
+  .settings-icon{
+    width:34px;
+    height:34px;
+    border-radius:9px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:#ecfdf5;
+    color:var(--brand-dark);
+    font-size:16px;
+    flex:0 0 auto;
+  }
+
+  .settings-copy > div{
+    min-width:0;
+  }
+
+  .settings-title{
+    font-weight:900;
+    color:var(--text);
+    font-size:14px;
+  }
+
+  .settings-desc{
+    color:var(--sub);
+    font-size:12px;
+    margin-top:4px;
+    line-height:1.5;
+    word-break:keep-all;
+    overflow-wrap:anywhere;
+  }
+
+  .coupon-settings-toggle .settings-copy{
+    gap:10px;
+    align-items:center;
+  }
+
+  .coupon-settings-toggle .settings-copy > div{
+    min-width:0;
+  }
+
+  .coupon-settings-toggle .settings-title{
+    font-size:15px;
+  }
+
+  .coupon-settings-toggle .settings-desc{
+    margin-top:2px;
+    font-size:12px;
+    line-height:1.35;
+  }
+
+  .coupon-settings-chevron{
+    flex:0 0 auto;
+    color:var(--sub);
+    font-size:16px;
+    transition:transform 0.2s ease;
+  }
+
+  .coupon-settings.is-open .coupon-settings-chevron{
+    transform:rotate(180deg);
+  }
+
+  .coupon-list{
+    width:100%;
+    display:grid;
+    grid-template-columns:repeat(3, minmax(0, 1fr));
+    gap:10px;
+    min-width:0;
+  }
+
+  .coupon-card{
+    width:100%;
+    background:var(--card);
+    border:1px solid var(--line2);
+    border-radius:10px;
+    padding:12px;
+    box-shadow:var(--shadow);
+    box-sizing:border-box;
+    min-width:0;
+    max-width:100%;
+    overflow:hidden;
+  }
+
+  .coupon-card-featured{
+    grid-column:auto;
+  }
+
+  .card-top{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:10px;
+    margin-bottom:9px;
+    min-width:0;
+  }
+
+  .card-tags{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    flex-wrap:wrap;
+  }
+
+  .badge{
+    color:var(--navy);
+    font-weight:900;
+    font-size:11px;
+    padding:4px 7px;
+    background:#eef2ff;
+    border-radius:999px;
+    border:1px solid var(--line);
+    white-space:nowrap;
+  }
+
+  .expires{
+    color:var(--sub);
+    font-size:11px;
+    white-space:nowrap;
+  }
+
+  .status-live{
+    color:#166534;
+    background:#dcfce7;
+    border:1px solid #86efac;
+    padding:4px 7px;
+    border-radius:999px;
+    font-weight:900;
+    font-size:11px;
+    white-space:nowrap;
+  }
+
+  .status-expired{
+    color:#b42318;
+    background:#fef3f2;
+    border:1px solid #f0b5ac;
+    padding:4px 7px;
+    border-radius:999px;
+    font-weight:900;
+    font-size:11px;
+    white-space:nowrap;
+  }
+
+  .code-row{
+    display:grid;
+    grid-template-columns:minmax(0, 1fr) auto;
+    align-items:stretch;
+    gap:7px;
+    margin-bottom:9px;
+    min-width:0;
+  }
+
+  .code-chip{
+    display:flex;
+    align-items:center;
+    background:#0f172a;
+    color:#ffffff;
+    padding:9px 10px;
+    border-radius:8px;
+    font-size:13px;
+    font-weight:900;
+    letter-spacing:0.04em;
+    max-width:100%;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+    min-width:0;
+    width:100%;
+    box-sizing:border-box;
+  }
+
+  .copy-btn{
+    padding:8px 10px;
+    border:1px solid var(--line);
+    background:#f8fafc;
+    color:var(--text);
+    border-radius:8px;
+    font-weight:900;
+    cursor:pointer;
+    transition:background 0.2s, transform 0.2s;
+    min-height:var(--touch);
+    user-select:none;
+    -webkit-user-select:none;
+    -webkit-tap-highlight-color:transparent;
+    touch-action:manipulation;
+    white-space:nowrap;
+  }
+
+  .copy-btn:hover{
+    background:#f1f5f9;
+    transform:translateY(-1px);
+  }
+
+  .copy-btn.is-success{
+    background:#dcfce7 !important;
+    color:#166534 !important;
+  }
+
+  .items-wrap{
+    border-top:1px dashed var(--line2);
+    padding-top:9px;
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+    min-width:0;
+  }
+
+  .items-title{
+    color:var(--text);
+    font-size:12px;
+    font-weight:900;
+    margin-bottom:2px;
+  }
+
+  .item-line{
+    color:var(--sub);
+    font-size:12px;
+    line-height:1.45;
+  }
+
+  .meta{
+    margin-top:9px;
+    color:#94a3b8;
+    font-size:12px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:10px;
+    flex-wrap:wrap;
+  }
+
+  .empty{
+    text-align:center;
+    color:#94a3b8;
+    padding:32px 0;
+    border:1px dashed #d6dee8;
+    border-radius:16px;
+    background:#f8fafc;
+    width:100%;
+    grid-column:1 / -1;
+  }
+
+  .toast{
+    position:fixed;
+    bottom:16px;
+    right:16px;
+    background:#0f172a;
+    color:#fff;
+    padding:12px 14px;
+    border-radius:12px;
+    box-shadow:0 10px 28px rgba(0,0,0,0.25);
+    font-weight:800;
+    font-size:14px;
+    z-index:9999;
+    opacity:0.96;
+    max-width:320px;
+  }
+
+  .notify-modal{
+    position:fixed;
+    inset:0;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    background:rgba(15,23,42,0.45);
+    z-index:10000;
+    padding:18px 14px;
+  }
+
+  .notify-modal.open{ display:flex; }
+
+  .notify-modal-card{
+    width:min(420px, 94vw);
+    background:#ffffff;
+    border-radius:20px;
+    box-shadow:0 18px 40px rgba(15,23,42,0.18);
+    padding:20px;
+    box-sizing:border-box;
+    border:1px solid var(--line);
+    max-height:min(78vh, 560px);
+    overflow:auto;
+    -webkit-overflow-scrolling:touch;
+    min-width:0;
+  }
+
+  .modal-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:14px;
+  }
+
+  .modal-title{
+    font-size:19px;
+    font-weight:900;
+    color:var(--text);
+  }
+
+  .modal-close{
+    border:none;
+    background:#f1f5f9;
+    color:#334155;
+    padding:8px 12px;
+    border-radius:10px;
+    cursor:pointer;
+    font-weight:800;
+    min-height:40px;
+  }
+
+  .toggle-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:12px;
+    padding:14px 0;
+    border-bottom:1px solid #eef2f7;
+  }
+
+  .toggle-label{ font-weight:900; color:var(--text); }
+  .toggle-desc{ font-size:12px; color:var(--sub); margin-top:4px; line-height:1.45; }
+
+  .switch{ position:relative; display:inline-block; width:46px; height:26px; }
+  .switch input{ opacity:0; width:0; height:0; }
+
+  .slider{
+    position:absolute;
+    cursor:pointer;
+    top:0; left:0; right:0; bottom:0;
+    background-color:#cbd5e1;
+    transition:0.2s;
+    border-radius:999px;
+  }
+
+  .slider:before{
+    position:absolute;
+    content:"";
+    height:20px;
+    width:20px;
+    left:3px;
+    bottom:3px;
+    background-color:white;
+    transition:0.2s;
+    border-radius:50%;
+  }
+
+  .switch input:checked + .slider{ background-color:var(--brand); }
+  .switch input:checked + .slider:before{ transform:translateX(20px); }
+
+  .select-row{ display:flex; flex-direction:column; gap:8px; padding:12px 0; }
+  .select-row label{ font-weight:900; color:var(--text); }
+
+  .select-row select{
+    padding:12px 12px;
+    border-radius:12px;
+    border:1px solid #e2e8f0;
+    background:#f8fafc;
+    font-weight:700;
+    color:var(--text);
+    min-height:var(--touch);
+  }
+
+  .permission-row{
+    background:#fef9c3;
+    color:#854d0e;
+    border-radius:12px;
+    padding:8px 10px;
+    font-size:12px;
+    display:none;
+    margin-top:6px;
+    line-height:1.35;
+  }
+
+  .permission-row.active{ display:block; }
+
+  .modal-actions{
+    display:flex;
+    gap:8px;
+    justify-content:flex-end;
+    margin-top:10px;
+  }
+
+  @media (max-width: 900px){
+    .coupon-list{
+      grid-template-columns:repeat(2, minmax(0, 1fr));
+    }
+
+    .coupon-card-featured{
+      grid-column:auto;
+    }
+  }
+
+  @media (max-width: 640px){
+    .coupon-page-outer{ padding:0 0 24px; }
+
+    .coupon-page{
+      max-width:100%;
+      padding:0;
+      gap:12px;
+    }
+
+    .coupon-hero{
+      border-radius:16px;
+      padding:16px 14px;
+    }
+
+    .coupon-header{
+      flex-direction:column;
+      align-items:flex-start;
+      gap:12px;
+    }
+
+    .coupon-eyebrow{
+      margin-bottom:8px;
+      font-size:10px;
+      padding:5px 9px;
+    }
+
+    .coupon-title{
+      font-size:22px;
+      line-height:1.1;
+    }
+
+    .coupon-subtitle{
+      font-size:12px;
+      line-height:1.45;
+      margin-top:8px;
+    }
+
+    .coupon-actions{
+      width:100%;
+    }
+
+    .coupon-actions .ghost-btn{
+      width:100%;
+      min-height:44px;
+      border-radius:10px;
+    }
+
+    .coupon-settings{
+      border-radius:16px;
+    }
+
+    .coupon-settings-toggle{
+      padding:12px;
+    }
+
+    .coupon-settings-panel{
+      flex-direction:column;
+      align-items:stretch;
+      gap:12px;
+      padding:0 12px 14px;
+    }
+
+    .coupon-settings-toggle .settings-copy{
+      gap:10px;
+      align-items:center;
+    }
+
+    .coupon-settings-toggle .settings-copy > div{
+      min-width:0;
+    }
+
+    .coupon-settings-toggle .settings-desc{
+      margin-top:2px;
+    }
+
+    .settings-copy{
+      gap:10px;
+    }
+
+    .settings-icon{
+      width:38px;
+      height:38px;
+      border-radius:11px;
+      font-size:17px;
+    }
+
+    .settings-title{
+      font-size:14px;
+    }
+
+    .settings-desc{
+      font-size:12px;
+      line-height:1.4;
+    }
+
+    .notify-btn{
+      width:100%;
+      border-radius:10px;
+      box-sizing:border-box;
+    }
+
+    .coupon-card{
+      padding:10px;
+      border-radius:10px;
+    }
+
+    .card-top{
+      flex-direction:row;
+      align-items:center;
+      gap:7px;
+      margin-bottom:8px;
+    }
+
+    .expires{
+      font-size:11px;
+      color:var(--sub);
+      white-space:normal;
+    }
+
+    .badge,
+    .status-expired,
+    .status-live{
+      font-size:11px;
+      padding:4px 8px;
+    }
+
+    .code-row{
+      grid-template-columns:1fr;
+      gap:7px;
+      align-items:stretch;
+      width:100%;
+      min-width:0;
+    }
+
+    .code-chip{
+      width:100%;
+      min-width:0;
+      text-align:left;
+      font-size:12px;
+      line-height:1.35;
+      padding:8px 9px;
+      white-space:pre-wrap;
+      word-break:break-all;
+      overflow-wrap:anywhere;
+    }
+
+    .copy-btn{
+      width:100%;
+      padding:8px 10px;
+      text-align:center;
+      white-space:nowrap;
+      min-height:36px;
+      border-radius:10px;
+      font-size:13px;
+    }
+
+    .items-wrap{
+      padding-top:12px;
+      gap:5px;
+    }
+
+    .items-title{
+      font-size:12px;
+    }
+
+    .item-line{
+      font-size:13px;
+      line-height:1.4;
+    }
+
+    .meta{
+      flex-direction:column;
+      align-items:flex-start;
+      gap:3px;
+      margin-top:12px;
+      font-size:11px;
+    }
+
+    .coupon-list{
+      gap:9px;
+    }
+
+    .notify-modal{
+      padding:12px;
+    }
+
+    .notify-modal-card{
+      width:100%;
+      max-width:none;
+      padding:16px;
+      border-radius:16px;
+      max-height:84vh;
+      box-sizing:border-box;
+    }
+
+    .toast{
+      left:16px;
+      right:16px;
+      bottom:12px;
+      text-align:center;
+      max-width:none;
+    }
+  }
+
+  @media (max-width: 360px){
+    .coupon-page{ padding:0 10px; }
+    .coupon-title{ font-size:20px; }
+    .ghost-btn{ padding:7px 9px; }
+    .badge,.status-expired,.status-live{ font-size:12px; }
+    .copy-btn{ padding:10px 10px; font-size:13px; }
+    .code-chip{ font-size:14px; }
+  }
+
+  @media (max-width: 520px){
+    .coupon-list{
+      grid-template-columns:1fr;
+    }
+  }
+
+  /* Rebuilt coupon page */
+  .coupon-page { max-width: 980px; gap: 18px; }
+  .coupon-hero {
+    padding: 0 0 18px;
+    border: 0;
+    border-bottom: 1px solid var(--line);
+    border-radius: 0;
+    background: transparent;
+  }
+  .coupon-header { align-items: center; }
+  .coupon-title { font-size: 30px; letter-spacing: -1px; word-break:keep-all; }
+  .coupon-subtitle { margin-top: 5px; word-break:keep-all; }
+  .coupon-input-btn {
+    min-height: 42px;
+    padding: 0 15px;
+    border-color: #cbd5e1;
+    border-radius: 11px;
+    background: #fff;
+  }
+  .coupon-settings {
+    border: 0;
+    border-radius: 14px;
+    background: #f1f7f4;
+  }
+  .coupon-settings-toggle { padding: 14px 16px; }
+  .coupon-settings-panel { padding: 0 16px 16px; }
+  .settings-icon { background: #ddf7ec; }
+  .coupon-list { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; }
+  .coupon-card {
+    padding: 17px;
+    border-color: #dce5ec;
+    border-radius: 15px;
+    box-shadow: 0 7px 22px rgba(15,23,42,.04);
+  }
+  .card-top { margin-bottom: 13px; }
+  .code-row { gap: 9px; margin-bottom: 13px; }
+  .code-chip { padding: 12px 13px; border-radius: 10px; font-size: 14px; }
+  .copy-btn { min-height: 44px; padding: 0 13px; border-radius: 10px; background: #fff; }
+  .items-wrap { padding-top: 12px; }
+  .meta { padding-top: 2px; font-size: 11px; }
+  @media(max-width:640px){
+    .coupon-page { gap: 14px; }
+    .coupon-hero { padding: 0 0 15px; border-radius: 0; }
+    .coupon-header { flex-direction: column; align-items: stretch; gap: 12px; }
+    .coupon-copy { width:100%; }
+    .coupon-actions { width:100%; }
+    .coupon-actions .coupon-input-btn { width:100%; }
+    .coupon-title { font-size: 24px; }
+    .coupon-subtitle { font-size: 12px; }
+    .coupon-input-btn { min-height: 38px; padding: 0 11px; }
+    .coupon-list { grid-template-columns: 1fr; }
+    .coupon-card { padding: 15px; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="coupon-page-outer">
+  <div class="coupon-page">
+    <section class="coupon-hero">
+      <div class="coupon-header">
+        <div class="coupon-copy">
+          <h1 class="coupon-title">FC모바일 쿠폰</h1>
+          <p class="coupon-subtitle">사용 가능한 쿠폰 코드와 보상 목록입니다.</p>
+        </div>
+        <div class="coupon-actions">
+          <a class="ghost-btn coupon-input-btn" href="https://fifamobile.nexon.com/Coupon/Index" target="_blank" rel="noopener">쿠폰 등록</a>
+        </div>
+      </div>
+    </section>
+
+    {% set ad_layout = 'compact' %}
+    {% include "_adsense_unit.html" %}
+
+    <div class="coupon-list">
+      {% if coupons %}
+        {% for c in coupons %}
+          <div class="coupon-card{% if loop.first and not c.boolExpires %} coupon-card-featured{% endif %}">
+            <div class="card-top">
+              <div class="card-tags">
+                <span class="badge">{{ (c.category and c.category != "미분류") and c.category or "쿠폰" }}</span>
+                {% if c.boolExpires %}
+                  <span class="status-expired">만료</span>
+                {% else %}
+                  <span class="status-live">사용 가능</span>
+                {% endif %}
+              </div>
+              <div class="expires">{{ c.expires or "유효기간 미정" }}</div>
+            </div>
+
+            <div class="code-row">
+              <span class="code-chip" title="{{ c.code }}">{{ c.code }}</span>
+              <button class="copy-btn" data-code="{{ c.code }}">코드 복사</button>
+            </div>
+
+            {% set items = c.get("items") %}
+            {% if items %}
+              <div class="items-wrap">
+                <div class="items-title">보상</div>
+                {% if items is string %}
+                  <div class="item-line">• {{ items }}</div>
+                {% elif items is iterable and not items is string %}
+                  {% for it in items %}
+                    {% if it is mapping %}
+                      <div class="item-line">• {{ it.get('type', '') }}{% if it.get('amount') %} x {{ it.get('amount') }}{% endif %}</div>
+                    {% else %}
+                      <div class="item-line">• {{ it }}</div>
+                    {% endif %}
+                  {% endfor %}
+                {% endif %}
+              </div>
+            {% endif %}
+
+            <div class="meta">
+              {% if c.added %}<span>등록일: {{ c.added }}</span>{% endif %}
+              <span>{{ c.boolExpires and '만료 쿠폰' or '사용 가능 쿠폰' }}</span>
+            </div>
+          </div>
+        {% endfor %}
+      {% else %}
+        <div class="empty">현재 사용 가능한 쿠폰이 없습니다.</div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<script>
+  // 복사 기능
+  document.querySelectorAll(".copy-btn").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      const code = btn.dataset.code;
+      if (!code) return;
+
+      try {
+        await navigator.clipboard.writeText(code);
+        const originalText = btn.innerText;
+        btn.innerText = "복사 완료!";
+        btn.classList.add("is-success");
+        setTimeout(() => {
+          btn.innerText = originalText;
+          btn.classList.remove("is-success");
+        }, 1500);
+      } catch (e) {
+        btn.innerText = "실패";
+        setTimeout(() => (btn.innerText = "코드 복사"), 1500);
+      }
+    });
+  });
+
+  // === 새 쿠폰 알림(로컬 토스트) ===
+  const SEEN_KEY = "seen_coupons_codes";
+  const toastHolder = document.createElement("div");
+  document.body.appendChild(toastHolder);
+
+  function showToast(msg) {
+    const t = document.createElement("div");
+    t.className = "toast";
+    t.innerText = msg;
+    toastHolder.appendChild(t);
+    setTimeout(() => t.remove(), 2500);
+  }
+
+  function loadSeen() {
+    try {
+      const raw = localStorage.getItem(SEEN_KEY);
+      return raw ? new Set(JSON.parse(raw)) : new Set();
+    } catch (e) {
+      return new Set();
+    }
+  }
+
+  function saveSeen(setObj) {
+    try {
+      localStorage.setItem(SEEN_KEY, JSON.stringify(Array.from(setObj)));
+    } catch (e) {}
+  }
+
+  async function checkNewCoupons() {
+    try {
+      const res = await fetch("{{ url_for('coupons_api') }}", { cache: "no-store" });
+      if (!res.ok) return;
+
+      const data = await res.json();
+      const codes = (data || []).map(c => c.code).filter(Boolean);
+      if (!codes.length) return;
+
+      const seen = loadSeen();
+      const unseen = codes.filter(c => !seen.has(c));
+      codes.forEach(c => seen.add(c));
+      saveSeen(seen);
+
+      if (unseen.length) {
+        const msg = unseen.length === 1 ? `새 쿠폰: ${unseen[0]}` : `새 쿠폰 ${unseen.length}개가 추가되었습니다.`;
+        showToast(msg);
+      }
+    } catch (e) {
+      console.warn("쿠폰 알림 확인 실패", e);
+    }
+  }
+
+  // === Firebase Push ===
+  const firebaseConfig = {{ firebase_config | tojson }};
+  const vapidKey = "{{ firebase_vapid_key }}";
+  const PUSH_TOKEN_KEY = "fcm_push_token";
+  const PUSH_PREFS_KEY = "fcm_push_prefs";
+
+  const notifyModal = document.getElementById("notifyModal");
+  const notifyBtnSecondary = document.getElementById("notifyBtnSecondary");
+  const couponSettings = document.querySelector(".coupon-settings");
+  const couponSettingsToggle = document.getElementById("couponSettingsToggle");
+  const notifyClose = document.getElementById("notifyClose");
+  const couponToggle = document.getElementById("couponToggle");
+  const modeSelect = document.getElementById("modeSelect");
+  const permissionNote = document.getElementById("permissionNote");
+  const savePrefsBtn = document.getElementById("savePrefsBtn");
+  const testNotifyBtn = document.getElementById("testNotifyBtn");
+  const pushStatusText = document.getElementById("pushStatusText");
+
+  function openModal() {
+    notifyModal.classList.add("open");
+    notifyModal.setAttribute("aria-hidden", "false");
+    loadPrefsIntoUI();
+  }
+
+  function closeModal() {
+    notifyModal.classList.remove("open");
+    notifyModal.setAttribute("aria-hidden", "true");
+  }
+
+  function setCouponSettingsOpen(open) {
+    if (!couponSettings || !couponSettingsToggle) return;
+    couponSettings.classList.toggle("is-open", open);
+    couponSettingsToggle.setAttribute("aria-expanded", open ? "true" : "false");
+  }
+
+  function loadPrefsIntoUI() {
+    const prefs = loadPrefs();
+    couponToggle.checked = !!prefs.enabled;
+    modeSelect.value = prefs.mode || "digest";
+    updatePermissionNote();
+    updatePushStatusText();
+  }
+
+  function updatePermissionNote() {
+    if (!("Notification" in window)) {
+      permissionNote.classList.add("active");
+      permissionNote.textContent = "이 브라우저는 알림을 지원하지 않습니다.";
+      return;
+    }
+    if (Notification.permission === "denied") {
+      permissionNote.classList.add("active");
+      permissionNote.textContent = "알림이 차단되어 있습니다. 브라우저 설정에서 허용해주세요.";
+      return;
+    }
+    permissionNote.classList.remove("active");
+    permissionNote.textContent = "";
+  }
+
+  function updatePushStatusText(text) {
+    if (!pushStatusText) return;
+    if (text) {
+      pushStatusText.textContent = text;
+      return;
+    }
+    const prefs = loadPrefs();
+    if (!("Notification" in window)) {
+      pushStatusText.textContent = "브라우저 미지원";
+    } else if (Notification.permission === "denied") {
+      pushStatusText.textContent = "차단됨";
+    } else if (prefs.enabled) {
+      pushStatusText.textContent = "켜짐";
+    } else {
+      pushStatusText.textContent = "꺼짐";
+    }
+  }
+
+  function loadPrefs() {
+    try {
+      const raw = localStorage.getItem(PUSH_PREFS_KEY);
+      if (raw) return JSON.parse(raw);
+    } catch (e) {}
+    return { enabled: false, mode: "digest" };
+  }
+
+  function savePrefs(prefs) {
+    try {
+      localStorage.setItem(PUSH_PREFS_KEY, JSON.stringify(prefs));
+    } catch (e) {}
+  }
+
+  function getStoredToken() {
+    return localStorage.getItem(PUSH_TOKEN_KEY);
+  }
+
+  function setStoredToken(token) {
+    if (!token) return;
+    localStorage.setItem(PUSH_TOKEN_KEY, token);
+  }
+
+  function clearStoredToken() {
+    localStorage.removeItem(PUSH_TOKEN_KEY);
+  }
+
+  async function ensureMessaging() {
+    if (!window.isSecureContext) {
+      throw new Error("HTTPS 환경에서만 푸시 알림을 사용할 수 있습니다.");
+    }
+    if (!firebaseConfig || !firebaseConfig.apiKey) {
+      throw new Error("Firebase 설정이 없습니다.");
+    }
+    if (!vapidKey) {
+      throw new Error("VAPID 키가 설정되어 있지 않습니다.");
+    }
+    if (typeof firebase === "undefined" || !firebase.messaging) {
+      throw new Error("Firebase 메시징 스크립트를 불러오지 못했습니다.");
+    }
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
+    return firebase.messaging();
+  }
+
+  async function getMessagingToken() {
+    if (!("serviceWorker" in navigator)) {
+      throw new Error("서비스 워커를 지원하지 않습니다.");
+    }
+
+    const registration = await navigator.serviceWorker.register("/firebase-messaging-sw.js", {
+      scope: "/",
+      updateViaCache: "none",
+    });
+    await registration.update();
+    const messaging = await ensureMessaging();
+    const token = await messaging.getToken({
+      vapidKey,
+      serviceWorkerRegistration: registration,
+    });
+    if (token) setStoredToken(token);
+    return token;
+  }
+
+  async function apiPost(url, body) {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || data.ok === false) {
+      throw new Error(data.error || "요청에 실패했습니다.");
+    }
+    return data;
+  }
+
+  async function syncServerPrefs(token, prefs) {
+    await apiPost("/api/push/register", { token });
+    await apiPost("/api/push/prefs", {
+      token,
+      coupons_enabled: prefs.enabled,
+      mode: prefs.mode,
+    });
+  }
+
+  async function disableServer(token) {
+    await apiPost("/api/push/unregister", { token });
+  }
+
+  async function refreshServerStatus() {
+    const token = getStoredToken();
+    if (!token) {
+      updatePushStatusText();
+      return;
+    }
+    try {
+      const res = await fetch(`/api/push/status?token=${encodeURIComponent(token)}`, { cache: "no-store" });
+      if (!res.ok) {
+        clearStoredToken();
+        savePrefs({ ...loadPrefs(), enabled: false });
+        updatePushStatusText("재설정 필요");
+        return;
+      }
+      const status = await res.json();
+      savePrefs({
+        enabled: !!status.is_enabled && !!status.coupons_enabled,
+        mode: status.mode || "digest",
+      });
+      loadPrefsIntoUI();
+    } catch (e) {
+      updatePushStatusText();
+    }
+  }
+
+  async function applyPrefs() {
+    if (!("Notification" in window)) {
+      showToast("이 브라우저는 알림을 지원하지 않습니다.");
+      return;
+    }
+
+    const prefs = {
+      enabled: couponToggle.checked,
+      mode: modeSelect.value,
+    };
+
+    if (prefs.enabled) {
+      const permission = Notification.permission === "granted"
+        ? "granted"
+        : await Notification.requestPermission();
+
+      if (permission !== "granted") {
+        showToast("알림 권한이 필요합니다.");
+        couponToggle.checked = false;
+        updatePermissionNote();
+        return;
+      }
+
+      try {
+        const token = await getMessagingToken();
+        if (!token) {
+          showToast("알림 토큰 발급에 실패했습니다.");
+          return;
+        }
+        await syncServerPrefs(token, prefs);
+        savePrefs(prefs);
+        showToast("알림이 설정되었습니다.");
+        updatePushStatusText("켜짐");
+      } catch (e) {
+        console.warn("알림 설정 실패", e);
+        clearStoredToken();
+        savePrefs({ ...prefs, enabled: false });
+        couponToggle.checked = false;
+        showToast(e.message || "알림 설정에 실패했습니다.");
+        updatePushStatusText("설정 실패");
+        return;
+      }
+    } else {
+      const token = getStoredToken();
+      if (token) await disableServer(token);
+      savePrefs(prefs);
+      clearStoredToken();
+      showToast("알림이 해제되었습니다.");
+      updatePushStatusText("꺼짐");
+    }
+
+    updatePermissionNote();
+    closeModal();
+  }
+
+  function showTestNotification() {
+    if (!("Notification" in window)) {
+      showToast("이 브라우저는 알림을 지원하지 않습니다.");
+      return;
+    }
+    if (Notification.permission !== "granted") {
+      showToast("먼저 알림을 켜주세요.");
+      return;
+    }
+    try {
+      new Notification("FC모바일 쿠폰", {
+        body: "알림이 정상적으로 표시됩니다.",
+        icon: "/static/icons/android-launchericon-192-192.png",
+      });
+    } catch (e) {
+      showToast("테스트 알림 표시 실패");
+    }
+  }
+
+  notifyBtnSecondary?.addEventListener("click", openModal);
+  couponSettingsToggle?.addEventListener("click", () => {
+    const next = !couponSettings?.classList.contains("is-open");
+    setCouponSettingsOpen(next);
+  });
+  notifyClose?.addEventListener("click", closeModal);
+  notifyModal?.addEventListener("click", (event) => {
+    if (event.target === notifyModal) closeModal();
+  });
+  savePrefsBtn?.addEventListener("click", applyPrefs);
+  testNotifyBtn?.addEventListener("click", showTestNotification);
+  setCouponSettingsOpen(false);
+
+  (async function setupForegroundMessages() {
+    try {
+      if (!firebaseConfig || !firebaseConfig.apiKey || typeof firebase === "undefined") return;
+      const messaging = await ensureMessaging();
+      messaging.onMessage((payload) => {
+        const notification = payload.notification || {};
+        const title = notification.title || "FC모바일 쿠폰";
+        const body = notification.body || "새 쿠폰이 도착했습니다.";
+        showToast(body);
+        if ("Notification" in window && Notification.permission === "granted" && loadPrefs().enabled) {
+          try {
+            new Notification(title, {
+              body,
+              icon: "/static/icons/android-launchericon-192-192.png",
+            });
+          } catch (e) {}
+        }
+      });
+    } catch (e) {}
+  })();
+
+  checkNewCoupons();
+  setInterval(checkNewCoupons, 75000);
+</script>
+{% endblock %}

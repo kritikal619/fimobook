@@ -1,0 +1,63 @@
+<svg width="220" height="200" viewBox="0 0 220 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="core" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(77 54) rotate(55) scale(137 132)">
+      <stop stop-color="#F8FEFF"/>
+      <stop offset=".23" stop-color="#9CF8F0"/>
+      <stop offset=".5" stop-color="#EA8EEB"/>
+      <stop offset=".76" stop-color="#7D62E8"/>
+      <stop offset="1" stop-color="#2E1D78"/>
+    </radialGradient>
+    <linearGradient id="rim" x1="36" y1="28" x2="170" y2="171" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#BFFFF6"/>
+      <stop offset=".22" stop-color="#52DACF"/>
+      <stop offset=".51" stop-color="#F1B4EC"/>
+      <stop offset=".78" stop-color="#5C45C2"/>
+      <stop offset="1" stop-color="#241554"/>
+    </linearGradient>
+    <linearGradient id="ticket" x1="90" y1="17" x2="151" y2="143" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F6D8FC"/>
+      <stop offset=".32" stop-color="#A9F4EF"/>
+      <stop offset=".66" stop-color="#8F82F0"/>
+      <stop offset="1" stop-color="#4D34B1"/>
+    </linearGradient>
+    <linearGradient id="triangle" x1="83" y1="153" x2="132" y2="192" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#E9FFF9"/>
+      <stop offset=".38" stop-color="#9EC9CB"/>
+      <stop offset="1" stop-color="#322369"/>
+    </linearGradient>
+    <filter id="shadow" x="4" y="3" width="211" height="197" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="5" stdDeviation="5" flood-color="#0F0B38" flood-opacity=".55"/>
+    </filter>
+    <filter id="glow" x="30" y="18" width="166" height="161" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="5"/>
+    </filter>
+  </defs>
+
+  <g filter="url(#shadow)">
+    <path d="M111 14C62 14 22 48 22 94c0 41 31 75 73 82l13 15 14-15c43-6 76-41 76-82 0-46-39-80-87-80Z" fill="#17133E"/>
+    <path d="M111 19C65 19 28 51 28 94c0 38 29 69 69 76l11 13 11-13c42-5 73-38 73-76 0-43-36-75-81-75Z" fill="url(#rim)"/>
+    <path d="M111 25C68 25 35 54 35 94c0 35 27 64 64 69l9 11 9-11c39-4 68-34 68-69 0-40-33-69-74-69Z" fill="url(#core)" stroke="#291C69" stroke-width="3"/>
+    <path d="M47 61c21-29 70-39 103-19-31 1-67 18-92 46-11 12-18 26-21 40-6-22-2-48 10-67Z" fill="#D5FFFA" fill-opacity=".35"/>
+    <path d="M42 119c30 24 83 28 133-4-7 25-29 43-59 48l-8 10-9-10c-28-4-49-20-57-44Z" fill="#38227D" fill-opacity=".55"/>
+    <ellipse cx="112" cy="92" rx="70" ry="65" stroke="#F5D9FF" stroke-opacity=".55" stroke-width="2"/>
+  </g>
+
+  <path d="M93 18 160 45l-7 15 8 13-50 85-57-35 49-82-10-23Z" fill="#9EEFE8" fill-opacity=".35" filter="url(#glow)"/>
+  <g transform="rotate(17 111 87)">
+    <path d="M79 15h70v19c-7 2-11 7-11 14s4 12 11 14v95H79V62c7-2 11-7 11-14S86 36 79 34V15Z" fill="url(#ticket)" stroke="#30216F" stroke-width="3"/>
+    <path d="M87 23h54v12c-6 3-9 7-9 13s3 10 9 13v87H87V61c6-3 9-7 9-13s-3-10-9-13V23Z" stroke="#E2FFFF" stroke-opacity=".8" stroke-width="1.5" stroke-dasharray="4 3"/>
+    <text x="114" y="37" fill="#1C1648" font-family="Arial, sans-serif" font-size="9" font-weight="900" text-anchor="middle" letter-spacing="1.1">TICKET</text>
+    <rect x="64" y="69" width="101" height="31" rx="4" fill="#15122F" stroke="#D8FFFF" stroke-width="2"/>
+    <text x="114.5" y="91" fill="white" font-family="Arial, sans-serif" font-size="21" font-weight="900" font-style="italic" text-anchor="middle" letter-spacing="1">PRIME</text>
+    <path d="m94 112 18 13 22-19-12 32-21-3-7-23Z" fill="#F5A9EC" fill-opacity=".72"/>
+  </g>
+
+  <g filter="url(#shadow)">
+    <path d="m79 158 29-10 31 10-9 32-22 8-22-8-7-32Z" fill="#22174F"/>
+    <path d="m86 160 22-7 23 7-7 25-16 7-17-7-5-25Z" fill="url(#triangle)" stroke="#C8FFF5" stroke-width="2"/>
+    <path d="m91 162 34-1-17 25-17-24Z" fill="#DFFFF9" stroke="#3B2A75" stroke-width="1.5" stroke-linejoin="round"/>
+    <path d="m91 162 17 5 17-6-17 25-17-24Z" fill="#A9D9D7"/>
+    <path d="m91 162 17 5v19l-17-24Z" fill="#F5FFFF" fill-opacity=".88"/>
+    <path d="m108 167 17-6-17 25v-19Z" fill="#6352A4" fill-opacity=".62"/>
+  </g>
+</svg>

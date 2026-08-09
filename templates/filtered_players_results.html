@@ -1,0 +1,419 @@
+{% extends "base.html" %}
+
+{% block body_class %}filtered-results-page{% endblock %}
+
+{% block title %}피모북 | 선수 세부검색 결과{% endblock %}
+
+{% block extra_head %}
+{% if not error and players|length >= 4 %}
+  {% include "_adsense_head.html" %}
+{% endif %}
+<style>
+  :root {
+    --line: #dbe3ec;
+    --line2: #e2e8f0;
+    --text: #111827;
+    --sub: #64748b;
+    --card: #ffffff;
+    --surface: #f8fafc;
+    --brand: #10b981;
+    --brand-dark: #059669;
+    --shadow: 0 14px 28px rgba(15,23,42,0.06);
+  }
+
+  .results-wrap {
+    width: 100%;
+    max-width: 1180px;
+    margin: 0 auto;
+    display: grid;
+    gap: 12px;
+  }
+
+  .top-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .back-btn {
+    display: inline-flex;
+    align-items: center;
+    min-height: 40px;
+    padding: 0 14px;
+    border-radius: 12px;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    color: #374151;
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 800;
+  }
+
+  .sort-form {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    padding: 8px;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    background: var(--card);
+  }
+
+  .sort-form label {
+    color: var(--sub);
+    font-size: 12px;
+    font-weight: 800;
+  }
+
+  .sort-form select {
+    min-height: 34px;
+    border: 1px solid var(--line2);
+    border-radius: 10px;
+    padding: 0 10px;
+    background: #fff;
+    color: var(--text);
+    font-size: 13px;
+    font-weight: 800;
+  }
+
+  .sort-form button {
+    min-height: 34px;
+    padding: 0 12px;
+    border: none;
+    border-radius: 10px;
+    background: linear-gradient(90deg, var(--brand-dark), var(--brand));
+    color: #fff;
+    font-size: 12px;
+    font-weight: 900;
+    cursor: pointer;
+  }
+
+  .chips {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 10px;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    color: var(--sub);
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  .chip b {
+    margin-left: 4px;
+    color: var(--text);
+  }
+
+  .title-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 10px;
+  }
+
+  .title {
+    margin: 0;
+    font-size: 28px;
+    color: var(--text);
+    font-weight: 900;
+    letter-spacing: -0.7px;
+  }
+
+  .count {
+    color: var(--sub);
+    font-size: 13px;
+    font-weight: 800;
+  }
+
+  .error {
+    border: 1px solid #f3b6b0;
+    background: #fef2f2;
+    color: #991b1b;
+    border-radius: 14px;
+    padding: 16px;
+    font-weight: 700;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .player-card {
+    display: grid;
+    grid-template-columns: 78px minmax(0, 1fr);
+    gap: 10px;
+    align-items: center;
+    padding: 11px;
+    border-radius: 14px;
+    border: 1px solid var(--line2);
+    background: var(--card);
+    text-decoration: none;
+    color: var(--text);
+    box-shadow: var(--shadow);
+    transition: transform .15s ease, box-shadow .15s ease;
+  }
+
+  .player-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 18px 30px rgba(15,23,42,0.1);
+  }
+
+  .thumb {
+    width: 78px;
+    height: 102px;
+    border-radius: 10px;
+    position: relative;
+    overflow: hidden;
+    background-size: cover;
+    background-position: center;
+  }
+
+  .thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+
+  .name {
+    font-size: 15px;
+    font-weight: 900;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .meta {
+    margin-top: 4px;
+    color: var(--sub);
+    font-size: 12px;
+    font-weight: 700;
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .playstyle-row {
+    margin-top: 6px;
+    display: flex;
+    gap: 5px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .playstyle-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    max-width: 100%;
+    padding: 2px 7px 2px 4px;
+    border-radius: 999px;
+    background: #f1f5f9;
+    color: #334155;
+    font-size: 11px;
+    font-weight: 800;
+  }
+
+  .playstyle-pill img {
+    width: 18px;
+    height: 18px;
+    object-fit: contain;
+    flex: 0 0 auto;
+  }
+
+  .ovr-price {
+    margin-top: 7px;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+    min-width: 0;
+  }
+
+  .ovr {
+    color: var(--brand-dark);
+    font-size: 20px;
+    line-height: 1;
+    font-weight: 900;
+  }
+
+  .price {
+    color: #0f172a;
+    font-size: 12px;
+    font-weight: 800;
+    flex: 0 0 auto;
+    white-space: nowrap;
+    text-align: right;
+  }
+
+  @media (min-width: 561px) {
+    .card-affiliation {
+      display: none;
+    }
+  }
+
+  @media (max-width: 860px) { .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (max-width: 560px) {
+    .title { font-size: 23px; }
+    .grid { grid-template-columns: 1fr; }
+    .top-row { align-items: stretch; }
+    .sort-form { width: 100%; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="results-wrap">
+  <div class="top-row">
+    <a class="back-btn" href="{{ url_for('traits_selection') }}">← 세부검색으로 돌아가기</a>
+    <form class="sort-form" method="get" action="{{ url_for('filtered_players') }}">
+      <input type="hidden" name="name" value="{{ filters.name }}">
+      {% for value in filters.skill_or_boosts %}
+        <input type="hidden" name="skill_or_boost" value="{{ value }}">
+      {% endfor %}
+      {% for value in filters.positions %}
+        <input type="hidden" name="position" value="{{ value }}">
+      {% endfor %}
+      {% if filters.include_sub_position %}
+        <input type="hidden" name="include_sub_position" value="1">
+      {% endif %}
+      {% for value in filters.skill_moves %}
+        <input type="hidden" name="skill_move" value="{{ value }}">
+      {% endfor %}
+      {% for value in filters.skill_levels %}
+        <input type="hidden" name="skill_level" value="{{ value }}">
+      {% endfor %}
+      {% for value in filters.raised_stats %}
+        <input type="hidden" name="raised_stat" value="{{ value }}">
+      {% endfor %}
+      {% for value in filters.work_rates %}
+        <input type="hidden" name="work_rate" value="{{ value }}">
+      {% endfor %}
+      {% for value in filters.traits %}
+        <input type="hidden" name="trait" value="{{ value }}">
+      {% endfor %}
+      {% for value in filters.playstyles %}
+        <input type="hidden" name="playstyle" value="{{ value }}">
+      {% endfor %}
+      {% for value in filters.player_classes %}
+        <input type="hidden" name="player_class" value="{{ value }}">
+      {% endfor %}
+      <input type="hidden" name="height_group" value="{{ filters.height_group }}">
+      <input type="hidden" name="min_height" value="{{ filters.min_height if filters.min_height is not none else '' }}">
+      <input type="hidden" name="max_height" value="{{ filters.max_height if filters.max_height is not none else '' }}">
+      <input type="hidden" name="weak_foot_min" value="{{ filters.weak_foot_min or '' }}">
+      <input type="hidden" name="league" value="{{ filters.league }}">
+      <input type="hidden" name="team" value="{{ filters.team }}">
+      {% if filters.all_career %}
+        <input type="hidden" name="all_career" value="1">
+      {% endif %}
+      <input type="hidden" name="min_ovr" value="{{ filters.min_ovr }}">
+      <input type="hidden" name="max_ovr" value="{{ filters.max_ovr }}">
+      <label for="sort">정렬</label>
+      <select id="sort" name="sort">
+        <option value="ovr_desc" {% if sort == 'ovr_desc' %}selected{% endif %}>OVR 높은순</option>
+        <option value="ovr_asc" {% if sort == 'ovr_asc' %}selected{% endif %}>OVR 낮은순</option>
+        <option value="name_asc" {% if sort == 'name_asc' %}selected{% endif %}>이름순</option>
+        <option value="price_desc" {% if sort == 'price_desc' %}selected{% endif %}>가격 높은순</option>
+        <option value="price_asc" {% if sort == 'price_asc' %}selected{% endif %}>가격 낮은순</option>
+      </select>
+      <button type="submit">적용</button>
+    </form>
+  </div>
+
+  <div class="chips">
+    {% if filters.name %}<span class="chip">이름<b>{{ filters.name }}</b></span>{% endif %}
+    {% if filters.positions %}<span class="chip">포지션<b>{{ filters.positions|join(', ') }}{% if filters.include_sub_position %} + 부포지션{% endif %}</b></span>{% endif %}
+    {% if filters.skill_levels %}<span class="chip">개인기 등급<b>{% for value in filters.skill_levels %}{{ value + 1 }}성{% if not loop.last %}, {% endif %}{% endfor %}</b></span>{% endif %}
+    {% if filters.skill_moves %}<span class="chip">개인기 동작<b>{{ filters.skill_moves|join(', ') }}</b></span>{% endif %}
+    {% if filters.raised_stat_labels %}<span class="chip">상승 스탯<b>{{ filters.raised_stat_labels|join(', ') }}</b></span>{% endif %}
+    {% if filters.work_rate_labels %}<span class="chip">활동량<b>{{ filters.work_rate_labels|join(', ') }}</b></span>{% endif %}
+    {% if filters.playstyles %}<span class="chip">플레이스타일<b>{{ filters.playstyles|join(', ') }}</b></span>{% endif %}
+    {% if filters.player_classes %}<span class="chip">클래스<b>{{ filters.player_classes|join(', ') }}</b></span>{% endif %}
+    {% if filters.traits %}<span class="chip">특성<b>{{ filters.traits|join(', ') }}</b></span>{% endif %}
+    {% if filters.min_height is not none and filters.max_height is not none and filters.min_height == filters.max_height %}
+      <span class="chip">키<b>{{ filters.min_height }}cm</b></span>
+    {% elif filters.min_height is not none and filters.max_height is not none %}
+      <span class="chip">키<b>{{ filters.min_height }}~{{ filters.max_height }}cm</b></span>
+    {% elif filters.min_height is not none %}
+      <span class="chip">키<b>{{ filters.min_height }}cm 이상</b></span>
+    {% elif filters.max_height is not none %}
+      <span class="chip">키<b>{{ filters.max_height }}cm 이하</b></span>
+    {% endif %}
+    {% if filters.height_group == 'tall' %}<span class="chip">키<b>장신 185cm 이상</b></span>{% endif %}
+    {% if filters.height_group == 'short' %}<span class="chip">키<b>단신 185cm 미만</b></span>{% endif %}
+    {% if filters.weak_foot_min %}<span class="chip">약발<b>{{ filters.weak_foot_min }} 이상</b></span>{% endif %}
+    {% if filters.league %}<span class="chip">리그<b>{{ filters.league }}</b></span>{% endif %}
+    {% if filters.team %}<span class="chip">팀<b>{{ filters.team }}</b></span>{% endif %}
+    {% if filters.all_career %}<span class="chip">경력<b>전체경력 포함</b></span>{% endif %}
+    {% if filters.min_ovr != 0 or filters.max_ovr != 999 %}<span class="chip">OVR<b>{{ filters.min_ovr }}~{{ filters.max_ovr }}</b></span>{% endif %}
+  </div>
+
+  <div class="title-row">
+    <h1 class="title">선수 세부검색 결과</h1>
+    <div class="count">총 {{ players|length }}명</div>
+  </div>
+
+  {% if error %}
+    <div class="error">{{ error }}</div>
+  {% else %}
+    <div class="grid">
+      {% for player in players %}
+      <a class="player-card" href="{{ url_for('player_detail', cid=player.cid) }}">
+        <div class="thumb" style="background-image:url('{{ player.bimage or '' }}')">
+          <img src="{{ player.pimage or '' }}" alt="{{ player.playerKor or '-' }}">
+        </div>
+        <div>
+          <div class="name">{{ player.playerKor or '-' }}</div>
+          <div class="meta">
+            <span>{{ player.position or '-' }}</span>
+            {% if player.potentialPositions %}
+              <span>부 {{ player.potentialPositions|join(', ') }}</span>
+            {% elif player.potentialPosition %}
+              <span>부 {{ player.potentialPosition }}</span>
+            {% endif %}
+            {% if player.jerseyNumber is defined and player.jerseyNumber is not none %}
+              <span>#{{ player.jerseyNumber }}</span>
+            {% endif %}
+          </div>
+          <div class="meta card-affiliation">
+            <span>{{ player.league or '-' }}</span>
+            <span class="card-team">{{ player.team or '-' }}</span>
+          </div>
+          <div class="meta">개인기 {{ (player.skillMovesLevel or 0) + 1 }}성 · {{ player.skillMovesName or '-' }}</div>
+          {% if player.playstyles %}
+            <div class="playstyle-row" aria-label="플레이스타일">
+              {% for playstyle in player.playstyles[:3] %}
+                <span class="playstyle-pill">
+                  <img src="{{ playstyle.imageUrl }}" alt="" loading="lazy">
+                  <span>{{ playstyle.name }}</span>
+                </span>
+              {% endfor %}
+            </div>
+          {% endif %}
+          <div class="ovr-price">
+            <span class="ovr">{{ player.ovr or 0 }}</span>
+            <span class="price">{{ "{:,}".format(player.price|int) if player.price is not none else "-" }} {{ price_unit }}</span>
+          </div>
+        </div>
+      </a>
+      {% if loop.index in (5, 15) %}
+        {% set ad_layout = 'grid-card' %}
+        {% include "_adsense_unit.html" %}
+      {% endif %}
+      {% endfor %}
+    </div>
+  {% endif %}
+</div>
+{% endblock %}
