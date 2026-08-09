@@ -523,6 +523,183 @@
     .top-grid,.career-grid { padding:14px; border-radius:14px; }
     .filter-section-head { align-items:flex-start; flex-direction:column; gap:4px; }
   }
+  /* Flat, utility-first detail search */
+  .detail-search-wrap {
+    gap: 14px;
+  }
+  .hero {
+    padding: 0 0 14px;
+    border-bottom: 2px solid #1f2937;
+  }
+  .hero h1 {
+    font-family: 'IBM Plex Sans KR', 'Apple SD Gothic Neo', sans-serif;
+    font-size: 27px;
+    font-weight: 800;
+    letter-spacing: -0.7px;
+  }
+  .panel,
+  .top-grid,
+  .career-grid,
+  .multi-box {
+    box-shadow: none;
+  }
+  .section-title,
+  .filter-section-head strong {
+    font-size: 16px;
+    font-weight: 800;
+    letter-spacing: -0.25px;
+  }
+  .section-title {
+    margin-bottom: 8px;
+    padding: 0 0 8px;
+    border-bottom: 1px solid #cbd5e1;
+  }
+  .filter-section-head {
+    margin: 20px 0 8px;
+    padding-bottom: 8px;
+    border-bottom-color: #cbd5e1;
+  }
+  .top-grid,
+  .career-grid {
+    padding: 14px;
+    border: 1px solid #d7e0e8;
+    border-radius: 8px;
+    background: #ffffff;
+  }
+  .top-grid {
+    gap: 10px;
+  }
+  .field {
+    gap: 5px;
+  }
+  .field label,
+  .filter-label {
+    color: #475569;
+    font-size: 12px;
+    font-weight: 700;
+  }
+  .control,
+  .control-select {
+    min-height: 42px;
+    padding: 0 11px;
+    border-color: #cbd5e1;
+    border-radius: 6px;
+    background: #ffffff;
+    font-size: 13px;
+    font-weight: 700;
+    transition: border-color .15s ease;
+  }
+  .control:focus,
+  .control-select:focus {
+    border-color: #087f5b;
+    background: #ffffff;
+    box-shadow: none;
+  }
+  .filter-grid {
+    gap: 8px;
+  }
+  .multi-box {
+    border-color: #d7e0e8;
+    border-radius: 8px;
+    background: #ffffff;
+  }
+  .multi-head {
+    min-height: 42px;
+    padding: 0 10px;
+    border-bottom-color: #e5eaf0;
+  }
+  .multi-head-left {
+    gap: 6px;
+  }
+  .toggle-icon {
+    width: 16px;
+    height: 16px;
+    border-radius: 0;
+    background: transparent;
+    color: #087f5b;
+    font-size: 14px;
+  }
+  .count-pill {
+    min-width: 22px;
+    height: 22px;
+    padding: 0 6px;
+    border: 1px solid #bbf7d0;
+    border-radius: 5px;
+    background: #ffffff;
+    font-size: 11px;
+    font-weight: 800;
+  }
+  .filter-search {
+    width: calc(100% - 20px);
+    min-height: 32px;
+    margin: 9px 10px 7px;
+    border-color: #d7e0e8;
+    border-radius: 5px;
+    font-weight: 600;
+  }
+  .option-list {
+    padding: 0 6px 7px;
+  }
+  .option-item {
+    gap: 7px;
+    padding: 7px 6px;
+    border-radius: 4px;
+    font-weight: 650;
+  }
+  .filter-note {
+    padding: 0 10px 8px;
+    font-weight: 600;
+  }
+  .career-grid {
+    gap: 10px;
+  }
+  .career-toggle {
+    min-height: 42px;
+    padding: 0 12px;
+    border-color: #cbd5e1;
+    border-radius: 6px;
+    background: #ffffff;
+    color: #334155;
+    font-weight: 800;
+  }
+  .career-toggle input {
+    accent-color: #087f5b;
+  }
+  .actions {
+    margin-top: 14px;
+    padding-top: 14px;
+  }
+  .btn {
+    min-height: 42px;
+    padding: 0 16px;
+    border-radius: 6px;
+    background: #ffffff;
+    font-size: 13px;
+    font-weight: 800;
+  }
+  .btn-primary {
+    min-width: 120px;
+    border: 1px solid #087f5b;
+    background: #087f5b;
+    box-shadow: none;
+  }
+  .btn-primary:hover {
+    border-color: #06694b;
+    background: #06694b;
+  }
+  .helper {
+    font-weight: 600;
+  }
+
+  @media (max-width: 720px) {
+    .detail-search-wrap { gap: 12px; }
+    .hero { padding: 0 0 11px; }
+    .hero h1 { font-size: 23px; }
+    .top-grid,
+    .career-grid { padding: 11px; border-radius: 7px; }
+    .filter-section-head { margin-top: 17px; }
+    .actions { gap: 8px; }
+  }
 </style>
 {% endblock %}
 
@@ -530,7 +707,6 @@
 <div class="detail-search-wrap">
   <section class="hero">
     <div class="hero-copy">
-      <div class="eyebrow">PLAYER DETAIL SEARCH</div>
       <h1>FC모바일 선수 세부 검색</h1>
     </div>
   </section>
