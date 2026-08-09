@@ -852,9 +852,9 @@
     width:100%;
     display:flex;
     justify-content:space-between;
-    align-items:flex-start;
+    align-items:center;
     gap:12px;
-    margin-bottom:12px;
+    margin-bottom:10px;
     min-width:0;
   }
   .coupon-title{
@@ -866,84 +866,108 @@
   }
   .coupon-sub{
     color:var(--muted);
-    font-size:13px;
+    font-size:12px;
     line-height:1.4;
-    margin-top:4px;
+    margin-top:2px;
     font-weight:700;
   }
   .ghost-btn{
-    padding:8px 12px;
-    border:1px solid var(--line);
-    background:#f8fafc;
+    min-height:34px;
+    padding:0 11px;
+    border:1px solid #34d399;
+    background:#ffffff;
     color:var(--brand-dark);
-    border-radius:8px;
+    border-radius:9px;
     font-weight:900;
     text-decoration:none;
-    box-shadow:0 1px 4px rgba(0,0,0,0.05);
+    box-shadow:none;
     white-space:nowrap;
     font-size:12px;
+    display:inline-flex;
+    align-items:center;
+    gap:5px;
   }
-  .ghost-btn:hover{ background:#f1f5f9; text-decoration:none; }
+  .ghost-btn:hover{
+    border-color:#059669;
+    background:#f8fffc;
+    color:#065f46;
+    text-decoration:none;
+  }
 
   .coupon-list{
     width:100%;
-    display:flex;
-    flex-direction:column;
+    display:grid;
+    grid-template-columns:repeat(2, minmax(0, 1fr));
     gap:10px;
     min-width:0;
   }
   .coupon-card{
     width:100%;
+    min-height:68px;
     background:#ffffff;
-    border:1px solid var(--line2);
-    border-radius:14px;
-    padding:14px 14px;
-    box-shadow:0 8px 18px rgba(15,23,42,0.04);
+    border:1px solid #d1fae5;
+    border-left:3px solid #10b981;
+    border-radius:10px;
+    padding:10px 11px;
+    box-shadow:none;
     box-sizing:border-box;
     min-width:0;
-  }
-  .coupon-card .top{
-    display:flex;
+    display:grid;
+    grid-template-columns:32px minmax(0, 1fr) 18px;
     align-items:center;
-    justify-content:space-between;
-    gap:10px;
-    margin-bottom:8px;
-    min-width:0;
-  }
-  .badge{
+    gap:9px;
     color:var(--text);
-    font-weight:900;
-    font-size:14px;
+    text-decoration:none;
   }
-  .code-row{
+  .coupon-card-icon{
+    width:30px;
+    height:30px;
+    border:1px solid #a7f3d0;
+    border-radius:8px;
+    color:var(--brand-dark);
     display:flex;
     align-items:center;
-    justify-content:space-between;
-    gap:10px;
+    justify-content:center;
+    font-size:15px;
+  }
+  .coupon-card-main{
     min-width:0;
+  }
+  .coupon-badge{
+    display:block;
+    color:var(--muted);
+    font-weight:900;
+    font-size:10px;
+    line-height:1.2;
   }
   .code-chip{
-    background:transparent;
+    display:block;
+    margin-top:3px;
     color:#0f172a;
-    padding:0;
-    border-radius:0;
     font-family:inherit;
-    font-size:15px;
+    font-size:14px;
     font-weight:900;
-    letter-spacing:0.6px;
+    letter-spacing:0.35px;
+    line-height:1.25;
     min-width:0;
-    overflow-wrap:anywhere;  /* ✅ 긴 코드 튀어나옴 방지 */
+    overflow-wrap:anywhere;
     word-break:break-word;
+  }
+  .coupon-card-arrow{
+    color:#10b981;
+    font-size:14px;
+    justify-self:end;
   }
 
   .coupon-link{
     cursor:pointer;
-    transition: transform .12s ease, box-shadow .12s ease, background .12s ease;
+    transition:border-color .15s ease, background .15s ease;
   }
   .coupon-link:hover{
-    transform: translateY(-1px);
-    box-shadow: 0 12px 24px rgba(15,23,42,0.06);
-    background:#f8fafc;
+    border-color:#10b981;
+    background:#f8fffc;
+    box-shadow:none;
+    text-decoration:none;
   }
 
   .empty{
@@ -991,8 +1015,8 @@
 
     .panel{ padding:18px 0 0; border-radius:0; }
 
-    .coupon-header{ flex-direction:column; align-items:flex-start; }
-    .ghost-btn{ align-self:flex-start; width:auto; }
+    .coupon-header{ align-items:center; }
+    .ghost-btn{ width:auto; }
     .weekly-header{ margin-bottom:10px; }
     .weekly-grid{ gap:8px; }
     .weekly-card{ padding:8px 6px; border-radius:12px; gap:6px; }
@@ -1007,8 +1031,9 @@
     .recent-row{ gap:7px; margin-top:10px; }
     .recent-pill{ font-size:12px; padding:7px 11px; }
 
-    .coupon-card{ padding:13px 13px; }
-    .code-chip{ font-size:14px; }
+    .coupon-list{ grid-template-columns:1fr; gap:8px; }
+    .coupon-card{ min-height:62px; padding:9px 10px; }
+    .code-chip{ font-size:13px; }
 
   }
 
@@ -1145,7 +1170,7 @@
           <h3 class="coupon-title">최근 쿠폰</h3>
           <div class="coupon-sub">최신 2개</div>
         </div>
-        <a class="ghost-btn" href="{{ url_for('coupons_page') }}">전체 쿠폰</a>
+        <a class="ghost-btn" href="{{ url_for('coupons_page') }}">전체 쿠폰 <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
       </div>
 
       <div class="coupon-list" id="couponPreview">
@@ -1290,23 +1315,16 @@
       const code = escapeHtml(c.code);
 
       return `
-        <div class="coupon-card coupon-link" data-href="${couponsUrl}">
-          <div class="top">
-            <span class="badge">${escapeHtml(category)}</span>
-          </div>
-          <div class="code-row">
-            <span class="code-chip">${code}</span>
-          </div>
-        </div>
+        <a class="coupon-card coupon-link" href="${couponsUrl}">
+          <span class="coupon-card-icon" aria-hidden="true"><i class="bi bi-ticket-perforated"></i></span>
+          <span class="coupon-card-main">
+            <span class="coupon-badge">${escapeHtml(category)}</span>
+            <strong class="code-chip">${code}</strong>
+          </span>
+          <i class="bi bi-chevron-right coupon-card-arrow" aria-hidden="true"></i>
+        </a>
       `;
     }).join("");
-
-    couponPreview.querySelectorAll(".coupon-link").forEach(el => {
-      el.addEventListener("click", () => {
-        const href = el.dataset.href;
-        if (href) window.location.href = href;
-      });
-    });
   }
 
   fetch("/coupons/api?dedupe=true")
