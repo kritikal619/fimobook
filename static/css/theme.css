@@ -142,10 +142,16 @@ html[data-theme="dark"] :is(.nav-toggle, .mobile-account-shortcut, .notification
   box-shadow: none !important;
 }
 
-html[data-theme="dark"] :is(.navbar, .detail-mobile-nav) {
+html[data-theme="dark"] .detail-mobile-nav {
   border-color: var(--dark-line) !important;
   background: #131d2e !important;
   box-shadow: 0 18px 46px rgba(0, 0, 0, .4) !important;
+}
+
+html[data-theme="dark"] .navbar {
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
 }
 
 html[data-theme="dark"] :is(.nav-user-summary, .detail-nav-user) {
@@ -1030,6 +1036,265 @@ html[data-theme="dark"] .tier-vote {
   color: var(--dark-text) !important;
 }
 
+/* Page-specific dark surfaces. Keep these explicit so stateful components do not
+   inherit a light inline style from their templates. */
+html[data-theme="dark"] :is(
+  .club-career-table,
+  .tier-section,
+  .profile-hero,
+  .profile-stat,
+  .profile-section,
+  .profile-page .review-item,
+  .community-page .review-board-item,
+  .community-page .ranking-panel,
+  .post-detail-page .post-shell,
+  .post-detail-page .comment-card,
+  .ranking-page-body .ranking-panel-head,
+  .ranking-page-body .ranking-row,
+  .compare-page-body .compare-hero,
+  .compare-page-body .player-panel,
+  .compare-page-body .stats-panel,
+  .compare-page-body .result-item
+) {
+  border-color: var(--dark-line) !important;
+  background: var(--dark-panel) !important;
+  color: var(--dark-text) !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] :is(
+  .club-career-period,
+  .tier-consensus,
+  .profile-badge,
+  .profile-stat-icon,
+  .profile-page .point-tile,
+  .community-page .review-filter-control,
+  .community-page .review-filter-reset,
+  .community-page .ranking-more,
+  .post-detail-page .post-poll,
+  .post-detail-page .reply-card,
+  .post-detail-page .comment-action,
+  .post-detail-page .comment-empty,
+  .post-detail-page .comment-login,
+  .compare-page-body .compare-tool,
+  .compare-page-body .result-list,
+  .compare-page-body .selected-card,
+  .compare-page-body .summary-chip,
+  .compare-page-body .selected-action,
+  .compare-page-body .boost-target,
+  .compare-page-body .compare-skill-card,
+  .compare-page-body .group-title,
+  .ranking-page-body .rank-index,
+  .editor-option-box
+) {
+  border-color: var(--dark-line) !important;
+  background: var(--dark-panel-soft) !important;
+  color: var(--dark-text) !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] .club-career-row + .club-career-row,
+html[data-theme="dark"] .club-career-period,
+html[data-theme="dark"] :is(.profile-form, .post-header, .post-reaction-row, .stats-toolbar, .compare-names, .group-title, .stat-row) {
+  border-color: var(--dark-line-soft) !important;
+}
+
+html[data-theme="dark"] :is(
+  .club-career-period,
+  .club-career-updated,
+  .tier-consensus,
+  .tier-consensus span,
+  .profile-stat-label,
+  .profile-badge,
+  .profile-label,
+  .account-email,
+  .profile-page .point-label,
+  .community-page .review-filter-control span,
+  .community-page .review-results-meta,
+  .community-page .review-board-class,
+  .community-page .review-board-excerpt,
+  .community-page .review-board-scoreline,
+  .community-page .review-board-side,
+  .post-detail-page .post-breadcrumb,
+  .post-detail-page .post-meta,
+  .post-detail-page .post-poll-result,
+  .post-detail-page .post-poll-count,
+  .post-detail-page .post-poll-login,
+  .post-detail-page .like-status,
+  .post-detail-page .comment-meta,
+  .compare-page-body .result-sub,
+  .compare-page-body .player-class,
+  .compare-page-body .compare-skill-meta,
+  .compare-page-body .skill-summary,
+  .compare-page-body .stat-label,
+  .compare-page-body .stamina-stars .stamina-text,
+  .ranking-page-body .ranking-period,
+  .ranking-page-body .ranking-count
+) {
+  color: var(--dark-muted) !important;
+}
+
+html[data-theme="dark"] :is(
+  .club-career-club,
+  .tier-consensus strong,
+  .profile-stat-value,
+  .profile-page .review-title,
+  .community-page .review-board-title,
+  .community-page .review-board-author,
+  .community-page .ranking-row,
+  .community-page .rank-user,
+  .post-detail-page .post-content,
+  .post-detail-page .post-poll-option-content,
+  .post-detail-page .comment-copy,
+  .compare-page-body .slot-title,
+  .compare-page-body .player-name,
+  .compare-page-body .compare-skill-name,
+  .compare-page-body .compare-name,
+  .compare-page-body .stat-value,
+  .ranking-page-body .rank-user
+) {
+  color: var(--dark-text) !important;
+}
+
+html[data-theme="dark"] .club-career-loan {
+  background: #3b2a18 !important;
+  color: #fdba74 !important;
+}
+
+html[data-theme="dark"] body .max-level-stat {
+  border-color: #286452 !important;
+  background: #123b31 !important;
+  color: #6ee7b7 !important;
+}
+
+html[data-theme="dark"] :is(.tier-cancel, .post-action-button, .like-button, .comment-cancel, .poll-remove, .poll-add) {
+  border-color: var(--dark-line) !important;
+  background: #202c40 !important;
+  color: #dbe4ef !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] :is(.post-action-button.danger, .comment-action.danger) {
+  border-color: #7f3f46 !important;
+  background: #3b2028 !important;
+  color: #fecaca !important;
+}
+
+html[data-theme="dark"] :is(.post-badge, .post-board-badge) {
+  border: 1px solid #286452 !important;
+  background: #123b31 !important;
+  color: #6ee7b7 !important;
+}
+
+html[data-theme="dark"] .post-badge:not(.is-pinned) {
+  border-color: var(--dark-line) !important;
+  background: #243149 !important;
+  color: #cbd5e1 !important;
+}
+
+html[data-theme="dark"] .post-detail-page .post-poll-option {
+  border-color: var(--dark-line) !important;
+  background: #111a2b !important;
+}
+
+html[data-theme="dark"] .post-detail-page .post-poll-progress {
+  background: rgba(16, 185, 129, .2) !important;
+}
+
+html[data-theme="dark"] :is(.like-button:hover, .like-button.is-liked) {
+  border-color: #3f806c !important;
+  background: #123b31 !important;
+  color: #6ee7b7 !important;
+}
+
+html[data-theme="dark"] .post-detail-page .reply-list {
+  border-color: #286452 !important;
+}
+
+html[data-theme="dark"] :is(.comment-textarea, .compare-skill-select) {
+  border-color: var(--dark-line) !important;
+  background: #111a2b !important;
+  color: var(--dark-text) !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] .community-page :is(.community-search, .community-search:focus-within) {
+  border-color: var(--dark-line) !important;
+  background: #111a2b !important;
+}
+
+html[data-theme="dark"] .community-page .review-filter-control select {
+  background: transparent !important;
+  color: var(--dark-text) !important;
+}
+
+html[data-theme="dark"] .community-page .review-board-art,
+html[data-theme="dark"] .profile-page .review-art,
+html[data-theme="dark"] .compare-page-body .mini-thumb {
+  background-color: #111a2b !important;
+}
+
+html[data-theme="dark"] .compare-page-body .compare-names {
+  background: rgba(23, 32, 51, .96) !important;
+}
+
+html[data-theme="dark"] .compare-page-body .rail-line {
+  background: linear-gradient(180deg, transparent, #475569, transparent) !important;
+}
+
+html[data-theme="dark"] .compare-page-body .stat-main.higher,
+html[data-theme="dark"] :is(.review-results-meta strong, .comments-count, .rank-points, .point-value) {
+  color: #6ee7b7 !important;
+}
+
+html[data-theme="dark"] :is(.remain, .remain.soon, .remain.is-updating) {
+  border: 1px solid #286452 !important;
+  background: #123b31 !important;
+  color: #6ee7b7 !important;
+}
+
+html[data-theme="dark"] .remain.soon {
+  border-color: #7f3f46 !important;
+  background: #3b2028 !important;
+  color: #fda4af !important;
+}
+
+html[data-theme="dark"] .remain.is-updating {
+  border-color: #31577c !important;
+  background: #17344d !important;
+  color: #7dd3fc !important;
+}
+
+html[data-theme="dark"] :is(.editor-check, .editor-form .form-label) {
+  color: var(--dark-text) !important;
+}
+
+html[data-theme="dark"] .ranking-page-body .ranking-row:nth-child(-n+3) .rank-index {
+  border: 1px solid #286452 !important;
+  background: #123b31 !important;
+  color: #6ee7b7 !important;
+}
+
+html[data-theme="dark"] :is(.community-mobile-tab, .ranking-tab) {
+  border-color: var(--dark-line) !important;
+  background: var(--dark-panel-soft) !important;
+  color: #dbe4ef !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] :is(.community-mobile-tab.active, .ranking-tab.active) {
+  border-color: #059669 !important;
+  background: #059669 !important;
+  color: #ffffff !important;
+}
+
+/* The source asset contains a baked checkerboard. Circular clipping keeps only
+   the actual MP token visible on both themes. */
+.price-icon {
+  border-radius: 50% !important;
+  clip-path: circle(43% at 50% 50%);
+}
+
 html[data-theme="dark"] ::selection {
   background: #0f766e;
   color: #ffffff;
@@ -1042,6 +1307,12 @@ html[data-theme="dark"] :is(.error-container, .flash-message) {
 }
 
 @media (max-width: 550px) {
+  html[data-theme="dark"] .navbar {
+    border: 1px solid var(--dark-line) !important;
+    background: #131d2e !important;
+    box-shadow: 0 18px 46px rgba(0, 0, 0, .4) !important;
+  }
+
   .theme-toggle--nav {
     width: 100%;
     height: 43px;
