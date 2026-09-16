@@ -6923,6 +6923,230 @@ def _normalize_team_for_match(value):
     return normalized
 
 
+# 2026/27 promotion and relegation changes for leagues represented in the
+# career-search data.  Player cards retain the league from the season in which
+# they were issued, so the team name is the stable key for presenting clubs in
+# their current competition.
+CURRENT_SEASON_CLUB_LEAGUES = {
+    # England
+    "코벤트리 시티": "잉글랜드 프리미어리그",
+    "입스위치 타운": "잉글랜드 프리미어리그",
+    "헐 시티": "잉글랜드 프리미어리그",
+    "울버햄프턴 원더러스": "잉글랜드 EFL 챔피언십",
+    "번리": "잉글랜드 EFL 챔피언십",
+    "웨스트 햄 유나이티드": "잉글랜드 EFL 챔피언십",
+    "노리치 시티": "잉글랜드 EFL 챔피언십",
+    "사우샘프턴": "잉글랜드 EFL 챔피언십",
+    "왓퍼드": "잉글랜드 EFL 챔피언십",
+    "레스터 시티": "잉글랜드 EFL 리그 원",
+    "루턴 타운": "잉글랜드 EFL 리그 원",
+    # Spain
+    "RC 데포르티보": "스페인 라리가 EA스포츠",
+    "말라가 CF": "스페인 라리가 EA스포츠",
+    "라싱 산탄데르": "스페인 라리가 EA스포츠",
+    "레알 오비에도": "스페인 라리가 하이퍼모션",
+    "RCD 마요르카": "스페인 라리가 하이퍼모션",
+    "지로나 FC": "스페인 라리가 하이퍼모션",
+    "CD 레가네스": "스페인 라리가 하이퍼모션",
+    "UD 라스 팔마스": "스페인 라리가 하이퍼모션",
+    "UD 알메리아": "스페인 라리가 하이퍼모션",
+    "그라나다 CF": "스페인 라리가 하이퍼모션",
+    "레알 바야돌리드 CF": "스페인 라리가 하이퍼모션",
+    "카디스 CF": "스페인 라리가 하이퍼모션",
+    "SD 우에스카": "스페인 프리메라 페데라시온",
+    # Germany
+    "FC 샬케 04": "독일 분데스리가",
+    "SV 엘버스베르크": "독일 분데스리가",
+    "SC 파더보른 07": "독일 분데스리가",
+    "FC 장크트파울리": "독일 분데스리가 2",
+    "1. FC 하이덴하임 1846": "독일 분데스리가 2",
+    "VfL 볼프스부르크": "독일 분데스리가 2",
+    "VfL 보훔 1848": "독일 분데스리가 2",
+    "헤르타 BSC": "독일 분데스리가 2",
+    "홀슈타인 킬": "독일 분데스리가 2",
+    # Italy
+    "프로시노네": "이탈리아 세리에 A",
+    "몬차": "이탈리아 세리에 A",
+    "베네치아": "이탈리아 세리에 A",
+    "크레모네세": "이탈리아 세리에 BKT",
+    "엘라스 베로나": "이탈리아 세리에 BKT",
+    "피사": "이탈리아 세리에 BKT",
+    "삼프도리아": "이탈리아 세리에 BKT",
+    "엠폴리": "이탈리아 세리에 BKT",
+    "살레르니타나": "이탈리아 세리에 C",
+    "스페치아": "이탈리아 세리에 C",
+    "코모 1907": "이탈리아 세리에 A",
+    # France
+    "ESTAC 트루아": "프랑스 리그 1 맥도날드",
+    "르망 FC": "프랑스 리그 1 맥도날드",
+    "FC 메스": "프랑스 리그 2 BKT",
+    "FC 낭트": "프랑스 리그 2 BKT",
+    "AS 생-테티엔": "프랑스 리그 2 BKT",
+    "몽펠리에 HSC": "프랑스 리그 2 BKT",
+    "스타드 드 랭스": "프랑스 리그 2 BKT",
+    "FC 지롱댕 드 보르도": "프랑스 나시오날",
+    # Netherlands
+    "ADO 덴하흐": "네덜란드 에레디비지",
+    "SC 캄뷔르": "네덜란드 에레디비지",
+    "빌럼 II": "네덜란드 에레디비지",
+    "헤라클레스 알멜로": "네덜란드 에이르스터 디비시",
+    "알메러 시티 FC": "네덜란드 에이르스터 디비시",
+    "비테서": "네덜란드 에이르스터 디비시",
+    # Greece
+    "이라클리스": "그리스 리그",
+    "칼라마타 FC": "그리스 리그",
+    "AEL": "그리스 수페르리가 2",
+    "판세라이코스": "그리스 수페르리가 2",
+    # Norway (2026)
+    "릴레스트룀 SK": "노르웨이 엘리테세리엔",
+    "IK 스타르트": "노르웨이 엘리테세리엔",
+    "올레순 FK": "노르웨이 엘리테세리엔",
+    "스트룀스고드세": "노르웨이 OBOS-리가엔",
+    # Korea (2026)
+    "인천 유나이티드 FC": "대한민국 K리그 1",
+    "TeamName_110765_Incheon-United-FC_Auth-FullChar": "대한민국 K리그 1",
+    "부천 FC 1995": "대한민국 K리그 1",
+    "FC 안양": "대한민국 K리그 1",
+    "대구 FC": "대한민국 K리그 2",
+    "수원 FC": "대한민국 K리그 2",
+    "성남 FC": "대한민국 K리그 2",
+    "수원 삼성 블루윙즈": "대한민국 K리그 2",
+    # Denmark
+    "륑뷔 BK": "덴마크 3F 수페르리가",
+    "AC 호르센스": "덴마크 3F 수페르리가",
+    "FC 프레데리시아": "덴마크 1부 리그",
+    # Romania
+    "코르비눌 후네도아라": "루마니아 수페르리가",
+    "셉시 OSK": "루마니아 수페르리가",
+    "FC 볼룬타리": "루마니아 수페르리가",
+    # Portugal
+    "CS 마리티무": "리가 포르투갈",
+    "아카데미쿠 드 비제우": "리가 포르투갈",
+    "AVS 풋볼 SAD": "리가 포르투갈 2",
+    "FC 파수스 드 페헤이라": "리가 포르투갈 2",
+    # Belgium
+    "SK 베베런": "벨기에 프로 리그",
+    "KV 코르트레이크": "벨기에 프로 리그",
+    "롬멜 SK": "벨기에 프로 리그",
+    "FCV 덴더 EH": "벨기에 챌린저 프로 리그",
+    # Saudi Arabia
+    "아브하 클럽": "사우디 프로페셔널 리그",
+    "알 파이살리": "사우디 프로페셔널 리그",
+    "알 디리야": "사우디 프로페셔널 리그",
+    "다마크": "사우디 퍼스트 디비전 리그",
+    "알 오로바흐": "사우디 퍼스트 디비전 리그",
+    "알 웨흐다": "사우디 퍼스트 디비전 리그",
+    # Sweden (2026)
+    "칼마르 FF": "스웨덴 알스벤스칸",
+    "베스테로스 SK": "스웨덴 알스벤스칸",
+    "외리뤼테 IS": "스웨덴 알스벤스칸",
+    # Switzerland
+    "FC 파두츠": "스위스 슈퍼리그",
+    # Scotland
+    "세인트 존스톤": "스코티시 프리미어십",
+    "리빙스턴": "스코티시 챔피언십",
+    # Republic of Ireland (2026)
+    "던도크 FC": "아일랜드 프리미어 디비전",
+    "TeamName_837_Dundalk-FC_Auth-FullChar": "아일랜드 프리미어 디비전",
+    "코크 시티": "아일랜드 퍼스트 디비전",
+    # Austria
+    "SC 아우스트리아 루스테나우": "오스트리아 분데스리가",
+    "FC 블라우바이스 린츠": "오스트리아 2. 리가",
+    # Ukraine
+    "FC 부코비나 체르니우치": "우크라이나 리그",
+    "초르노모레츠 오데사": "우크라이나 리그",
+    "리비 베레흐 키이우": "우크라이나 리그",
+    # China (2026)
+    "랴오닝 톄런": "중국 슈퍼 리그",
+    "충칭 퉁량룽": "중국 슈퍼 리그",
+    "광저우 풋볼 클럽": "중국 하위 리그",
+    # Czech Republic and Croatia
+    "FC 즈브로요프카 브르노": "체코 체스카 리그",
+    "SK 아르티스 브르노": "체코 체스카 리그",
+    "FK 두클라 프라하": "체코 2부 리그",
+    "NK 루데스": "크로아티아 리그",
+    "HNK 부코바르 1991": "크로아티아 2부 리그",
+    # Türkiye
+    "에르주룸스포르 FK": "튀르키예 트렌디욜 쉬페르리그",
+    "아메드 SK": "튀르키예 트렌디욜 쉬페르리그",
+    "초룸 FK": "튀르키예 트렌디욜 쉬페르리그",
+    "안탈리아스포르": "튀르키예 TFF 1. 리그",
+    "카이세리스포르 풋볼 A.Ş": "튀르키예 TFF 1. 리그",
+    "파티흐 카라귐뤼크 SK": "튀르키예 TFF 1. 리그",
+    "아다나 데미르스포르": "튀르키예 TFF 1. 리그",
+    # Poland
+    "비스와 크라쿠프": "폴란드 엑스트라클라사",
+    "실롱스크 브로츠와프": "폴란드 엑스트라클라사",
+    "비에치스타 크라쿠프": "폴란드 엑스트라클라사",
+    # Finland (2026)
+    "FC 라흐티": "핀란드 리그",
+    "TPS": "핀란드 리그",
+    # Argentina (2026)
+    "힘나시아 이 에스그리마 데 멘도사": "아르헨티나 리가 프로페시오날 데 풋볼",
+    "에스투디안테스 데 리오 콰르토": "아르헨티나 리가 프로페시오날 데 풋볼",
+    "고도이 크루스": "아르헨티나 프리메라 나시오날",
+    "산 마르틴 데 산후안": "아르헨티나 프리메라 나시오날",
+    # India
+    "처칠 브라더스 FC": "인도 슈퍼리그",
+    "모하메단 SC": "인도 I리그",
+    "잠셰드푸르 FC": "인도 I리그",
+    # Hungary
+    "버셔시 SC": "헝가리 리그",
+    "부다페스트 혼베드": "헝가리 리그",
+    # UAE
+    "두바이 유나이티드": "아랍에미리트 리그",
+    "디바 FC": "아랍에미리트 1부 리그",
+    # Australia has no sporting promotion/relegation, but Western United's
+    # licence was terminated for 2026/27 and it must not remain in A-League.
+    "웨스턴 유나이티드 FC": "오스트레일리아 하위 리그",
+}
+_CURRENT_SEASON_CLUB_LEAGUES_NORMALIZED = {
+    _normalize_team_for_match(team): league
+    for team, league in CURRENT_SEASON_CLUB_LEAGUES.items()
+}
+_CURRENT_SEASON_TOP_FLIGHT_LEAGUES = {
+    "잉글랜드 프리미어리그",
+    "스페인 라리가 EA스포츠",
+    "독일 분데스리가",
+    "이탈리아 세리에 A",
+    "프랑스 리그 1 맥도날드",
+    "그리스 리그",
+    "네덜란드 에레디비지",
+    "노르웨이 엘리테세리엔",
+    "대한민국 K리그 1",
+    "덴마크 3F 수페르리가",
+    "루마니아 수페르리가",
+    "리가 포르투갈",
+    "벨기에 프로 리그",
+    "사우디 프로페셔널 리그",
+    "스웨덴 알스벤스칸",
+    "스위스 슈퍼리그",
+    "스코티시 프리미어십",
+    "아일랜드 프리미어 디비전",
+    "오스트리아 분데스리가",
+    "우크라이나 리그",
+    "중국 슈퍼 리그",
+    "체코 체스카 리그",
+    "크로아티아 리그",
+    "튀르키예 트렌디욜 쉬페르리그",
+    "폴란드 엑스트라클라사",
+    "핀란드 리그",
+    "아르헨티나 리가 프로페시오날 데 풋볼",
+    "인도 슈퍼리그",
+    "헝가리 리그",
+    "아랍에미리트 리그",
+}
+
+
+def _current_season_team_pair(pair):
+    if not pair:
+        return pair
+    current_league = _CURRENT_SEASON_CLUB_LEAGUES_NORMALIZED.get(
+        _normalize_team_for_match(pair.get("team"))
+    )
+    if not current_league:
+        return pair
+    return {"league": current_league, "team": pair.get("team", "")}
 def _player_identity_key(player):
     pid = player.get("pid")
     if pid not in (None, ""):
@@ -7092,7 +7316,7 @@ def _current_team_score(player):
 def _build_player_current_team_index():
     best_rows = {}
     for player in PLAYER_DATA:
-        pair = _player_team_pair(player)
+        pair = _current_season_team_pair(_player_team_pair(player))
         if not pair:
             continue
         key = _player_identity_key(player)
@@ -7102,12 +7326,17 @@ def _build_player_current_team_index():
     return {key: pair for key, (_, pair) in best_rows.items()}
 
 
-def _build_league_team_map(pairs):
+def _build_league_team_map(pairs, include_current_top_flight=False):
     league_teams = {}
     for pair in pairs:
+        pair = _current_season_team_pair(pair)
         if not pair or not pair.get("league") or not pair.get("team"):
             continue
         league_teams.setdefault(pair["league"], set()).add(pair["team"])
+    if include_current_top_flight:
+        for team, league in CURRENT_SEASON_CLUB_LEAGUES.items():
+            if league in _CURRENT_SEASON_TOP_FLIGHT_LEAGUES:
+                league_teams.setdefault(league, set()).add(team)
     return {
         league: sorted(teams)
         for league, teams in sorted(league_teams.items(), key=lambda item: item[0])
@@ -7117,6 +7346,7 @@ def _build_league_team_map(pairs):
 def _team_pair_matches(pair, selected_league="", selected_team=""):
     if not pair:
         return False
+    pair = _current_season_team_pair(pair)
     league = _normalize_filter_text(pair.get("league"))
     team = _normalize_team_for_match(pair.get("team"))
     league_filter = _normalize_filter_text(selected_league)
@@ -9160,9 +9390,12 @@ def traits_selection():
     )
     career_index = _build_player_career_index()
     current_team_index = _build_player_current_team_index()
-    current_league_teams = _build_league_team_map(current_team_index.values())
+    current_league_teams = _build_league_team_map(
+        current_team_index.values(), include_current_top_flight=True
+    )
     all_league_teams = _build_league_team_map(
-        pair for pairs in career_index.values() for pair in pairs
+        (pair for pairs in career_index.values() for pair in pairs),
+        include_current_top_flight=True,
     )
 
     return render_template(
