@@ -1,0 +1,6 @@
+# Firebase admin keys
+/instance/*.json
+/instance/*.db
+/instance/.secret_key
+/*firebase-adminsdk*.json
+**/*firebase-adminsdk*.json

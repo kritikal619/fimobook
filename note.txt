@@ -1,0 +1,15 @@
+server {
+    listen 80;
+    server_name 13.209.96.241; # 여기에 실제 EC2 퍼블릭 IP를 입력하세요.
+
+    location / {
+        include proxy_params;
+        proxy_pass http://unix:/home/ubuntu/fimobook.sock; # Gunicorn에서 설정한 .sock 파일 경로
+    }
+
+    # 정적 파일 서빙을 위한 설정 (선택 사항)
+    # static 폴더의 파일들을 Nginx가 직접 서빙하도록 하여 Flask 앱의 부하를 줄입니다.
+    location /static {
+        alias /home/ubuntu/static; # 실제 static 폴더의 절대 경로
+    }
+}

@@ -1,187 +1,509 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>검색 결과</title>
-  <!-- Google Fonts: Poppins (이전 디자인에서 사용된 폰트) -->
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <style>
-    /* CSS 변수 설정 (재사용성을 위해) */
-    :root {
-      --primary-color: #007bff; /* 강조색 (버튼, 링크 등) */
-      --secondary-color: #6c757d; /* 보조 버튼 색상 */
-      --background-color: #f0f2f5;
-      --card-bg-color: #fff;
-      --text-color-dark: #333;
-      --text-color-medium: #555;
-      --border-color-light: #eee;
-      --border-color-medium: #ccc;
-      --shadow-light: 0 8px 24px rgba(0, 0, 0, 0.1);
-      --border-radius-default: 8px;
-    }
+{% extends "base.html" %}
 
-    /* 전역 스타일 */
-    body {
-      font-family: 'Poppins', sans-serif;
-      background-color: var(--background-color);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh; /* 전체 뷰포트 높이 */
-      margin: 0;
-      box-sizing: border-box; /* 패딩과 보더가 너비에 포함되도록 설정 */
-      padding: 20px; /* 작은 화면에서 여백 확보 */
-    }
+{% block body_class %}search-results-page{% endblock %}
 
-    /* 카드형 레이아웃 스타일 (검색 결과 컨테이너) */
-    .result-card {
-      background-color: var(--card-bg-color);
-      padding: 30px;
-      border-radius: 12px;
-      box-shadow: var(--shadow-light);
-      width: 100%;
-      max-width: 800px; /* 테이블을 담기 위해 최대 너비 늘림 */
-      box-sizing: border-box;
-    }
+{% block title %}FC모바일 선수 검색 결과 | 피모북{% endblock %}
 
-    /* 제목 스타일 */
-    h1 {
-      text-align: center;
-      color: var(--text-color-dark);
-      margin-bottom: 25px;
-      font-size: 28px;
-      font-weight: 600;
-    }
+{% block extra_head %}
+<meta name="description" content="FC모바일 선수 검색 결과를 확인하세요. 원하는 선수의 능력치, 특성, OVR 정보를 비교하고 선택할 수 있습니다.">
+<meta name="keywords" content="FC모바일, 피모, 선수검색결과, 선수비교, OVR, 능력치">
+<meta name="author" content="피모북">
+<meta name="robots" content="index, follow">
 
-    /* 에러 메시지 스타일 */
-    .error {
-      color: red;
-      background-color: #ffe0e0; /* 연한 빨간색 배경 */
-      border: 1px solid #ffb3b3; /* 빨간색 테두리 */
-      border-radius: var(--border-radius-default);
-      padding: 15px;
-      margin-bottom: 20px;
-      text-align: center;
-      font-weight: 500;
-    }
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="피모북">
+<meta property="og:locale" content="ko_KR">
+<meta property="og:title" content="FC모바일 선수 검색 결과 | 피모북">
+<meta property="og:description" content="FC모바일 선수 검색 결과를 확인하고 비교하세요.">
+<meta property="og:url" content="{{ url_for('search', _external=True) }}">
+<meta property="og:image" content="{{ url_for('static', filename='images/fimobook-og.png', _external=True) }}">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="FC모바일 선수 검색 결과 - 피모북">
 
-    /* 테이블 스타일 */
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-bottom: 30px; /* 아래 버튼과의 간격 */
-      background-color: var(--card-bg-color); /* 테이블 배경색 */
-      border-radius: var(--border-radius-default); /* 테이블 모서리 둥글게 */
-      overflow: hidden; /* 둥근 모서리 적용을 위해 */
-    }
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="FC모바일 선수 검색 결과 | 피모북">
+<meta name="twitter:description" content="FC모바일 선수 검색 결과를 확인하고 비교하세요.">
+<meta name="twitter:image" content="{{ url_for('static', filename='images/fimobook-og.png', _external=True) }}">
 
-    th, td {
-      border: 1px solid var(--border-color-light); /* 연한 테두리 */
-      padding: 12px 15px; /* 패딩 늘림 */
-      text-align: left;
-    }
+<link rel="canonical" href="https://fcbook.info/search">
+<meta name="theme-color" content="#4CAF50">
 
-    th {
-      background-color: #f8f8f8; /* 헤더 배경색 */
-      color: var(--text-color-dark);
-      font-weight: 600; /* Poppins 세미볼드 */
-      border-bottom: 2px solid var(--primary-color); /* 강조색 하단 테두리 */
+<script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "SearchResultsPage",
+    "name": "FC모바일 선수 검색 결과",
+    "description": "FC모바일 선수 검색 결과 페이지",
+    "url": "https://fcbook.info/search",
+    "mainEntity": {
+        "@type": "ItemList",
+        "name": "검색된 선수 목록",
+        "numberOfItems": "{{ players|length }}"
+    },
+    "breadcrumb": {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+            { "@type": "ListItem", "position": 1, "name": "홈", "item": "https://fcbook.info/" },
+            { "@type": "ListItem", "position": 2, "name": "검색 결과", "item": "https://fcbook.info/search" }
+        ]
     }
+}
+</script>
 
-    /* 테이블 행 줄무늬 및 호버 효과 */
-    tbody tr:nth-child(even) {
-      background-color: #fbfbfb; /* 짝수 행 배경색 */
-    }
+<style>
+  :root{
+    --card:#ffffff;
+    --surface:#f6f8fb;
+    --text:#1f2937;
+    --muted:#64748b;
+    --line:#dbe3ec;
+    --line2:#e2e8f0;
+    --brand:#10b981;
+    --brand-dark:#059669;
+    --navy:#374151;
+    --shadow:0 14px 30px rgba(15,23,42,0.05);
+  }
+  .main-content {
+    max-width: 1180px;
+    background: transparent;
+    box-shadow: none;
+    border: none;
+    padding: 0;
+    overflow: visible;
+  }
+  .results-wrap {
+    width: 100%;
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 8px 0 32px;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    box-sizing: border-box;
+  }
+  .results-topbar {
+    width: 100%;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+  .back-btn {
+    margin: 0;
+    padding: 10px 14px;
+    border-radius: 12px;
+    background: #f8fafc;
+    color: var(--navy);
+    border: 1px solid var(--line);
+    font-weight: 800;
+    font-size: 14px;
+    text-decoration: none;
+    box-shadow: 0 6px 16px rgba(15,23,42,0.04);
+  }
+  .back-btn:hover {
+    background: #f1f5f9;
+    text-decoration: none;
+    transform: translateY(-1px);
+  }
+  .error {
+    color: #b42318;
+    background: #fef3f2;
+    border: 1px solid #f0b5ac;
+    border-radius: 14px;
+    padding: 17px;
+    text-align: center;
+    font-weight: 700;
+    font-size: 16px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  .page-title {
+    width: 100%;
+    text-align: left;
+    color: var(--text);
+    margin: 0;
+  }
+  .filter-row {
+    width: 100%;
+    display: flex;
+    justify-content: flex-end;
+  }
+  .sort-form {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 6px 10px;
+    box-shadow: 0 6px 16px rgba(15,23,42,0.04);
+  }
+  .sort-form label {
+    color: var(--muted);
+    font-weight: 700;
+    font-size: 13px;
+  }
+  .sort-form select {
+    border: 1px solid var(--line2);
+    background: #fff;
+    border-radius: 8px;
+    padding: 6px 8px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text);
+  }
+  .results-grid {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+  .player-card {
+    display: flex;
+    gap: 14px;
+    align-items: center;
+    padding: 12px 14px;
+    background: var(--card);
+    border-radius: 16px;
+    border: 1px solid var(--line2);
+    box-shadow: var(--shadow);
+    text-decoration: none;
+    color: var(--text);
+    transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+    opacity: 0;
+    transform: translateY(10px);
+    animation: cardIn 0.45s ease forwards;
+    animation-delay: calc(var(--i) * 35ms);
+  }
+  .player-card:hover {
+    transform: translateY(-2px);
+    border-color: var(--line);
+    box-shadow: 0 16px 28px rgba(15,23,42,0.08);
+  }
+  @keyframes cardIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .card-image {
+    width: 84px;
+    height: 108px;
+    border-radius: 12px;
+    overflow: hidden;
+    background: var(--surface);
+    flex-shrink: 0;
+    position: relative;
+    background-size: cover;
+    background-position: center;
+  }
+  .card-image img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+    filter: drop-shadow(0 4px 6px rgba(0,0,0,0.2));
+    z-index: 1;
+  }
+  .card-meta {
+    position: absolute;
+    inset: 0;
+    padding: 0;
+    color: #ffffff;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.45);
+    pointer-events: none;
+    z-index: 2;
+  }
+  .meta-top {
+    position: absolute;
+    top: 14%;
+    left: 14%;
+    display: inline-flex;
+    flex-direction: column;
+    gap: 3px;
+    align-items: flex-start;
+    font-weight: 800;
+    letter-spacing: -0.3px;
+    width: max-content;
+  }
+  .meta-ovr {
+    font-size: 14px;
+    line-height: 1;
+    font-family: 'FCOVR', 'Poppins', 'Apple SD Gothic Neo', sans-serif;
+    margin: 0;
+    text-align: left;
+    align-self: flex-start;
+  }
+  .meta-pos {
+    font-size: 9px;
+    line-height: 1;
+    opacity: 0.95;
+    font-family: 'FCOVR', 'Poppins', 'Apple SD Gothic Neo', sans-serif;
+    width: 100%;
+    text-align: center;
+    margin: 0;
+    transform: translateX(-2px);
+    align-self: center;
+  }
+  .meta-name {
+    position: absolute;
+    left: 10%;
+    width: 80%;
+    top: 65%;
+    font-size: 8px;
+    font-weight: 800;
+    text-align: center;
+    white-space: nowrap;
+    line-height: 1;
+    overflow: hidden;
+    text-overflow: clip;
+    word-break: keep-all;
+  }
+  .card-body {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+    flex: 1;
+  }
+  .card-title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .player-name {
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .class-tag {
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: #ecfdf5;
+    color: var(--brand-dark);
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: -0.2px;
+    white-space: nowrap;
+  }
+  .card-sub {
+    font-size: 13px;
+    color: var(--muted);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+  }
+  .meta-label {
+    color: #94a3b8;
+    font-weight: 700;
+  }
+  .boost-row {
+    gap: 10px;
+    color: var(--navy);
+    font-weight: 600;
+  }
+  .boost-pill {
+    padding: 3px 8px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    color: var(--navy);
+    background: #f8fafc;
+    font-size: 12px;
+  }
+  .skill-moves-name {
+    color: var(--navy);
+    font-weight: 700;
+    font-size: 13px;
+  }
+  .skill-stars {
+    font-size: 13px;
+    letter-spacing: 1px;
+    color: #f2c94c;
+    font-weight: 800;
+    text-shadow: 0 1px 1px rgba(0,0,0,0.15);
+  }
+  .skill-stars .off {
+    color: #d6dbe2;
+    text-shadow: none;
+  }
+  .price-row {
+    gap: 8px;
+    color: var(--text);
+    font-weight: 700;
+  }
+  .price-icon {
+    width: 22px;
+    height: 22px;
+    object-fit: contain;
+    flex-shrink: 0;
+  }
+  .playstyle-row {
+    gap: 5px;
+  }
+  .playstyle-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    max-width: 100%;
+    padding: 2px 7px 2px 4px;
+    border-radius: 999px;
+    background: #f1f5f9;
+    color: #334155;
+    font-size: 11px;
+    font-weight: 800;
+  }
+  .playstyle-pill img {
+    width: 18px;
+    height: 18px;
+    object-fit: contain;
+    flex: 0 0 auto;
+  }
+  .back {
+    display: block;
+    width: fit-content;
+    margin: 10px auto 0;
+    padding: 13px 34px;
+    background: linear-gradient(90deg, var(--brand-dark) 0%, var(--brand) 100%);
+    color: #fff;
+    text-decoration: none;
+    border: none;
+    border-radius: 11px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 10px 20px rgba(16,185,129,0.18);
+    letter-spacing: 0.2px;
+    transition: background 0.23s, box-shadow 0.12s, transform 0.12s;
+  }
+  .back:hover {
+    background: linear-gradient(90deg, #0c5f41 0%, var(--brand-dark) 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 12px 24px rgba(16,185,129,0.22);
+  }
+  @media (max-width: 1400px) {
+    .results-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  }
+  @media (max-width: 1024px) {
+    .results-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  @media (max-width: 640px) {
+    .results-wrap { padding: 0 4px 18px; }
+    .results-grid { grid-template-columns: 1fr; gap: 10px; }
+    .player-card { padding: 10px; gap: 10px; width: 100%; box-sizing: border-box; }
+    .card-image { width: 72px; height: 96px; }
+    .player-name { font-size: 14px; }
+    .class-tag { font-size: 10px; padding: 3px 8px; }
+    .card-sub { font-size: 11px; gap: 4px; }
+    .page-title { font-size: 24px; }
+  }
+  @media (max-width: 380px) {
+    .player-card { padding: 9px; }
+    .card-image { width: 68px; height: 92px; }
+    .player-name { font-size: 13px; }
+  }
+  @media (max-width: 560px) {
+    .error { font-size: 15px; padding: 12px; margin-bottom: 12px; }
+    .back { padding: 10px 25px; font-size: 14px; border-radius: 9px; }
+  }
+  @media (max-width: 560px) {
+    .sort-form { padding: 5px 8px; gap: 6px; }
+    .sort-form label { font-size: 12px; }
+    .sort-form select { font-size: 12px; padding: 5px 6px; }
+  }
+</style>
+{% endblock %}
 
-    tbody tr:hover {
-      background-color: #e6f7ff; /* 호버 시 연한 파란색 */
-      transition: background-color 0.2s ease;
-    }
-
-    /* 상세보기 링크 스타일 */
-    a.detail-link {
-      display: inline-block;
-      padding: 6px 12px;
-      background-color: #e0f2ff; /* 연한 파란색 배경 */
-      color: var(--primary-color); /* 파란색 텍스트 */
-      text-decoration: none;
-      border-radius: 5px; /* 작은 둥근 모서리 */
-      font-weight: 500;
-      transition: background-color 0.2s ease, transform 0.1s ease;
-    }
-
-    a.detail-link:hover {
-      background-color: #cce7ff; /* 호버 시 약간 어두운 파란색 */
-      transform: translateY(-1px); /* 약간 위로 떠오르는 효과 */
-    }
-
-    /* '다시 검색하기' 버튼 스타일 */
-    a.back {
-      display: block; /* 블록 요소로 만들어 가운데 정렬 가능하게 */
-      width: fit-content; /* 내용에 맞는 너비 */
-      margin: 25px auto 0 auto; /* 위쪽 마진 및 좌우 자동 마진으로 가운데 정렬 */
-      padding: 12px 25px;
-      background-color: var(--secondary-color); /* 회색 버튼 */
-      color: #fff;
-      text-decoration: none;
-      border: none;
-      border-radius: var(--border-radius-default);
-      font-size: 17px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: background-color 0.3s ease, transform 0.1s ease;
-    }
-
-    a.back:hover {
-      background-color: #5a6268; /* 호버 시 약간 어두운 회색 */
-      transform: translateY(-2px); /* 약간 위로 떠오르는 효과 */
-    }
-
-    a.back:active {
-        transform: translateY(0); /* 클릭 시 원위치 */
-    }
-  </style>
-</head>
-<body>
-  <div class="result-card">
-    <h1>검색 결과</h1>
-
-    {% if error %}
-      <div class="error">{{ error }}</div>
-      <a href="/" class="back">← 다시 검색하기</a>
-    {% else %}
-      <table>
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>클래스</th>
-            <th>이름</th>
-            <th>OVR</th>
-            <th>팀</th>
-            <th>상세보기</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for player in players %}
-            <tr>
-              <td>{{ loop.index }}</td>
-              <td>{{ player.className }}</td>
-              <td>{{ player.playerKor }}</td>
-              <td>{{ player.ovr }}</td>
-              <td>{{ player.team }}</td>
-              <td>
-                <a href="{{ url_for('player_detail', cid=player.cid) }}?names={{ names|urlencode }}"
-                   class="detail-link">
-                  보기
-                </a>
-              </td>
-            </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-      <a href="/" class="back">← 다시 검색하기</a>
-    {% endif %}
+{% block content %}
+<div class="results-wrap">
+  <div class="results-topbar">
+    <a class="back-btn" href="javascript:history.back()">← 뒤로가기</a>
   </div>
-</body>
-</html>
+  <h1 class="page-title">검색 결과</h1>
+  {% if error %}
+    <div class="error">{{ error }}</div>
+    <a href="/" class="back">← 다시 검색하기</a>
+  {% else %}
+    <div class="filter-row">
+      <form method="get" class="sort-form">
+        <input type="hidden" name="names" value="{{ names }}">
+        <label for="sort">정렬</label>
+        <select id="sort" name="sort" onchange="this.form.submit()">
+          <option value="ovr" {% if sort == 'ovr' %}selected{% endif %}>OVR 순</option>
+          <option value="price_desc" {% if sort == 'price_desc' %}selected{% endif %}>가격 높은순</option>
+          <option value="price_asc" {% if sort == 'price_asc' %}selected{% endif %}>가격 낮은순</option>
+        </select>
+      </form>
+    </div>
+    <div class="results-grid">
+        {% for player in players %}
+          {% set nation = player.nation or player.nationName or player.team %}
+        <a href="{{ url_for('player_detail', cid=player.cid) }}" class="player-card" style="--i: {{ loop.index0 }};">
+          <div class="card-image" style="background-image: url('{{ player.bimage if player.bimage else url_for('static', filename='favicon.ico') }}');">
+            <img src="{{ player.pimage if player.pimage else url_for('static', filename='favicon.ico') }}" alt="{{ player.playerKor }}">
+            <div class="card-meta">
+              <div class="meta-top">
+                <div class="meta-ovr">{{ player.ovr or '-' }}</div>
+                <div class="meta-pos">{{ player.position or '-' }}</div>
+              </div>
+              <div class="meta-name">{{ player.playerKor or '-' }}</div>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="card-title-row">
+              <div class="player-name">{{ player.playerKor or '-' }}</div>
+            </div>
+            <div class="card-sub">
+              <span class="meta-label">포지션</span>
+              <span>{{ player.position or '-' }}</span>
+              {% if player.potentialPosition %}
+                <span class="meta-label">부포지션</span>
+                <span>{{ player.potentialPosition }}</span>
+              {% endif %}
+              {% if player.jerseyNumber is defined and player.jerseyNumber is not none %}
+                <span class="meta-label">등번호</span>
+                <span>{{ player.jerseyNumber }}</span>
+              {% endif %}
+              <span class="meta-label">국적</span>
+              <span>{{ nation or '-' }}</span>
+            </div>
+            <div class="card-sub boost-row">
+              <span class="skill-moves-name">{{ player.skillMovesName or '-' }}</span>
+              {% set skill_level = player.get('skillMovesLevel') or player.get('skillMoves') or player.get('n1SkillMove') %}
+              {% if skill_level %}
+                {% set level = (skill_level|int) + 1 %}
+                <span class="skill-stars" aria-label="개인기 {{ level }}">
+                  {% for i in range(1, 6) %}
+                    {% if i <= level %}★{% else %}<span class="off">★</span>{% endif %}
+                  {% endfor %}
+                </span>
+              {% endif %}
+            </div>
+            {% if player.playstyles %}
+              <div class="card-sub playstyle-row" aria-label="플레이스타일">
+                {% for playstyle in player.playstyles[:3] %}
+                  <span class="playstyle-pill">
+                    <img src="{{ playstyle.imageUrl }}" alt="" loading="lazy">
+                    <span>{{ playstyle.name }}</span>
+                  </span>
+                {% endfor %}
+              </div>
+            {% endif %}
+            <div class="card-sub price-row">
+              <img class="price-icon" src="{{ url_for('static', filename='images/ea-token.png') }}" alt="재화">
+              <span>{{ "{:,}".format(player.price|int) if player.price is not none else '-' }}</span>
+            </div>
+          </div>
+        </a>
+      {% endfor %}
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

@@ -96,42 +96,32 @@ def display_player_details(player):
 
     # 영어 키를 한국어로 바꿀 수 있는 매핑 (없으면 키 자체를 표시)
     stat_names = {
-        "ACC": "가속",
-        "AGG": "공격성",
-        "AGI": "민첩성",
-        "AWR": "위치 선정",
-        "BAC": "볼 컨트롤",
-        "BAL": "밸런스",
-        "CRO": "크로스",
-        "CUR": "감아차기",
-        "DRI": "드리블",
-        "FIN": "결정력",
-        "FRK": "프리킥",
-        "GKD": "GK 다이빙",
-        "GKK": "GK 킥",
-        "GKP": "GK 위치 선정",
-        "HAN": "태클",
-        "HEA": "헤딩",
-        "JMP": "점프",
-        "LPA": "롱패스",
-        "LSA": "롱슛",
-        "MRK": "수비 마킹",
-        "PAS": "패스",
-        "PEN": "페널티 킥",
-        "POS": "포지셔닝",
-        "REA": "반응도",
-        "REF": "반사 신경",
-        "SHO": "슈팅력",
-        "SLT": "슬라이딩 태클",
-        "SPD": "질주 속도",
-        "STA": "체력",
-        "STR": "힘",
-        "STT": "마크",
-        "VIS": "시야",
-        "VOL": "볼 컨트롤",
-        "WFA": "약발 정확도",
-        "LVO": "로빙 발리 정확도",
-        "LVOD": "로빙 발리 데미지"
+            "ACC": "가속",
+            "SPD": "질주속도",
+            "FIN": "결정력",
+            "SHO": "슈팅력",
+            "LSA": "중거리 슛",
+            "PEN": "PK",
+            "CUR": "감아차기",
+            "AWR": "위치선정",
+            "PAS": "짧은패스",
+            "LPA": "긴패스",
+            "VIS": "시야",
+            "CRO": "크로스",
+            "FRK": "프리킥",
+            "DRI": "드리블",
+            "BAC": "볼 컨트롤",
+            "AGI": "민첩성",
+            "REA": "반응도",
+            "BAL": "밸런스",
+            "MRK": "마크",
+            "HAN": "태클",
+            "SLT": "슬라이딩 태클",
+            "STT": "가로채기",
+            "HEA": "헤딩",
+            "STR": "힘",
+            "AGG": "공격성",
+            "JMP": "점프"
     }
 
     print("----- 선수 상세 정보 -----")
@@ -159,21 +149,19 @@ def display_player_details(player):
     skill_boost_level = player.get("skillBoostLevel", "N/A")
     print(f"스킬 부스트: {skill_boost_name} (레벨: {skill_boost_level})\n")
 
-    # 모든 능력치 출력
+    # 모든 능력치 출력 (미리 정의된 순서에 따라)
     print("----- 모든 능력치 -----")
-    for key, value in player.items():
-        # 키가 모두 대문자이고, 정수형 값인 경우 능력치로 판단
-        if key.isupper() and isinstance(value, int):
-            label = stat_names.get(key, key)
-            print(f"{label}: {value}")
+    for key, label in stat_names.items():
+        value = player.get(key, '-') # 값이 없으면 '-'로 표시
+        print(f"{label}: {value}")
     print()
 
-    # 가격 정보 (진화 등급: 가격) - 콤마 추가
+    # 가격 정보 (진화 등급: 가격) - 콤마 추가 및 단위 변경
     print("----- 가격 (진화 등급: 가격) -----")
-    for i in range(0, 11):  # n8Price0부터 n8Price10까지
+    for i in range(0, 16):  # n8Price0부터 n8Price15까지
         price_key = f"n8Price{i}"
-        if price_key in player:
-            print(f"{i}진화: {player[price_key]:,}원")
+        if price_key in player and player[price_key] is not None:
+            print(f"{i}진화: {player[price_key]:,} MP")
     print()
 
     # Trait(특성) 출력
@@ -239,3 +227,4 @@ if __name__ == "__main__":
 
     except Exception as e:
         print("에러 발생:", e)
+

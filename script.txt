@@ -1,0 +1,99 @@
+   602 
+   603         # 특성 데이터 처리
+   604         # traits가 리스트가 아니면 빈 리스트로 초기화
+   605         if not isinstance(player_data.get("traits"), list):
+   606             player_data["traits"] = []
+   607 
+   608         return player_data
+   609 
+   610     # app.py의 이 함수를 통째로 교체하세요.
+   611 
+   612     @app.route("/compare_players/<cids>")
+   613     def compare_selected_players(cids):
+   614         selected_cids_str = cids.split(',')
+   615 
+   616         if len(selected_cids_str) != 2:
+   617             return "비교를 위해서는 반드시 두 명의 선수를 선택해야 합니다.", 400
+   618 
+   619         players_to_compare = []
+   620         for cid_str in selected_cids_str:
+   621             # ... (이전 답변의 선수 데이터 가져오는 로직과 동일) ...
+   622             full_player_data = None
+   623             try:
+   624                 cid = int(cid_str)
+   625                 player_from_local = next((p for p in PLAYER_DATA if p.get("cid") == cid), None)
+   626                 if not player_from_local: continue
+   627 
+   628                 player_name, player_class = player_from_local.get("playerKor"), player_from_local.get("className"
+       )
+   629                 try:
+   630                     api_data = fetch_player_search_list(player_names_list=[player_name])
+   631                     if api_data.get("ResultCode") == 1:
+   632                         api_match = next((p for p in api_data["ResultData"].get("PlayerList", [])
+   633                                           if p.get("cid") == cid and p.get("className") == player_class), None)
+   634                         if api_match: full_player_data = api_match
+   635                 except Exception: pass
+   636 
+   637                 if full_player_data is None: full_player_data = player_from_local
+   638 
+   639                 if not full_player_data.get("pimage"): full_player_data["pimage"] = player_from_local.get(
+       "pimage")
+   640                 if not full_player_data.get("bimage"): full_player_data["bimage"] = player_from_local.get(
+       "bimage")
+   641                 if not full_player_data.get("traits"): full_player_data["traits"] = player_from_local.get(
+       "traits", [])
+   642 
+   643                 processed_player = process_player_for_view(full_player_data)
+   644                 players_to_compare.append(processed_player)
+   645             except Exception as e:
+   646                 print(f"ERROR: CID {cid_str} 처리 중 오류 발생: {e}")
+   647 
+   648         # 최종적으로 compare_players.html 템플릿을 렌더링
+   649         return render_template("compare_players.html", players=players_to_compare, stat_groups=STAT_GROUPS)
+   650 
+   651 
+   652     @app.route("/board")
+   653     def board():
+   654         posts = Post.query.order_by(Post.created_at.desc()).all()
+   655         return render_template("board.html", posts=posts)
+   656 
+   657     @app.route("/board/new", methods=["GET", "POST"])
+   658     @login_required
+   659     def new_post():
+   660         if request.method == "POST":
+   661             title = request.form["title"]
+   662             content = request.form["content"]
+   663             new_post = Post(title=title, content=content, author=current_user)
+   664             db.session.add(new_post)
+   665             db.session.commit()
+   666             return redirect(url_for("board"))
+   667         return render_template("create_post.html")
+   668 
+   669     @app.route("/board/<int:post_id>")
+   670     def post_detail(post_id):
+   671         post = Post.query.get_or_404(post_id)
+   672         return render_template("post_detail.html", post=post)
+   673 
+   674     @app.route("/board/<int:post_id>/like", methods=["POST"])
+   675     @login_required
+   676     def like_post(post_id):
+   677         post = Post.query.get_or_404(post_id)
+   678         post.likes += 1
+   679         db.session.commit()
+   680         return jsonify({"likes": post.likes})
+   681 
+   682     @app.route("/board/<int:post_id>/comment", methods=["POST"])
+   683     @login_required
+   684     def add_comment(post_id):
+   685         post = Post.query.get_or_404(post_id)
+   686         content = request.form["content"]
+   687         new_comment = Comment(content=content, post_id=post.id, author=current_user)
+   688         db.session.add(new_comment)
+   689         db.session.commit()
+   690         return redirect(url_for("post_detail", post_id=post.id))
+   691 
+   692     if __name__ == '__main__':
+   693         with app.app_context():
+   694             db.create_all()
+   695         app.run(port=8000)
+   696         #app.run(host="0.0.0.0", port=6000, debug=True)
