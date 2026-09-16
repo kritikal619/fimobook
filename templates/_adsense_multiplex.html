@@ -1,0 +1,82 @@
+<style>
+  .fimo-multiplex-shell {
+    width: 100%;
+    min-width: 0;
+    min-height: 138px;
+    margin: 10px 0;
+    padding: 8px;
+    box-sizing: border-box;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    background: #ffffff;
+  }
+
+  .fimo-multiplex-shell .fimo-ad-label {
+    display: block;
+    margin: 0 0 8px;
+    color: #94a3b8;
+    font-size: 10px;
+    font-weight: 600;
+    line-height: 1;
+    text-align: center;
+  }
+
+  .fimo-multiplex-shell .adsbygoogle {
+    width: 100%;
+    min-height: 108px;
+  }
+
+  .fimo-multiplex-shell.is-unfilled,
+  .fimo-multiplex-shell:has(.adsbygoogle[data-ad-status="unfilled"]) {
+    display: none !important;
+  }
+
+  @media (max-width: 560px) {
+    .fimo-multiplex-shell {
+      min-height: 132px;
+      margin: 9px 0;
+      padding: 7px;
+      border-radius: 10px;
+    }
+
+    .fimo-multiplex-shell .adsbygoogle {
+      min-height: 104px;
+    }
+  }
+</style>
+<aside class="fimo-multiplex-shell" aria-label="광고">
+  <span class="fimo-ad-label">광고</span>
+  <ins class="adsbygoogle"
+       style="display:block"
+       data-ad-format="autorelaxed"
+       data-ad-client="ca-pub-4347323294488780"
+       data-ad-slot="3862806077"
+       data-matched-content-ui-type="image_sidebyside"
+       data-matched-content-rows-num="1"
+       data-matched-content-columns-num="2"></ins>
+</aside>
+<script>
+  (() => {
+    const script = document.currentScript;
+    const shell = script && script.previousElementSibling;
+    const ad = shell && shell.querySelector('.adsbygoogle');
+    if (!shell || !ad) return;
+
+    const syncAdState = () => {
+      const status = ad.getAttribute('data-ad-status');
+      shell.classList.toggle('is-unfilled', status === 'unfilled');
+      shell.hidden = status === 'unfilled';
+    };
+
+    const observer = new MutationObserver(syncAdState);
+    observer.observe(ad, { attributes: true, attributeFilter: ['data-ad-status'] });
+    syncAdState();
+
+    try {
+      (window.adsbygoogle = window.adsbygoogle || []).push({});
+    } catch (error) {
+      shell.classList.add('is-unfilled');
+      shell.hidden = true;
+    }
+  })();
+</script>

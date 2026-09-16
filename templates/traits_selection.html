@@ -1,0 +1,1125 @@
+{% extends "base.html" %}
+
+{% block body_class %}detail-search-page{% endblock %}
+
+{% block title %}FC모바일 선수 세부 검색 | 피모북{% endblock %}
+
+{% block extra_head %}
+{% include "_adsense_head.html" %}
+<style>
+  :root {
+    --line: #d8e2ec;
+    --line-strong: #c8d5e1;
+    --text: #0f172a;
+    --sub: #64748b;
+    --surface: #f7fafc;
+    --card: #ffffff;
+    --ink: #132531;
+    --brand: #0ea772;
+    --brand-dark: #087f5b;
+    --gold: #f5b945;
+    --shadow: 0 22px 46px rgba(15, 23, 42, 0.09);
+  }
+
+  .main-content {
+    max-width: 1180px;
+  }
+
+  .detail-search-wrap {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    margin: 0 auto;
+    display: grid;
+    gap: 16px;
+    box-sizing: border-box;
+  }
+
+  .detail-search-page {
+    overflow-x: hidden;
+  }
+
+  .detail-search-wrap .panel,
+  .detail-search-wrap form,
+  .detail-search-wrap .top-grid,
+  .detail-search-wrap .filter-grid,
+  .detail-search-wrap .career-grid,
+  .detail-search-wrap .actions,
+  .detail-search-wrap .fimo-ad-shell {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+
+  .detail-search-wrap .fimo-ad-shell .adsbygoogle,
+  .detail-search-wrap .fimo-ad-shell iframe {
+    max-width: 100% !important;
+  }
+
+  .hero {
+    position: relative;
+    overflow: hidden;
+    padding: 28px;
+    border-radius: 26px;
+    border: 1px solid rgba(216, 226, 236, 0.9);
+    background:
+      radial-gradient(circle at 86% 14%, rgba(245, 185, 69, 0.26), transparent 28%),
+      radial-gradient(circle at 8% 10%, rgba(14, 167, 114, 0.18), transparent 33%),
+      linear-gradient(135deg, #fffdf8 0%, #f7fafc 48%, #edf5f1 100%);
+    box-shadow: var(--shadow);
+  }
+
+  .hero::after {
+    content: "";
+    position: absolute;
+    right: -80px;
+    bottom: -120px;
+    width: 300px;
+    height: 300px;
+    border-radius: 50%;
+    border: 42px solid rgba(8, 127, 91, 0.08);
+  }
+
+  .hero-copy {
+    position: relative;
+    z-index: 1;
+    max-width: 760px;
+  }
+
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 6px 11px;
+    border-radius: 999px;
+    background: rgba(8, 127, 91, 0.1);
+    color: var(--brand-dark);
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    margin-bottom: 12px;
+  }
+
+  .hero h1 {
+    margin: 0;
+    color: var(--text);
+    font-size: 34px;
+    font-weight: 950;
+    letter-spacing: -1px;
+    word-spacing: 0.22em;
+    font-family: 'FCOVR', 'IBM Plex Sans KR', sans-serif;
+  }
+
+  .hero p {
+    margin: 10px 0 0;
+    color: #516172;
+    line-height: 1.65;
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  .panel {
+    padding: 18px;
+    border-radius: 26px;
+    border: 1px solid var(--line);
+    background: var(--card);
+    box-shadow: var(--shadow);
+  }
+
+  .section-title {
+    margin: 0 0 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    color: var(--text);
+    font-size: 17px;
+    font-weight: 950;
+    letter-spacing: -0.35px;
+  }
+
+  .section-title span {
+    color: var(--sub);
+    font-size: 12px;
+    font-weight: 800;
+  }
+
+  .top-grid {
+    display: grid;
+    grid-template-columns: 1.2fr repeat(4, minmax(125px, 0.55fr));
+    gap: 12px;
+  }
+
+  .field {
+    display: grid;
+    gap: 7px;
+  }
+
+  .field label,
+  .filter-label {
+    color: var(--sub);
+    font-size: 12px;
+    font-weight: 900;
+  }
+
+  .control,
+  .control-select {
+    min-height: 46px;
+    width: 100%;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    background: var(--surface);
+    color: var(--text);
+    font-size: 14px;
+    font-weight: 850;
+    padding: 0 13px;
+    box-sizing: border-box;
+    outline: none;
+    transition: border-color .15s ease, box-shadow .15s ease, background .15s ease;
+  }
+
+  .control:focus,
+  .control-select:focus {
+    border-color: var(--brand);
+    box-shadow: 0 0 0 3px rgba(14, 167, 114, 0.14);
+    background: #fff;
+  }
+
+  .range-controls {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    align-items: center;
+    gap: 7px;
+  }
+
+  .range-controls .control {
+    min-width: 0;
+    padding: 0 10px;
+    text-align: center;
+  }
+
+  .range-separator {
+    color: var(--sub);
+    font-size: 13px;
+    font-weight: 900;
+  }
+
+  .filter-grid {
+    margin-top: 14px;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .multi-box {
+    min-width: 0;
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    background: linear-gradient(180deg, #ffffff, #f9fbfd);
+    overflow: hidden;
+  }
+
+  .multi-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 12px 9px;
+    border-bottom: 1px solid #edf2f7;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .multi-head:focus-visible {
+    outline: 3px solid rgba(14, 167, 114, 0.22);
+    outline-offset: -3px;
+  }
+
+  .multi-head-left {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+  }
+
+  .toggle-icon {
+    width: 22px;
+    height: 22px;
+    border-radius: 8px;
+    background: #eef6f2;
+    color: var(--brand-dark);
+    font-size: 13px;
+    font-weight: 950;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform .16s ease;
+  }
+
+  .multi-box.is-collapsed .toggle-icon {
+    transform: rotate(-90deg);
+  }
+
+  .multi-body {
+    display: block;
+  }
+
+  .multi-box.is-collapsed .multi-body {
+    display: none;
+  }
+
+  .count-pill {
+    min-width: 24px;
+    height: 24px;
+    padding: 0 8px;
+    border-radius: 999px;
+    background: #ecfdf5;
+    color: var(--brand-dark);
+    font-size: 12px;
+    font-weight: 950;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .filter-search {
+    width: calc(100% - 24px);
+    margin: 0 12px 10px;
+    min-height: 34px;
+    border: 1px solid #e2e8f0;
+    border-radius: 11px;
+    background: #fff;
+    color: var(--text);
+    font-size: 13px;
+    font-weight: 750;
+    padding: 0 10px;
+    outline: none;
+    box-sizing: border-box;
+  }
+
+  .option-list {
+    max-height: 206px;
+    overflow-y: auto;
+    padding: 0 8px 10px;
+  }
+
+  .option-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 8px;
+    border-radius: 11px;
+    color: #263445;
+    font-size: 13px;
+    font-weight: 800;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .option-item:hover {
+    background: #f1f5f9;
+  }
+
+  .option-item input {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--brand);
+  }
+
+  .filter-note {
+    padding: 0 12px 10px;
+    color: #8b98a8;
+    font-size: 11px;
+    font-weight: 800;
+    line-height: 1.4;
+  }
+
+  .option-item.is-disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+
+  .career-grid {
+    margin-top: 14px;
+    display: grid;
+    grid-template-columns: 1fr 1fr auto;
+    align-items: end;
+    gap: 12px;
+  }
+
+  .career-toggle {
+    min-height: 46px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    padding: 0 14px;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    background: #fffaf0;
+    color: #7a4b00;
+    font-size: 13px;
+    font-weight: 950;
+    white-space: nowrap;
+  }
+
+  .career-toggle input {
+    width: 17px;
+    height: 17px;
+    accent-color: var(--gold);
+  }
+
+  .actions {
+    margin-top: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .btn {
+    min-height: 48px;
+    padding: 0 18px;
+    border-radius: 14px;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    color: var(--text);
+    font-size: 14px;
+    font-weight: 950;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .btn-primary {
+    min-width: 138px;
+    border: none;
+    color: #ffffff;
+    background: linear-gradient(90deg, var(--brand-dark), var(--brand));
+    box-shadow: none;
+  }
+
+  .helper {
+    margin-left: auto;
+    color: #8b98a8;
+    font-size: 12px;
+    font-weight: 800;
+  }
+
+  /* Rebuilt detail-search layout */
+  .detail-search-wrap { gap: 22px; }
+  .hero {
+    padding: 0 0 6px;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+  .hero::after { display: none; }
+  .eyebrow { margin-bottom: 8px; background: #eaf8f2; }
+  .hero h1 { font-size: 30px; }
+  .panel {
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+  .section-title {
+    margin-bottom: 10px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #dbe3ec;
+  }
+  .top-grid {
+    padding: 18px;
+    border-radius: 16px;
+    background: #fff;
+    box-shadow: 0 8px 24px rgba(15,23,42,.045);
+  }
+  .filter-section-head {
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    gap:12px;
+    margin:26px 0 10px;
+    padding-bottom:10px;
+    border-bottom:1px solid #dbe3ec;
+  }
+  .filter-section-head strong { color:#0f172a; font-size:17px; font-weight:950; }
+  .filter-section-head span { color:#64748b; font-size:12px; font-weight:750; }
+  .filter-grid { margin-top: 0; }
+  .multi-box {
+    border-radius: 14px;
+    background: #fff;
+    box-shadow: 0 6px 18px rgba(15,23,42,.035);
+  }
+  .career-grid {
+    margin-top:0;
+    padding:18px;
+    border-radius:16px;
+    background:#fff;
+    box-shadow:0 8px 24px rgba(15,23,42,.045);
+  }
+  .actions {
+    justify-content:flex-end;
+    padding-top:18px;
+    border-top:1px solid #dbe3ec;
+  }
+
+  @media (max-width: 1060px) {
+    .filter-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .career-grid {
+      grid-template-columns: 1fr 1fr;
+    }
+    .career-toggle {
+      grid-column: span 2;
+    }
+  }
+
+  @media (max-width: 720px) {
+    .hero {
+      padding: 22px;
+      border-radius: 22px;
+    }
+    .hero h1 {
+      font-size: 27px;
+    }
+    .top-grid,
+    .filter-grid,
+    .career-grid {
+      grid-template-columns: 1fr;
+    }
+    .top-grid > *,
+    .filter-grid > *,
+    .career-grid > * {
+      min-width: 0;
+      max-width: 100%;
+    }
+    .career-toggle {
+      grid-column: auto;
+      justify-content: flex-start;
+    }
+    .actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+    }
+    .actions > .btn {
+      width: 100%;
+      min-width: 0;
+      padding-left: 12px;
+      padding-right: 12px;
+      box-sizing: border-box;
+    }
+    .helper {
+      grid-column: span 2;
+      margin-left: 0;
+    }
+    .hero { padding:0 0 4px; border-radius:0; }
+    .top-grid,.career-grid { padding:14px; border-radius:14px; }
+    .filter-section-head { align-items:flex-start; flex-direction:column; gap:4px; }
+  }
+  /* Player-detail aligned search interface */
+  .detail-search-wrap {
+    max-width: 860px;
+    gap: 16px;
+  }
+  .hero {
+    padding: 8px 0 4px;
+    border-bottom: 0;
+  }
+  .hero-copy {
+    max-width: none;
+    text-align: left;
+  }
+  .hero h1 {
+    font-family: 'IBM Plex Sans KR', 'Apple SD Gothic Neo', sans-serif;
+    font-size: 26px;
+    font-weight: 700;
+    letter-spacing: -1px;
+  }
+  .panel {
+    padding: 14px;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    background: #ffffff;
+    box-shadow: none;
+  }
+  .top-grid,
+  .career-grid,
+  .multi-box {
+    box-shadow: none;
+  }
+  .section-title,
+  .filter-section-head strong {
+    font-size: 14px;
+    font-weight: 900;
+    letter-spacing: -0.3px;
+  }
+  .section-title {
+    margin: 0 0 10px;
+    padding: 0;
+    border-bottom: 0;
+  }
+  .filter-section-head {
+    margin: 20px 0 10px;
+    padding: 0;
+    border-bottom: 0;
+  }
+  .top-grid,
+  .career-grid {
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+  }
+  .top-grid {
+    gap: 10px;
+  }
+  .field {
+    gap: 5px;
+  }
+  .field label,
+  .filter-label {
+    color: #64748b;
+    font-size: 12px;
+    font-weight: 700;
+  }
+  .control,
+  .control-select {
+    min-height: 42px;
+    padding: 0 11px;
+    border-color: #cbd5e1;
+    border-radius: 10px;
+    background: #f8fafc;
+    color: #1f2937;
+    font-size: 14px;
+    font-weight: 800;
+    transition: border-color .15s ease;
+  }
+  .control:focus,
+  .control-select:focus {
+    border-color: #087f5b;
+    background: #f8fafc;
+    box-shadow: none;
+  }
+  .filter-grid {
+    gap: 8px;
+  }
+  .multi-box {
+    border-color: #d7e0e8;
+    border-radius: 12px;
+    background: #f8fafc;
+  }
+  .multi-head {
+    min-height: 44px;
+    padding: 0 10px;
+    border-bottom-color: #e5eaf0;
+  }
+  .multi-head-left {
+    gap: 6px;
+  }
+  .toggle-icon {
+    width: 16px;
+    height: 16px;
+    border-radius: 0;
+    background: transparent;
+    color: #087f5b;
+    font-size: 14px;
+  }
+  .count-pill {
+    min-width: 22px;
+    height: 22px;
+    padding: 0 6px;
+    border: 0;
+    border-radius: 999px;
+    background: #ecfdf5;
+    font-size: 11px;
+    font-weight: 800;
+  }
+  .filter-search {
+    width: calc(100% - 20px);
+    min-height: 32px;
+    margin: 9px 10px 7px;
+    border-color: #d7e0e8;
+    border-radius: 8px;
+    background: #ffffff;
+    font-weight: 600;
+  }
+  .option-list {
+    padding: 0 6px 7px;
+  }
+  .option-item {
+    gap: 7px;
+    padding: 7px 6px;
+    border-radius: 7px;
+    font-weight: 650;
+  }
+  .filter-note {
+    padding: 0 10px 8px;
+    font-weight: 600;
+  }
+  .career-grid {
+    gap: 10px;
+  }
+  .career-toggle {
+    min-height: 42px;
+    padding: 0 12px;
+    border-color: #f0d29a;
+    border-radius: 10px;
+    background: #fffaf0;
+    color: #7a4b00;
+    font-weight: 800;
+  }
+  .career-toggle input {
+    accent-color: #d97706;
+  }
+  .actions {
+    margin-top: 14px;
+    padding-top: 14px;
+  }
+  .btn {
+    min-height: 42px;
+    padding: 0 16px;
+    border-radius: 10px;
+    background: #ffffff;
+    font-size: 13px;
+    font-weight: 800;
+  }
+  .btn-primary {
+    min-width: 120px;
+    border: 1px solid #087f5b;
+    background: #087f5b;
+    box-shadow: none;
+  }
+  .btn-primary:hover {
+    border-color: #06694b;
+    background: #06694b;
+  }
+  .helper {
+    font-weight: 600;
+  }
+
+  @media (max-width: 720px) {
+    .detail-search-wrap { gap: 12px; }
+    .hero { padding: 4px 0; }
+    .hero h1 { font-size: 24px; }
+    .panel { padding: 12px; border-radius: 14px; }
+    .top-grid,
+    .career-grid { padding: 0; border-radius: 0; }
+    .filter-section-head { margin-top: 17px; }
+    .actions { gap: 8px; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="detail-search-wrap">
+  <section class="hero">
+    <div class="hero-copy">
+      <h1>FC모바일 선수 세부 검색</h1>
+    </div>
+  </section>
+
+  <section class="panel">
+    <form action="{{ url_for('filtered_players') }}" method="get">
+      <div class="section-title">
+        기본 조건
+        
+      </div>
+
+      <div class="top-grid">
+        <div class="field">
+          <label for="name">선수 이름</label>
+          <input class="control" id="name" name="name" type="text" placeholder="예: 호날두">
+        </div>
+
+        <div class="field">
+          <label for="min_ovr">최소 OVR</label>
+          <input class="control" id="min_ovr" name="min_ovr" type="number" min="0" max="200" value="{{ default_min_ovr }}" placeholder="예: 132">
+        </div>
+
+        <div class="field">
+          <label for="max_ovr">최대 OVR</label>
+          <input class="control" id="max_ovr" name="max_ovr" type="number" min="0" max="200" value="{{ default_max_ovr }}" placeholder="예: 160">
+        </div>
+
+        <div class="field">
+          <label for="min_height">키 범위 (cm)</label>
+          <div class="range-controls">
+            <input class="control" id="min_height" name="min_height" type="number"
+                   min="{{ min_player_height }}" max="{{ max_player_height }}"
+                   placeholder="{{ min_player_height }}" aria-label="최소 키">
+            <span class="range-separator">~</span>
+            <input class="control" id="max_height" name="max_height" type="number"
+                   min="{{ min_player_height }}" max="{{ max_player_height }}"
+                   placeholder="{{ max_player_height }}" aria-label="최대 키">
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="weak_foot_min">약발</label>
+          <select class="control-select" id="weak_foot_min" name="weak_foot_min">
+            <option value="">전체 약발</option>
+            <option value="3">3 이상</option>
+            <option value="4">4 이상</option>
+            <option value="5">5</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="filter-section-head">
+        <strong>상세 조건</strong>
+        
+      </div>
+
+      <div class="filter-grid">
+        <div class="multi-box is-collapsed" data-multi-box>
+          <div class="multi-head" role="button" tabindex="0" aria-expanded="false">
+            <div class="multi-head-left">
+              <span class="toggle-icon">⌄</span>
+              <div class="filter-label">클래스</div>
+            </div>
+            <span class="count-pill" data-count>0</span>
+          </div>
+          <div class="multi-body">
+            <input class="filter-search" type="search" placeholder="클래스 검색" data-filter-search>
+            <div class="filter-note">여러 개를 선택하면 선택한 클래스 중 하나에 해당하는 선수를 찾습니다.</div>
+            <div class="option-list">
+              {% for player_class in player_classes %}
+                <label class="option-item" data-option-text="{{ player_class|lower }}">
+                  <input type="checkbox" name="player_class" value="{{ player_class }}">
+                  <span>{{ player_class }}</span>
+                </label>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+
+        <div class="multi-box is-collapsed" data-multi-box data-exclusive-group="skill">
+          <div class="multi-head" role="button" tabindex="0" aria-expanded="false">
+            <div class="multi-head-left">
+              <span class="toggle-icon">⌄</span>
+              <div class="filter-label">스킬/스킬부스트</div>
+            </div>
+            <span class="count-pill" data-count>0</span>
+          </div>
+          <div class="multi-body">
+            <input class="filter-search" type="search" placeholder="스킬/스부 검색" data-filter-search>
+            <div class="filter-note">상승 스탯 필터와 함께 사용할 수 없습니다.</div>
+            <div class="option-list">
+              {% for item in skill_or_boost_names %}
+                <label class="option-item" data-option-text="{{ item|lower }}">
+                  <input type="checkbox" name="skill_or_boost" value="{{ item }}">
+                  <span>{{ item }}</span>
+                </label>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+
+        <div class="multi-box is-collapsed" data-multi-box data-exclusive-group="raised-stat">
+          <div class="multi-head" role="button" tabindex="0" aria-expanded="false">
+            <div class="multi-head-left">
+              <span class="toggle-icon">⌄</span>
+              <div class="filter-label">상승 스탯</div>
+            </div>
+            <span class="count-pill" data-count>0</span>
+          </div>
+          <div class="multi-body">
+            <input class="filter-search" type="search" placeholder="스탯 검색" data-filter-search>
+            <div class="filter-note">최대 5개, 스킬/스킬부스트 필터와 함께 사용할 수 없습니다.</div>
+            <div class="option-list">
+              {% for stat in raised_stat_options %}
+                <label class="option-item" data-option-text="{{ stat.label|lower }}">
+                  <input type="checkbox" name="raised_stat" value="{{ stat.code }}">
+                  <span>{{ stat.label }}</span>
+                </label>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+
+        <div class="multi-box is-collapsed" data-multi-box>
+          <div class="multi-head" role="button" tabindex="0" aria-expanded="false">
+            <div class="multi-head-left">
+              <span class="toggle-icon">⌄</span>
+              <div class="filter-label">포지션</div>
+            </div>
+            <span class="count-pill" data-count>0</span>
+          </div>
+          <div class="multi-body">
+            <input class="filter-search" type="search" placeholder="포지션 검색" data-filter-search>
+            <div class="filter-note">포지션 선택지는 본 포지션 기준입니다.</div>
+            <div class="option-list">
+              {% for pos in positions %}
+                <label class="option-item" data-option-text="{{ pos|lower }}">
+                  <input type="checkbox" name="position" value="{{ pos }}">
+                  <span>{{ pos }}</span>
+                </label>
+              {% endfor %}
+              <label class="option-item" data-option-text="부포지션 선택포지션" data-option-fixed="true">
+                <input type="checkbox" name="include_sub_position" value="1">
+                <span>부포지션 [선택포지션]</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div class="multi-box is-collapsed" data-multi-box>
+          <div class="multi-head" role="button" tabindex="0" aria-expanded="false">
+            <div class="multi-head-left">
+              <span class="toggle-icon">⌄</span>
+              <div class="filter-label">개인기</div>
+            </div>
+            <span class="count-pill" data-count>0</span>
+          </div>
+          <div class="multi-body">
+            <input class="filter-search" type="search" placeholder="동작 검색" data-filter-search>
+            <div class="option-list">
+              {% for level in skill_levels %}
+                <label class="option-item" data-option-text="{{ level + 1 }}성">
+                  <input type="checkbox" name="skill_level" value="{{ level }}">
+                  <span>{{ level + 1 }}성 개인기</span>
+                </label>
+              {% endfor %}
+              {% for move in skill_moves %}
+                <label class="option-item" data-option-text="{{ move|lower }}">
+                  <input type="checkbox" name="skill_move" value="{{ move }}">
+                  <span>{{ move }}</span>
+                </label>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+
+        <div class="multi-box is-collapsed" data-multi-box>
+          <div class="multi-head" role="button" tabindex="0" aria-expanded="false">
+            <div class="multi-head-left">
+              <span class="toggle-icon">⌄</span>
+              <div class="filter-label">활동량</div>
+            </div>
+            <span class="count-pill" data-count>0</span>
+          </div>
+          <div class="multi-body">
+            <input class="filter-search" type="search" placeholder="활동량 검색" data-filter-search>
+            <div class="option-list">
+              {% for work_rate in work_rate_options %}
+                <label class="option-item" data-option-text="{{ work_rate.label|replace('/', '')|lower }}">
+                  <input type="checkbox" name="work_rate" value="{{ work_rate.value }}">
+                  <span>{{ work_rate.label }}</span>
+                </label>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+
+        <div class="multi-box is-collapsed" data-multi-box>
+          <div class="multi-head" role="button" tabindex="0" aria-expanded="false">
+            <div class="multi-head-left">
+              <span class="toggle-icon">⌄</span>
+              <div class="filter-label">플레이스타일</div>
+            </div>
+            <span class="count-pill" data-count>0</span>
+          </div>
+          <div class="multi-body">
+            <input class="filter-search" type="search" placeholder="플레이스타일 검색" data-filter-search>
+            <div class="filter-note">여러 개를 선택하면 선택한 플레이스타일 중 하나를 가진 선수를 찾습니다.</div>
+            <div class="option-list">
+              {% for playstyle in playstyles %}
+                <label class="option-item" data-option-text="{{ playstyle|lower }}">
+                  <input type="checkbox" name="playstyle" value="{{ playstyle }}">
+                  <span>{{ playstyle }}</span>
+                </label>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+
+        <div class="multi-box is-collapsed" data-multi-box>
+          <div class="multi-head" role="button" tabindex="0" aria-expanded="false">
+            <div class="multi-head-left">
+              <span class="toggle-icon">⌄</span>
+              <div class="filter-label">특성</div>
+            </div>
+            <span class="count-pill" data-count>0</span>
+          </div>
+          <div class="multi-body">
+            <input class="filter-search" type="search" placeholder="특성 검색" data-filter-search>
+            <div class="option-list">
+              {% for trait in traits %}
+                <label class="option-item" data-option-text="{{ trait|lower }}">
+                  <input type="checkbox" name="trait" value="{{ trait }}">
+                  <span>{{ trait }}</span>
+                </label>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      {% include "_adsense_unit.html" %}
+
+      <div class="filter-section-head">
+        <strong>팀경력</strong>
+        
+      </div>
+
+      <div class="career-grid">
+        <div class="field">
+          <label for="league">리그</label>
+          <select class="control-select" id="league" name="league">
+            <option value="">전체 리그</option>
+            {% for league in current_league_teams.keys() %}
+              <option value="{{ league }}">{{ league }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="team">팀</label>
+          <select class="control-select" id="team" name="team" disabled>
+            <option value="">리그를 먼저 선택</option>
+          </select>
+        </div>
+
+        <label class="career-toggle" for="all_career">
+          <input id="all_career" type="checkbox" name="all_career" value="1">
+          전체경력 포함
+        </label>
+      </div>
+
+      <div class="actions">
+        <button type="submit" class="btn btn-primary">검색</button>
+        <a class="btn" href="{{ url_for('traits_selection') }}">초기화</a>
+        <div class="helper">팀 필터는 기본적으로 현재 소속팀 기준입니다.</div>
+      </div>
+    </form>
+  </section>
+</div>
+
+<script>
+  const currentLeagueTeams = {{ current_league_teams|tojson }};
+  const allLeagueTeams = {{ all_league_teams|tojson }};
+  const leagueSelect = document.getElementById("league");
+  const teamSelect = document.getElementById("team");
+  const allCareerCheckbox = document.getElementById("all_career");
+
+  function rebuildTeamOptions(preferredTeam = "") {
+    const leagueTeams = allCareerCheckbox.checked ? allLeagueTeams : currentLeagueTeams;
+    const league = leagueSelect.value;
+    const teams = leagueTeams[league] || [];
+    teamSelect.innerHTML = "";
+
+    if (!league) {
+      teamSelect.disabled = true;
+      teamSelect.append(new Option("리그를 먼저 선택", ""));
+      return;
+    }
+
+    teamSelect.disabled = false;
+    teamSelect.append(new Option("전체 팀", ""));
+    teams.forEach((team) => teamSelect.append(new Option(team, team)));
+    if (preferredTeam && teams.includes(preferredTeam)) {
+      teamSelect.value = preferredTeam;
+    }
+  }
+
+  leagueSelect.addEventListener("change", () => rebuildTeamOptions());
+  allCareerCheckbox.addEventListener("change", () => {
+    const selectedLeague = leagueSelect.value;
+    const selectedTeam = teamSelect.value;
+    const leagueTeams = allCareerCheckbox.checked ? allLeagueTeams : currentLeagueTeams;
+    const availableLeagues = Object.keys(leagueTeams);
+
+    leagueSelect.innerHTML = "";
+    leagueSelect.append(new Option("전체 리그", ""));
+    availableLeagues.forEach((league) => leagueSelect.append(new Option(league, league)));
+    if (availableLeagues.includes(selectedLeague)) {
+      leagueSelect.value = selectedLeague;
+    }
+    rebuildTeamOptions(selectedTeam);
+  });
+  rebuildTeamOptions();
+
+  function syncExclusiveFilters() {
+    const skillInputs = Array.from(document.querySelectorAll('input[name="skill_or_boost"]'));
+    const raisedStatInputs = Array.from(document.querySelectorAll('input[name="raised_stat"]'));
+    const hasSkill = skillInputs.some((input) => input.checked);
+    const hasRaisedStat = raisedStatInputs.some((input) => input.checked);
+
+    skillInputs.forEach((input) => {
+      input.disabled = hasRaisedStat && !input.checked;
+      input.closest(".option-item")?.classList.toggle("is-disabled", input.disabled);
+    });
+    raisedStatInputs.forEach((input) => {
+      input.disabled = hasSkill && !input.checked;
+      input.closest(".option-item")?.classList.toggle("is-disabled", input.disabled);
+    });
+  }
+
+  document.querySelectorAll("[data-multi-box]").forEach((box) => {
+    const head = box.querySelector(".multi-head");
+    const search = box.querySelector("[data-filter-search]");
+    const count = box.querySelector("[data-count]");
+    const options = Array.from(box.querySelectorAll(".option-item"));
+    const inputs = Array.from(box.querySelectorAll('input[type="checkbox"]'));
+
+    function setCollapsed(collapsed) {
+      box.classList.toggle("is-collapsed", collapsed);
+      head.setAttribute("aria-expanded", String(!collapsed));
+    }
+
+    function toggleCollapsed() {
+      setCollapsed(!box.classList.contains("is-collapsed"));
+    }
+
+    head.addEventListener("click", toggleCollapsed);
+    head.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        toggleCollapsed();
+      }
+    });
+
+    function updateCount() {
+      const selectedCount = inputs.filter((input) => input.checked).length;
+      count.textContent = selectedCount;
+      if (selectedCount > 0) {
+        setCollapsed(false);
+      }
+    }
+
+    search.addEventListener("input", () => {
+      const query = search.value.trim().toLowerCase().replace(/\s+/g, "");
+      options.forEach((option) => {
+        if (option.dataset.optionFixed === "true") {
+          option.style.display = "flex";
+          return;
+        }
+        const text = (option.dataset.optionText || "").replace(/\s+/g, "");
+        option.style.display = !query || text.includes(query) ? "flex" : "none";
+      });
+    });
+
+    inputs.forEach((input) => input.addEventListener("change", () => {
+      if (input.name === "raised_stat") {
+        const selectedRaisedStats = Array.from(document.querySelectorAll('input[name="raised_stat"]:checked'));
+        if (selectedRaisedStats.length > 5) {
+          input.checked = false;
+          alert("상승 스탯은 최대 5개까지 선택할 수 있습니다.");
+        }
+      }
+      updateCount();
+      syncExclusiveFilters();
+    }));
+    updateCount();
+  });
+  syncExclusiveFilters();
+</script>
+{% endblock %}

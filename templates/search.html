@@ -1,0 +1,1463 @@
+{% extends "base.html" %}
+
+{% block body_class %}home-page{% endblock %}
+
+{% block title %}피모북 - FC모바일{% endblock %}
+
+{% block extra_head %}
+<meta name="description" content="FC모바일 선수를 검색하고 스쿼드를 만들고 선수 세부검색을 해보세요! 쿠폰과 갱신시간 정보도 쉽게 찾을 수 있습니다.">
+<meta name="keywords" content="FC모바일, 쿠폰, 갱신시간, 스탯, 이적시장, 가격, 피모, 미페, 선수검색, 피모북, 데이터베이스, 세부검색, 능력치, 넥슨">
+<meta name="author" content="피모북">
+<meta name="robots" content="index, follow">
+
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="피모북 - FC모바일">
+<meta property="og:locale" content="ko_KR">
+<meta property="og:title" content="피모북 | FC모바일 선수 검색, 스쿼드 메이커, 선수 세부검색, 쿠폰, 갱신시간">
+<meta property="og:description" content="FC모바일 선수를 검색하고 스쿼드를 만들고 선수 세부검색을 해보세요! 쿠폰과 갱신시간 정보도 쉽게 찾을 수 있습니다.">
+<meta property="og:url" content="{{ url_for('index', _external=True) }}">
+<meta property="og:image" content="{{ url_for('static', filename='images/fimobook-og.png', _external=True) }}">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="피모북">
+
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="피모북">
+<meta name="twitter:description" content="FC모바일 선수를 빠르게 검색하고 비교하세요. 19,000명 이상의 선수 데이터와 세부검색 기능을 제공합니다.">
+<meta name="twitter:image" content="{{ url_for('static', filename='images/fimobook-og.png', _external=True) }}">
+
+<link rel="canonical" href="https://fcbook.info/">
+<meta name="theme-color" content="#132531">
+
+<style>
+  :root{
+    --card:#ffffff;
+    --surface:#f6f8fb;
+    --text:#1f2937;
+    --muted:#64748b;
+    --muted2:#94a3b8;
+    --line:#dbe3ec;
+    --line2:#e2e8f0;
+    --brand:#10b981;
+    --brand-dark:#059669;
+    --navy:#374151;
+    --navy-soft:#4b5563;
+    --shadow:0 14px 30px rgba(15,23,42,0.05);
+    --shadow2:0 12px 24px rgba(15,23,42,0.06);
+    --radius:20px;
+  }
+
+  .main-content{
+    max-width:860px;
+    background:var(--card);
+    box-shadow:var(--shadow);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:30px 40px;
+    overflow:visible;
+  }
+
+  /* ===== 전체 래핑 ===== */
+  .home-wrap{
+    width:100%;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:28px;
+    padding: 0;
+  }
+
+  /* ===== 상단 검색 ===== */
+  .search-section{
+    width:100%;
+    max-width: 800px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding:0;
+    background:transparent;
+    border-radius:0;
+    box-shadow:none;
+    border:none;
+    box-sizing:border-box;
+    min-width:0;
+  }
+
+  .search-title{
+    font-size:36px;
+    color:var(--text);
+    margin:0 0 8px;
+    font-weight:900;
+    letter-spacing:-0.9px;
+    text-align:center;
+    font-family:'FCOVR', 'IBM Plex Sans KR', sans-serif;
+  }
+  .search-desc{
+    font-size:14px;
+    color:var(--muted);
+    margin:0 0 18px;
+    text-align:center;
+    line-height:1.5;
+    font-weight:600;
+  }
+
+  .input-area{
+    width:100%;
+    max-width: 620px;
+    position:relative;
+    min-width:0;
+  }
+  .search-section form{
+    width:100%;
+    max-width:620px;
+  }
+
+  /* ✅ 검색바: 넓게 + 슬림 + 버튼 정렬 */
+  .input-area input[type="text"]{
+    width:100%;
+    font-size:18px;
+    border-radius:16px;
+    border:1.5px solid var(--line);
+    background:#ffffff;
+    height:56px;
+    padding:0 62px 0 18px;
+    line-height:56px;
+    box-sizing:border-box;
+    transition:.25s;
+    outline:none;
+    font-family:inherit;
+    font-weight:800;
+    color:var(--text);
+    box-shadow: inset 0 1px 3px rgba(0,0,0,.05);
+  }
+  .input-area input[type="text"]::placeholder{ color:#90a09a; font-weight:700; }
+  .input-area input[type="text"]:focus{
+    border-color:var(--brand);
+    background:#fff;
+    box-shadow: 0 0 0 3px rgba(16,185,129,.14);
+  }
+
+  .search-icon-btn{
+    position:absolute;
+    right:6px;
+    top:6px;
+    width:44px;
+    height:44px;
+    border-radius:14px;
+    border:none;
+    background: var(--brand);
+    color:#fff;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    box-shadow: 0 8px 18px rgba(16,185,129,.20);
+    transition: transform .18s ease, box-shadow .18s ease;
+  }
+  .search-icon-btn:hover{
+    transform: scale(1.03);
+    box-shadow: 0 12px 22px rgba(16,185,129,.24);
+  }
+  .search-icon-btn i{ font-size:20px; }
+
+  /* ===== 자동완성 ===== */
+  .autocomplete-box{
+    position:absolute;
+    left:0; right:0;
+    top: calc(100% + 8px);
+    background:#fff;
+    border:1px solid #ecf0f1;
+    border-radius: 14px;
+    box-shadow: 0 10px 24px rgba(0,0,0,.10);
+    max-height:240px;
+    overflow-y:auto;
+    z-index:99;
+    display:none;
+  }
+  .autocomplete-item{
+    padding:12px 16px;
+    font-size:15px;
+    color:#32424c;
+    border-bottom:1px solid #f1f5f9;
+    cursor:pointer;
+    transition:.12s;
+    font-weight:800;
+  }
+  .autocomplete-item:last-child{ border-bottom:none; }
+  .autocomplete-item:hover{ background:#f1f5f9; }
+  .autocomplete-item strong{ color:var(--brand-dark); }
+
+  /* ===== 최근 검색어: 중앙정렬 + PC 5개 / 모바일 3개 ===== */
+  .recent-row{
+    width:100%;
+    max-width: 800px;
+    margin:12px 0 0;
+    display:none;
+    justify-content:center;
+    flex-wrap:wrap;
+    gap:8px;
+    min-width:0;
+  }
+  .recent-pill{
+    padding:7px 12px;
+    border-radius:999px;
+    background:#f1f5f9;
+    color:#0f172a;
+    font-size:13px;
+    cursor:pointer;
+    border:1px solid var(--line);
+    font-weight:900;
+    transition:.12s;
+    user-select:none;
+    max-width:100%;
+  }
+  .recent-pill:hover{ transform: translateY(-1px); background:#e9eff6; }
+
+  /* ===== 최신 리뷰 · 선수 장단점 ===== */
+  .latest-review-section{
+    width:100%;
+    max-width:800px;
+    margin-top:20px;
+    min-width:0;
+  }
+  .latest-review-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    margin-bottom:10px;
+  }
+  .latest-review-title{
+    margin:0;
+    color:var(--text);
+    font-size:17px;
+    font-weight:950;
+    letter-spacing:-.3px;
+  }
+  .latest-review-more{
+    color:var(--brand-dark);
+    font-size:12px;
+    font-weight:900;
+    text-decoration:none;
+  }
+  .latest-review-more:hover{ text-decoration:underline; text-underline-offset:3px; }
+  .latest-review-list{
+    display:grid;
+    gap:9px;
+  }
+  .latest-review-item{
+    display:grid;
+    grid-template-columns:58px minmax(0, 1fr) auto;
+    gap:13px;
+    align-items:center;
+    min-width:0;
+    padding:11px 13px 11px 10px;
+    border:1px solid var(--line);
+    border-radius:13px;
+    background:#f8fafc;
+    color:inherit;
+    text-decoration:none;
+    transition:transform .16s ease, border-color .16s ease, background .16s ease;
+  }
+  .latest-review-item:hover{
+    transform:translateY(-1px);
+    border-color:#86efac;
+    background:#ffffff;
+    text-decoration:none;
+  }
+  .latest-review-art{
+    width:54px;
+    height:70px;
+    position:relative;
+    overflow:hidden;
+    border-radius:8px;
+    background-color:#e9eef5;
+    background-repeat:no-repeat;
+    background-position:center;
+    background-size:cover;
+  }
+  .latest-review-art img{
+    position:absolute;
+    left:50%;
+    bottom:0;
+    width:94%;
+    height:94%;
+    transform:translateX(-50%);
+    object-fit:contain;
+  }
+  .latest-review-main{ min-width:0; }
+  .latest-review-topline{
+    display:flex;
+    align-items:center;
+    gap:6px 9px;
+    min-width:0;
+    flex-wrap:wrap;
+  }
+  .latest-review-kind{
+    display:inline-flex;
+    align-items:center;
+    min-height:22px;
+    padding:0 7px;
+    border-radius:999px;
+    background:#dcfce7;
+    color:#047857;
+    font-size:10px;
+    font-weight:950;
+    white-space:nowrap;
+  }
+  .latest-review-kind.summary{
+    background:#e0f2fe;
+    color:#0369a1;
+  }
+  .latest-review-name{
+    color:var(--brand-dark);
+    font-size:11px;
+    font-weight:950;
+    white-space:nowrap;
+  }
+  .latest-review-post-title{
+    margin-top:4px;
+    overflow:hidden;
+    color:#172033;
+    font-size:14px;
+    font-weight:950;
+    line-height:1.4;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+  .latest-review-excerpt{
+    margin-top:4px;
+    overflow:hidden;
+    color:#64748b;
+    font-size:11px;
+    font-weight:650;
+    line-height:1.45;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+  .latest-review-side{
+    display:grid;
+    justify-items:end;
+    gap:5px;
+    color:#64748b;
+    font-size:10px;
+    font-weight:750;
+    white-space:nowrap;
+  }
+  .latest-review-score{
+    color:#d97706;
+    font-size:13px;
+    font-weight:950;
+  }
+  .latest-review-author{
+    max-width:92px;
+    overflow:hidden;
+    color:#475569;
+    font-weight:900;
+    text-overflow:ellipsis;
+  }
+  .latest-review-empty{
+    padding:20px;
+    border:1px dashed var(--line);
+    border-radius:12px;
+    background:#f8fafc;
+    color:#94a3b8;
+    font-size:12px;
+    font-weight:800;
+    text-align:center;
+  }
+
+  /* ===== 홈 프로모션 스와이프 배너 ===== */
+  .home-promo-shell{
+    position:relative;
+    width:100%;
+    max-width:800px;
+    margin-top:16px;
+  }
+  .home-promo-rail{
+    width:100%;
+    max-width:800px;
+    padding:0 0 4px;
+    display:flex;
+    gap:10px;
+    overflow-x:auto;
+    overscroll-behavior-x:contain;
+    scroll-snap-type:x mandatory;
+    scroll-behavior:smooth;
+    scrollbar-width:none;
+    -webkit-overflow-scrolling:touch;
+  }
+  .home-promo-rail::-webkit-scrollbar{ display:none; }
+  .home-promo-nav{
+    position:absolute;
+    top:50%;
+    z-index:4;
+    width:32px;
+    height:32px;
+    margin-top:-16px;
+    border:1px solid #34d399;
+    border-radius:50%;
+    background:#ffffff;
+    color:#047857;
+    box-shadow:none;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    font-size:15px;
+    transition:border-color .15s ease, opacity .15s ease;
+  }
+  .home-promo-nav:hover{ border-color:#059669; }
+  .home-promo-nav:disabled{ opacity:0; pointer-events:none; }
+  .home-promo-prev{ left:8px; }
+  .home-promo-next{ right:8px; }
+  .prime-home-banner{
+    position:relative;
+    isolation:isolate;
+    flex:0 0 100%;
+    width:auto;
+    max-width:none;
+    min-height:106px;
+    margin:0;
+    overflow:hidden;
+    display:grid;
+    grid-template-columns:minmax(0, 1fr) 135px;
+    align-items:center;
+    border:1px solid rgba(128,236,224,.34);
+    border-radius:17px;
+    background:
+      radial-gradient(circle at 83% 23%, rgba(225,111,230,.35), transparent 27%),
+      radial-gradient(circle at 68% 115%, rgba(61,210,200,.27), transparent 41%),
+      linear-gradient(118deg, #12182c 0%, #1a1940 56%, #302063 100%);
+    box-shadow:none;
+    color:#fff;
+    text-decoration:none;
+    box-sizing:border-box;
+    scroll-snap-align:start;
+    transition:transform .18s ease, border-color .18s ease;
+  }
+  .prime-home-banner::before{
+    position:absolute;
+    inset:0;
+    z-index:-1;
+    background:
+      linear-gradient(115deg, transparent 0 51%, rgba(255,255,255,.07) 51.2% 51.8%, transparent 52%),
+      repeating-linear-gradient(135deg, transparent 0 22px, rgba(255,255,255,.025) 22px 23px);
+    content:"";
+  }
+  .prime-home-banner:hover{
+    border-color:rgba(138,255,238,.62);
+    box-shadow:none;
+    transform:translateY(-1px);
+    text-decoration:none;
+  }
+  .prime-home-content{
+    min-width:0;
+    padding:14px 8px 14px 18px;
+  }
+  .prime-home-kicker{
+    display:flex;
+    align-items:center;
+    gap:7px;
+    color:#82eee3;
+    font-size:9px;
+    font-weight:950;
+    letter-spacing:.11em;
+  }
+  .prime-home-kicker::before{
+    width:6px;
+    height:6px;
+    border-radius:50%;
+    background:#69f4df;
+    box-shadow:none;
+    content:"";
+  }
+  .prime-home-title{
+    display:block;
+    margin-top:7px;
+    color:#fff;
+    font-size:18px;
+    font-weight:950;
+    letter-spacing:-.45px;
+    line-height:1.25;
+  }
+  .prime-home-desc{
+    display:block;
+    margin-top:5px;
+    color:#c7cbe3;
+    font-size:10px;
+    font-weight:700;
+    line-height:1.5;
+  }
+  .prime-home-cta{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    min-height:24px;
+    margin-top:7px;
+    padding:0 9px;
+    border:1px solid rgba(164,255,241,.25);
+    border-radius:999px;
+    background:rgba(113,242,224,.11);
+    color:#d9fff9;
+    font-size:9px;
+    font-weight:900;
+  }
+  .prime-home-visual{
+    position:relative;
+    align-self:stretch;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    min-width:0;
+  }
+  .prime-home-visual::before{
+    position:absolute;
+    width:92px;
+    height:92px;
+    border-radius:50%;
+    background:radial-gradient(circle, rgba(169,255,244,.25), rgba(191,91,226,.13) 52%, transparent 70%);
+    filter:blur(2px);
+    content:"";
+  }
+  .prime-home-logo{
+    position:relative;
+    width:92px;
+    height:auto;
+    margin-top:3px;
+    filter:none;
+    transform:rotate(3deg);
+    transition:transform .2s ease;
+  }
+  .prime-home-banner:hover .prime-home-logo{ transform:rotate(0) scale(1.035); }
+  .career-home-banner{
+    border-color:#86efac;
+    background:
+      radial-gradient(circle at 84% 22%, rgba(52,211,153,.16), transparent 31%),
+      linear-gradient(118deg, #f0fdf4 0%, #ecfdf5 55%, #ecfeff 100%);
+    color:#16352c;
+  }
+  .career-home-banner::before{
+    background:repeating-linear-gradient(135deg, transparent 0 24px, rgba(5,150,105,.035) 24px 25px);
+  }
+  .career-home-banner:hover{ border-color:#10b981; }
+  .career-home-banner .prime-home-kicker{ color:#047857; }
+  .career-home-banner .prime-home-kicker::before{ background:#10b981; }
+  .career-home-banner .prime-home-title{ margin-top:0; color:#16352c; }
+  .career-home-banner .prime-home-desc{ color:#4b635b; }
+  .career-home-banner .prime-home-cta{
+    border-color:#6ee7b7;
+    background:#ffffff;
+    color:#047857;
+  }
+  .career-home-visual::before{
+    width:90px;
+    height:90px;
+    border:1px solid #a7f3d0;
+    background:#ffffff;
+    filter:none;
+  }
+  .career-home-graphic{
+    position:relative;
+    width:105px;
+    max-width:88%;
+    height:auto;
+    display:block;
+  }
+
+  /* ===== 추천 툴 ===== */
+  .tools-wrap{
+    width:100%;
+    max-width: 800px;
+    margin-top:18px;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    min-width:0;
+  }
+  .tools-title{
+    font-size:16px;
+    font-weight:900;
+    color:var(--text);
+    letter-spacing:-0.2px;
+    visibility:hidden;
+  }
+
+  .quick-links{
+    display:grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap:10px;
+    width:100%;
+    min-width:0;
+  }
+  .quick-card{
+    position:relative;
+    padding:10px 8px;
+    border-radius:12px;
+    color:var(--text);
+    text-decoration:none;
+    overflow:hidden;
+    background:#ffffff;
+    box-shadow:none;
+    border:1px solid #34d399;
+    transition:border-color .18s ease, transform .18s ease;
+    min-height:88px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:7px;
+    min-width:0;
+    text-align:center;
+  }
+  .quick-card:hover{
+    transform:translateY(-1px);
+    border-color:#059669;
+    color:#065f46;
+    text-decoration:none;
+    box-shadow:none;
+  }
+  .tool-glyph{
+    width:36px;
+    height:36px;
+    border:1px solid #a7f3d0;
+    border-radius:10px;
+    background:#ffffff;
+    color:var(--brand-dark);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:20px;
+    box-shadow:none;
+  }
+  .tool-name{
+    font-size:15px;
+    font-weight:900;
+    letter-spacing:-0.2px;
+    line-height:1.1;
+  }
+  .tool-coupon,
+  .tool-traits,
+  .tool-times,
+  .tool-community,
+  .tool-squad{
+    background:#ffffff;
+    color:var(--text);
+    border-color:#34d399;
+    box-shadow:none;
+  }
+  .tool-coupon .tool-glyph,
+  .tool-traits .tool-glyph,
+  .tool-times .tool-glyph,
+  .tool-community .tool-glyph,
+  .tool-squad .tool-glyph{
+    border-color:#a7f3d0;
+    background:#ffffff;
+    color:var(--brand-dark);
+  }
+  @media (min-width: 641px){
+    .quick-links{
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+    }
+    .quick-card{
+      height:auto;
+      min-height:88px;
+      padding:10px 8px;
+      border-radius:12px;
+      flex-direction:column;
+      justify-content:center;
+      gap:7px;
+      text-align:center;
+    }
+    .tool-glyph{
+      width:36px;
+      height:36px;
+      border-radius:10px;
+      font-size:20px;
+    }
+    .tool-name{
+      font-size:14px;
+      white-space:normal;
+    }
+  }
+  @media (max-width: 640px){
+    .tools-title{ font-size:7px; line-height:1; }
+    .quick-links{
+      grid-template-columns: 1fr;
+      gap:8px;
+    }
+    .quick-card{
+      min-height:0;
+      height:44px;
+      padding:0 12px;
+      border-radius:10px;
+      box-shadow:none;
+      flex-direction:row;
+      justify-content:flex-start;
+      gap:9px;
+      text-align:left;
+    }
+    .tool-glyph{
+      width:28px;
+      height:28px;
+      border-radius:8px;
+      font-size:15px;
+      flex:0 0 auto;
+    }
+    .tool-name{
+      font-size:14px;
+      margin-top:0;
+      flex:1;
+      white-space:nowrap;
+    }
+    .latest-review-section{ margin-top:16px; }
+    .latest-review-title{ font-size:15px; }
+    .latest-review-item{
+      grid-template-columns:46px minmax(0, 1fr);
+      gap:10px;
+      padding:9px;
+      border-radius:11px;
+    }
+    .latest-review-art{ width:44px; height:58px; border-radius:7px; }
+    .latest-review-post-title{ font-size:13px; }
+    .latest-review-excerpt{ font-size:10px; }
+    .latest-review-side{
+      grid-column:2;
+      width:100%;
+      display:flex;
+      align-items:center;
+      justify-content:flex-end;
+      gap:7px;
+      margin-top:-3px;
+    }
+    .latest-review-score{ font-size:11px; }
+    .home-promo-shell{ margin-top:13px; }
+    .home-promo-rail{ gap:8px; }
+    .home-promo-nav{ display:none; }
+    .prime-home-banner{
+      flex-basis:calc(100% - 22px);
+      min-height:92px;
+      grid-template-columns:minmax(0, 1fr) 84px;
+      border-radius:13px;
+    }
+    .prime-home-content{ padding:11px 0 11px 12px; }
+    .prime-home-title{ margin-top:4px; font-size:15px; }
+    .prime-home-desc{ display:none; }
+    .prime-home-cta{ min-height:22px; margin-top:6px; padding:0 7px; font-size:8px; }
+    .prime-home-logo{ width:70px; }
+    .prime-home-visual::before{ width:72px; height:72px; }
+    .career-home-graphic{ width:70px; max-width:88%; }
+  }
+
+  .data-source{
+    margin-top:4px;
+    color:#94a3b8;
+    font-size:12px;
+    text-align:right;
+    width:100%;
+    max-width: 860px;
+    font-weight:700;
+    letter-spacing:0.18em;
+  }
+
+  .coupon-panel{
+    width:100%;
+    max-width: 800px;
+  }
+
+  .weekly-panel{
+    width:100%;
+    max-width:800px;
+    margin-bottom:16px;
+  }
+  .weekly-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    gap:12px;
+    margin-bottom:12px;
+  }
+  .weekly-title{
+    margin:0;
+    color:var(--text);
+    font-size:16px;
+    font-weight:900;
+    letter-spacing:-0.2px;
+  }
+  .weekly-sub{
+    color:var(--muted);
+    font-size:12px;
+    font-weight:800;
+  }
+  .weekly-grid{
+    display:grid;
+    grid-template-columns:repeat(3, minmax(0, 1fr));
+    gap:8px;
+  }
+  .weekly-card{
+    min-width:0;
+    display:grid;
+    grid-template-columns:80px minmax(0, 1fr);
+    align-items:center;
+    gap:8px;
+    padding:8px;
+    border:1px solid var(--line);
+    border-radius:14px;
+    background:#ffffff;
+    box-shadow:0 8px 18px rgba(15,23,42,0.04);
+    color:var(--text);
+    text-decoration:none;
+    transition:transform .15s ease, box-shadow .15s ease;
+  }
+  .weekly-card:hover{
+    transform:translateY(-2px);
+    box-shadow:0 12px 24px rgba(15,23,42,0.07);
+    text-decoration:none;
+  }
+  .weekly-player-art{
+    width:80px;
+    aspect-ratio:0.72;
+    position:relative;
+    border-radius:12px;
+    overflow:hidden;
+    background-repeat:no-repeat;
+    background-position:center;
+    background-size:cover;
+  }
+  .weekly-player-art img{
+    position:absolute;
+    left:50%;
+    bottom:1%;
+    transform:translateX(-50%);
+    width:94%;
+    height:94%;
+    object-fit:contain;
+  }
+  .weekly-player-info{
+    width:100%;
+    min-width:0;
+    text-align:left;
+  }
+  .weekly-player-name{
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+    color:var(--text);
+    font-size:13px;
+    font-weight:900;
+  }
+  .weekly-player-meta{
+    margin-top:2px;
+    color:var(--brand-dark);
+    font-size:11px;
+    font-weight:900;
+  }
+  .weekly-player-price{
+    margin-top:4px;
+    color:#0f172a;
+    font-size:12px;
+    font-weight:900;
+  }
+  .home-notice {
+    display:block;
+    margin-top:12px;
+    padding:12px 14px;
+    border:1px solid var(--line);
+    border-radius:14px;
+    background:#f8fafc;
+    color:var(--text);
+    text-decoration:none;
+  }
+  .home-notice:hover {
+    text-decoration:none;
+    border-color:#cbd5e1;
+    background:#ffffff;
+  }
+  .home-notice-head {
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    margin-bottom:5px;
+  }
+  .home-notice-label {
+    color:var(--brand-dark);
+    font-size:12px;
+    font-weight:900;
+  }
+  .home-notice-date {
+    color:var(--muted);
+    font-size:12px;
+    font-weight:800;
+  }
+  .home-notice-title {
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+    font-size:14px;
+    font-weight:900;
+  }
+  .home-notice-preview {
+    margin-top:3px;
+    color:var(--muted);
+    font-size:12px;
+    font-weight:700;
+    line-height:1.4;
+    display:-webkit-box;
+    -webkit-line-clamp:2;
+    -webkit-box-orient:vertical;
+    overflow:hidden;
+  }
+  .home-notice-empty {
+    margin-top:12px;
+    padding:10px 12px;
+    border:1px dashed var(--line);
+    border-radius:12px;
+    color:var(--muted);
+    font-size:12px;
+    font-weight:800;
+    background:#f8fafc;
+  }
+
+  .panel{
+    background: transparent;
+    border-radius: 0;
+    box-shadow: none;
+    border:0;
+    border-top:1px solid var(--line);
+    padding:22px 0 0;
+    box-sizing:border-box;
+    min-width:0;
+  }
+
+  /* ===== 최근 쿠폰 미리보기(심플 + 클릭 이동) ===== */
+  .coupon-header{
+    width:100%;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:12px;
+    margin-bottom:10px;
+    min-width:0;
+  }
+  .coupon-title{
+    font-size:16px;
+    font-weight:900;
+    color:var(--text);
+    letter-spacing:-0.2px;
+    margin:0;
+  }
+  .coupon-sub{
+    color:var(--muted);
+    font-size:12px;
+    line-height:1.4;
+    margin-top:2px;
+    font-weight:700;
+  }
+  .ghost-btn{
+    min-height:34px;
+    padding:0 11px;
+    border:1px solid #34d399;
+    background:#ffffff;
+    color:var(--brand-dark);
+    border-radius:9px;
+    font-weight:900;
+    text-decoration:none;
+    box-shadow:none;
+    white-space:nowrap;
+    font-size:12px;
+    display:inline-flex;
+    align-items:center;
+    gap:5px;
+  }
+  .ghost-btn:hover{
+    border-color:#059669;
+    background:#f8fffc;
+    color:#065f46;
+    text-decoration:none;
+  }
+
+  .coupon-list{
+    width:100%;
+    display:grid;
+    grid-template-columns:repeat(2, minmax(0, 1fr));
+    gap:10px;
+    min-width:0;
+  }
+  .coupon-card{
+    width:100%;
+    min-height:68px;
+    background:#ffffff;
+    border:1px solid #d1fae5;
+    border-left:3px solid #10b981;
+    border-radius:10px;
+    padding:10px 11px;
+    box-shadow:none;
+    box-sizing:border-box;
+    min-width:0;
+    display:grid;
+    grid-template-columns:32px minmax(0, 1fr) 18px;
+    align-items:center;
+    gap:9px;
+    color:var(--text);
+    text-decoration:none;
+  }
+  .coupon-card-icon{
+    width:30px;
+    height:30px;
+    border:1px solid #a7f3d0;
+    border-radius:8px;
+    color:var(--brand-dark);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:15px;
+  }
+  .coupon-card-main{
+    min-width:0;
+  }
+  .coupon-badge{
+    display:block;
+    color:var(--muted);
+    font-weight:900;
+    font-size:10px;
+    line-height:1.2;
+  }
+  .code-chip{
+    display:block;
+    margin-top:3px;
+    color:#0f172a;
+    font-family:inherit;
+    font-size:14px;
+    font-weight:900;
+    letter-spacing:0.35px;
+    line-height:1.25;
+    min-width:0;
+    overflow-wrap:anywhere;
+    word-break:break-word;
+  }
+  .coupon-card-arrow{
+    color:#10b981;
+    font-size:14px;
+    justify-self:end;
+  }
+
+  .coupon-link{
+    cursor:pointer;
+    transition:border-color .15s ease, background .15s ease;
+  }
+  .coupon-link:hover{
+    border-color:#10b981;
+    background:#f8fffc;
+    box-shadow:none;
+    text-decoration:none;
+  }
+
+  .empty{
+    text-align:center;
+    color:#94a3b8;
+    padding:18px 0;
+    width:100%;
+    border:1px dashed #d6dee8;
+    border-radius:12px;
+    background:#f8fafc;
+    font-weight:900;
+    font-size:13px;
+  }
+
+  /* ===== 반응형 ===== */
+  @media (min-width: 1024px){
+    .input-area{
+      max-width:100%;
+    }
+  }
+
+  @media (max-width: 520px){
+    .main-content{ padding:22px 14px; }
+    .home-wrap{ gap:22px; padding:0; }
+    .search-section{ padding:0; border-radius:0; }
+    .search-title{ font-size:26px; }
+    .search-desc{ font-size:14px; margin-bottom:14px; }
+
+    .input-area{ max-width: 100%; }
+    .search-section form{ max-width:100%; }
+    .input-area input[type="text"]{
+      height:52px;
+      line-height:52px;
+      font-size:16px;
+      padding:0 58px 0 14px;
+      border-radius:14px;
+    }
+    .search-icon-btn{
+      width:40px; height:40px; border-radius:12px;
+      top:6px; right:6px;
+    }
+    .search-icon-btn i{ font-size:18px; }
+
+    .quick-card{ height:50px; min-height:0; padding:0 18px; }
+
+    .panel{ padding:18px 0 0; border-radius:0; }
+
+    .coupon-header{ align-items:center; }
+    .ghost-btn{ width:auto; }
+    .weekly-panel{ margin-bottom:22px; }
+    .weekly-header{ margin-bottom:10px; }
+    .weekly-grid{ gap:8px; }
+    .weekly-card{ display:flex; flex-direction:column; padding:8px 6px; border-radius:12px; gap:6px; }
+    .weekly-player-art{ width:100%; max-width:92px; border-radius:10px; }
+    .weekly-player-info{ text-align:center; }
+    .weekly-player-name{ font-size:12px; }
+    .weekly-player-meta{ font-size:10px; }
+    .weekly-player-price{ font-size:11px; margin-top:4px; }
+    .home-notice { padding:10px 11px; border-radius:12px; }
+    .home-notice-title { font-size:13px; }
+    .home-notice-preview { font-size:11px; }
+
+    .recent-row{ gap:7px; margin-top:10px; }
+    .recent-pill{ font-size:12px; padding:7px 11px; }
+
+    .coupon-list{ grid-template-columns:1fr; gap:8px; }
+    .coupon-card{ min-height:62px; padding:9px 10px; }
+    .code-chip{ font-size:13px; }
+
+  }
+
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="home-wrap">
+  <div class="search-section" id="searchTop">
+    <form method="GET" action="/search">
+      <div class="input-area">
+        <input type="text" id="names" name="names" placeholder="벨링엄, 리오넬 메시" autocomplete="off" required>
+        <button class="search-icon-btn" type="submit" aria-label="검색">
+          <i class="bi bi-search"></i>
+        </button>
+        <div id="autocomplete-list" class="autocomplete-box"></div>
+      </div>
+    </form>
+
+    <div id="recent-row" class="recent-row"></div>
+
+    <section class="latest-review-section" aria-labelledby="latestReviewTitle">
+      <div class="latest-review-head">
+        <h2 class="latest-review-title" id="latestReviewTitle">최신 리뷰 · 선수 장단점</h2>
+        <a class="latest-review-more" href="{{ url_for('community', tab='review') }}">리뷰 전체보기</a>
+      </div>
+      <div class="latest-review-list">
+        {% for item in latest_review_activity %}
+          {% if item.kind == 'review' %}
+            {% set activity_url = url_for('player_review_detail', cid=item.player_cid, review_id=item.id) %}
+          {% else %}
+            {% set activity_url = url_for('player_detail', cid=item.player_cid, _anchor='review-summary') %}
+          {% endif %}
+          <a class="latest-review-item" href="{{ activity_url }}">
+            <div class="latest-review-art" {% if item.player_bimage %}style="background-image:url('{{ item.player_bimage }}');"{% endif %}>
+              {% if item.player_pimage %}<img src="{{ item.player_pimage }}" alt="{{ item.player_name }}" loading="lazy">{% endif %}
+            </div>
+            <div class="latest-review-main">
+              <div class="latest-review-topline">
+                <span class="latest-review-kind {% if item.kind == 'summary' %}summary{% endif %}">{{ item.kind_label }}</span>
+                <span class="latest-review-name">{% if item.player_position %}{{ item.player_position }} · {% endif %}OVR {{ item.player_ovr or '-' }} · {{ item.player_name }}</span>
+              </div>
+              <div class="latest-review-post-title">{{ item.title }}</div>
+              <div class="latest-review-excerpt">{{ item.excerpt or '새로운 선수 분석 콘텐츠를 확인해보세요.' }}</div>
+            </div>
+            <div class="latest-review-side">
+              {% if item.average_rating %}<span class="latest-review-score">★ {{ item.average_rating }}</span>{% endif %}
+              <span class="latest-review-author">{{ item.username or '피모북' }}</span>
+              <span>{{ item.created_date_display }}</span>
+            </div>
+          </a>
+        {% else %}
+          <div class="latest-review-empty">등록된 리뷰 또는 선수 장단점이 없습니다.</div>
+        {% endfor %}
+      </div>
+    </section>
+
+    <div class="home-promo-shell">
+      <div class="home-promo-rail" aria-label="추천 기능" tabindex="0">
+        <a class="prime-home-banner" href="{{ url_for('prime_exchange_page') }}" aria-label="프라임 교환 효율 순위 보기">
+          <span class="prime-home-content">
+            <span class="prime-home-kicker">PRIME EXCHANGE</span>
+            <strong class="prime-home-title">프라임 교환 효율</strong>
+            <span class="prime-home-cta">효율 순위 보기 <i class="bi bi-arrow-right" aria-hidden="true"></i></span>
+          </span>
+          <span class="prime-home-visual" aria-hidden="true">
+            <img class="prime-home-logo" src="{{ url_for('static', filename='images/prime-token-mark.svg') }}" alt="">
+          </span>
+        </a>
+
+        <a class="prime-home-banner career-home-banner" href="{{ url_for('traits_selection') }}" aria-label="전체경력을 포함해 선수 세부검색하기">
+          <span class="prime-home-content">
+            <strong class="prime-home-title">전체경력으로 선수검색</strong>
+            <span class="prime-home-desc">현재 팀뿐 아니라 이전 소속팀 경력까지 포함해서 찾아보세요.</span>
+            <span class="prime-home-cta">선수 세부검색 열기 <i class="bi bi-arrow-right" aria-hidden="true"></i></span>
+          </span>
+          <span class="prime-home-visual career-home-visual" aria-hidden="true">
+            <img class="career-home-graphic" src="{{ url_for('static', filename='images/detail-search-graphic.svg') }}" alt="">
+          </span>
+        </a>
+      </div>
+      <button class="home-promo-nav home-promo-prev" type="button" aria-label="이전 추천 배너"><i class="bi bi-chevron-left" aria-hidden="true"></i></button>
+      <button class="home-promo-nav home-promo-next" type="button" aria-label="다음 추천 배너"><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
+    </div>
+
+    <div class="tools-wrap">
+      <div class="tools-title">바로가기</div>
+      <div class="quick-links">
+        <a href="{{ url_for('squad_maker') }}" class="quick-card tool-squad">
+          <span class="tool-glyph" aria-hidden="true"><i class="bi bi-diagram-3"></i></span>
+          <span class="tool-name">스쿼드메이커</span>
+        </a>
+        <a href="{{ url_for('coupons_page') }}" class="quick-card tool-coupon">
+          <span class="tool-glyph" aria-hidden="true"><i class="bi bi-ticket-perforated"></i></span>
+          <span class="tool-name">쿠폰</span>
+        </a>
+        <a href="{{ url_for('traits_selection') }}" class="quick-card tool-traits">
+          <span class="tool-glyph" aria-hidden="true"><i class="bi bi-sliders2"></i></span>
+          <span class="tool-name">선수 세부검색</span>
+        </a>
+        <a href="{{ url_for('times') }}" class="quick-card tool-times">
+          <span class="tool-glyph" aria-hidden="true"><i class="bi bi-clock-history"></i></span>
+          <span class="tool-name">갱신시간</span>
+        </a>
+        <a href="{{ url_for('community') }}" class="quick-card tool-community">
+          <span class="tool-glyph" aria-hidden="true"><i class="bi bi-chat-square-text"></i></span>
+          <span class="tool-name">커뮤니티</span>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div class="coupon-panel">
+    <div class="weekly-panel">
+      <div class="weekly-header">
+        <h3 class="weekly-title">이주의 선수</h3>
+        <span class="weekly-sub">추천 3명</span>
+      </div>
+      <div class="weekly-grid">
+        {% for player in weekly_players %}
+          <a class="weekly-card" href="{{ url_for('player_detail', cid=player.cid) }}">
+            <div class="weekly-player-art" style="background-image:url('{{ player.bimage if player.bimage else url_for('static', filename='favicon.ico') }}');">
+              <img src="{{ player.pimage if player.pimage else url_for('static', filename='favicon.ico') }}" alt="{{ player.playerKor }}">
+            </div>
+            <div class="weekly-player-info">
+              <div class="weekly-player-name">{{ player.playerKor }}</div>
+              <div class="weekly-player-meta">{{ player.position or '-' }} · OVR {{ player.ovr or '-' }}</div>
+              <div class="weekly-player-price">{{ "{:,}".format(player.price|int) if player.price else '-' }} {{ price_unit }}</div>
+            </div>
+          </a>
+        {% endfor %}
+      </div>
+      {% if latest_notice %}
+        <a class="home-notice" href="{{ url_for('post_detail', post_id=latest_notice.id) }}">
+          <div class="home-notice-head">
+            <span class="home-notice-label">공지사항</span>
+            <span class="home-notice-date">{{ latest_notice.created_at.strftime('%m.%d') }}</span>
+          </div>
+          <div class="home-notice-title">{{ latest_notice.title }}</div>
+          <div class="home-notice-preview">{{ latest_notice.content }}</div>
+        </a>
+      {% else %}
+        <div class="home-notice-empty">등록된 공지사항이 없습니다.</div>
+      {% endif %}
+    </div>
+
+    <div class="panel">
+      <div class="coupon-header">
+        <div>
+          <h3 class="coupon-title">최근 쿠폰</h3>
+          <div class="coupon-sub">최신 2개</div>
+        </div>
+        <a class="ghost-btn" href="{{ url_for('coupons_page') }}">전체 쿠폰 <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
+      </div>
+
+      <div class="coupon-list" id="couponPreview">
+        <div class="empty">쿠폰 불러오는 중...</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="data-source">Data based on NEXON</div>
+</div>
+
+<script>
+  const promoRail = document.querySelector('.home-promo-rail');
+  const promoPrev = document.querySelector('.home-promo-prev');
+  const promoNext = document.querySelector('.home-promo-next');
+
+  function updatePromoButtons(){
+    if (!promoRail || !promoPrev || !promoNext) return;
+    const maxScroll = Math.max(0, promoRail.scrollWidth - promoRail.clientWidth);
+    promoPrev.disabled = promoRail.scrollLeft <= 4;
+    promoNext.disabled = promoRail.scrollLeft >= maxScroll - 4;
+  }
+
+  function movePromo(direction){
+    if (!promoRail) return;
+    const banner = promoRail.querySelector('.prime-home-banner');
+    const gap = parseFloat(getComputedStyle(promoRail).gap) || 0;
+    const distance = (banner?.getBoundingClientRect().width || promoRail.clientWidth) + gap;
+    promoRail.scrollBy({ left: direction * distance, behavior: 'smooth' });
+  }
+
+  promoPrev?.addEventListener('click', () => movePromo(-1));
+  promoNext?.addEventListener('click', () => movePromo(1));
+  promoRail?.addEventListener('scroll', updatePromoButtons, { passive:true });
+  window.addEventListener('resize', updatePromoButtons);
+  requestAnimationFrame(updatePromoButtons);
+
+  const input = document.getElementById("names");
+  const box = document.getElementById("autocomplete-list");
+  const recentRow = document.getElementById("recent-row");
+
+  /* ===== 디바이스별 최근검색 노출 개수 ===== */
+  function getRecentLimit(){
+    return window.matchMedia("(max-width: 520px)").matches ? 3 : 5;
+  }
+
+  /* ===== 최근 검색어 ===== */
+  function renderRecent() {
+    const savedAll = JSON.parse(localStorage.getItem("recent_keywords") || "[]");
+    const limit = getRecentLimit();
+    const saved = savedAll.slice(0, limit);
+
+    if (!saved.length) {
+      recentRow.style.display = "none";
+      recentRow.innerHTML = "";
+      return;
+    }
+
+    recentRow.style.display = "flex";
+    recentRow.innerHTML = "";
+    saved.forEach(v => {
+      const p = document.createElement("span");
+      p.className = "recent-pill";
+      p.innerText = v;
+      p.addEventListener("click", () => {
+        input.value = v;
+        input.focus();
+      });
+      recentRow.appendChild(p);
+    });
+  }
+
+  function saveRecent(v) {
+    let r = JSON.parse(localStorage.getItem("recent_keywords") || "[]");
+    r = r.filter(i => i !== v);
+    r.unshift(v);
+    if (r.length > 8) r.pop();
+    localStorage.setItem("recent_keywords", JSON.stringify(r));
+  }
+
+  document.querySelector("form").addEventListener("submit", () => {
+    const first = input.value.split(",")[0].trim();
+    if (first) {
+      saveRecent(first);
+      renderRecent();
+    }
+  });
+
+  window.addEventListener("resize", () => renderRecent());
+  renderRecent();
+
+  /* ===== 자동완성 ===== */
+  let raf = null;
+  input.addEventListener("input", () => {
+    cancelAnimationFrame(raf);
+    raf = requestAnimationFrame(() => {
+      const val = input.value.split(",").pop().trim();
+      if (!val) {
+        box.innerHTML = "";
+        box.style.display = "none";
+        return;
+      }
+      fetch(`/autocomplete?q=${encodeURIComponent(val)}`)
+        .then(r => r.json())
+        .then(arr => {
+          box.innerHTML = "";
+          if (!arr || !arr.length) {
+            box.style.display = "none";
+            return;
+          }
+          box.style.display = "block";
+          arr.forEach(p => {
+            const item = document.createElement("div");
+            item.classList.add("autocomplete-item");
+            const reg = new RegExp(val, "gi");
+            item.innerHTML = (p.playerKor || "").replace(reg, m => `<strong>${m}</strong>`);
+            item.addEventListener("click", () => {
+              const curr = input.value.split(",").map(t => t.trim());
+              curr.pop();
+              curr.push(p.playerKor);
+              input.value = curr.join(", ") + ", ";
+              box.innerHTML = "";
+              box.style.display = "none";
+              input.focus();
+            });
+            box.appendChild(item);
+          });
+        })
+        .catch(() => {
+          box.innerHTML = "";
+          box.style.display = "none";
+        });
+    });
+  });
+
+  document.addEventListener("click", e => {
+    if (e.target !== input && !box.contains(e.target)) {
+      box.innerHTML = "";
+      box.style.display = "none";
+    }
+  });
+
+  /* ===== 최근 쿠폰 2개 미리보기: 클릭하면 쿠폰 페이지 이동 ===== */
+  const couponPreview = document.getElementById("couponPreview");
+  const couponsUrl = "{{ url_for('coupons_page') }}";
+
+  function escapeHtml(str){
+    return String(str || "")
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+  function renderCoupons(list){
+    if (!Array.isArray(list) || list.length === 0) {
+      couponPreview.innerHTML = `<div class="empty">표시할 쿠폰이 없습니다.</div>`;
+      return;
+    }
+
+    const valid = list.filter(c => !c.boolExpires);
+    const picked = (valid.length ? valid : list).slice(0, 2);
+
+    couponPreview.innerHTML = picked.map(c => {
+      const category = (c.category && c.category !== "미분류") ? c.category : "쿠폰";
+      const code = escapeHtml(c.code);
+
+      return `
+        <a class="coupon-card coupon-link" href="${couponsUrl}">
+          <span class="coupon-card-icon" aria-hidden="true"><i class="bi bi-ticket-perforated"></i></span>
+          <span class="coupon-card-main">
+            <span class="coupon-badge">${escapeHtml(category)}</span>
+            <strong class="code-chip">${code}</strong>
+          </span>
+          <i class="bi bi-chevron-right coupon-card-arrow" aria-hidden="true"></i>
+        </a>
+      `;
+    }).join("");
+  }
+
+  fetch("/coupons/api?dedupe=true")
+    .then(r => r.json())
+    .then(list => renderCoupons(list))
+    .catch(() => {
+      couponPreview.innerHTML = `<div class="empty">쿠폰을 불러오지 못했습니다.</div>`;
+    });
+</script>
+{% endblock %}

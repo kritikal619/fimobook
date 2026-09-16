@@ -1,0 +1,72 @@
+{% if google_client_id %}
+<div class="social-login">
+    <div id="google-signin-button" class="google-signin-button"></div>
+    <div class="auth-divider"><span>또는 이메일로 계속</span></div>
+</div>
+<form id="google-login-form" method="POST" action="{{ url_for('google_login') }}" hidden>
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <input type="hidden" name="credential" id="google-credential">
+    <input type="hidden" name="google-recaptcha-response" data-recaptcha-token>
+    {% if google_next_url %}
+      <input type="hidden" name="next" value="{{ google_next_url }}">
+    {% endif %}
+</form>
+<script>
+  (function initializeGoogleButton(attempt) {
+    if (!window.google || !window.google.accounts || !window.google.accounts.id) {
+      if (attempt < 40) {
+        window.setTimeout(function () {
+          initializeGoogleButton(attempt + 1);
+        }, 100);
+      }
+      return;
+    }
+    window.google.accounts.id.initialize({
+      client_id: {{ google_client_id|tojson }},
+      callback: function (response) {
+        if (!window.fimobookRequireRecaptcha()) return;
+        document.getElementById("google-credential").value = response.credential;
+        document.getElementById("google-login-form").submit();
+      }
+    });
+    var buttonTarget = document.getElementById("google-signin-button");
+    window.google.accounts.id.renderButton(
+      buttonTarget,
+      {
+        type: "standard",
+        theme: "outline",
+        size: "large",
+        shape: "rectangular",
+        width: Math.max(200, Math.min(390, buttonTarget.clientWidth || 390)),
+        text: {{ (google_button_text or "signin_with")|tojson }},
+        locale: "ko"
+      }
+    );
+  })(0);
+</script>
+<style>
+  .social-login {
+    margin: 4px 0 22px;
+  }
+  .google-signin-button {
+    display: flex;
+    justify-content: center;
+    min-height: 44px;
+  }
+  .auth-divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 20px;
+    color: #94a3b8;
+    font-size: 13px;
+  }
+  .auth-divider::before,
+  .auth-divider::after {
+    content: "";
+    height: 1px;
+    background: #e2e8f0;
+    flex: 1;
+  }
+</style>
+{% endif %}

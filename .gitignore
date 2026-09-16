@@ -1,0 +1,27 @@
+.DS_Store
+__pycache__/
+*.py[cod]
+
+# Local environments and secrets
+.env
+.env.*
+!.env.example
+venv/
+.venv/
+instance/
+*.pem
+*firebase-adminsdk*.json
+*serviceaccount*.json
+
+# Runtime data
+*.db
+*.sqlite
+*.sqlite3
+*.log
+nohup.out
+visitor_count.txt
+static/uploads/
+
+# Generated large player assets (kept on the server)
+static/card/
+static/faceon/

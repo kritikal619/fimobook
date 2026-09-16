@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block body_class %}auth-page{% endblock %}
+{% block title %}인증 메일 재전송 | 피모북{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <h1 class="page-title">인증 메일 재전송</h1>
+    <p class="auth-description">
+        회원가입에 사용한 이메일 주소를 입력해주세요.
+    </p>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }}">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <form method="POST" action="{{ url_for('resend_verification') }}" class="auth-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <div class="form-group">
+            <label for="email">이메일 주소</label>
+            <input type="email" class="form-control" id="email" name="email" required>
+        </div>
+        <button type="submit" class="btn-primary btn-block">인증 메일 보내기</button>
+    </form>
+    <div class="auth-switch">
+        <a href="{{ url_for('login') }}">로그인으로 돌아가기</a>
+    </div>
+</div>
+
+<style>
+    .auth-container {
+        width: 100%;
+        max-width: 440px;
+        margin: auto;
+        background: #ffffff;
+        border: 1px solid #dbe3ec;
+        border-radius: 18px;
+        box-shadow: 0 14px 30px rgba(15,23,42,0.05);
+        padding: 28px 24px;
+        box-sizing: border-box;
+    }
+    .auth-description {
+        margin: -4px 0 22px;
+        color: #64748b;
+        font-size: 14px;
+        line-height: 1.6;
+        text-align: center;
+    }
+    .auth-form .form-group { margin-bottom: 20px; }
+    .auth-form label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: #495057;
+    }
+    .btn-block { width: 100%; margin-top: 10px; }
+    .auth-switch {
+        text-align: center;
+        margin-top: 20px;
+        font-size: 14px;
+    }
+    .alert {
+        padding: 15px;
+        margin-bottom: 20px;
+        border: 1px solid transparent;
+        border-radius: 12px;
+    }
+    .alert-success { color: #155724; background-color: #d4edda; border-color: #c3e6cb; }
+    .alert-danger { color: #721c24; background-color: #f8d7da; border-color: #f5c6cb; }
+    .alert-info { color: #0c5460; background-color: #d1ecf1; border-color: #bee5eb; }
+    .alert-warning { color: #856404; background-color: #fff3cd; border-color: #ffeeba; }
+</style>
+{% endblock %}

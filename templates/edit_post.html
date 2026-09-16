@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+{% block title %}글 수정 | 피모북{% endblock %}
+
+{% block extra_head %}
+<style>
+  .editor-shell{
+    width:100%;
+    max-width:760px;
+    background:#ffffff;
+    border:1px solid #dbe3ec;
+    border-radius:20px;
+    box-shadow:0 14px 30px rgba(15,23,42,0.05);
+    padding:24px;
+    box-sizing:border-box;
+  }
+  .editor-title{
+    margin:0 0 8px;
+    font-size:28px;
+    font-weight:900;
+    color:#1f2937;
+    letter-spacing:-0.6px;
+  }
+  .editor-desc{
+    margin:0 0 20px;
+    color:#64748b;
+    font-size:14px;
+    line-height:1.5;
+  }
+  .editor-form .form-group{ margin-bottom:18px; }
+  .editor-form .form-label{
+    display:block;
+    margin-bottom:8px;
+    font-weight:800;
+    color:#374151;
+  }
+  .editor-help{ display:block; margin-top:8px; color:#94a3b8; font-size:12px; }
+  .editor-option-box{ border:1px solid #dbe3ec; border-radius:14px; background:#f8fafc; padding:15px; }
+  .editor-check{ display:flex; align-items:center; gap:9px; color:#334155; font-size:14px; font-weight:850; cursor:pointer; }
+  .editor-check input{ width:17px; height:17px; accent-color:#059669; }
+  .admin-editor-options{ display:grid; gap:10px; }
+  .poll-editor{ display:none; margin-top:14px; }
+  .poll-editor.is-open{ display:block; }
+  .poll-option-list{ display:grid; gap:8px; margin-top:10px; }
+  .poll-option-row{ display:flex; gap:7px; }
+  .poll-option-row .form-control{ flex:1; }
+  .poll-remove,.poll-add{ min-height:38px; border:1px solid #cbd5e1; border-radius:9px; background:#fff; color:#475569; font:inherit; font-size:12px; font-weight:900; cursor:pointer; }
+  .poll-remove{ width:40px; flex:0 0 40px; }
+  .poll-add{ margin-top:9px; padding:0 12px; }
+  .current-image{ display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-top:10px; }
+  .current-image img{ width:92px; height:70px; object-fit:cover; border:1px solid #dbe3ec; border-radius:9px; }
+  .editor-actions{
+    display:flex;
+    justify-content:flex-end;
+    margin-top:8px;
+  }
+  @media (max-width: 640px){
+    .editor-shell{ padding:18px 14px; border-radius:16px; }
+    .editor-title{ font-size:24px; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="editor-shell">
+<h1 class="editor-title">글 수정</h1>
+<p class="editor-desc">게시글 내용을 정리하고 필요한 부분만 수정해서 다시 저장하세요.</p>
+<form method="POST" enctype="multipart/form-data" class="editor-form">
+    {{ form.hidden_tag() }}
+    <input type="hidden" name="board_type" value="{{ active_board }}">
+    <div class="form-group">
+        <label class="form-label" for="board_type_display">게시판</label>
+        <select id="board_type_display" class="form-control" onchange="this.form.board_type.value=this.value">
+            {% for key, board in boards.items() %}
+                {% if key != "review" and (key != "notice" or is_admin_user) %}
+                    <option value="{{ key }}" {% if key == active_board %}selected{% endif %}>{{ board.label }}</option>
+                {% endif %}
+            {% endfor %}
+        </select>
+    </div>
+    {% if is_admin_user %}
+      <div class="form-group editor-option-box admin-editor-options">
+        <strong class="form-label">공지 설정</strong>
+        <label class="editor-check">
+          <input type="checkbox" name="make_notice" value="1" {% if active_board == 'notice' %}checked{% endif %}>
+          이 글을 공지사항으로 등록
+        </label>
+        <label class="editor-check">
+          <input type="checkbox" name="is_pinned" value="1" {% if post.is_pinned %}checked{% endif %}>
+          공지사항 목록 상단에 고정
+        </label>
+      </div>
+    {% endif %}
+    <div class="form-group">
+        {{ form.title.label(class_="form-label") }}
+        {{ form.title(class_="form-control") }}
+    </div>
+    <div class="form-group">
+        {{ form.content.label(class_="form-label") }}
+        {{ form.content(class_="form-control", rows="10") }}
+    </div>
+    <div class="form-group editor-option-box" data-poll-box>
+      <label class="editor-check">
+        <input type="checkbox" name="poll_enabled" value="1" data-poll-toggle {% if poll_enabled %}checked{% endif %} {% if poll_has_votes %}onclick="return false"{% endif %}>
+        투표 추가
+      </label>
+      <div class="poll-editor{% if poll_enabled %} is-open{% endif %}" data-poll-editor>
+        <label class="form-label" for="poll_question">투표 질문</label>
+        <input id="poll_question" name="poll_question" class="form-control" maxlength="200" value="{{ poll_question|default('') }}" placeholder="투표 질문" {% if poll_has_votes %}readonly{% endif %}>
+        <div class="poll-option-list" data-poll-options>
+          {% set option_values = poll_options if poll_options else ['', ''] %}
+          {% for option in option_values %}
+            <div class="poll-option-row">
+              <input name="poll_options" class="form-control" maxlength="80" value="{{ option }}" placeholder="항목 {{ loop.index }}" {% if poll_has_votes %}readonly{% endif %}>
+              {% if not poll_has_votes %}<button type="button" class="poll-remove" data-remove-poll-option aria-label="투표 항목 삭제">×</button>{% endif %}
+            </div>
+          {% endfor %}
+        </div>
+        {% if not poll_has_votes %}<button type="button" class="poll-add" data-add-poll-option>+ 항목 추가</button>{% endif %}
+        <small class="editor-help">{% if poll_has_votes %}참여자가 있어 투표 질문과 항목은 수정할 수 없습니다.{% else %}항목은 2개 이상, 최대 6개까지 등록할 수 있습니다.{% endif %}</small>
+      </div>
+    </div>
+    <div class="form-group">
+      {{ form.image.label(class_="form-label") }}
+      {{ form.image(class_="form-control") }}
+      <small class="editor-help">새 이미지를 선택하면 기존 이미지를 교체합니다. JPG, PNG, GIF, WEBP 가능</small>
+      {% if post.image_filename %}
+        <div class="current-image">
+          <img src="{{ url_for('static', filename='uploads/' ~ post.image_filename) }}" alt="현재 첨부 이미지">
+          <label class="editor-check"><input type="checkbox" name="remove_image" value="1"> 현재 이미지 삭제</label>
+        </div>
+      {% endif %}
+    </div>
+    <div class="editor-actions">
+      <button type="submit" class="btn-primary">수정 완료</button>
+    </div>
+</form>
+</section>
+<script>
+  (() => {
+    const box = document.querySelector("[data-poll-box]");
+    if (!box) return;
+    const toggle = box.querySelector("[data-poll-toggle]");
+    const editor = box.querySelector("[data-poll-editor]");
+    const list = box.querySelector("[data-poll-options]");
+    const sync = () => editor?.classList.toggle("is-open", Boolean(toggle?.checked));
+    toggle?.addEventListener("change", sync);
+    box.querySelector("[data-add-poll-option]")?.addEventListener("click", () => {
+      if (!list || list.children.length >= 6) return;
+      const row = document.createElement("div");
+      row.className = "poll-option-row";
+      row.innerHTML = `<input name="poll_options" class="form-control" maxlength="80" placeholder="항목 ${list.children.length + 1}"><button type="button" class="poll-remove" data-remove-poll-option aria-label="투표 항목 삭제">×</button>`;
+      list.appendChild(row);
+      row.querySelector("input")?.focus();
+    });
+    list?.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-remove-poll-option]");
+      if (!button || list.children.length <= 2) return;
+      button.closest(".poll-option-row")?.remove();
+    });
+    sync();
+  })();
+</script>
+{% endblock %}

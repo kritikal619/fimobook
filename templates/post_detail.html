@@ -1,0 +1,683 @@
+{% extends "base.html" %}
+{% block body_class %}post-detail-page{% endblock %}
+{% block title %}{{ post.title }} | 피모북{% endblock %}
+
+{% block extra_head %}
+<style>
+  body.post-detail-page .main-content {
+    align-items: stretch;
+    max-width: 1120px;
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+  .post-shell {
+    width: 100%;
+    box-sizing: border-box;
+    border: 1px solid #dfe7e3;
+    border-radius: 16px;
+    background: #fff;
+    padding: 20px;
+  }
+  .post-breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 16px;
+    color: #718096;
+    font-size: 13px;
+    font-weight: 800;
+  }
+  .post-breadcrumb a {
+    color: #526173;
+    text-decoration: none;
+  }
+  .post-breadcrumb a:hover { color: var(--brand-dark); }
+  .post-header {
+    padding-bottom: 18px;
+    border-bottom: 1px solid #e8eeeb;
+  }
+  .post-board-badge {
+    display: inline-flex;
+    align-items: center;
+    min-height: 25px;
+    padding: 0 9px;
+    border-radius: 999px;
+    background: #ecfdf5;
+    color: #047857;
+    font-size: 11px;
+    font-weight: 950;
+  }
+  .post-title {
+    margin: 10px 0 12px;
+    color: #17221f;
+    font-size: clamp(23px, 3vw, 31px);
+    font-weight: 900;
+    line-height: 1.3;
+    letter-spacing: -.7px;
+    overflow-wrap: anywhere;
+  }
+  .post-meta {
+    display: flex;
+    align-items: center;
+    gap: 7px 14px;
+    flex-wrap: wrap;
+    color: #718096;
+    font-size: 13px;
+    font-weight: 700;
+  }
+  .post-meta-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .author-link {
+    color: #3f4f49;
+    text-decoration: none;
+    font-weight: 900;
+  }
+  .author-link:hover { color: var(--brand-dark); }
+  .post-owner-actions {
+    display: flex;
+    gap: 7px;
+    margin-top: 14px;
+    flex-wrap: wrap;
+  }
+  .post-action-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    min-height: 34px;
+    box-sizing: border-box;
+    padding: 0 11px;
+    border: 1px solid #dfe7e3;
+    border-radius: 9px;
+    background: #fff;
+    color: #526173;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 900;
+    text-decoration: none;
+    cursor: pointer;
+  }
+  .post-action-button.danger {
+    border-color: #fecaca;
+    color: #b91c1c;
+    background: #fffafa;
+  }
+  .post-image {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    margin: 20px auto 0;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+  }
+  .post-content {
+    min-height: 110px;
+    margin: 0;
+    padding: 22px 0;
+    color: #26332f;
+    font-size: 16px;
+    line-height: 1.78;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+  .post-poll {
+    margin: 2px 0 22px;
+    padding: 18px;
+    border: 1px solid #dbe7e1;
+    border-radius: 14px;
+    background: #f8fbf9;
+  }
+  .post-poll-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 14px;
+    color: #17221f;
+    font-size: 18px;
+    font-weight: 950;
+    line-height: 1.45;
+  }
+  .post-poll-title i { color: #059669; }
+  .post-poll-options { display: grid; gap: 9px; }
+  .post-poll-option {
+    position: relative;
+    display: block;
+    overflow: hidden;
+    min-height: 46px;
+    border: 1px solid #d8e2dd;
+    border-radius: 10px;
+    background: #fff;
+    cursor: pointer;
+  }
+  .post-poll-option.is-selected { border-color: #34d399; }
+  .post-poll-progress {
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: var(--poll-percent, 0%);
+    background: #d1fae5;
+  }
+  .post-poll-option-content {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    min-height: 46px;
+    padding: 0 12px;
+    box-sizing: border-box;
+    color: #33413c;
+    font-size: 14px;
+    font-weight: 850;
+  }
+  .post-poll-option input { accent-color: #059669; }
+  .post-poll-result { margin-left: auto; color: #526173; font-size: 12px; white-space: nowrap; }
+  .post-poll-footer { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:12px; }
+  .post-poll-count { color:#718096; font-size:12px; font-weight:750; }
+  .post-poll-submit {
+    min-height: 36px;
+    padding: 0 14px;
+    border: 1px solid #047857;
+    border-radius: 9px;
+    background: #047857;
+    color: #fff;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 950;
+    cursor: pointer;
+  }
+  .post-poll-login { color:#526173; font-size:12px; font-weight:750; }
+  .post-poll-login a { color:#047857; font-weight:950; }
+  .post-reaction-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 42px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #e8eeeb;
+  }
+  .like-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    min-width: 108px;
+    min-height: 40px;
+    padding: 0 14px;
+    border: 1px solid #cfdad5;
+    border-radius: 999px;
+    background: #fff;
+    color: #526173;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 950;
+    text-decoration: none;
+    cursor: pointer;
+    transition: border-color .15s ease, background .15s ease, color .15s ease;
+  }
+  .like-button:hover,
+  .like-button.is-liked {
+    border-color: #86efac;
+    background: #ecfdf5;
+    color: #047857;
+    text-decoration: none;
+  }
+  .like-button[disabled] { opacity: .58; cursor: wait; }
+  .like-status {
+    color: #718096;
+    font-size: 12px;
+    font-weight: 750;
+  }
+  .comments-section { padding-top: 20px; }
+  .comments-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+  .comments-title {
+    margin: 0;
+    color: #17221f;
+    font-size: 20px;
+    font-weight: 950;
+  }
+  .comments-count {
+    color: var(--brand-dark);
+    font-size: 13px;
+    font-weight: 950;
+  }
+  .comment-list {
+    display: grid;
+    gap: 10px;
+  }
+  .comment-card {
+    border: 1px solid #e3ebe7;
+    border-radius: 12px;
+    background: #fff;
+    padding: 13px 14px;
+    scroll-margin-top: 90px;
+  }
+  .comment-meta {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    flex-wrap: wrap;
+    color: #7a8983;
+    font-size: 12px;
+    font-weight: 700;
+  }
+  .comment-copy {
+    margin: 8px 0 0;
+    color: #2d3b36;
+    font-size: 14px;
+    line-height: 1.65;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+  .comment-actions {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    margin-top: 8px;
+    flex-wrap: wrap;
+  }
+  .comment-action {
+    display: inline-flex;
+    align-items: center;
+    min-height: 29px;
+    padding: 0 9px;
+    border: 0;
+    border-radius: 8px;
+    background: #f1f5f3;
+    color: #526173;
+    font: inherit;
+    font-size: 11px;
+    font-weight: 900;
+    cursor: pointer;
+  }
+  .comment-action.danger {
+    color: #b91c1c;
+    background: #fff1f2;
+  }
+  .reply-list {
+    display: grid;
+    gap: 8px;
+    margin: 11px 0 0 24px;
+    padding-left: 12px;
+    border-left: 2px solid #d1fae5;
+  }
+  .reply-card {
+    padding: 10px 11px;
+    border-radius: 10px;
+    background: #f8fbf9;
+    scroll-margin-top: 90px;
+  }
+  .reply-form,
+  .new-comment-form {
+    display: grid;
+    gap: 8px;
+    margin-top: 11px;
+  }
+  .reply-form[hidden] { display: none; }
+  .reply-target {
+    color: #047857;
+    font-size: 12px;
+    font-weight: 900;
+  }
+  .comment-textarea {
+    width: 100%;
+    min-height: 86px;
+    box-sizing: border-box;
+    resize: vertical;
+    border: 1px solid #d8e2dd;
+    border-radius: 10px;
+    padding: 11px 12px;
+    outline: none;
+    color: #26332f;
+    background: #fff;
+    font: inherit;
+    font-size: 14px;
+    line-height: 1.55;
+  }
+  .comment-textarea:focus {
+    border-color: #34d399;
+    box-shadow: 0 0 0 3px rgba(52, 211, 153, .11);
+  }
+  .comment-submit-row {
+    display: flex;
+    justify-content: flex-end;
+    gap: 7px;
+  }
+  .comment-submit,
+  .comment-cancel {
+    min-height: 34px;
+    padding: 0 12px;
+    border-radius: 9px;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 950;
+    cursor: pointer;
+  }
+  .comment-submit {
+    border: 1px solid var(--brand-dark);
+    background: var(--brand-dark);
+    color: #fff;
+  }
+  .comment-cancel {
+    border: 1px solid #d8e2dd;
+    background: #fff;
+    color: #64748b;
+  }
+  .comment-empty,
+  .comment-login {
+    margin: 10px 0 0;
+    padding: 18px 12px;
+    border-radius: 10px;
+    background: #f8faf9;
+    color: #718096;
+    text-align: center;
+    font-size: 13px;
+    font-weight: 750;
+  }
+  .comment-login a { color: #047857; font-weight: 950; }
+
+  @media (max-width: 640px) {
+    body.post-detail-page .main-content {
+      padding-left: 8px;
+      padding-right: 8px;
+    }
+    .post-shell {
+      padding: 13px 11px;
+      border-radius: 12px;
+    }
+    .post-breadcrumb { margin-bottom: 12px; }
+    .post-header { padding-bottom: 14px; }
+    .post-title {
+      margin-top: 8px;
+      font-size: 22px;
+      line-height: 1.35;
+    }
+    .post-meta { gap: 6px 11px; font-size: 12px; }
+    .post-content {
+      min-height: 90px;
+      padding: 18px 1px;
+      font-size: 15px;
+      line-height: 1.72;
+    }
+    .post-poll { padding: 14px 11px; margin-bottom: 17px; }
+    .post-poll-title { font-size: 16px; }
+    .post-reaction-row { padding-bottom: 16px; }
+    .comments-section { padding-top: 16px; }
+    .comment-card { padding: 12px 11px; }
+    .reply-list {
+      margin-left: 8px;
+      padding-left: 9px;
+    }
+    .reply-card { padding: 9px; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<article class="post-shell">
+  <nav class="post-breadcrumb" aria-label="현재 위치">
+    <a href="{{ url_for('community', tab=post.board_type) }}"><i class="bi bi-chevron-left" aria-hidden="true"></i> {{ board.label }}</a>
+  </nav>
+
+  <header class="post-header">
+    <span class="post-board-badge">{% if post.is_pinned %}<i class="bi bi-pin-angle-fill" aria-hidden="true"></i> 고정 · {% endif %}{{ board.label }}</span>
+    <h1 class="post-title">{{ post.title }}</h1>
+    <div class="post-meta">
+      <span class="post-meta-item">
+        <i class="bi bi-person" aria-hidden="true"></i>
+        {% if post.author %}
+          <a href="{{ url_for('public_profile', user_id=post.author.id) }}" class="author-link">{{ post.author.username }}</a>
+        {% else %}
+          익명
+        {% endif %}
+      </span>
+      <span class="post-meta-item"><i class="bi bi-clock" aria-hidden="true"></i> {{ post.created_at.strftime("%Y-%m-%d %H:%M") }}</span>
+      <span class="post-meta-item"><i class="bi bi-eye" aria-hidden="true"></i> 조회 {{ post.views or 0 }}</span>
+      <span class="post-meta-item"><i class="bi bi-chat-dots" aria-hidden="true"></i> 댓글 {{ total_comments }}</span>
+    </div>
+
+    {% if current_user.is_authenticated and (post.author_id == current_user.id or is_admin_user) %}
+      <div class="post-owner-actions">
+        <a href="{{ url_for('edit_post', post_id=post.id) }}" class="post-action-button"><i class="bi bi-pencil" aria-hidden="true"></i> 수정</a>
+        <form action="{{ url_for('delete_post', post_id=post.id) }}" method="POST" onsubmit="return confirm('정말 삭제하시겠습니까?');">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+          <button type="submit" class="post-action-button danger"><i class="bi bi-trash" aria-hidden="true"></i> 삭제</button>
+        </form>
+      </div>
+    {% endif %}
+  </header>
+
+  {% if post.image_filename %}
+    <img src="{{ url_for('static', filename='uploads/' ~ post.image_filename) }}" class="post-image" alt="게시글 첨부 이미지">
+  {% endif %}
+
+  <div class="post-content">{{ post.content or "" }}</div>
+
+  {% if post.poll_question and poll_options %}
+    <section class="post-poll" id="post-poll" aria-labelledby="post-poll-title">
+      <h2 class="post-poll-title" id="post-poll-title"><i class="bi bi-bar-chart-fill" aria-hidden="true"></i>{{ post.poll_question }}</h2>
+      {% if current_user.is_authenticated %}
+        <form method="POST" action="{{ url_for('vote_post_poll', post_id=post.id) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+          <div class="post-poll-options">
+            {% for option in poll_options %}
+              <label class="post-poll-option{% if selected_poll_option_id == option.id %} is-selected{% endif %}" style="--poll-percent:{{ option.percent }}%">
+                <span class="post-poll-progress" aria-hidden="true"></span>
+                <span class="post-poll-option-content">
+                  <input type="radio" name="option_id" value="{{ option.id }}" {% if selected_poll_option_id == option.id %}checked{% endif %} required>
+                  <span>{{ option.text }}</span>
+                  <span class="post-poll-result">{{ option.percent }}% · {{ option.votes }}표</span>
+                </span>
+              </label>
+            {% endfor %}
+          </div>
+          <div class="post-poll-footer">
+            <span class="post-poll-count">총 {{ poll_total_votes }}표{% if selected_poll_option_id %} · 선택 변경 가능{% endif %}</span>
+            <button type="submit" class="post-poll-submit">{% if selected_poll_option_id %}선택 변경{% else %}투표하기{% endif %}</button>
+          </div>
+        </form>
+      {% else %}
+        <div class="post-poll-options">
+          {% for option in poll_options %}
+            <div class="post-poll-option" style="--poll-percent:{{ option.percent }}%">
+              <span class="post-poll-progress" aria-hidden="true"></span>
+              <span class="post-poll-option-content"><span>{{ option.text }}</span><span class="post-poll-result">{{ option.percent }}% · {{ option.votes }}표</span></span>
+            </div>
+          {% endfor %}
+        </div>
+        <div class="post-poll-footer">
+          <span class="post-poll-count">총 {{ poll_total_votes }}표</span>
+          <span class="post-poll-login"><a href="{{ url_for('login', next=request.full_path) }}">로그인</a> 후 참여할 수 있습니다.</span>
+        </div>
+      {% endif %}
+    </section>
+  {% endif %}
+
+  <div class="post-reaction-row">
+    {% if current_user.is_authenticated %}
+      <form action="{{ url_for('like_post', post_id=post.id) }}" method="POST" class="like-form" data-like-form>
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <button type="submit" class="like-button{% if has_liked %} is-liked{% endif %}" aria-pressed="{{ 'true' if has_liked else 'false' }}" data-like-button>
+          <i class="bi bi-hand-thumbs-up{% if has_liked %}-fill{% endif %}" aria-hidden="true" data-like-icon></i>
+          <span data-like-label>{{ '좋아요 취소' if has_liked else '좋아요' }}</span>
+          <span data-like-count>{{ post.likes or 0 }}</span>
+        </button>
+      </form>
+      <span class="like-status" data-like-status aria-live="polite"></span>
+    {% else %}
+      <a class="like-button" href="{{ url_for('login', next=request.full_path) }}">
+        <i class="bi bi-hand-thumbs-up" aria-hidden="true"></i> 좋아요 {{ post.likes or 0 }}
+      </a>
+    {% endif %}
+  </div>
+
+  <section class="comments-section" id="comments">
+    <div class="comments-head">
+      <h2 class="comments-title">댓글</h2>
+      <span class="comments-count">{{ total_comments }}개</span>
+    </div>
+
+    <div class="comment-list">
+      {% for comment in top_comments %}
+        <article class="comment-card" id="comment-{{ comment.id }}">
+          <div class="comment-meta">
+            {% if comment.author %}
+              <a href="{{ url_for('public_profile', user_id=comment.author.id) }}" class="author-link">{{ comment.author.username }}</a>
+            {% else %}
+              익명
+            {% endif %}
+            <span>·</span>
+            <time>{{ comment.created_at.strftime("%Y-%m-%d %H:%M") }}</time>
+          </div>
+          <p class="comment-copy">{{ comment.content }}</p>
+          <div class="comment-actions">
+            {% if current_user.is_authenticated %}
+              <button type="button"
+                      class="comment-action reply-toggle"
+                      data-reply-form="reply-form-{{ comment.id }}"
+                      data-parent-id="{{ comment.id }}"
+                      data-reply-author="{{ comment.author.username if comment.author else '익명' }}">답글</button>
+            {% endif %}
+            {% if current_user.is_authenticated and (comment.author_id == current_user.id or is_admin_user) %}
+              <form action="{{ url_for('delete_comment', comment_id=comment.id) }}" method="POST" onsubmit="return confirm('댓글과 답글을 삭제하시겠습니까?');">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <button type="submit" class="comment-action danger">삭제</button>
+              </form>
+            {% endif %}
+          </div>
+
+          {% if current_user.is_authenticated %}
+            <form id="reply-form-{{ comment.id }}" action="{{ url_for('add_comment', post_id=post.id) }}" method="POST" class="reply-form" hidden>
+              <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+              <input type="hidden" name="parent_id" value="{{ comment.id }}" data-reply-parent>
+              <div class="reply-target" data-reply-target>@{{ comment.author.username if comment.author else '익명' }}님에게 답글</div>
+              <textarea name="content" rows="2" maxlength="1000" class="comment-textarea" placeholder="답글을 입력하세요" required></textarea>
+              <div class="comment-submit-row">
+                <button type="button" class="comment-cancel" data-reply-cancel>취소</button>
+                <button type="submit" class="comment-submit">답글 등록</button>
+              </div>
+            </form>
+          {% endif %}
+
+          {% if comment.replies %}
+            <div class="reply-list">
+              {% for reply in comment.replies|sort(attribute='created_at') %}
+                <article class="reply-card" id="comment-{{ reply.id }}">
+                  <div class="comment-meta">
+                    {% if reply.author %}
+                      <a href="{{ url_for('public_profile', user_id=reply.author.id) }}" class="author-link">{{ reply.author.username }}</a>
+                    {% else %}
+                      익명
+                    {% endif %}
+                    <span>·</span>
+                    <time>{{ reply.created_at.strftime("%Y-%m-%d %H:%M") }}</time>
+                  </div>
+                  <p class="comment-copy">{{ reply.content }}</p>
+                  <div class="comment-actions">
+                    {% if current_user.is_authenticated %}
+                      <button type="button"
+                              class="comment-action reply-toggle"
+                              data-reply-form="reply-form-{{ comment.id }}"
+                              data-parent-id="{{ reply.id }}"
+                              data-reply-author="{{ reply.author.username if reply.author else '익명' }}">답글</button>
+                    {% endif %}
+                    {% if current_user.is_authenticated and (reply.author_id == current_user.id or is_admin_user) %}
+                      <form action="{{ url_for('delete_comment', comment_id=reply.id) }}" method="POST" onsubmit="return confirm('답글을 삭제하시겠습니까?');">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                        <button type="submit" class="comment-action danger">삭제</button>
+                      </form>
+                    {% endif %}
+                  </div>
+                </article>
+              {% endfor %}
+            </div>
+          {% endif %}
+        </article>
+      {% else %}
+        <div class="comment-empty">아직 등록된 댓글이 없습니다.</div>
+      {% endfor %}
+    </div>
+
+    {% if current_user.is_authenticated %}
+      <form action="{{ url_for('add_comment', post_id=post.id) }}" method="POST" class="new-comment-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <textarea name="content" rows="3" maxlength="1000" class="comment-textarea" placeholder="댓글을 입력하세요" required></textarea>
+        <div class="comment-submit-row">
+          <button type="submit" class="comment-submit">댓글 등록</button>
+        </div>
+      </form>
+    {% else %}
+      <p class="comment-login">댓글을 작성하려면 <a href="{{ url_for('login', next=request.full_path) }}">로그인</a>해주세요.</p>
+    {% endif %}
+  </section>
+</article>
+
+<script>
+  (() => {
+    document.querySelectorAll(".reply-toggle").forEach((button) => {
+      button.addEventListener("click", () => {
+        const form = document.getElementById(button.dataset.replyForm || "");
+        if (!form) return;
+        const parentInput = form.querySelector("[data-reply-parent]");
+        const target = form.querySelector("[data-reply-target]");
+        if (parentInput) parentInput.value = button.dataset.parentId || "";
+        if (target) target.textContent = `@${button.dataset.replyAuthor || "익명"}님에게 답글`;
+        form.hidden = false;
+        form.querySelector("textarea")?.focus();
+      });
+    });
+
+    document.querySelectorAll("[data-reply-cancel]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const form = button.closest(".reply-form");
+        if (form) form.hidden = true;
+      });
+    });
+
+    const likeForm = document.querySelector("[data-like-form]");
+    const likeButton = document.querySelector("[data-like-button]");
+    if (likeForm && likeButton) {
+      likeForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const status = document.querySelector("[data-like-status]");
+        likeButton.disabled = true;
+        if (status) status.textContent = "";
+        try {
+          const response = await fetch(likeForm.action, {
+            method: "POST",
+            body: new FormData(likeForm),
+            headers: {
+              "Accept": "application/json",
+              "X-Requested-With": "XMLHttpRequest"
+            }
+          });
+          if (!response.ok) throw new Error("request failed");
+          const data = await response.json();
+          const liked = Boolean(data.liked);
+          likeButton.classList.toggle("is-liked", liked);
+          likeButton.setAttribute("aria-pressed", liked ? "true" : "false");
+          const label = likeButton.querySelector("[data-like-label]");
+          const count = likeButton.querySelector("[data-like-count]");
+          const icon = likeButton.querySelector("[data-like-icon]");
+          if (label) label.textContent = liked ? "좋아요 취소" : "좋아요";
+          if (count) count.textContent = String(data.likes ?? 0);
+          if (icon) icon.className = `bi bi-hand-thumbs-up${liked ? "-fill" : ""}`;
+          if (status) status.textContent = liked ? "좋아요를 반영했습니다." : "좋아요를 취소했습니다.";
+        } catch (error) {
+          if (status) status.textContent = "좋아요 처리에 실패했습니다. 잠시 후 다시 시도해주세요.";
+        } finally {
+          likeButton.disabled = false;
+        }
+      });
+    }
+  })();
+</script>
+{% endblock %}

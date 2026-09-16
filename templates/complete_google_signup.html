@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% block body_class %}auth-page{% endblock %}
+{% block title %}감독명 선택 | 피모북{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <h1 class="page-title">감독명을 정해주세요</h1>
+    <p class="auth-description">
+        Google 인증이 완료되었습니다.<br>
+        피모북에서 사용할 감독명은 나중에 중복될 수 없으니 신중하게 정해주세요.
+    </p>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }}">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <div class="google-account-email">{{ pending.email }}</div>
+    <form method="POST" action="{{ url_for('complete_google_signup') }}" class="auth-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <div class="form-group">
+            <label for="username">감독명</label>
+            <input
+              type="text"
+              class="form-control"
+              id="username"
+              name="username"
+              value="{{ request.form.get('username', pending.google_name) }}"
+              maxlength="100"
+              autocomplete="nickname"
+              autofocus
+              required
+            >
+            <small class="form-help">1자 이상 100자 이하로 입력해주세요.</small>
+        </div>
+        <button type="submit" class="btn-primary btn-block">감독명 확정하고 시작하기</button>
+    </form>
+    <div class="auth-switch">
+        <a href="{{ url_for('login') }}">다른 Google 계정으로 로그인</a>
+    </div>
+</div>
+
+<style>
+    .auth-container {
+        width: 100%;
+        max-width: 440px;
+        margin: auto;
+        background: #ffffff;
+        border: 1px solid #dbe3ec;
+        border-radius: 18px;
+        box-shadow: 0 14px 30px rgba(15,23,42,0.05);
+        padding: 28px 24px;
+        box-sizing: border-box;
+    }
+    .auth-description {
+        margin: -4px 0 18px;
+        color: #64748b;
+        font-size: 14px;
+        line-height: 1.65;
+        text-align: center;
+    }
+    .google-account-email {
+        margin: 0 0 20px;
+        padding: 10px 12px;
+        border-radius: 10px;
+        background: #f8fafc;
+        color: #475569;
+        font-size: 13px;
+        text-align: center;
+        overflow-wrap: anywhere;
+    }
+    .auth-form .form-group { margin-bottom: 20px; }
+    .auth-form label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: #495057;
+    }
+    .form-help {
+        display: block;
+        margin-top: 7px;
+        color: #64748b;
+        font-size: 12px;
+    }
+    .btn-block { width: 100%; margin-top: 10px; }
+    .auth-switch {
+        margin-top: 20px;
+        text-align: center;
+        font-size: 14px;
+    }
+    .alert {
+        padding: 15px;
+        margin-bottom: 20px;
+        border: 1px solid transparent;
+        border-radius: 12px;
+    }
+    .alert-success { color: #155724; background-color: #d4edda; border-color: #c3e6cb; }
+    .alert-danger { color: #721c24; background-color: #f8d7da; border-color: #f5c6cb; }
+    .alert-info { color: #0c5460; background-color: #d1ecf1; border-color: #bee5eb; }
+    .alert-warning { color: #856404; background-color: #fff3cd; border-color: #ffeeba; }
+</style>
+{% endblock %}

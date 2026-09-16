@@ -1,0 +1,547 @@
+{% extends "base.html" %}
+
+{% block body_class %}prime-exchange-page{% endblock %}
+{% block title %}프라임 교환 효율 | 피모북{% endblock %}
+
+{% block extra_head %}
+<meta name="description" content="FC모바일 프라임 교환 대상 선수의 7진·10진 가격과 토큰 1개당 비용을 비교합니다.">
+<link rel="canonical" href="https://fcbook.info/prime-exchange">
+<style>
+  :root{
+    --prime-green:#059669;
+    --prime-green-dark:#047857;
+    --prime-mint:#ecfdf5;
+    --prime-line:#dfe8e4;
+    --prime-text:#17221f;
+    --prime-muted:#64748b;
+  }
+
+  body.prime-exchange-page .main-content{
+    width:100%;
+    max-width:1040px;
+    padding:20px 32px 44px !important;
+    box-sizing:border-box;
+  }
+  .prime-page{
+    width:100%;
+    max-width:940px;
+    min-width:0;
+    margin:0 auto;
+  }
+  .prime-page-head{
+    padding:18px 0 20px;
+    border-bottom:1px solid #e5ebe8;
+  }
+  .prime-page-heading{ min-width:0; }
+  .prime-page-kicker{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    margin-bottom:8px;
+    color:var(--prime-green);
+    font-size:11px;
+    font-weight:900;
+  }
+  .prime-page-kicker::before{
+    width:8px;
+    height:8px;
+    border-radius:50%;
+    background:#10b981;
+    box-shadow:0 0 0 5px rgba(16,185,129,.10);
+    content:"";
+  }
+  .prime-page-title{
+    margin:0;
+    color:var(--prime-text);
+    font-size:27px;
+    font-weight:950;
+    letter-spacing:-.8px;
+    line-height:1.2;
+  }
+  .prime-explorer{ margin-top:18px; }
+  .prime-controls{
+    display:grid;
+    grid-template-columns:minmax(220px, 1fr) auto 120px;
+    gap:10px;
+    align-items:center;
+    padding:13px;
+    border:1px solid var(--prime-line);
+    border-radius:15px;
+    background:#f8faf9;
+  }
+  .prime-search{
+    position:relative;
+    min-width:0;
+  }
+  .prime-search i{
+    position:absolute;
+    left:13px;
+    top:50%;
+    color:#84938e;
+    font-size:14px;
+    transform:translateY(-50%);
+    pointer-events:none;
+  }
+  .prime-search input{
+    width:100%;
+    height:40px;
+    padding:0 12px 0 37px;
+    border:1px solid #d8e2de;
+    border-radius:10px;
+    outline:0;
+    background:#fff;
+    color:#1f2d29;
+    font:inherit;
+    font-size:12px;
+    font-weight:800;
+    box-sizing:border-box;
+  }
+  .prime-search input:focus{
+    border-color:#34d399;
+    box-shadow:0 0 0 3px rgba(16,185,129,.10);
+  }
+  .prime-level-tabs{
+    display:flex;
+    align-items:center;
+    gap:4px;
+    padding:3px;
+    border:1px solid #d8e2de;
+    border-radius:10px;
+    background:#fff;
+  }
+  .prime-level-tab{
+    min-width:48px;
+    height:32px;
+    padding:0 10px;
+    border:0;
+    border-radius:7px;
+    background:transparent;
+    color:#64748b;
+    font:inherit;
+    font-size:11px;
+    font-weight:900;
+    cursor:pointer;
+  }
+  .prime-level-tab:hover{ color:var(--prime-green-dark); }
+  .prime-level-tab.is-active{ background:#dcfce7; color:var(--prime-green-dark); }
+  .prime-group-select{
+    width:100%;
+    height:40px;
+    padding:0 30px 0 12px;
+    border:1px solid #d8e2de;
+    border-radius:10px;
+    outline:0;
+    background:#fff;
+    color:#40534d;
+    font:inherit;
+    font-size:11px;
+    font-weight:900;
+    cursor:pointer;
+    box-sizing:border-box;
+  }
+  .prime-result-head{
+    display:flex;
+    align-items:flex-end;
+    justify-content:space-between;
+    gap:16px;
+    margin:17px 2px 9px;
+  }
+  .prime-result-title{
+    margin:0;
+    color:#26352f;
+    font-size:15px;
+    font-weight:950;
+  }
+  .prime-result-count{
+    color:#7b8a85;
+    font-size:10px;
+    font-weight:800;
+  }
+  .prime-result-count strong{ color:var(--prime-green-dark); font-weight:950; }
+  .prime-column-head{
+    display:grid;
+    grid-template-columns:30px 43px minmax(0, 1fr) 150px 165px;
+    gap:10px;
+    padding:0 12px 6px 8px;
+    color:#95a19d;
+    font-size:9px;
+    font-weight:850;
+  }
+  .prime-column-head span:nth-last-child(-n+2){ text-align:right; }
+  .prime-result-list{
+    display:grid;
+    gap:5px;
+  }
+  .prime-result-row{
+    display:grid;
+    grid-template-columns:30px 43px minmax(0, 1fr) 150px 165px;
+    gap:10px;
+    align-items:center;
+    min-width:0;
+    min-height:58px;
+    padding:5px 12px 5px 8px;
+    border:1px solid #e2e9e6;
+    border-radius:11px;
+    background:#fff;
+    color:inherit;
+    text-decoration:none;
+    box-sizing:border-box;
+    transition:border-color .15s ease, box-shadow .15s ease, transform .15s ease;
+  }
+  .prime-result-row:hover{
+    border-color:#86efac;
+    box-shadow:0 8px 20px rgba(15,118,110,.07);
+    transform:translateY(-1px);
+    text-decoration:none;
+  }
+  .prime-rank{
+    color:#9aa7a3;
+    font-size:11px;
+    font-weight:950;
+    text-align:center;
+  }
+  .prime-result-row:nth-child(-n+3) .prime-rank{ color:var(--prime-green); }
+  .prime-player-art{
+    position:relative;
+    width:39px;
+    height:49px;
+    overflow:hidden;
+    border-radius:6px;
+    background:#eef3f1 center/cover no-repeat;
+  }
+  .prime-player-art img{
+    position:absolute;
+    left:50%;
+    bottom:0;
+    width:94%;
+    height:94%;
+    object-fit:contain;
+    transform:translateX(-50%);
+  }
+  .prime-player-info{ min-width:0; }
+  .prime-player-name{
+    display:block;
+    overflow:hidden;
+    color:#1f2d29;
+    font-size:13px;
+    font-weight:950;
+    line-height:1.35;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+  .prime-player-sub{
+    display:block;
+    margin-top:3px;
+    overflow:hidden;
+    color:#7d8c87;
+    font-size:8px;
+    font-weight:800;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+  .prime-exchange-meta{
+    display:flex;
+    justify-content:flex-end;
+    align-items:center;
+    gap:5px;
+    white-space:nowrap;
+  }
+  .prime-chip{
+    display:inline-flex;
+    align-items:center;
+    min-height:20px;
+    padding:0 7px;
+    border-radius:999px;
+    font-size:8px;
+    font-weight:950;
+  }
+  .prime-chip-level{ background:#eef2ff; color:#4f46e5; }
+  .prime-chip-token{ background:#ecfdf5; color:#047857; }
+  .prime-price{
+    min-width:0;
+    text-align:right;
+  }
+  .prime-unit-price{
+    display:block;
+    color:var(--prime-green-dark);
+    font-size:13px;
+    font-weight:950;
+    letter-spacing:-.25px;
+  }
+  .prime-unit-price small{
+    margin-left:2px;
+    color:#7c8c87;
+    font-size:8px;
+    font-weight:800;
+  }
+  .prime-total-price{
+    display:block;
+    margin-top:4px;
+    color:#94a3b8;
+    font-size:9px;
+    font-weight:750;
+  }
+  .prime-empty{
+    padding:44px 18px;
+    border:1px dashed #cfdcd7;
+    border-radius:13px;
+    background:#fafcfb;
+    color:#84938e;
+    font-size:12px;
+    font-weight:800;
+    text-align:center;
+  }
+  .prime-more{
+    width:100%;
+    height:43px;
+    margin-top:11px;
+    border:1px solid #d4e0dc;
+    border-radius:11px;
+    background:#fff;
+    color:#38534b;
+    font:inherit;
+    font-size:11px;
+    font-weight:900;
+    cursor:pointer;
+  }
+  .prime-more:hover{ border-color:#6ee7b7; background:#f6fbf9; color:var(--prime-green-dark); }
+  .prime-notice{
+    display:flex;
+    align-items:flex-start;
+    gap:7px;
+    margin:12px 2px 0;
+    color:#84938e;
+    font-size:10px;
+    font-weight:700;
+    line-height:1.6;
+  }
+
+  @media (max-width:760px){
+    body.prime-exchange-page .main-content{ padding:10px 14px 34px !important; }
+    .prime-page-head{ padding:14px 0 17px; }
+    .prime-page-title{ font-size:23px; }
+    .prime-controls{ grid-template-columns:1fr 112px; }
+    .prime-search{ grid-column:1 / -1; }
+    .prime-level-tabs{ justify-content:stretch; }
+    .prime-level-tab{ min-width:0; flex:1; padding:0 7px; }
+    .prime-column-head{ display:none; }
+    .prime-result-row{
+      grid-template-columns:23px 39px minmax(0, 1fr) 108px;
+      gap:7px;
+      min-height:56px;
+      padding:5px 8px 5px 5px;
+    }
+    .prime-player-art{ width:36px; height:46px; }
+    .prime-player-name{ font-size:12px; }
+    .prime-player-sub{ display:none; }
+    .prime-exchange-meta{
+      grid-column:3;
+      justify-content:flex-start;
+      margin-top:-13px;
+    }
+    .prime-price{
+      grid-column:4;
+      grid-row:1 / span 2;
+      min-width:0;
+      text-align:right;
+    }
+    .prime-unit-price{ font-size:11px; }
+    .prime-unit-price small{ display:block; margin:2px 0 0; font-size:8px; }
+    .prime-total-price{ margin-top:2px; font-size:7px; }
+  }
+
+  @media (max-width:480px){
+    .prime-explorer{ margin-top:18px; }
+    .prime-controls{ padding:10px; }
+    .prime-result-head{ margin-top:14px; }
+    .prime-result-row{
+      grid-template-columns:20px 37px minmax(0, 1fr) 94px;
+      gap:6px;
+      min-height:55px;
+    }
+    .prime-player-art{ width:34px; height:43px; }
+    .prime-unit-price small{ display:block; margin:1px 0 0; }
+    .prime-total-price{ display:none; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+{% set prime_rows = prime_exchange.rows if prime_exchange else [] %}
+<div class="prime-page">
+  <header class="prime-page-head">
+    <div class="prime-page-heading">
+      <div class="prime-page-kicker">FC모바일 교환 계산기</div>
+      <h1 class="prime-page-title">프라임 교환 효율</h1>
+    </div>
+  </header>
+
+  <section class="prime-explorer" aria-labelledby="primeResultTitle">
+    <div class="prime-controls">
+      <label class="prime-search">
+        <i class="bi bi-search" aria-hidden="true"></i>
+        <input id="primeSearch" type="search" placeholder="선수 이름 검색" autocomplete="off" aria-label="선수 이름 검색">
+      </label>
+      <div class="prime-level-tabs" role="tablist" aria-label="진화 단계 필터">
+        <button class="prime-level-tab is-active" type="button" role="tab" aria-selected="true" data-prime-level="all">전체</button>
+        <button class="prime-level-tab" type="button" role="tab" aria-selected="false" data-prime-level="7">7진</button>
+        <button class="prime-level-tab" type="button" role="tab" aria-selected="false" data-prime-level="10">10진</button>
+      </div>
+      <select class="prime-group-select" id="primeGroup" aria-label="교환 그룹 필터">
+        <option value="all">전체 그룹</option>
+        {% for group in 'ABCDEFGHIJKLM' %}<option value="{{ group }}">{{ group }}그룹</option>{% endfor %}
+      </select>
+    </div>
+
+    {% set ad_layout = 'horizontal' %}
+    {% include "_adsense_unit.html" %}
+
+    <div class="prime-result-head">
+      <h2 class="prime-result-title" id="primeResultTitle">효율 순위</h2>
+      <span class="prime-result-count">조건에 맞는 선수 <strong id="primeResultCount">{{ prime_rows|length }}명</strong></span>
+    </div>
+    <div class="prime-column-head" aria-hidden="true">
+      <span>순위</span><span></span><span>선수</span><span>교환 조건</span><span>가격 / 효율</span>
+    </div>
+
+    <div class="prime-result-list" id="primeResultList">
+      {% for item in prime_rows[:20] %}
+        <a class="prime-result-row" href="{{ url_for('player_detail', cid=item.cid) }}">
+          <span class="prime-rank">{{ loop.index }}</span>
+          <span class="prime-player-art" {% if item.player_bimage %}style="background-image:url('{{ item.player_bimage }}');"{% endif %}>
+            {% if item.player_pimage %}<img src="{{ item.player_pimage }}" alt="" loading="lazy">{% endif %}
+          </span>
+          <span class="prime-player-info">
+            <span class="prime-player-name">{{ item.player_name }}</span>
+            <span class="prime-player-sub">{% if item.player_position %}{{ item.player_position }} · {% endif %}OVR {{ item.player_ovr or '-' }}{% if item.player_class %} · {{ item.player_class }}{% endif %}</span>
+          </span>
+          <span class="prime-exchange-meta">
+            <span class="prime-chip prime-chip-level">{{ item.enhance_level }}진</span>
+            <span class="prime-chip prime-chip-token">{{ item.group }}그룹 · {{ item.token_count }}개</span>
+          </span>
+          <span class="prime-price">
+            <span class="prime-unit-price">{{ "{:,.0f}".format(item.price_per_token) }} <small>MP / 토큰 1개</small></span>
+            <span class="prime-total-price">선수 가격 {{ "{:,}".format(item.price) }} MP</span>
+          </span>
+        </a>
+      {% else %}
+        <div class="prime-empty">계산 가능한 교환 대상이 없습니다.</div>
+      {% endfor %}
+    </div>
+    <button class="prime-more" id="primeMore" type="button" {% if prime_rows|length <= 20 %}hidden{% endif %}>20개 더 보기 · 전체 {{ prime_rows|length }}개</button>
+    <p class="prime-notice"><i class="bi bi-info-circle" aria-hidden="true"></i><span>선수 시세는 변동될 수 있습니다. 실제 교환 전 게임 내 선수 가격과 교환 대상 여부를 다시 확인하세요.</span></p>
+  </section>
+  <script id="primeExchangeData" type="application/json">{{ prime_rows|tojson }}</script>
+</div>
+
+<script>
+  (() => {
+    const dataNode = document.getElementById("primeExchangeData");
+    const listNode = document.getElementById("primeResultList");
+    const countNode = document.getElementById("primeResultCount");
+    const moreButton = document.getElementById("primeMore");
+    const searchInput = document.getElementById("primeSearch");
+    const groupSelect = document.getElementById("primeGroup");
+    const levelTabs = Array.from(document.querySelectorAll("[data-prime-level]"));
+    let rows = [];
+    let level = "all";
+    let group = "all";
+    let query = "";
+    let visibleCount = 20;
+
+    try { rows = JSON.parse(dataNode.textContent || "[]"); } catch (_) { rows = []; }
+
+    const escapeHtml = value => String(value || "")
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+    const safeImageUrl = value => String(value || "")
+      .replaceAll("\\", "%5C")
+      .replaceAll('"', "%22")
+      .replaceAll("'", "%27")
+      .replaceAll("(", "%28")
+      .replaceAll(")", "%29");
+    const formatNumber = value => Math.round(Number(value) || 0).toLocaleString("ko-KR");
+    const normalize = value => String(value || "").replace(/\s+/g, "").toLowerCase();
+
+    function filteredRows() {
+      return rows.filter(row => {
+        if (level !== "all" && String(row.enhance_level) !== level) return false;
+        if (group !== "all" && String(row.group) !== group) return false;
+        return !query || normalize(row.player_name).includes(query);
+      });
+    }
+
+    function render() {
+      const filtered = filteredRows();
+      const visible = filtered.slice(0, visibleCount);
+      countNode.textContent = `${formatNumber(filtered.length)}명`;
+
+      if (!visible.length) {
+        listNode.innerHTML = `<div class="prime-empty">조건에 맞는 선수가 없습니다.</div>`;
+      } else {
+        listNode.innerHTML = visible.map((row, index) => {
+          const cid = Number(row.cid) || 0;
+          const background = safeImageUrl(row.player_bimage);
+          const artStyle = background ? ` style="background-image:url('${background}')"` : "";
+          const art = row.player_pimage ? `<img src="${escapeHtml(row.player_pimage)}" alt="" loading="lazy">` : "";
+          const playerSub = [row.player_position || "", `OVR ${row.player_ovr || "-"}`, row.player_class || ""].filter(Boolean).join(" · ");
+          return `
+            <a class="prime-result-row" href="/player/${cid}">
+              <span class="prime-rank">${index + 1}</span>
+              <span class="prime-player-art"${artStyle}>${art}</span>
+              <span class="prime-player-info">
+                <span class="prime-player-name">${escapeHtml(row.player_name || "선수")}</span>
+                <span class="prime-player-sub">${escapeHtml(playerSub)}</span>
+              </span>
+              <span class="prime-exchange-meta">
+                <span class="prime-chip prime-chip-level">${Number(row.enhance_level) || "-"}진</span>
+                <span class="prime-chip prime-chip-token">${escapeHtml(row.group || "-")}그룹 · ${formatNumber(row.token_count)}개</span>
+              </span>
+              <span class="prime-price">
+                <span class="prime-unit-price">${formatNumber(row.price_per_token)} <small>MP / 토큰 1개</small></span>
+                <span class="prime-total-price">선수 가격 ${formatNumber(row.price)} MP</span>
+              </span>
+            </a>`;
+        }).join("");
+      }
+
+      const remaining = Math.max(0, filtered.length - visibleCount);
+      moreButton.hidden = filtered.length <= 20;
+      moreButton.textContent = remaining > 0
+        ? `${Math.min(20, remaining)}개 더 보기 · 전체 ${formatNumber(filtered.length)}개`
+        : "접기";
+    }
+
+    levelTabs.forEach(tab => tab.addEventListener("click", () => {
+      level = tab.dataset.primeLevel || "all";
+      visibleCount = 20;
+      levelTabs.forEach(item => {
+        const active = item === tab;
+        item.classList.toggle("is-active", active);
+        item.setAttribute("aria-selected", active ? "true" : "false");
+      });
+      render();
+    }));
+    groupSelect.addEventListener("change", () => {
+      group = groupSelect.value || "all";
+      visibleCount = 20;
+      render();
+    });
+    searchInput.addEventListener("input", () => {
+      query = normalize(searchInput.value);
+      visibleCount = 20;
+      render();
+    });
+    moreButton.addEventListener("click", () => {
+      const total = filteredRows().length;
+      visibleCount = visibleCount >= total ? 20 : visibleCount + 20;
+      render();
+      if (visibleCount === 20) document.getElementById("primeResultTitle")?.scrollIntoView({ behavior:"smooth", block:"start" });
+    });
+    render();
+  })();
+</script>
+{% endblock %}

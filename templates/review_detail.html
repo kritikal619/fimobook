@@ -1,0 +1,520 @@
+{% extends "base.html" %}
+{% block body_class %}review-detail-page{% endblock %}
+{% block title %}{{ review.title }} | 피모북 선수 리뷰{% endblock %}
+
+{% block extra_head %}
+<style>
+  .main-content { max-width: 980px; align-items: stretch; }
+  .review-detail-shell { width: 100%; min-width: 0; }
+  .review-breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 18px;
+    color: #64748b;
+    font-size: 13px;
+    font-weight: 800;
+  }
+  .review-breadcrumb a { color: #475569; text-decoration: none; }
+  .review-breadcrumb a:hover { color: var(--brand-dark); }
+  .review-hero {
+    display: grid;
+    grid-template-columns: 128px minmax(0, 1fr);
+    gap: 24px;
+    align-items: center;
+    padding: 22px;
+    border: 1px solid #dbe3ec;
+    border-radius: 16px;
+    background: linear-gradient(135deg, #f5fdf9 0%, #ffffff 65%);
+  }
+  .review-player-art {
+    width: 118px;
+    height: 154px;
+    position: relative;
+    overflow: hidden;
+    border-radius: 14px;
+    background-color: #e9eef5;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: cover;
+  }
+  .review-player-art img {
+    position: absolute;
+    left: 50%;
+    bottom: 1px;
+    width: 95%;
+    height: 95%;
+    transform: translateX(-50%);
+    object-fit: contain;
+  }
+  .review-hero-main { min-width: 0; }
+  .review-player-line {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    flex-wrap: wrap;
+    color: #059669;
+    font-size: 13px;
+    font-weight: 950;
+  }
+  .review-position {
+    display: inline-flex;
+    align-items: center;
+    min-height: 25px;
+    padding: 0 9px;
+    border-radius: 999px;
+    background: #d1fae5;
+    color: #047857;
+  }
+  .review-detail-title {
+    margin: 8px 0 7px;
+    color: #172033;
+    font-size: clamp(24px, 4vw, 34px);
+    font-weight: 950;
+    line-height: 1.25;
+    letter-spacing: -1px;
+    word-break: keep-all;
+  }
+  .review-player-class {
+    color: #64748b;
+    font-size: 13px;
+    font-weight: 750;
+  }
+  .review-byline {
+    display: flex;
+    align-items: center;
+    gap: 8px 12px;
+    margin-top: 13px;
+    color: #64748b;
+    font-size: 13px;
+    font-weight: 750;
+    flex-wrap: wrap;
+  }
+  .review-author { color: #334155; font-weight: 950; }
+  .review-average {
+    color: #d97706;
+    font-size: 18px;
+    font-weight: 950;
+  }
+  .review-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 16px;
+    flex-wrap: wrap;
+  }
+  .review-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 36px;
+    padding: 0 12px;
+    border: 1px solid #dbe3ec;
+    border-radius: 10px;
+    background: #ffffff;
+    color: #334155;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 900;
+    text-decoration: none;
+    cursor: pointer;
+  }
+  .review-action.danger { border-color: #fecaca; background: #fff7f7; color: #b91c1c; }
+  .review-section {
+    margin-top: 22px;
+    padding-top: 22px;
+    border-top: 1px solid #dbe3ec;
+  }
+  .review-section-title {
+    margin: 0 0 14px;
+    color: #172033;
+    font-size: 19px;
+    font-weight: 950;
+    letter-spacing: -.4px;
+  }
+  .review-meta-chips,
+  .review-skill-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .review-chip {
+    display: inline-flex;
+    align-items: center;
+    min-height: 30px;
+    padding: 0 10px;
+    border: 1px solid #dbe3ec;
+    border-radius: 999px;
+    background: #f1f5f9;
+    color: #475569;
+    font-size: 12px;
+    font-weight: 850;
+  }
+  .review-rating-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+  .review-rating-card {
+    display: grid;
+    grid-template-columns: minmax(80px, auto) 42px minmax(0, 1fr);
+    gap: 10px;
+    align-items: center;
+    min-width: 0;
+    padding: 13px 14px;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    background: #fbfcfd;
+  }
+  .rating-label { color: #334155; font-size: 13px; font-weight: 950; }
+  .rating-score { color: #059669; font-size: 15px; font-weight: 950; }
+  .rating-note {
+    min-width: 0;
+    color: #64748b;
+    font-size: 12px;
+    font-weight: 650;
+    line-height: 1.45;
+  }
+  .review-copy {
+    margin: 0;
+    color: #263445;
+    font-size: 15px;
+    font-weight: 550;
+    line-height: 1.85;
+    white-space: pre-wrap;
+    word-break: keep-all;
+  }
+  .comment-form {
+    display: grid;
+    gap: 9px;
+    padding: 14px;
+    border: 1px solid #dbe3ec;
+    border-radius: 13px;
+    background: #f8fafc;
+  }
+  .comment-form textarea {
+    width: 100%;
+    min-height: 86px;
+    padding: 11px 12px;
+    border: 1px solid #dbe3ec;
+    border-radius: 10px;
+    background: #ffffff;
+    color: #172033;
+    font: inherit;
+    font-size: 13px;
+    line-height: 1.55;
+    resize: vertical;
+    box-sizing: border-box;
+  }
+  .comment-submit {
+    justify-self: end;
+    min-height: 38px;
+    padding: 0 15px;
+    border: 0;
+    border-radius: 10px;
+    background: #059669;
+    color: #ffffff;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 950;
+    cursor: pointer;
+  }
+  .comment-login {
+    padding: 14px;
+    border-radius: 12px;
+    background: #f8fafc;
+    color: #64748b;
+    font-size: 13px;
+    font-weight: 750;
+  }
+  .comment-list { display: grid; gap: 10px; margin-top: 14px; }
+  .comment-item {
+    padding: 13px 14px;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    background: #ffffff;
+  }
+  .comment-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #64748b;
+    font-size: 11px;
+    font-weight: 750;
+  }
+  .comment-user { color: #334155; font-size: 12px; font-weight: 950; }
+  .comment-content {
+    margin-top: 7px;
+    color: #334155;
+    font-size: 13px;
+    line-height: 1.65;
+    white-space: pre-wrap;
+  }
+  .comment-tools { display: flex; gap: 6px; margin-top: 8px; }
+  .comment-tool {
+    padding: 5px 8px;
+    border: 0;
+    border-radius: 7px;
+    background: #f1f5f9;
+    color: #64748b;
+    font: inherit;
+    font-size: 11px;
+    font-weight: 900;
+    cursor: pointer;
+  }
+  .comment-tool.danger { color: #b91c1c; background: #fef2f2; }
+  .reply-form { margin-top: 9px; }
+  .reply-form textarea { min-height: 64px; }
+  .reply-list {
+    display: grid;
+    gap: 8px;
+    margin: 10px 0 0 18px;
+    padding-left: 12px;
+    border-left: 3px solid #dcfce7;
+  }
+  .empty-comments { color: #94a3b8; font-size: 13px; padding: 18px 0 2px; }
+  .related-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+  .related-review {
+    display: grid;
+    grid-template-columns: 52px minmax(0, 1fr);
+    gap: 10px;
+    align-items: center;
+    min-width: 0;
+    padding: 11px;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    background: #ffffff;
+    color: inherit;
+    text-decoration: none;
+  }
+  .related-review:hover { border-color: #86efac; text-decoration: none; }
+  .related-art {
+    width: 50px;
+    height: 66px;
+    position: relative;
+    overflow: hidden;
+    border-radius: 7px;
+    background: #eef2f7 center/cover no-repeat;
+  }
+  .related-art img {
+    position: absolute;
+    left: 50%;
+    bottom: 0;
+    width: 94%;
+    height: 94%;
+    transform: translateX(-50%);
+    object-fit: contain;
+  }
+  .related-title {
+    overflow: hidden;
+    color: #263445;
+    font-size: 13px;
+    font-weight: 950;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+  .related-meta { margin-top: 4px; color: #64748b; font-size: 11px; font-weight: 750; }
+  .flash-message { margin-bottom: 10px; padding: 10px 12px; border-radius: 10px; background: #ecfdf5; color: #047857; font-size: 13px; font-weight: 850; }
+  @media (max-width: 640px) {
+    .review-breadcrumb { margin-bottom: 12px; }
+    .review-hero { grid-template-columns: 82px minmax(0, 1fr); gap: 13px; padding: 14px; border-radius: 14px; }
+    .review-player-art { width: 78px; height: 102px; border-radius: 10px; }
+    .review-detail-title { margin-top: 6px; font-size: 21px; letter-spacing: -.6px; }
+    .review-player-line, .review-player-class, .review-byline { font-size: 11px; }
+    .review-average { font-size: 15px; }
+    .review-actions { grid-column: 1 / -1; margin-top: 11px; }
+    .review-rating-grid, .related-grid { grid-template-columns: 1fr; }
+    .review-rating-card { grid-template-columns: 76px 36px minmax(0, 1fr); padding: 11px; gap: 7px; }
+    .review-copy { font-size: 14px; line-height: 1.75; }
+    .reply-list { margin-left: 4px; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="review-detail-shell">
+  <nav class="review-breadcrumb" aria-label="현재 위치">
+    <a href="{{ url_for('index') }}">선수 검색</a>
+    <span aria-hidden="true">›</span>
+    <a href="{{ url_for('player_detail', cid=review.player_cid) }}">{{ review.player_name }}</a>
+    <span aria-hidden="true">›</span>
+    <span>리뷰</span>
+  </nav>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for category, message in messages %}<div class="flash-message {{ category }}">{{ message }}</div>{% endfor %}
+  {% endwith %}
+
+  <article>
+    <header class="review-hero">
+      <a class="review-player-art" href="{{ url_for('player_detail', cid=review.player_cid) }}" {% if review.player_bimage %}style="background-image:url('{{ review.player_bimage }}');"{% endif %} aria-label="{{ review.player_name }} 선수 상세">
+        {% if review.player_pimage %}<img src="{{ review.player_pimage }}" alt="{{ review.player_name }}">{% endif %}
+      </a>
+      <div class="review-hero-main">
+        <div class="review-player-line">
+          {% if review.player_position %}<span class="review-position">{{ review.player_position }}</span>{% endif %}
+          <span>OVR {{ review.player_ovr or '-' }}</span>
+          <span>{{ review.player_name }}</span>
+        </div>
+        <h1 class="review-detail-title">{{ review.title }}</h1>
+        {% if review.player_class %}<div class="review-player-class">{{ review.player_class }}</div>{% endif %}
+        <div class="review-byline">
+          <span class="review-author">{{ review.username or '익명' }}</span>
+          <span>{{ review.created_at_display }}</span>
+          {% if review.average_rating %}<span class="review-average">★ {{ review.average_rating }}</span>{% endif %}
+          <span><i class="bi bi-chat-dots" aria-hidden="true"></i> {{ total_comments }}</span>
+        </div>
+        {% if current_user.is_authenticated and (review.user_id|string) == (current_user.id|string) %}
+          <div class="review-actions">
+            <a class="review-action" href="{{ url_for('edit_player_firebase_review', cid=review.player_cid, next=url_for('player_review_detail', cid=review.player_cid, review_id=review.id)) }}">리뷰 수정</a>
+            <form method="post" action="{{ url_for('delete_player_firebase_review', cid=review.player_cid) }}" onsubmit="return confirm('이 리뷰를 삭제할까요?');">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+              <input type="hidden" name="next" value="{{ url_for('community', tab='review') }}">
+              <button class="review-action danger" type="submit">리뷰 삭제</button>
+            </form>
+          </div>
+        {% endif %}
+      </div>
+    </header>
+
+    <section class="review-section">
+      <h2 class="review-section-title">사용 정보</h2>
+      <div class="review-meta-chips">
+        <span class="review-chip">{{ review.formation or '-' }}</span>
+        <span class="review-chip">{{ review.used_position or '-' }}</span>
+        <span class="review-chip">{{ review.enhance_level if review.enhance_level is not none else '-' }}진</span>
+        <span class="review-chip">{{ review.tier or '-' }}</span>
+      </div>
+    </section>
+
+    <section class="review-section">
+      <h2 class="review-section-title">항목별 평점</h2>
+      <div class="review-rating-grid">
+        {% for field in review_rating_fields %}
+          <div class="review-rating-card">
+            <span class="rating-label">{{ field.label }}</span>
+            {% set field_rating = review.ratings.get(field.key) %}
+            <span class="rating-score">{% if field_rating is not none and field_rating != '' %}{{ field_rating }}/10{% else %}-{% endif %}</span>
+            <span class="rating-note">{{ review.rating_notes.get(field.key) or '별도 평가 없음' }}</span>
+          </div>
+        {% endfor %}
+        {% for item in review.skill_move_ratings or [] %}
+          <div class="review-rating-card">
+            <span class="rating-label">{{ item.label }}</span>
+            <span class="rating-score">{{ item.rating }}/10</span>
+            <span class="rating-note">{{ item.note or '별도 평가 없음' }}</span>
+          </div>
+        {% endfor %}
+      </div>
+    </section>
+
+    {% if review.skill_config %}
+      <section class="review-section">
+        <h2 class="review-section-title">스킬 구성</h2>
+        <div class="review-skill-chips">
+          {% for item in review.skill_config %}<span class="review-chip">{{ item.name }} {{ item.point }}pt</span>{% endfor %}
+        </div>
+      </section>
+    {% endif %}
+
+    <section class="review-section">
+      <h2 class="review-section-title">전체 리뷰</h2>
+      <p class="review-copy">{{ review.review_text or '작성된 상세 리뷰가 없습니다.' }}</p>
+    </section>
+  </article>
+
+  <section class="review-section" id="review-comments">
+    <h2 class="review-section-title">댓글 {{ total_comments }}</h2>
+    {% if current_user.is_authenticated %}
+      <form class="comment-form" method="post" action="{{ url_for('add_player_review_comment', cid=review.player_cid, review_id=review.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <textarea name="content" maxlength="1000" placeholder="리뷰에 대한 의견이나 질문을 남겨주세요." required></textarea>
+        <button class="comment-submit" type="submit">댓글 등록</button>
+      </form>
+    {% else %}
+      <div class="comment-login"><a href="{{ url_for('login', next=request.path) }}">로그인</a>하면 댓글을 작성할 수 있습니다.</div>
+    {% endif %}
+
+    <div class="comment-list">
+      {% for comment in top_comments %}
+        <article class="comment-item">
+          <div class="comment-meta"><span class="comment-user">{{ comment.author.username if comment.author else '탈퇴한 사용자' }}</span><span>{{ comment.created_at.strftime('%Y-%m-%d %H:%M') }}</span></div>
+          <div class="comment-content">{{ comment.content }}</div>
+          <div class="comment-tools">
+            {% if current_user.is_authenticated %}<button class="comment-tool" type="button" data-reply-toggle="reply-{{ comment.id }}">답글</button>{% endif %}
+            {% if current_user.is_authenticated and (comment.author_id == current_user.id or is_admin_user) %}
+              <form method="post" action="{{ url_for('delete_player_review_comment', comment_id=comment.id) }}" onsubmit="return confirm('댓글을 삭제할까요?');">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <button class="comment-tool danger" type="submit">삭제</button>
+              </form>
+            {% endif %}
+          </div>
+          {% if current_user.is_authenticated %}
+            <form id="reply-{{ comment.id }}" class="comment-form reply-form" method="post" action="{{ url_for('add_player_review_comment', cid=review.player_cid, review_id=review.id) }}" hidden>
+              <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+              <input type="hidden" name="parent_id" value="{{ comment.id }}">
+              <textarea name="content" maxlength="1000" placeholder="답글을 입력하세요." required></textarea>
+              <button class="comment-submit" type="submit">답글 등록</button>
+            </form>
+          {% endif %}
+          {% if comment.replies %}
+            <div class="reply-list">
+              {% for reply in comment.replies|sort(attribute='created_at') %}
+                <div class="comment-item">
+                  <div class="comment-meta"><span class="comment-user">{{ reply.author.username if reply.author else '탈퇴한 사용자' }}</span><span>{{ reply.created_at.strftime('%Y-%m-%d %H:%M') }}</span></div>
+                  <div class="comment-content">{{ reply.content }}</div>
+                  {% if current_user.is_authenticated and (reply.author_id == current_user.id or is_admin_user) %}
+                    <div class="comment-tools">
+                      <form method="post" action="{{ url_for('delete_player_review_comment', comment_id=reply.id) }}" onsubmit="return confirm('답글을 삭제할까요?');">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                        <button class="comment-tool danger" type="submit">삭제</button>
+                      </form>
+                    </div>
+                  {% endif %}
+                </div>
+              {% endfor %}
+            </div>
+          {% endif %}
+        </article>
+      {% else %}
+        <div class="empty-comments">첫 댓글을 남겨보세요.</div>
+      {% endfor %}
+    </div>
+  </section>
+
+  <section class="review-section">
+    <h2 class="review-section-title">다른 리뷰도 둘러보기</h2>
+    {% if related_reviews %}
+      <div class="related-grid">
+        {% for item in related_reviews %}
+          <a class="related-review" href="{{ url_for('player_review_detail', cid=item.player_cid, review_id=item.id) }}">
+            <div class="related-art" {% if item.player_bimage %}style="background-image:url('{{ item.player_bimage }}');"{% endif %}>
+              {% if item.player_pimage %}<img src="{{ item.player_pimage }}" alt="{{ item.player_name }}" loading="lazy">{% endif %}
+            </div>
+            <div>
+              <div class="related-title">{{ item.title }}</div>
+              <div class="related-meta">OVR {{ item.player_ovr or '-' }} · {{ item.player_name }}{% if item.average_rating %} · ★ {{ item.average_rating }}{% endif %}</div>
+            </div>
+          </a>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="empty-comments">함께 볼 다른 리뷰가 아직 없습니다.</div>
+    {% endif %}
+  </section>
+</div>
+
+<script>
+  document.querySelectorAll('[data-reply-toggle]').forEach(function (button) {
+    button.addEventListener('click', function () {
+      var form = document.getElementById(button.getAttribute('data-reply-toggle'));
+      if (form) form.hidden = !form.hidden;
+    });
+  });
+</script>
+{% endblock %}

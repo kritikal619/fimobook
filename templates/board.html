@@ -1,0 +1,1005 @@
+{% extends "base.html" %}
+{% block body_class %}community-page{% endblock %}
+{% set active = active_board|default('free') %}
+{% block title %}{% if active == 'review' %}FC모바일 선수리뷰, 사용 후기 | 피모북{% else %}커뮤니티 | 피모북{% endif %}{% endblock %}
+
+{% block extra_head %}
+{% if active == 'review' and review_posts|length >= 8 %}
+  {% include "_adsense_head.html" %}
+{% endif %}
+<style>
+  .main-content {
+    align-items: stretch;
+    max-width: 1220px;
+  }
+  .community-shell {
+    width: 100%;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 290px;
+    gap: 22px;
+  }
+  .community-main,
+  .ranking-panel {
+    min-width: 0;
+  }
+  .community-heading {
+    margin-bottom: 20px;
+    text-align: center;
+  }
+  .community-kicker {
+    display: none;
+  }
+  .community-title {
+    margin: 0;
+    color: var(--navy);
+    font-size: 26px;
+    font-weight: 700;
+    letter-spacing: -1px;
+  }
+  .community-subtitle {
+    margin: 8px 0 0;
+    color: var(--muted);
+    font-size: 14px;
+  }
+  .community-tabs {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin: 0 0 18px;
+    flex-wrap: wrap;
+  }
+  .community-tab {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 38px;
+    padding: 0 15px;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+    color: #41505a;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 700;
+    background: #f8fafc;
+  }
+  .community-tab:hover {
+    text-decoration: none;
+    color: var(--brand-dark);
+    border-color: var(--brand);
+    background: #ffffff;
+  }
+  .community-tab.active {
+    border-color: var(--brand-dark);
+    background: linear-gradient(90deg, var(--brand-dark) 0%, var(--brand) 100%);
+    color: #fff;
+  }
+  .mobile-ranking-tab {
+    display: none;
+  }
+  .community-toolbar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 10px;
+    margin-bottom: 8px;
+  }
+  .community-toolbar.is-review {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .community-filter-form {
+    display: grid;
+    gap: 10px;
+    min-width: 0;
+  }
+  .community-search {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    border: 1.5px solid var(--line);
+    border-radius: 12px;
+    background: #f7faf8;
+    padding: 0 14px;
+    transition: border-color 0.2s, background 0.2s;
+  }
+  .community-search:focus-within {
+    border-color: var(--brand);
+    background: #fff;
+  }
+  .community-search i {
+    color: var(--muted);
+  }
+  .community-search input {
+    width: 100%;
+    min-width: 0;
+    height: 44px;
+    border: 0;
+    outline: none;
+    font: inherit;
+    color: var(--ink);
+    background: transparent;
+  }
+  .community-search-button {
+    flex: 0 0 auto;
+    height: 34px;
+    padding: 0 15px;
+    border: 0;
+    border-radius: 9px;
+    background: var(--brand-dark);
+    color: #fff;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 900;
+    cursor: pointer;
+  }
+  .community-search-button:hover {
+    background: #0c5f41;
+  }
+  .review-filter-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .review-filter-control {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 40px;
+    padding: 0 10px 0 13px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: #fff;
+  }
+  .review-filter-control span {
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 800;
+    white-space: nowrap;
+  }
+  .review-filter-control select {
+    min-width: 112px;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    color: var(--ink);
+    font: inherit;
+    font-size: 13px;
+    font-weight: 800;
+    cursor: pointer;
+  }
+  .review-filter-reset {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 40px;
+    padding: 0 13px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 800;
+    text-decoration: none;
+  }
+  .review-filter-reset:hover {
+    border-color: var(--brand);
+    color: var(--brand-dark);
+    text-decoration: none;
+  }
+  .write-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    height: 46px;
+    padding: 0 18px;
+    border-radius: 10px;
+    background: linear-gradient(90deg, var(--brand-dark) 0%, var(--brand) 100%);
+    color: #fff;
+    text-decoration: none;
+    font-weight: 900;
+    white-space: nowrap;
+  }
+  .write-button:hover {
+    background: linear-gradient(90deg, #0c5f41 0%, var(--brand-dark) 100%);
+    color: #fff;
+    text-decoration: none;
+  }
+  .post-list {
+    border-top: 1px solid var(--line);
+  }
+  .community-post {
+    display: grid;
+    grid-template-columns: 10px minmax(0, 1fr) auto;
+    gap: 16px;
+    align-items: center;
+    padding: 18px 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .post-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 999px;
+    background: var(--brand);
+  }
+  .post-badge {
+    display: inline-flex;
+    align-items: center;
+    height: 24px;
+    padding: 0 9px;
+    border-radius: 999px;
+    background: #eef2f7;
+    color: #475569;
+    font-size: 12px;
+    font-weight: 900;
+    vertical-align: middle;
+    margin-right: 7px;
+  }
+  .post-badge.is-pinned {
+    background: #dcfce7;
+    color: #047857;
+  }
+  .post-extra-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    margin-left: 5px;
+    color: #64748b;
+    font-size: 11px;
+    font-weight: 900;
+  }
+  .post-title-link {
+    color: var(--ink);
+    font-weight: 900;
+    text-decoration: none;
+    line-height: 1.35;
+  }
+  .post-title-link:hover {
+    color: var(--brand-dark);
+  }
+  .comment-count {
+    color: var(--brand-dark);
+    font-weight: 950;
+  }
+  .post-preview {
+    margin: 7px 0 0;
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1.45;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .post-side {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: var(--muted);
+    font-size: 13px;
+    white-space: nowrap;
+  }
+  .author-link {
+    color: #475569;
+    text-decoration: none;
+    font-weight: 800;
+  }
+  .author-link:hover {
+    color: var(--brand-dark);
+  }
+  .profile-arrow {
+    color: #94a3b8;
+    margin-left: 2px;
+    font-weight: 900;
+  }
+  .post-thumb {
+    width: 46px;
+    height: 46px;
+    border-radius: 8px;
+    object-fit: cover;
+    border: 1px solid var(--line);
+  }
+  .empty-posts {
+    padding: 54px 10px;
+    text-align: center;
+    color: var(--muted);
+    border-bottom: 1px solid var(--line);
+  }
+  .review-board-list {
+    display: grid;
+    gap: 12px;
+    padding-top: 4px;
+  }
+  .review-results-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin: 14px 2px 8px;
+    color: #64748b;
+    font-size: 13px;
+    font-weight: 750;
+  }
+  .review-results-meta strong {
+    color: var(--brand-dark);
+    font-size: 15px;
+    font-weight: 950;
+  }
+  .review-board-item {
+    display: grid;
+    grid-template-columns: 76px minmax(0, 1fr) auto;
+    gap: 16px;
+    align-items: center;
+    min-width: 0;
+    padding: 14px 16px 14px 12px;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    background: #ffffff;
+    color: inherit;
+    text-decoration: none;
+    transition: border-color .18s ease, box-shadow .18s ease, transform .18s ease;
+  }
+  .review-board-item:hover {
+    border-color: #86efac;
+    box-shadow: 0 12px 28px rgba(15, 23, 42, .07);
+    transform: translateY(-1px);
+    text-decoration: none;
+  }
+  .review-board-art {
+    width: 70px;
+    height: 92px;
+    position: relative;
+    overflow: hidden;
+    border-radius: 10px;
+    background-color: #eef2f7;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: cover;
+  }
+  .review-board-art img {
+    position: absolute;
+    left: 50%;
+    bottom: 1px;
+    width: 94%;
+    height: 94%;
+    transform: translateX(-50%);
+    object-fit: contain;
+  }
+  .review-board-body { min-width: 0; }
+  .review-board-titleline {
+    display: flex;
+    align-items: baseline;
+    gap: 8px 11px;
+    min-width: 0;
+    flex-wrap: wrap;
+  }
+  .review-board-title {
+    color: #172033;
+    font-size: 16px;
+    font-weight: 950;
+    line-height: 1.35;
+    letter-spacing: -.3px;
+  }
+  .review-board-kind {
+    display: inline-flex;
+    align-items: center;
+    min-height: 22px;
+    padding: 0 7px;
+    border-radius: 999px;
+    background: #dcfce7;
+    color: #047857;
+    font-size: 10px;
+    font-weight: 950;
+    white-space: nowrap;
+  }
+  .review-board-player {
+    color: var(--brand-dark);
+    font-size: 13px;
+    font-weight: 950;
+    white-space: nowrap;
+  }
+  .review-board-class {
+    margin-top: 4px;
+    overflow: hidden;
+    color: #64748b;
+    font-size: 12px;
+    font-weight: 750;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .review-board-excerpt {
+    margin: 8px 0 0;
+    overflow: hidden;
+    color: #526173;
+    font-size: 13px;
+    font-weight: 650;
+    line-height: 1.5;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+  .review-board-scoreline {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 9px;
+    color: #64748b;
+    font-size: 12px;
+    font-weight: 800;
+  }
+  .review-board-score {
+    color: #d97706;
+    font-size: 14px;
+    font-weight: 950;
+  }
+  .review-board-side {
+    display: grid;
+    justify-items: end;
+    gap: 7px;
+    min-width: 112px;
+    color: #64748b;
+    font-size: 12px;
+    font-weight: 750;
+    white-space: nowrap;
+  }
+  .review-board-author {
+    max-width: 130px;
+    overflow: hidden;
+    color: #334155;
+    font-weight: 900;
+    text-overflow: ellipsis;
+  }
+  .review-board-stats {
+    display: flex;
+    gap: 10px;
+  }
+  .review-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    margin-top: 22px;
+    flex-wrap: wrap;
+  }
+  .review-page-link,
+  .review-page-gap {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 38px;
+    height: 38px;
+    padding: 0 10px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 900;
+  }
+  .review-page-link {
+    border: 1px solid var(--line);
+    background: #fff;
+    color: #475569;
+    text-decoration: none;
+  }
+  .review-page-link:hover {
+    border-color: var(--brand);
+    color: var(--brand-dark);
+    text-decoration: none;
+  }
+  .review-page-link.active {
+    border-color: var(--brand-dark);
+    background: var(--brand-dark);
+    color: #fff;
+  }
+  .review-page-link.disabled {
+    opacity: .38;
+    pointer-events: none;
+  }
+  .review-page-gap {
+    min-width: 24px;
+    padding: 0;
+    color: #94a3b8;
+  }
+  .ranking-panel {
+    align-self: start;
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    background: #ffffff;
+    padding: 18px;
+    position: sticky;
+    top: 88px;
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.04);
+    max-height: calc(100vh - 110px);
+    overflow: auto;
+  }
+  .ranking-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 4px;
+    font-size: 17px;
+    font-weight: 950;
+    color: var(--ink);
+  }
+  .ranking-month {
+    margin: 0 0 14px;
+    color: var(--muted);
+    font-size: 12px;
+  }
+  .ranking-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin: 0 0 16px;
+    padding: 0;
+    list-style: none;
+  }
+  .ranking-row {
+    display: grid;
+    grid-template-columns: 24px minmax(0, 1fr) auto;
+    gap: 8px;
+    align-items: center;
+    color: #334155;
+    font-size: 13px;
+  }
+  .rank-index {
+    color: #94a3b8;
+    font-weight: 900;
+  }
+  .rank-user {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: #334155;
+    text-decoration: none;
+    font-weight: 850;
+  }
+  .rank-user:hover {
+    color: #16a34a;
+  }
+  .rank-points {
+    color: #ea580c;
+    font-weight: 950;
+  }
+  .ranking-more {
+    display: inline-flex;
+    width: 100%;
+    justify-content: center;
+    align-items: center;
+    height: 36px;
+    border-radius: 10px;
+    background: #f1f5f9;
+    color: #334155;
+    text-decoration: none;
+    font-weight: 900;
+    font-size: 13px;
+  }
+  @media (max-width: 980px) {
+    .community-shell {
+      grid-template-columns: 1fr;
+    }
+    .ranking-panel {
+      position: static;
+    }
+  }
+  @media (max-width: 640px) {
+    .main-content {
+      padding-left: 14px;
+      padding-right: 14px;
+    }
+    .community-shell {
+      gap: 14px;
+    }
+    .community-heading {
+      margin-bottom: 14px;
+      text-align: left;
+    }
+    .community-title {
+      font-size: 23px;
+    }
+    .community-subtitle {
+      font-size: 13px;
+      line-height: 1.45;
+    }
+    .community-tabs {
+      justify-content: flex-start;
+      flex-wrap: nowrap;
+      gap: 6px;
+      margin-bottom: 12px;
+      overflow-x: auto;
+      padding-bottom: 3px;
+      scrollbar-width: none;
+    }
+    .community-tabs::-webkit-scrollbar {
+      display: none;
+    }
+    .community-tab {
+      flex: 0 0 auto;
+      min-height: 34px;
+      padding: 0 12px;
+      border-radius: 999px;
+      font-size: 13px;
+    }
+    .mobile-ranking-tab {
+      display: inline-flex;
+    }
+    .community-toolbar {
+      grid-template-columns: 1fr;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .community-search {
+      min-height: 42px;
+      border-radius: 999px;
+      padding: 0 12px;
+    }
+    .community-search input {
+      height: 42px;
+      font-size: 14px;
+    }
+    .community-search-button {
+      height: 32px;
+      padding: 0 13px;
+      border-radius: 999px;
+    }
+    .review-filter-row {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .review-filter-control {
+      min-width: 0;
+      padding: 0 9px;
+    }
+    .review-filter-control span {
+      display: none;
+    }
+    .review-filter-control select {
+      width: 100%;
+      min-width: 0;
+    }
+    .review-filter-reset {
+      grid-column: 1 / -1;
+      min-height: 38px;
+    }
+    .write-button {
+      height: 42px;
+      border-radius: 999px;
+      font-size: 14px;
+    }
+    .post-list {
+      display: grid;
+      gap: 10px;
+      border-top: 0;
+    }
+    .community-post {
+      grid-template-columns: minmax(0, 1fr);
+      align-items: start;
+      gap: 10px;
+      padding: 13px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #ffffff;
+      box-shadow: 0 8px 18px rgba(15, 23, 42, 0.04);
+    }
+    .post-dot {
+      display: none;
+    }
+    .post-badge {
+      height: 22px;
+      padding: 0 8px;
+      margin-right: 5px;
+      font-size: 11px;
+    }
+    .post-title-link {
+      font-size: 15px;
+    }
+    .post-side {
+      grid-column: auto;
+      flex-wrap: wrap;
+      gap: 7px;
+      white-space: normal;
+      font-size: 12px;
+      order: 3;
+    }
+    .post-preview {
+      margin-top: 8px;
+      font-size: 13px;
+      white-space: normal;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+    }
+    .post-thumb {
+      width: 38px;
+      height: 38px;
+      order: -1;
+    }
+    .review-board-list { gap: 9px; }
+    .review-results-meta {
+      margin-top: 4px;
+      font-size: 12px;
+    }
+    .review-results-meta strong { font-size: 14px; }
+    .review-board-item {
+      grid-template-columns: 58px minmax(0, 1fr);
+      gap: 11px;
+      padding: 12px;
+      border-radius: 12px;
+      align-items: start;
+    }
+    .review-board-art {
+      width: 56px;
+      height: 74px;
+      border-radius: 8px;
+    }
+    .review-board-titleline {
+      align-items: flex-start;
+      gap: 4px 8px;
+    }
+    .review-board-title {
+      width: 100%;
+      font-size: 14px;
+    }
+    .review-board-player { font-size: 11px; }
+    .review-board-class { font-size: 11px; }
+    .review-board-excerpt {
+      margin-top: 6px;
+      font-size: 12px;
+      -webkit-line-clamp: 2;
+    }
+    .review-board-scoreline {
+      margin-top: 7px;
+      gap: 6px;
+      font-size: 11px;
+    }
+    .review-board-score { font-size: 13px; }
+    .review-board-side {
+      grid-column: 1 / -1;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 9px;
+      min-width: 0;
+      padding-top: 8px;
+      border-top: 1px solid #eef2f7;
+      font-size: 11px;
+    }
+    .review-pagination {
+      gap: 4px;
+      margin-top: 18px;
+    }
+    .review-page-link,
+    .review-page-gap {
+      min-width: 34px;
+      height: 34px;
+      padding: 0 8px;
+      border-radius: 9px;
+      font-size: 12px;
+    }
+    .review-page-gap {
+      min-width: 18px;
+      padding: 0;
+    }
+    .ranking-panel {
+      display: none;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="community-shell">
+  <section class="community-main">
+    <div class="community-heading">
+      <p class="community-kicker">COMMUNITY</p>
+      <h1 class="community-title">{% if active == 'review' %}FC모바일 선수리뷰{% else %}커뮤니티{% endif %}</h1>
+    </div>
+
+    <nav class="community-tabs" aria-label="커뮤니티 게시판">
+      {% for key, board in boards.items() %}
+        <a class="community-tab {% if key == active %}active{% endif %}" href="{{ url_for('community', tab=key) }}">{{ board.label }}</a>
+      {% endfor %}
+      <a class="community-tab mobile-ranking-tab" href="{{ url_for('review_rankings') }}">리뷰랭킹</a>
+    </nav>
+
+    <div class="community-toolbar{% if active == 'review' %} is-review{% endif %}">
+      <form action="{{ url_for('community') }}" method="GET" class="community-filter-form">
+        <div class="community-search">
+          <input type="hidden" name="tab" value="{{ active }}">
+          <i class="bi bi-search" aria-hidden="true"></i>
+          <input type="text" name="q" placeholder="{{ boards[active].label }} 검색..." value="{{ q if q else '' }}">
+          <button type="submit" class="community-search-button">검색</button>
+        </div>
+        {% if active == 'review' %}
+          <div class="review-filter-row">
+            <label class="review-filter-control">
+              <span>포지션</span>
+              <select name="position" aria-label="선수 포지션 필터">
+                <option value="">전체 포지션</option>
+                {% for position in review_positions %}
+                  <option value="{{ position }}" {% if review_position == position %}selected{% endif %}>{{ position }}</option>
+                {% endfor %}
+              </select>
+            </label>
+            <label class="review-filter-control">
+              <span>최소 별점</span>
+              <select name="min_rating" aria-label="최소 별점 필터">
+                <option value="">전체 별점</option>
+                {% for rating in range(10, 0, -1) %}
+                  <option value="{{ rating }}" {% if review_min_rating == rating|string %}selected{% endif %}>{{ rating }}점 이상</option>
+                {% endfor %}
+              </select>
+            </label>
+            {% if q or review_position or review_min_rating %}
+              <a class="review-filter-reset" href="{{ url_for('community', tab='review') }}">필터 초기화</a>
+            {% endif %}
+          </div>
+        {% endif %}
+      </form>
+      {% if active != 'review' and can_write_board|default(true) %}
+        <a href="{{ url_for('new_post', board_type=active) }}" class="write-button">
+          <i class="bi bi-plus-lg" aria-hidden="true"></i>
+          글쓰기
+        </a>
+      {% endif %}
+    </div>
+
+    {% if active == 'review' %}
+      <div class="review-results-meta" aria-live="polite">
+        <span>
+          {% if q %}<strong>“{{ q }}”</strong> 검색 결과{% elif review_position or review_min_rating %}필터 결과{% else %}전체 리뷰{% endif %}
+          <strong>{{ review_total }}</strong>개
+        </span>
+        {% if review_total %}<span>{{ review_page }} / {{ review_total_pages }} 페이지</span>{% endif %}
+      </div>
+      <div class="review-board-list">
+        {% for review in review_posts %}
+          {% if review.kind == 'summary' %}
+            {% set review_url = url_for('player_detail', cid=review.player_cid, _anchor='review-summary') %}
+          {% else %}
+            {% set review_url = url_for('player_review_detail', cid=review.player_cid, review_id=review.id) %}
+          {% endif %}
+          <a class="review-board-item" href="{{ review_url }}">
+            <div class="review-board-art" {% if review.player_bimage %}style="background-image:url('{{ review.player_bimage }}');"{% endif %}>
+              {% if review.player_pimage %}<img src="{{ review.player_pimage }}" alt="{{ review.player_name }}" loading="lazy">{% endif %}
+            </div>
+            <div class="review-board-body">
+              <div class="review-board-titleline">
+                {% if review.kind == 'summary' %}<span class="review-board-kind">선수 장단점</span>{% endif %}
+                <span class="review-board-title">{{ review.title }}</span>
+                <span class="review-board-player">{% if review.player_position %}{{ review.player_position }} · {% endif %}OVR {{ review.player_ovr or '-' }} · {{ review.player_name }}</span>
+              </div>
+              {% if review.player_class %}<div class="review-board-class">{{ review.player_class }}</div>{% endif %}
+              <p class="review-board-excerpt">{{ review.excerpt or '작성자가 남긴 선수 사용 리뷰를 확인해보세요.' }}</p>
+              <div class="review-board-scoreline">
+                {% if review.average_rating %}<span class="review-board-score">★ {{ review.average_rating }}</span>{% endif %}
+                {% if review.kind == 'summary' %}
+                  <span>장점 · 단점 · 최종 결론</span>
+                {% else %}
+                  <span>{{ review.used_position or '-' }} · {{ review.enhance_level if review.enhance_level is not none else '-' }}진 · {{ review.tier or '-' }}</span>
+                {% endif %}
+              </div>
+            </div>
+            <div class="review-board-side">
+              <span class="review-board-author">{{ review.username or '익명' }}</span>
+              <div class="review-board-stats">
+                <span>{{ review.created_date_display }}</span>
+                {% if review.kind != 'summary' %}<span><i class="bi bi-chat-dots" aria-hidden="true"></i> {{ review.comment_count or 0 }}</span>{% endif %}
+              </div>
+            </div>
+          </a>
+          {% if loop.index == 8 %}
+            {% set ad_layout = 'compact' %}
+            {% include "_adsense_unit.html" %}
+          {% endif %}
+        {% else %}
+          <div class="empty-posts">아직 등록된 선수 리뷰 또는 선수 장단점이 없습니다.</div>
+        {% endfor %}
+      </div>
+      {% if review_total_pages > 1 %}
+        <nav class="review-pagination" aria-label="리뷰 목록 페이지">
+          {% if review_page > 1 %}
+            <a class="review-page-link" href="{{ url_for('community', tab='review', q=q, position=review_position, min_rating=review_min_rating, page=review_page - 1) }}" aria-label="이전 페이지"><i class="bi bi-chevron-left" aria-hidden="true"></i></a>
+          {% else %}
+            <span class="review-page-link disabled" aria-hidden="true"><i class="bi bi-chevron-left"></i></span>
+          {% endif %}
+
+          {% if review_page_numbers and review_page_numbers[0] > 1 %}
+            <a class="review-page-link" href="{{ url_for('community', tab='review', q=q, position=review_position, min_rating=review_min_rating, page=1) }}">1</a>
+            {% if review_page_numbers[0] > 2 %}<span class="review-page-gap" aria-hidden="true">…</span>{% endif %}
+          {% endif %}
+
+          {% for page_number in review_page_numbers %}
+            {% if page_number == review_page %}
+              <span class="review-page-link active" aria-current="page">{{ page_number }}</span>
+            {% else %}
+              <a class="review-page-link" href="{{ url_for('community', tab='review', q=q, position=review_position, min_rating=review_min_rating, page=page_number) }}">{{ page_number }}</a>
+            {% endif %}
+          {% endfor %}
+
+          {% if review_page_numbers and review_page_numbers[-1] < review_total_pages %}
+            {% if review_page_numbers[-1] < review_total_pages - 1 %}<span class="review-page-gap" aria-hidden="true">…</span>{% endif %}
+            <a class="review-page-link" href="{{ url_for('community', tab='review', q=q, position=review_position, min_rating=review_min_rating, page=review_total_pages) }}">{{ review_total_pages }}</a>
+          {% endif %}
+
+          {% if review_page < review_total_pages %}
+            <a class="review-page-link" href="{{ url_for('community', tab='review', q=q, position=review_position, min_rating=review_min_rating, page=review_page + 1) }}" aria-label="다음 페이지"><i class="bi bi-chevron-right" aria-hidden="true"></i></a>
+          {% else %}
+            <span class="review-page-link disabled" aria-hidden="true"><i class="bi bi-chevron-right"></i></span>
+          {% endif %}
+        </nav>
+      {% endif %}
+    {% else %}
+      <div class="post-list">
+        {% for post in posts %}
+          <article class="community-post">
+            <span class="post-dot" aria-hidden="true"></span>
+            <div class="post-body">
+              <div>
+                <span class="post-badge{% if post.is_pinned %} is-pinned{% endif %}">{% if post.is_pinned %}<i class="bi bi-pin-angle-fill" aria-hidden="true"></i> {% endif %}{{ boards[post.board_type if post.board_type in boards else active].label }}</span>
+                <a href="{{ url_for('post_detail', post_id=post.id) }}" class="post-title-link">{{ post.title }}</a>
+                {% if post.poll_question %}<span class="post-extra-badge"><i class="bi bi-bar-chart-fill" aria-hidden="true"></i> 투표</span>{% endif %}
+                {% if post.comments|length %}<span class="comment-count">({{ post.comments|length }})</span>{% endif %}
+              </div>
+              <p class="post-preview">{{ post.content }}</p>
+            </div>
+            <div class="post-side">
+              {% if post.image_filename %}<img src="{{ url_for('static', filename='uploads/' ~ post.image_filename) }}" class="post-thumb" alt="">{% endif %}
+              <span>
+                {% if post.author %}
+                  <a href="{{ url_for('public_profile', user_id=post.author.id) }}" class="author-link">{{ post.author.username }}<span class="profile-arrow">&gt;</span></a>
+                {% else %}
+                  익명
+                {% endif %}
+              </span>
+              <span>{{ post.created_at.strftime('%m.%d') }}</span>
+              <span><i class="bi bi-eye" aria-hidden="true"></i> {{ post.views or 0 }}</span>
+              <span><i class="bi bi-hand-thumbs-up" aria-hidden="true"></i> {{ post.likes }}</span>
+            </div>
+          </article>
+        {% else %}
+          <div class="empty-posts">아직 게시글이 없습니다.</div>
+        {% endfor %}
+      </div>
+      {% if post_total_pages|default(1) > 1 %}
+        <nav class="review-pagination" aria-label="게시글 목록 페이지">
+          {% if post_page > 1 %}
+            <a class="review-page-link" href="{{ url_for('community', tab=active, q=q, page=post_page - 1) }}" aria-label="이전 페이지"><i class="bi bi-chevron-left" aria-hidden="true"></i></a>
+          {% else %}
+            <span class="review-page-link disabled" aria-hidden="true"><i class="bi bi-chevron-left"></i></span>
+          {% endif %}
+
+          {% for page_number in post_page_numbers %}
+            {% if page_number == post_page %}
+              <span class="review-page-link active" aria-current="page">{{ page_number }}</span>
+            {% else %}
+              <a class="review-page-link" href="{{ url_for('community', tab=active, q=q, page=page_number) }}">{{ page_number }}</a>
+            {% endif %}
+          {% endfor %}
+
+          {% if post_page < post_total_pages %}
+            <a class="review-page-link" href="{{ url_for('community', tab=active, q=q, page=post_page + 1) }}" aria-label="다음 페이지"><i class="bi bi-chevron-right" aria-hidden="true"></i></a>
+          {% else %}
+            <span class="review-page-link disabled" aria-hidden="true"><i class="bi bi-chevron-right"></i></span>
+          {% endif %}
+        </nav>
+      {% endif %}
+    {% endif %}
+  </section>
+
+  <aside class="ranking-panel">
+    <h2 class="ranking-title"><i class="bi bi-trophy" aria-hidden="true"></i> 리뷰 포인트 랭킹</h2>
+    <p class="ranking-month">{{ sidebar.current_month_key }} 월간 TOP 30</p>
+    <ol class="ranking-list">
+      {% for row in sidebar.monthly_rankings %}
+        <li class="ranking-row">
+          <span class="rank-index">{{ loop.index }}</span>
+          <a href="{{ url_for('public_profile', user_id=row.user.id) }}" class="rank-user">{{ row.user.username }}</a>
+          <span class="rank-points">{{ row.points }}점</span>
+        </li>
+      {% else %}
+        <li class="ranking-row" style="grid-template-columns:1fr; color:#64748b;">이번 달 리뷰 포인트가 없습니다.</li>
+      {% endfor %}
+    </ol>
+    <a href="{{ url_for('review_rankings') }}" class="ranking-more">랭킹 자세히 보기</a>
+  </aside>
+</div>
+{% endblock %}

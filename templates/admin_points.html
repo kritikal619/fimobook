@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+{% block title %}관리자 | 피모북{% endblock %}
+
+{% block extra_head %}
+<style>
+  .admin-shell{width:100%;max-width:900px;display:grid;gap:18px;}
+  .admin-panel{background:#fff;border:1px solid var(--line);border-radius:16px;padding:20px;box-sizing:border-box;}
+  .admin-title{margin:0 0 6px;color:var(--ink);font-size:24px;font-weight:900;}
+  .admin-subtitle{margin:0 0 16px;color:var(--muted);font-size:14px;}
+  .admin-grid{display:grid;grid-template-columns:minmax(0,1fr) 160px;gap:10px;}
+  .admin-meta{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:0 0 14px;color:var(--muted);font-size:14px;}
+  .admin-clear{color:#059669;font-weight:900;text-decoration:none;}
+  .user-list{display:grid;gap:10px;margin-top:14px;}
+  .user-row{display:grid;grid-template-columns:minmax(0,1fr) 110px minmax(120px,1fr) 86px;gap:8px;align-items:center;border:1px solid #e5edf5;border-radius:12px;padding:10px;}
+  .user-name{font-weight:900;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .user-email{display:block;color:var(--muted);font-size:12px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .user-activity{display:block;margin-top:3px;color:#64748b;font-size:11px;font-weight:700;}
+  .grant-form{display:contents;}
+  .grant-form input{margin-bottom:0;}
+  .user-delete{grid-column:1 / -1;border-top:1px solid #eef2f7;padding-top:8px;}
+  .user-delete summary{width:max-content;color:#b91c1c;font-size:13px;font-weight:900;cursor:pointer;}
+  .delete-form{display:grid;grid-template-columns:150px minmax(170px,1fr) auto;gap:8px;align-items:center;margin-top:10px;}
+  .delete-form input{margin-bottom:0;}
+  .delete-check{display:flex;align-items:center;gap:6px;color:#475569;font-size:12px;font-weight:800;}
+  .delete-check input{width:auto;margin:0;}
+  .purge-check{grid-column:1 / -1;display:flex;align-items:flex-start;gap:7px;padding:10px;border-radius:10px;background:#fff7ed;color:#9a3412;font-size:12px;font-weight:900;}
+  .purge-check input{width:auto;margin:2px 0 0;}
+  .btn-danger{border:0;border-radius:10px;background:#fef2f2;color:#b91c1c;font-weight:900;padding:12px 14px;cursor:pointer;}
+  .grant-history{margin:0;padding:0;list-style:none;display:grid;gap:8px;}
+  .grant-history li{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;border-bottom:1px solid #eef2f7;padding:8px 0;color:#334155;font-size:14px;}
+  .grant-points{font-weight:950;color:#ea580c;white-space:nowrap;}
+  @media (max-width:700px){
+    .admin-panel{padding:16px 12px;}
+    .admin-grid,.user-row,.delete-form{grid-template-columns:1fr;}
+    .grant-form{display:grid;gap:8px;}
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="admin-shell">
+  <section class="admin-panel">
+    <h1 class="admin-title">관리자</h1>
+    <p class="admin-subtitle">공지사항 작성, 모든 커뮤니티 글 삭제, 포인트 증정을 관리합니다.</p>
+    <form method="GET" class="admin-grid">
+      <input class="form-control" type="text" name="q" value="{{ q }}" placeholder="회원 이름 또는 이메일 검색">
+      <button class="btn-primary" type="submit">검색</button>
+    </form>
+  </section>
+
+  <section class="admin-panel">
+    <h2 class="admin-title">전체 회원 관리</h2>
+    <div class="admin-meta">
+      <span>
+        {% if q %}
+          검색 결과 {{ user_count }}명 / 전체 회원 {{ total_user_count }}명
+        {% else %}
+          전체 회원 {{ total_user_count }}명 모두 표시 중
+        {% endif %}
+      </span>
+      {% if q %}
+        <a class="admin-clear" href="{{ url_for('admin_points') }}">전체 회원 보기</a>
+      {% endif %}
+    </div>
+    <div class="user-list">
+      {% for user in users %}
+        <div class="user-row">
+          <div>
+            <span class="user-name">{{ user.username }}</span>
+            <span class="user-email">{{ user.email }}</span>
+            {% set activity = user_activity_counts.get(user.id, {}) %}
+            <span class="user-activity">글 {{ activity.get('posts', 0) }} · 게시판 댓글 {{ activity.get('comments', 0) }} · 리뷰 댓글 {{ activity.get('review_comments', 0) }}</span>
+          </div>
+          <form method="POST" class="grant-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <input type="hidden" name="user_id" value="{{ user.id }}">
+            <input class="form-control" type="number" name="points" min="1" max="1000000" placeholder="포인트" required>
+            <input class="form-control" type="text" name="reason" maxlength="200" placeholder="사유">
+            <button class="btn-primary" type="submit">증정</button>
+          </form>
+          <details class="user-delete">
+            <summary>회원 삭제</summary>
+            {% if current_user.id == user.id %}
+              <p class="admin-subtitle" style="margin:8px 0 0;">현재 로그인한 관리자 계정은 여기서 삭제할 수 없습니다.</p>
+            {% else %}
+              <form method="POST" action="{{ url_for('admin_delete_user', user_id=user.id) }}" class="delete-form" onsubmit="return confirm('1차 확인: 이 회원 계정을 삭제하시겠습니까?') && confirm('2차 확인: 삭제 후 계정은 복구할 수 없습니다. 계속할까요?');">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                {% if delete_password_required %}
+                  <input class="form-control" type="password" name="delete_password" placeholder="삭제 비밀번호" required>
+                {% endif %}
+                <label class="delete-check">
+                  <input type="checkbox" name="confirm_delete" value="yes" required>
+                  2단 확인 완료
+                </label>
+                <label class="purge-check">
+                  <input type="checkbox" name="purge_content" value="yes">
+                  스팸 계정인 경우 작성한 게시글·댓글·답글도 모두 삭제
+                </label>
+                <button class="btn-danger" type="submit">삭제</button>
+              </form>
+            {% endif %}
+          </details>
+        </div>
+      {% else %}
+        <p class="admin-subtitle">검색된 회원이 없습니다.</p>
+      {% endfor %}
+    </div>
+  </section>
+
+  <section class="admin-panel">
+    <h2 class="admin-title">최근 증정 내역</h2>
+    <ul class="grant-history">
+      {% for grant in recent_grants %}
+        <li>
+          <span>
+            {{ grant.user.username if grant.user else "알 수 없음" }}
+            {% if grant.admin_reason %}<small>· {{ grant.admin_reason }}</small>{% endif %}
+            <small>· {{ grant.created_at.strftime("%Y-%m-%d %H:%M") }}</small>
+          </span>
+          <span class="grant-points">{{ grant.points }}점</span>
+        </li>
+      {% else %}
+        <li>아직 관리자 포인트 증정 내역이 없습니다.</li>
+      {% endfor %}
+    </ul>
+  </section>
+</div>
+{% endblock %}

@@ -1,0 +1,545 @@
+{% extends "base.html" %}
+
+{% block body_class %}review-form-page{% endblock %}
+
+{% block title %}{% if player.className %}{{ player.className }} · {% endif %}{{ player.playerKor }} 리뷰 {% if form_mode == 'edit' %}수정{% else %}작성{% endif %} | 피모북{% endblock %}
+
+{% block extra_head %}
+<style>
+  .main-content {
+    max-width: 980px;
+    align-items: stretch;
+  }
+
+  .review-write-wrap {
+    display: grid;
+    gap: 16px;
+    width: 100%;
+  }
+
+  .review-write-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .review-write-title {
+    margin: 0;
+    color: #0f172a;
+    font-size: 24px;
+    font-weight: 950;
+    letter-spacing: -0.6px;
+  }
+
+  .review-write-sub {
+    color: #64748b;
+    font-size: 13px;
+    font-weight: 800;
+  }
+
+  .flash-messages {
+    display: grid;
+    gap: 8px;
+  }
+
+  .flash-message {
+    padding: 11px 13px;
+    border-radius: 10px;
+    border: 1px solid #dbe3ec;
+    background: #f8fafc;
+    color: #334155;
+    font-size: 13px;
+    font-weight: 800;
+  }
+
+  .flash-message.success {
+    border-color: #a7f3d0;
+    background: #ecfdf5;
+    color: #047857;
+  }
+
+  .flash-message.danger {
+    border-color: #fecaca;
+    background: #fef2f2;
+    color: #b91c1c;
+  }
+
+  .back-link {
+    min-height: 40px;
+    padding: 0 13px;
+    border-radius: 11px;
+    border: 1px solid #dbe3ec;
+    background: #f8fafc;
+    color: #334155;
+    display: inline-flex;
+    align-items: center;
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 900;
+  }
+
+  .review-panel {
+    border: 1px solid #dbe3ec;
+    border-radius: 14px;
+    background: #ffffff;
+    padding: 16px;
+    box-sizing: border-box;
+    display: grid;
+    gap: 14px;
+  }
+
+  .section-title {
+    margin: 0;
+    color: #111827;
+    font-size: 16px;
+    font-weight: 950;
+  }
+
+  .form-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .field {
+    display: grid;
+    gap: 6px;
+    min-width: 0;
+  }
+
+  .field label {
+    color: #64748b;
+    font-size: 12px;
+    font-weight: 900;
+  }
+
+  .field select,
+  .field input,
+  .field textarea {
+    width: 100%;
+    border: 1px solid #dbe3ec;
+    border-radius: 10px;
+    background: #f8fafc;
+    color: #0f172a;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 750;
+    box-sizing: border-box;
+    outline: none;
+  }
+
+  .field select,
+  .field input {
+    min-height: 40px;
+    padding: 0 10px;
+  }
+
+  .field textarea {
+    min-height: 120px;
+    padding: 10px;
+    resize: vertical;
+    line-height: 1.5;
+  }
+
+  .wide {
+    grid-column: 1 / -1;
+  }
+
+  .rating-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .rating-card {
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    background: #f8fafc;
+    padding: 12px;
+    display: grid;
+    grid-template-columns: 120px minmax(0, 1fr);
+    gap: 10px;
+    align-items: end;
+  }
+
+  .rating-name {
+    color: #0f172a;
+    font-size: 14px;
+    font-weight: 950;
+  }
+
+  .skill-config {
+    border: 1px solid #dbe3ec;
+    border-radius: 14px;
+    background: linear-gradient(180deg, #ffffff, #f8fafc);
+    padding: 14px;
+    display: grid;
+    gap: 12px;
+  }
+
+  .skill-config-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .skill-summary {
+    color: #059669;
+    font-size: 12px;
+    font-weight: 950;
+  }
+
+  .skill-summary.is-over {
+    color: #dc2626;
+  }
+
+  .skill-card-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .skill-card {
+    min-width: 0;
+    display: grid;
+    grid-template-columns: 52px minmax(0, 1fr);
+    gap: 10px;
+    align-items: center;
+    padding: 10px;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    background: #ffffff;
+  }
+
+  .skill-card.is-locked {
+    opacity: 0.58;
+  }
+
+  .skill-card.no-skill-image {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .skill-card img {
+    width: 52px;
+    height: 52px;
+    object-fit: contain;
+  }
+
+  .skill-card-main {
+    min-width: 0;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 104px;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .skill-name {
+    color: #0f172a;
+    font-size: 14px;
+    font-weight: 950;
+    line-height: 1.25;
+  }
+
+  .skill-meta {
+    margin-top: 3px;
+    color: #64748b;
+    font-size: 11px;
+    font-weight: 800;
+  }
+
+  .skill-stat-list {
+    margin-top: 6px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  .skill-stat-chip {
+    min-height: 22px;
+    display: inline-flex;
+    align-items: center;
+    padding: 0 7px;
+    border-radius: 999px;
+    background: #ecfdf5;
+    color: #047857;
+    font-size: 11px;
+    font-weight: 900;
+  }
+
+  .skill-card select {
+    min-height: 36px;
+    border: 1px solid #dbe3ec;
+    border-radius: 10px;
+    background: #f8fafc;
+    color: #0f172a;
+    font-size: 12px;
+    font-weight: 900;
+    padding: 0 8px;
+  }
+
+  .actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .submit-btn {
+    min-height: 44px;
+    padding: 0 18px;
+    border: none;
+    border-radius: 12px;
+    background: linear-gradient(90deg, #059669, #10b981);
+    color: #fff;
+    font-size: 14px;
+    font-weight: 950;
+    cursor: pointer;
+  }
+
+  @media (max-width: 860px) {
+    .form-grid,
+    .rating-grid,
+    .skill-card-grid {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  @media (max-width: 620px) {
+    .form-grid,
+    .rating-grid,
+    .skill-card-grid,
+    .rating-card {
+      grid-template-columns: 1fr;
+    }
+    .skill-card-main {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="review-write-wrap">
+  <div class="review-write-head">
+    <div>
+      <h1 class="review-write-title">{{ player.className }} {{ player.playerKor }} 리뷰 {% if form_mode == 'edit' %}수정{% else %}작성{% endif %}</h1>
+      <div class="review-write-sub">사용 포지션, 진화, 티어와 실제 사용감을 남겨주세요.</div>
+    </div>
+    <a class="back-link" href="{{ url_for('player_detail', cid=player.review_cid or player.cid, _anchor='player-reviews') }}">상세로 돌아가기</a>
+  </div>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div class="flash-messages">
+        {% for category, message in messages %}
+          <div class="flash-message {{ category }}">{{ message }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+
+  <form class="review-panel" method="post" action="{{ form_action }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <input type="hidden" name="next" value="{{ request.args.get('next') or (url_for('player_reviews', cid=player.review_cid or player.cid) if form_mode == 'edit' else url_for('player_detail', cid=player.review_cid or player.cid, _anchor='player-reviews')) }}">
+
+    <div class="field wide">
+      <label for="review-title">리뷰 제목</label>
+      <input id="review-title" name="title" type="text" minlength="2" maxlength="80" value="{{ review.title or '' }}" placeholder="리뷰의 핵심이 드러나는 제목을 입력해주세요" required>
+    </div>
+
+    <h2 class="section-title">사용 정보</h2>
+    <div class="form-grid">
+      <div class="field">
+        <label for="review-formation">포메이션</label>
+          <select id="review-formation" name="formation" required>
+            <option value="">선택</option>
+            {% for formation in review_formations %}
+              <option value="{{ formation }}" {% if review.formation == formation %}selected{% endif %}>{{ formation }}</option>
+            {% endfor %}
+          </select>
+      </div>
+      <div class="field">
+        <label for="review-position">사용 포지션</label>
+          <select id="review-position" name="used_position" required>
+            <option value="">선택</option>
+            {% for position in review_positions %}
+              <option value="{{ position }}" {% if review.used_position == position %}selected{% endif %}>{{ position }}</option>
+            {% endfor %}
+          </select>
+      </div>
+      <div class="field">
+        <label for="review-enhance">사용 진화</label>
+          <select id="review-enhance" name="enhance_level" required>
+            {% for value in range(0, enhance_totals|length) %}
+              <option value="{{ value }}" {% if value == (review.enhance_level if review.enhance_level is defined else player.initialEnhance) %}selected{% endif %}>{{ value }}진</option>
+            {% endfor %}
+          </select>
+      </div>
+      <div class="field">
+        <label for="review-tier">사용자 티어</label>
+          <select id="review-tier" name="tier" required>
+            <option value="">선택</option>
+            {% for tier in review_tiers %}
+              <option value="{{ tier }}" {% if review.tier == tier %}selected{% endif %}>{{ tier }}</option>
+            {% endfor %}
+          </select>
+      </div>
+    </div>
+
+    <h2 class="section-title">항목별 평가</h2>
+    <div class="rating-grid">
+      {% for field in review_rating_fields %}
+        <div class="rating-card">
+          <div class="rating-name">{{ field.label }}</div>
+          <div class="field">
+            <label for="{{ field.field }}">별점</label>
+            <select id="{{ field.field }}" name="{{ field.field }}" required>
+                <option value="">선택</option>
+                {% for score in range(1, 11) %}
+                <option value="{{ score }}" {% if review.ratings and review.ratings.get(field.key) == score %}selected{% endif %}>{{ score }} / 10</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="field wide">
+              <label for="{{ field.note_field }}">짧은 평가</label>
+            <input id="{{ field.note_field }}" name="{{ field.note_field }}" type="text" maxlength="160" value="{{ review.rating_notes.get(field.key, '') if review.rating_notes else '' }}">
+            </div>
+          </div>
+        {% endfor %}
+
+      {% for label in review_skill_move_labels %}
+        {% set move_review = review.skill_move_ratings[loop.index0] if review.skill_move_ratings and loop.index0 < (review.skill_move_ratings|length) else {} %}
+        <div class="rating-card">
+          <div class="rating-name">{{ label }}</div>
+          <div class="field">
+            <label for="rating_skill_move_{{ loop.index0 }}">별점</label>
+            <select id="rating_skill_move_{{ loop.index0 }}" name="rating_skill_move_{{ loop.index0 }}" required>
+                <option value="">선택</option>
+                {% for score in range(1, 11) %}
+                <option value="{{ score }}" {% if move_review.rating == score %}selected{% endif %}>{{ score }} / 10</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="field wide">
+              <label for="note_skill_move_{{ loop.index0 }}">짧은 평가</label>
+            <input id="note_skill_move_{{ loop.index0 }}" name="note_skill_move_{{ loop.index0 }}" type="text" maxlength="160" value="{{ move_review.note or '' }}">
+            </div>
+          </div>
+      {% endfor %}
+    </div>
+
+    {% if player.reviewSkillDisplay and player.reviewSkillDisplay['type'] == 'skill' and player.reviewSkillDisplay['items'] %}
+      <section class="skill-config">
+        <div class="skill-config-head">
+          <h2 class="section-title">스킬 구성</h2>
+          <div class="skill-summary" id="review-skill-summary"></div>
+        </div>
+        <div class="skill-card-grid">
+          {% for skill in player.reviewSkillDisplay['items'] %}
+            <div class="skill-card" data-review-skill-card data-skill-kind="{{ skill._review_kind }}" data-skill-slot="{{ skill._review_slot }}" data-required-base="{{ skill._required_base_slot }}">
+              <img src="{{ skill.imageUrl }}" alt="{{ skill.name }}" loading="lazy" onerror="this.parentElement.classList.add('no-skill-image'); this.remove();">
+              <div class="skill-card-main">
+                <div>
+                  <div class="skill-name">{{ skill.name }}</div>
+                  <div class="skill-meta">
+                    {{ skill._review_slot }}
+                    {{ skill._review_kind }}
+                    {% if skill.level is defined and skill.level is not none %}Lv.{{ skill.level }}{% endif %}
+                  </div>
+                  {% if skill.statCodes %}
+                    <div class="skill-stat-list">
+                      {% for code in skill.statCodes %}
+                        <span class="skill-stat-chip">{{ stat_labels.get(code, code) }}</span>
+                      {% endfor %}
+                    </div>
+                  {% endif %}
+                </div>
+                <select name="skill_config_{{ loop.index0 }}" data-review-skill-select data-initial-point="{{ (review.skill_config[loop.index0].point if review.skill_config and loop.index0 < (review.skill_config|length) else 0) }}"></select>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      </section>
+    {% endif %}
+
+    <div class="field wide">
+      <label for="review-text">전체 리뷰</label>
+      <textarea id="review-text" name="review_text" minlength="20" maxlength="3000" placeholder="전체적인 사용감, 장단점, 추천 포지션을 20자 이상 적어주세요.">{{ review.review_text or '' }}</textarea>
+    </div>
+
+    <div class="actions">
+      <button class="submit-btn" type="submit">리뷰 {% if form_mode == 'edit' %}수정{% else %}저장{% endif %}</button>
+    </div>
+  </form>
+</div>
+
+<script>
+  const enhanceSelect = document.getElementById("review-enhance");
+  const skillSummary = document.getElementById("review-skill-summary");
+  const skillCards = Array.from(document.querySelectorAll("[data-review-skill-card]"));
+
+  function baseSlotForUltimate(slot) {
+    const normalized = String(slot || "").toUpperCase();
+    if (normalized === "U1") return "B1";
+    if (normalized === "U2") return "B2";
+    if (normalized === "U3") return "B1";
+    if (normalized === "U4") return "B2";
+    return "";
+  }
+
+  function pointsForSlot(slot) {
+    const card = skillCards.find((item) => String(item.dataset.skillSlot || "").toUpperCase() === String(slot || "").toUpperCase());
+    return Number(card?.querySelector("[data-review-skill-select]")?.value || 0);
+  }
+
+  function isUnlocked(card) {
+    if (card.dataset.skillKind !== "ULTIMATE") return true;
+    const requiredBase = card.dataset.requiredBase || baseSlotForUltimate(card.dataset.skillSlot);
+    return !requiredBase || pointsForSlot(requiredBase) >= 2;
+  }
+
+  function maxPointsForCard(card) {
+    if (card.dataset.skillKind === "ULTIMATE") return 4;
+    return 2;
+  }
+
+  function selectedPoints() {
+    return skillCards.reduce((sum, card) => sum + Number(card.querySelector("[data-review-skill-select]")?.value || 0), 0);
+  }
+
+  function rebuildSkillSelects() {
+    const enhance = Number(enhanceSelect?.value || 0);
+    let spent = 0;
+    skillCards.forEach((card) => {
+      const select = card.querySelector("[data-review-skill-select]");
+      if (!select) return;
+      const current = select.options.length ? Number(select.value || 0) : Number(select.dataset.initialPoint || 0);
+      const unlocked = isUnlocked(card);
+      const max = unlocked ? Math.min(maxPointsForCard(card), Math.max(0, enhance - spent)) : 0;
+      select.innerHTML = "";
+      for (let point = 0; point <= max; point += 1) {
+        select.append(new Option(`${point}pt`, String(point)));
+      }
+      select.value = String(Math.min(current, max));
+      select.disabled = !unlocked;
+      card.classList.toggle("is-locked", !unlocked);
+      spent += Number(select.value || 0);
+    });
+    if (skillSummary) {
+      const spent = selectedPoints();
+      skillSummary.textContent = `스킬 포인트 ${spent} / ${enhance}`;
+      skillSummary.classList.toggle("is-over", false);
+    }
+  }
+
+  enhanceSelect?.addEventListener("change", rebuildSkillSelects);
+  skillCards.forEach((card) => {
+    card.querySelector("[data-review-skill-select]")?.addEventListener("change", rebuildSkillSelects);
+  });
+  rebuildSkillSelects();
+</script>
+{% endblock %}

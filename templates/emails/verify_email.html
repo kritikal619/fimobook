@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="ko">
+<body style="margin:0;padding:0;background:#f1f5f9;font-family:Arial,'Apple SD Gothic Neo',sans-serif;color:#1f2937;">
+  <div style="max-width:560px;margin:0 auto;padding:32px 16px;">
+    <div style="background:#ffffff;border:1px solid #dbe3ec;border-radius:16px;padding:32px 28px;">
+      <div style="font-size:22px;font-weight:700;color:#059669;margin-bottom:20px;">피모북</div>
+      <h1 style="font-size:24px;line-height:1.4;margin:0 0 14px;">이메일 주소를 인증해주세요</h1>
+      <p style="font-size:15px;line-height:1.7;margin:0 0 24px;color:#475569;">
+        {{ user.username }}님, 아래 버튼을 눌러 피모북 회원가입을 완료해주세요.
+      </p>
+      <p style="margin:0 0 24px;">
+        <a href="{{ verification_link }}" style="display:inline-block;background:#10b981;color:#ffffff;text-decoration:none;font-weight:700;padding:13px 22px;border-radius:10px;">이메일 인증하기</a>
+      </p>
+      <p style="font-size:13px;line-height:1.6;margin:0;color:#64748b;">
+        이 링크는 {{ expires_hours }}시간 동안 유효합니다. 본인이 요청하지 않았다면 이 메일을 무시해주세요.
+      </p>
+    </div>
+  </div>
+</body>
+</html>

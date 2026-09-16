@@ -1,4 +1,11 @@
 Flask
 requests
 beautifulsoup4
-gunicorn==20.1.0
+pytz
+Flask-SQLAlchemy
+Flask-Migrate
+Flask-Login
+Flask-Mail
+google-auth
+firebase-admin
+Pillow
