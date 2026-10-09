@@ -1,0 +1,61 @@
+body.edit-post-page .main-content { max-width: 1160px; }
+.edit-post-shell { max-width: 1100px; }
+.edit-post-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.edit-post-badge { display: inline-flex; align-items: center; gap: 6px; flex-shrink: 0; padding: 7px 11px; border-radius: 100px; background: #e7f3ee; color: #076448; font-size: 12px; font-weight: 800; }
+.edit-post-layout { display: grid; grid-template-columns: minmax(0, 1fr) 310px; align-items: start; gap: 20px; }
+.edit-post-writing { display: grid; gap: 24px; padding: 28px; }
+.edit-post-board { max-width: 220px; }
+.edit-post-form .edit-post-title-input { font-size: 18px; font-weight: 750; min-height: 52px; }
+.edit-post-form textarea.form-control { min-height: 480px; padding: 16px; font-size: 15px; line-height: 1.85; }
+.edit-post-sidebar { display: grid; gap: 16px; min-width: 0; }
+.edit-post-setting { padding: 20px; }
+.edit-post-section-title { display: flex; align-items: center; gap: 8px; margin: 0 0 14px; color: #172033; font-size: 15px; font-weight: 850; }
+.edit-post-section-title i { color: #648176; }
+.edit-post-section-help { margin: -6px 0 16px; }
+.edit-post-image-preview { position: relative; overflow: hidden; margin-bottom: 16px; border: 1px solid #dbe3ec; border-radius: 9px; background: #f1f5f9; }
+.edit-post-image-preview img { display: block; width: 100%; height: 160px; object-fit: contain; }
+.edit-post-image-caption { display: block; padding: 8px 10px; border-top: 1px solid #dbe3ec; background: #fff; color: #64748b; font-size: 11px; }
+.edit-post-image-preview.is-removing img { opacity: .3; }
+.edit-post-image-caption { overflow-wrap: anywhere; }
+.edit-post-remove-image { margin-top: 14px; }
+.edit-post-form input[type="file"].form-control { font-size: 12px; }
+.edit-post-reset-image { margin-top: 10px; padding: 6px 0; border: 0; background: transparent; color: #047857; font: inherit; font-size: 12px; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+.edit-post-form [hidden] { display: none !important; }
+.edit-post-poll-lock { margin: 12px 0 0; padding: 10px; border-radius: 8px; background: #f1f5f9; color: #64748b; font-size: 12px; line-height: 1.6; }
+.edit-post-form .form-control[readonly] { background: #f8fafc; color: #64748b; }
+.edit-post-form .poll-option-row .form-control { min-width: 0; }
+.edit-post-form .poll-remove { align-self: center; }
+.edit-post-form .poll-add:disabled, .edit-post-form .poll-remove:disabled { opacity: .4; cursor: default; }
+.edit-post-actions { padding: 18px 22px; border: 1px solid #dbe3ec; border-radius: 12px; background: #fff; justify-content: space-between; gap: 16px; }
+.edit-post-save-status { color: #64748b; font-size: 12px; line-height: 1.5; }
+.edit-post-action-buttons { display: flex; gap: 8px; flex-shrink: 0; }
+.edit-post-action-buttons .post-editor-submit { gap: 7px; }
+.edit-post-form :is(a, button, input[type="checkbox"]):focus-visible { outline: 3px solid #34d399; outline-offset: 3px; }
+html[data-theme="dark"] .edit-post-page :is(.edit-post-actions, .edit-post-image-caption) { background: var(--dark-panel); border-color: var(--dark-line); }
+html[data-theme="dark"] .edit-post-page :is(.edit-post-image-preview, .edit-post-poll-lock) { background: var(--dark-bg-soft); border-color: var(--dark-line); }
+html[data-theme="dark"] .edit-post-page :is(.edit-post-image-caption, .edit-post-save-status, .edit-post-poll-lock) { color: var(--dark-muted); }
+html[data-theme="dark"] .edit-post-page :is(.edit-post-badge, .edit-post-reset-image) { color: var(--dark-green); }
+html[data-theme="dark"] .edit-post-page .edit-post-badge { background: #12392d; }
+html[data-theme="dark"] .edit-post-page .edit-post-section-title i { color: var(--dark-green); }
+@media (max-width: 900px) {
+  .edit-post-layout { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+  .edit-post-sidebar { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; }
+  .edit-post-form textarea.form-control { min-height: 360px; }
+}
+@media (max-width: 600px) {
+  body.edit-post-page .main-content { padding: 8px 12px 28px !important; }
+  .edit-post-badge { display: none; }
+  .edit-post-sidebar { grid-template-columns: 1fr; }
+  .edit-post-form .post-editor-card { border: 1px solid #dbe3ec; border-radius: 12px; padding: 18px 15px; }
+  .edit-post-writing { gap: 20px; }
+  .edit-post-board { max-width: none; }
+  .edit-post-form .edit-post-title-input { font-size: 16px; }
+  .edit-post-form :is(select, input:not([type="file"]), textarea).form-control { font-size: 16px; }
+  .edit-post-form textarea.form-control { min-height: 330px; padding: 12px; }
+  .edit-post-form :is(.poll-add, .poll-remove, .post-editor-cancel, .post-editor-submit) { min-height: 44px; }
+  .edit-post-form .poll-remove { width: 44px; flex-basis: 44px; }
+  .edit-post-form .post-editor-check { min-height: 44px; }
+  .edit-post-actions { display: flex; flex-direction: column; align-items: stretch; padding: 16px; gap: 12px; }
+  .edit-post-action-buttons { display: grid; grid-template-columns: 1fr 1.7fr; }
+  .edit-post-image-preview img { height: 190px; }
+}

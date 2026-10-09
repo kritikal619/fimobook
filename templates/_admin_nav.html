@@ -1,0 +1,7 @@
+<div class="workspace-heading"><div><h1>관리자</h1></div><a class="workspace-site" href="{{ url_for('index') }}">사이트 보기 ↗</a></div>
+<nav class="workspace-nav" aria-label="관리자 메뉴">
+  <a href="{{ url_for('admin_dashboard') }}" {% if request.endpoint == 'admin_dashboard' %}aria-current="page"{% endif %}>관리 홈</a>
+  <a href="{{ url_for('player_review_summary_admin') }}" {% if request.endpoint == 'player_review_summary_admin' %}aria-current="page"{% endif %}>요약리뷰</a>
+  <a href="{{ url_for('admin_points') }}" {% if request.endpoint == 'admin_points' %}aria-current="page"{% endif %}>회원 관리</a>
+  <a href="{{ url_for('community', tab='notice') }}">커뮤니티 ↗</a>
+</nav>

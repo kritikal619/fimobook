@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+
+{# Source data is chronological. Keep older seasons archived in the JSON. #}
+{% set cutoff = namespace(index=0) %}
+{% for card in renewal_cards %}
+  {% if card.separateCode == 'founders2' %}
+    {% set cutoff.index = loop.index0 %}
+  {% endif %}
+{% endfor %}
+{% set renewal_cards = renewal_cards[cutoff.index:] %}
+
+{% block body_class %}times-page{% endblock %}
+
+{% block title %}FC모바일 갱신시간 - 클래스별 다음 갱신 시간 | 피모북{% endblock %}
+
+{% block extra_head %}
+<meta name="description" content="FC모바일 클래스별 갱신시간과 다음 갱신까지 남은 시간을 확인하세요. 클래스명, 시즌명과 통용 별칭으로 빠르게 검색할 수 있습니다.">
+{% include "_adsense_head.html" %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/times-workspace.css', v='20261009-compact-2') }}">
+{% endblock %}
+
+{% block content %}
+<section class="times-wrap">
+  <div class="times-header">
+    <div class="times-copy">
+      <h1 class="times-title">FC모바일 갱신시간</h1>
+
+    </div>
+
+  </div>
+
+  <section class="interest-area" aria-label="관심 갱신시간">
+    <div class="interest-heading">
+      <span class="interest-title"><span aria-hidden="true">★</span> 관심 <span id="watch-count">0</span></span>
+      <span class="interest-empty" id="watch-empty">{% if current_user.is_authenticated %}별을 눌러 추가{% else %}<a href="{{ url_for('login', next=url_for('times')) }}">로그인하고 관심 저장</a>{% endif %}</span>
+      <div class="interest-actions">
+        <button class="quiet-button" id="interest-filter" type="button" aria-pressed="false">관심만</button>
+        {% if current_user.is_authenticated %}
+        <button class="quiet-button push-toggle" id="push-toggle" type="button" disabled><i class="bi bi-bell" aria-hidden="true"></i><span id="push-toggle-label">알림 켜기</span></button>
+        <details class="alert-settings">
+          <summary class="quiet-button" aria-label="알림 설정"><i class="bi bi-gear" aria-hidden="true"></i></summary>
+          <div class="alert-settings-panel">
+            <div class="alert-settings-row">
+              <span id="push-state">알림 확인 중</span>
+              <button class="quiet-button" id="push-test" type="button" hidden>테스트 알림</button>
+            </div>
+            <p class="alert-settings-note"><span id="push-detail" role="status"></span><span class="alert-hint">홈 화면 앱에서도 알림을 켜주세요.</span></p>
+            <form id="quiet-form">
+              <strong class="alert-settings-title" id="quiet-summary">방해금지 시간</strong>
+              <label class="quiet-enabled"><input id="quiet-enabled" type="checkbox" disabled> 지정한 시간에는 갱신 알림 끄기</label>
+              <div class="quiet-time-fields">
+                <label for="quiet-start">시작<input id="quiet-start" type="time" value="00:00" required disabled></label>
+                <span aria-hidden="true">~</span>
+                <label for="quiet-end">종료<input id="quiet-end" type="time" value="07:00" required disabled></label>
+                <button class="quiet-button" id="quiet-save" type="submit" disabled>저장</button>
+              </div>
+              <p class="quiet-note">한국시간 기준. 모든 기기에 적용됩니다.</p>
+              <p id="quiet-status" role="status"></p>
+            </form>
+          </div>
+        </details>
+        {% endif %}
+      </div>
+    </div>
+    <div class="interest-list" id="watch-cards"></div>
+    <div class="interest-status" id="interest-status" role="status"></div>
+  </section>
+
+  <div class="times-toolbar">
+    <div class="search-bar">
+      <input id="times-search" class="search-input" type="text" aria-label="클래스 또는 시즌 검색" placeholder="클래스/시즌 검색 (예: 아이콘, TOTY)" autocomplete="off">
+      <i class="bi bi-search"></i>
+    </div>
+
+    <div class="times-overview" aria-live="polite">
+      <span class="overview-count"><span id="times-count">{{ renewal_cards|length }}</span>개 클래스</span>
+      <span class="overview-divider" aria-hidden="true"></span>
+      <span class="overview-clock" id="times-clock">--:--:--</span>
+    </div>
+  </div>
+
+  {% set ad_layout = "compact" %}
+  {% include "_adsense_unit.html" %}
+
+  <div class="table-shell">
+    <div class="table-head">
+      <div>카드</div>
+      <div>이름</div>
+      <div>갱신 시간</div>
+      <div>남은 시간</div>
+    </div>
+    <div class="table-body" id="times-body">
+      {% for card in renewal_cards %}
+        <div class="table-row{% if not card.available %} status-dim{% endif %}" data-server-rendered="true">
+          <div class="image-col">
+            <img class="card-img" src="{{ card.image if card.image.startswith('https://') else url_for('static', filename='times/' ~ card.image|replace('./', '')) }}" alt="{{ card.name }} FC모바일 카드" loading="lazy">
+          </div>
+          <div class="name-col"><div class="card-name">{{ card.name }}</div></div>
+          <div class="time-col time-text">
+            {{ '짝수시' if card.eo == 0 else '홀수시' }} {{ card.min }}분{% if card.sec %} {{ card.sec }}초{% endif %}{% if card.endMin is defined %}~{{ card.endMin }}분{% if card.endSec %} {{ card.endSec }}초{% endif %}{% endif %}
+          </div>
+          <div class="remain-col"><span class="remain">—</span></div>
+        </div>
+      {% else %}
+        <div class="times-empty">갱신시간 데이터를 불러오지 못했습니다.</div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <details class="times-guide">
+    <summary>갱신시간 안내</summary>
+    <div class="times-guide-content">
+      <h2>FC모바일 클래스별 갱신시간</h2>
+      <p>클래스명, 시즌명 또는 통용 별칭으로 검색하면 홀수시와 짝수시의 갱신 기준을 확인할 수 있습니다. 갱신 리스트의 남은 시간은 한국시간을 기준으로 현재 시간대에 아직 갱신되지 않은 클래스에 표시됩니다.</p>
+      <p class="times-guide-note">관심 목록에는 다음 갱신까지 남은 시간이 표시됩니다. 로그인 후 별을 눌러 저장하고 이 기기의 알림을 켜면 갱신 알림을 받을 수 있습니다. 실제 게임 내 갱신 시각은 표시된 기준과 차이가 있을 수 있습니다.</p>
+    </div>
+  </details>
+</section>
+
+<script id="renewal-card-data" type="application/json">{{ renewal_cards|tojson }}</script>
+<script src="{{ url_for('static', filename='js/times-workspace.js', v='20261009-compact-2') }}" data-signed-in="{{ 'true' if current_user.is_authenticated else 'false' }}" defer></script>
+{% endblock %}

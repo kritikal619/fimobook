@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block body_class %}auth-page{% endblock %}
+{% block title %}아이디 찾기 | 피모북{% endblock %}
+{% block extra_head %}
+  {% if recaptcha_enabled %}<script src="https://www.google.com/recaptcha/api.js?hl=ko" async defer></script>{% endif %}
+{% endblock %}
+{% block content %}
+<div class="auth-container">
+  <h1 class="page-title">아이디 찾기</h1>
+  <p class="auth-description">피모북의 로그인 아이디는 이메일 주소입니다.<br>가입할 때 설정한 감독명으로 이메일을 확인하세요.</p>
+  {% include "_recaptcha_widget.html" %}
+  <form method="POST" action="{{ url_for('find_id') }}" class="auth-form" onsubmit="return window.fimobookRequireRecaptcha();">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <input type="hidden" name="g-recaptcha-response" data-recaptcha-token>
+    <div class="form-group">
+      <label for="username">감독명</label>
+      <input type="text" class="form-control" id="username" name="username" maxlength="100" value="{{ request.form.get('username', '') }}" placeholder="가입할 때 설정한 감독명" required>
+    </div>
+    <button type="submit" class="btn-primary btn-block">가입 이메일 확인</button>
+  </form>
+  {% if masked_email %}
+  <div class="recovery-result" role="status">
+    가입한 이메일 주소
+    <strong>{{ masked_email }}</strong>
+    개인정보 보호를 위해 일부만 표시합니다.<br>로그인할 때는 전체 이메일 주소를 입력해주세요.
+  </div>
+  {% endif %}
+  <p class="recovery-note">Google로 가입했다면 로그인 화면의 Google 버튼을 이용하세요. 가입 이메일을 사용할 수 없는 경우 이 화면에서 이메일을 변경할 수는 없습니다.</p>
+  <div class="auth-switch">
+    <a href="{{ url_for('login') }}">로그인</a> ·
+    <a href="{{ url_for('forgot_password') }}">비밀번호 재설정</a>
+  </div>
+</div>
+{% include "_account_recovery_styles.html" %}
+{% endblock %}

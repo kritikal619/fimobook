@@ -1,0 +1,40 @@
+.season-ranking-page .main-content{display:block;width:100%;max-width:1120px;box-sizing:border-box;padding:16px 24px!important}
+.srank-page{--srank-ink:#20252c;--srank-muted:#64748b;--srank-line:#e2e8f0;--srank-panel:#fff;--srank-soft:#f8fafc;--srank-accent:#087b56;color:var(--srank-ink);padding:20px 0 48px;width:100%;min-width:0}
+html[data-theme="dark"] .srank-page{--srank-ink:#edf0f4;--srank-muted:#a0a8b4;--srank-line:#2c3949;--srank-panel:#141b24;--srank-soft:#1b2833;--srank-accent:#6ee7b7}
+.srank-page *{box-sizing:border-box}.srank-heading{margin:28px 0 24px}.srank-kicker{font-size:11px;letter-spacing:1.8px;font-weight:700;color:var(--srank-accent);margin:0 0 9px}.srank-heading h1{margin:0;color:var(--srank-ink);font-size:28px;line-height:1.4;letter-spacing:-1px}.srank-description{font-size:14px;line-height:1.7;margin:10px 0;color:var(--srank-muted)}.srank-date{font-size:12px;color:var(--srank-muted);margin:0}
+.srank-search{border:1px solid var(--srank-line);border-radius:12px;background:var(--srank-panel);padding:20px;margin:0 0 24px}.srank-search label{display:block;font-size:13px;font-weight:700;margin-bottom:9px}.srank-search-controls{display:flex;gap:8px;max-width:560px}.srank-search input{min-width:0;flex:1;width:100%;font:inherit;font-size:14px;padding:12px 14px;color:var(--srank-ink);background:var(--srank-soft);border:1px solid var(--srank-line);border-radius:7px}.srank-search button{flex-shrink:0;padding:10px 14px;border:1px solid var(--srank-line);border-radius:7px;background:var(--srank-panel);color:var(--srank-ink);font:inherit;font-size:12px;cursor:pointer}.srank-search input:focus-visible,.srank-search button:focus-visible{outline:2px solid var(--srank-accent);outline-offset:3px}.srank-status{margin:12px 0 0;font-size:12px;line-height:1.7;color:var(--srank-muted);overflow-wrap:anywhere}.srank-status--match{font-size:16px;font-weight:700;color:var(--srank-accent)}
+.srank-table-wrap{border-top:2px solid var(--srank-ink)}.srank-table{border-collapse:collapse;width:100%;table-layout:fixed;background:var(--srank-panel);font-size:14px}.srank-table th,.srank-table td{border-bottom:1px solid var(--srank-line);padding:15px 16px;color:var(--srank-ink)}.srank-table thead th{background:var(--srank-soft);font-size:12px;color:var(--srank-muted);font-weight:600;text-align:right}.srank-table thead th:first-child{width:80px;text-align:center}.srank-table thead th:nth-child(2){width:42%;text-align:left}.srank-table thead th:nth-child(3),.srank-table thead th:nth-child(4){width:90px}.srank-table thead th:last-child{width:150px;text-align:left}.srank-rank{text-align:center;font-variant-numeric:tabular-nums;font-weight:700}.srank-nickname{text-align:left;font-weight:600;overflow-wrap:anywhere}.srank-stars,.srank-ovr{text-align:right;font-variant-numeric:tabular-nums}.srank-stars{font-weight:700}.srank-table .srank-tier{font-size:12px;color:var(--srank-muted)}.srank-top .srank-rank span:first-child{display:inline-grid;place-items:center;width:30px;height:30px;border-radius:50%;background:var(--srank-soft);color:var(--srank-accent)}.srank-table tbody tr:hover,.srank-table .srank-exact{background:var(--srank-soft)}.srank-exact .srank-nickname{color:var(--srank-accent)}.srank-empty{text-align:center;padding:40px 12px;font-size:14px;line-height:1.9;color:var(--srank-muted)}.srank-note{font-size:11px;line-height:1.8;color:var(--srank-muted);margin-top:18px}.srank-page [hidden]{display:none!important}.srank-visually-hidden{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}
+@media(max-width:620px){.season-ranking-page .main-content{padding:12px!important}.srank-page{padding-top:12px}.srank-heading{margin-top:22px}.srank-heading h1{font-size:23px}.srank-search{padding:16px;margin-bottom:20px}.srank-search input{font-size:16px;padding:11px}.srank-table{font-size:13px}.srank-table th,.srank-table td{padding:13px 8px}.srank-table .srank-tier{display:none}.srank-table thead th:first-child{width:48px}.srank-table thead th:nth-child(2){width:auto}.srank-table thead th:nth-child(3),.srank-table thead th:nth-child(4){width:58px}.srank-top .srank-rank span:first-child{width:26px;height:26px}.srank-status--match{font-size:15px}}
+
+/* Compact ranking layout; keep names and numbers readable on small screens. */
+.season-ranking-page .main-content{max-width:960px}
+.srank-heading{margin:24px 0 20px}
+.srank-heading h1{font-size:26px;letter-spacing:-.8px}
+.srank-date{margin-top:8px}
+.srank-search{padding:0 0 18px;border:0;border-radius:0;background:transparent;margin-bottom:0}
+.srank-search label{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
+.srank-search-controls{max-width:none}
+.srank-search input{background:var(--srank-panel);min-height:46px}
+.srank-search button{min-width:56px;min-height:46px}
+.srank-status{min-height:21px;margin-top:9px}
+.srank-status--match{font-size:14px}
+.srank-table thead th{position:sticky;top:var(--site-header-height,56px);z-index:2;box-shadow:0 1px 0 var(--srank-line)}
+.srank-top .srank-rank span:first-child{display:inline;width:auto;height:auto;border-radius:0;background:none}
+@media(max-width:620px){
+ .season-ranking-page .main-content{padding:0 12px!important}
+ .srank-page{padding-top:0}
+ .srank-page .normal-ranking-tabs{flex-wrap:nowrap;gap:0;margin-bottom:18px;padding-bottom:0}
+ .srank-page .normal-ranking-tabs a{border-radius:0;justify-content:center;min-height:46px;padding:10px 8px;font-size:13px;white-space:nowrap}
+ .srank-page .normal-ranking-tabs a[aria-current="page"]{background:transparent;border-bottom:2px solid currentColor}
+ .srank-heading{margin:18px 0 16px}
+ .srank-heading h1{font-size:22px}
+ .srank-date{font-size:11px}
+ .srank-search{padding:0 0 12px;margin-bottom:0}
+ .srank-search input{font-size:16px;padding:11px 12px}
+ .srank-table th,.srank-table td{padding:14px 6px;line-height:1.5}
+ .srank-table thead th:first-child{width:38px}
+ .srank-table thead th:nth-child(3),.srank-table thead th:nth-child(4){width:53px}
+ .srank-nickname{font-weight:500;word-break:break-word}
+ .srank-stars{font-weight:600}
+ .srank-note{font-size:11px;margin-top:14px}
+}

@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="robots" content="{{ robots_meta|default('noindex,nofollow') }}">
+  <meta name="theme-color" content="#ffffff">
+  <title>{% block title %}피모북{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/v2-home.css') }}">
+  <meta name="fimobook-page-token" content="{{ csrf_token }}">
+  <script src="{{ url_for('static', filename='js/page-data-access.js', v='20261004-1') }}"></script>
+  {% block head %}{% endblock %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/player-card-art.css', v='20261003-4') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/site-notices.css', v='20261002-2') }}">
+</head>
+<body class="v2-body {% block body_class %}{% endblock %}">
+  <a class="skip-link" href="#main-content">본문으로 건너뛰기</a>
+
+  <header class="site-header">
+    <div class="site-header-inner">
+      <a class="brand" href="{{ url_for('v2_index') }}" aria-label="피모북 새 화면 홈">
+        <img src="{{ url_for('static', filename='icons/pwa-logo-192.png') }}" alt="" width="30" height="30">
+        <span>피모북</span>
+        <em>새 화면</em>
+      </a>
+      <nav class="desktop-nav" aria-label="주요 메뉴">
+        <a class="{% if active_page == 'search' %}is-active{% endif %}" href="{{ url_for('v2_index') }}">선수 찾기</a>
+        <a href="{{ url_for('player_compare_page') }}">선수 비교</a>
+        <a href="{{ url_for('squad_maker') }}">스쿼드</a>
+        <a href="{{ url_for('normal_mode_power_ranking') }}">파워랭킹</a>
+        <a href="{{ url_for('community') }}">커뮤니티</a>
+      </nav>
+      <div class="header-actions">
+        <a class="legacy-link" href="{{ url_for('index') }}">기존 화면</a>
+        {% if current_user.is_authenticated %}
+          <a class="account-button" href="{{ url_for('profile') }}">내 정보</a>
+        {% else %}
+          <a class="account-button" href="{{ url_for('login') }}">로그인</a>
+        {% endif %}
+      </div>
+    </div>
+  </header>
+
+  <main id="main-content" class="page-container">
+    {% block main %}{% endblock %}
+  </main>
+
+  <footer class="site-footer">
+    <div>
+      <strong>피모북</strong>
+      <span>FC모바일 선수 정보를 더 빠르고 편하게.</span>
+    </div>
+    <a href="{{ url_for('index') }}">기존 피모북으로 돌아가기</a>
+  </footer>
+
+  <nav class="mobile-nav" aria-label="모바일 주요 메뉴">
+    <a class="{% if active_page == 'search' %}is-active{% endif %}" href="{{ url_for('v2_index') }}">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg>
+      <span>선수 찾기</span>
+    </a>
+    <a href="{{ url_for('player_compare_page') }}">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 7h12M16 3l4 4-4 4M16 17H4M8 13l-4 4 4 4"/></svg>
+      <span>비교</span>
+    </a>
+    <a href="{{ url_for('squad_maker') }}">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3"/><circle cx="6" cy="16" r="2.5"/><circle cx="18" cy="16" r="2.5"/><path d="M9.5 10.5 7.5 14M14.5 10.5l2 3.5"/></svg>
+      <span>스쿼드</span>
+    </a>
+    <a href="{{ url_for('community') }}">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5h14v11H9l-4 3V5Z"/></svg>
+      <span>커뮤니티</span>
+    </a>
+  </nav>
+
+  <script src="{{ url_for('static', filename='js/player-card-art.js', v='20261003-4') }}"></script>
+  {% block scripts %}{% endblock %}
+  <script src="{{ url_for('static', filename='js/pwa.js', v='20260914-1') }}" defer></script>
+  <script src="{{ url_for('static', filename='js/webmcp.js', v='20261002-1') }}" defer></script>
+  {% include "_flash_messages.html" %}
+  <script src="{{ url_for('static', filename='js/site-notices.js', v='20261002-2') }}" defer></script>
+</body>
+</html>

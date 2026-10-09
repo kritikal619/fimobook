@@ -158,10 +158,10 @@ def display_player_details(player):
 
     # 가격 정보 (진화 등급: 가격) - 콤마 추가 및 단위 변경
     print("----- 가격 (진화 등급: 가격) -----")
-    for i in range(0, 16):  # n8Price0부터 n8Price15까지
+    for i in range(0, 11):  # n8Price0부터 n8Price10까지
         price_key = f"n8Price{i}"
         if price_key in player and player[price_key] is not None:
-            print(f"{i}진화: {player[price_key]:,} MP")
+            print(f"{i}진화: {player[price_key]:,} TP")
     print()
 
     # Trait(특성) 출력
@@ -227,4 +227,5 @@ if __name__ == "__main__":
 
     except Exception as e:
         print("에러 발생:", e)
+
 

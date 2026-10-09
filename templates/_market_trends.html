@@ -1,0 +1,58 @@
+{% set trends = market_trends|default({'risers': [], 'fallers': [], 'period': ''}) %}
+<section class="market-panel" aria-labelledby="market-title">
+  <details class="market-details">
+    <summary class="market-header">
+      <h3 id="market-title" class="weekly-title">시장동향</h3>
+      {% if trends.risers or trends.fallers %}<span class="market-more"><span class="market-show-more">더보기</span><span class="market-show-less">접기</span> <i class="bi bi-chevron-down" aria-hidden="true"></i></span>{% endif %}
+    </summary>
+    {% if trends.risers or trends.fallers %}
+    <div class="market-table-scroll">
+      <table class="market-table">
+        <caption>시장동향 전체 순위 · 0강 기준</caption>
+        <thead><tr><th scope="col">구분</th><th scope="col">순위</th><th scope="col">선수</th><th scope="col">가격 ({{ price_unit }})</th><th scope="col">변동률</th></tr></thead>
+        <tbody>
+          {% for label, players, direction in [('상승', trends.risers, 'up'), ('하락', trends.fallers, 'down')] %}
+            {% for player in players %}
+            <tr><td>{{ label }}</td><td>{{ loop.index }}</td><td><a href="{{ url_for('player_detail', cid=player.cid) }}">{{ player.className }} {{ player.playerKor }}</a></td><td>{{ '{:,}'.format(player.price) }}</td><td class="is-{{ direction }}">{{ '%+.1f'|format(player.change) }}%</td></tr>
+            {% endfor %}
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% endif %}
+  </details>
+  {% if trends.period %}<p class="market-sub">{{ trends.period }}</p>{% endif %}
+  {% if is_admin_user %}
+  <nav class="market-controls" aria-label="관리자 시장동향 필터">
+    <a href="{{ request.path }}#market-title"{% if not trends.unfiltered %} aria-current="true"{% endif %}>필터 적용</a>
+    <a href="{{ request.path }}?market_all=1#market-title"{% if trends.unfiltered %} aria-current="true"{% endif %}>전체 보기 <span>관리자</span></a>
+  </nav>
+  {% endif %}
+  {% if trends.risers or trends.fallers %}
+  <div class="market-groups">
+    {% for label, players, direction in [('가격 상승', trends.risers, 'up'), ('가격 하락', trends.fallers, 'down')] %}
+    <div class="market-group">
+      <h4 class="market-group-title is-{{ direction }}">{{ label }} <span>TOP 5</span></h4>
+      <div class="market-grid">
+        {% for player in players[:5] %}
+        <a class="market-card" href="{{ url_for('player_detail', cid=player.cid) }}" aria-label="{{ loop.index }}위 {{ player.className }} {{ player.playerKor }}, {{ player.market_price }} {{ price_unit }}, {{ '%+.1f'|format(player.change) }}%" data-ga-event="player_select" data-ga-param-source-surface="market_trends" data-ga-param-content-id="{{ player.cid }}">
+          {% set card_thumb = player_thumbnail_url('card', player.cid, 256) %}
+          {% set face_thumb = player_thumbnail_url('faceon', player.cid, 256) %}
+          <div class="market-player-art" data-fimo-player-card='{{ player_card_meta(player)|tojson }}' data-player-bg="{{ card_thumb or player.bimage or url_for('static', filename='favicon.ico') }}">
+            <img src="{{ face_thumb or player.pimage or url_for('static', filename='favicon.ico') }}" alt="{{ player.playerKor }}" loading="lazy" decoding="async">
+          </div>
+          <span class="market-rank">{{ loop.index }}</span>
+          <div class="market-card-footer">
+            <span class="market-price">{{ player.market_price }} <img class="market-coin" src="{{ url_for('static', filename='pack-opener/images/mp-token-transparent.png') }}" alt="{{ price_unit }}" loading="lazy"></span>
+            <span class="market-change is-{{ direction }}">{{ '%+.1f'|format(player.change) }}%</span>
+          </div>
+        </a>
+        {% else %}<p class="market-empty">{{ label }} 선수가 없습니다.</p>{% endfor %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="market-empty">{% if trends.period %}표시 조건에 맞는 가격 변동 선수가 없습니다.{% else %}시장동향을 준비 중입니다. 가격 기록이 두 번 이상 수집되면 상승·하락 선수를 확인할 수 있습니다.{% endif %}</div>
+  {% endif %}
+</section>

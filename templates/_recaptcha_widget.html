@@ -1,0 +1,56 @@
+{% if recaptcha_enabled %}
+<div class="recaptcha-section">
+  <div
+    class="g-recaptcha"
+    data-sitekey="{{ recaptcha_site_key }}"
+    data-callback="fimobookRecaptchaCompleted"
+    data-expired-callback="fimobookRecaptchaExpired"
+    data-error-callback="fimobookRecaptchaExpired"
+  ></div>
+  <p class="recaptcha-help">계속하려면 로봇이 아님을 확인해주세요.</p>
+</div>
+<script>
+  window.fimobookRecaptchaToken = "";
+  window.fimobookRecaptchaCompleted = function (token) {
+    window.fimobookRecaptchaToken = token || "";
+    document.querySelectorAll("[data-recaptcha-token]").forEach(function (input) {
+      input.value = window.fimobookRecaptchaToken;
+    });
+  };
+  window.fimobookRecaptchaExpired = function () {
+    window.fimobookRecaptchaToken = "";
+    document.querySelectorAll("[data-recaptcha-token]").forEach(function (input) {
+      input.value = "";
+    });
+  };
+  window.fimobookRequireRecaptcha = function () {
+    if (window.fimobookRecaptchaToken) return true;
+    window.alert("로봇이 아님을 먼저 확인해주세요.");
+    return false;
+  };
+</script>
+<style>
+  .recaptcha-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 0 0 22px;
+  }
+  .recaptcha-help {
+    margin: 8px 0 0;
+    color: #64748b;
+    font-size: 12px;
+  }
+  @media (max-width: 370px) {
+    .recaptcha-section {
+      transform: scale(0.9);
+      transform-origin: top center;
+      margin-bottom: -4px;
+    }
+  }
+</style>
+{% else %}
+<script>
+  window.fimobookRequireRecaptcha = function () { return true; };
+</script>
+{% endif %}

@@ -6,8 +6,8 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-from pathlib import Path
-from urllib.parse import urljoin
+from pathlib import Path, PureWindowsPath
+from urllib.parse import unquote, urljoin
 
 import requests
 
@@ -28,13 +28,55 @@ def fetch_bytes(url: str) -> bytes:
 
 def local_image_path(image: str) -> Path:
     normalized = image.strip()
+    if (
+        not normalized
+        or "\\" in normalized
+        or any(ord(char) < 32 or ord(char) == 127 for char in normalized)
+    ):
+        raise ValueError("image path must be a non-empty relative path")
+    if normalized.startswith("//"):
+        raise ValueError("image path must not be absolute or network-rooted")
     if normalized.startswith("./"):
         normalized = normalized[2:]
     if normalized.startswith("/"):
         normalized = normalized[1:]
     if normalized.startswith("resources/"):
         normalized = normalized[len("resources/") :]
+    if not normalized:
+        raise ValueError("image path must name a file inside the asset output directory")
+
+    candidate = normalized
+    for _ in range(8):
+        path = Path(candidate)
+        if (
+            not path.parts
+            or path.is_absolute()
+            or any(part == ".." for part in path.parts)
+            or PureWindowsPath(candidate).drive
+            or "\\" in candidate
+            or any(ord(char) < 32 or ord(char) == 127 for char in candidate)
+        ):
+            raise ValueError("image path must stay inside the asset output directory")
+        decoded = unquote(candidate)
+        if decoded == candidate:
+            break
+        candidate = decoded
+    else:
+        raise ValueError("image path has too many encoded layers")
+
     return Path(normalized)
+
+
+def image_target_path(rel_path: Path) -> Path:
+    output_root = OUT_DIR.resolve()
+    target = (output_root / rel_path).resolve()
+    if target == output_root:
+        raise ValueError("image path must name a file inside the asset output directory")
+    try:
+        target.relative_to(output_root)
+    except ValueError:
+        raise ValueError("image path resolves outside the asset output directory") from None
+    return target
 
 
 def sync(force: bool = False) -> int:
@@ -50,19 +92,35 @@ def sync(force: bool = False) -> int:
         if not image:
             continue
 
-        if image.startswith("http://") or image.startswith("https://"):
-            source_url = image
-            rel_path = local_image_path(Path(image).name)
-        else:
-            source_url = urljoin(SOURCE_BASE, image[2:] if image.startswith("./") else image)
-            rel_path = local_image_path(image)
+        try:
+            if image.startswith("http://") or image.startswith("https://"):
+                source_url = image
+                rel_path = local_image_path(Path(image).name)
+            else:
+                source_url = urljoin(SOURCE_BASE, image[2:] if image.startswith("./") else image)
+                rel_path = local_image_path(image)
+        except ValueError as exc:
+            print(f"unsafe image path: {exc}", file=sys.stderr)
+            return 1
 
-        target = OUT_DIR / rel_path
+        try:
+            target = image_target_path(rel_path)
+        except ValueError as exc:
+            print(f"unsafe image path: {exc}", file=sys.stderr)
+            return 1
+
         target.parent.mkdir(parents=True, exist_ok=True)
+        try:
+            target = image_target_path(rel_path)
+        except ValueError as exc:
+            print(f"unsafe image path: {exc}", file=sys.stderr)
+            return 1
 
         if force or not target.exists():
             try:
-                target.write_bytes(fetch_bytes(source_url))
+                content = fetch_bytes(source_url)
+                target = image_target_path(rel_path)
+                target.write_bytes(content)
                 downloaded += 1
             except Exception as exc:
                 failed.append(f"{source_url} ({exc})")

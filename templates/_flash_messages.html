@@ -1,0 +1,25 @@
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    <section class="site-notices" aria-label="처리 결과 알림" data-site-notices>
+      {% for category, message in messages %}
+        {% set kind = 'danger' if category in ('danger', 'error') else (category if category in ('success', 'warning', 'info') else 'info') %}
+        {% set labels = {'success': '완료', 'danger': '확인해 주세요', 'warning': '주의', 'info': '안내'} %}
+        <div class="site-notice site-notice--{{ kind }}" role="{{ 'alert' if kind in ('danger', 'warning') else 'status' }}" aria-atomic="true" data-site-notice>
+          <svg class="site-notice-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            {% if kind == 'success' %}<circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/>
+            {% elif kind == 'warning' %}<path d="M10.3 4.3 2.5 18a2 2 0 0 0 1.7 3h15.6a2 2 0 0 0 1.7-3L13.7 4.3a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4m0 4h.01"/>
+            {% elif kind == 'danger' %}<circle cx="12" cy="12" r="9"/><path d="M12 7v6m0 4h.01"/>
+            {% else %}<circle cx="12" cy="12" r="9"/><path d="M12 11v6m0-10h.01"/>{% endif %}
+          </svg>
+          <div class="site-notice-body">
+            <strong class="site-notice-label">{{ labels[kind] }}</strong>
+            <p class="site-notice-text">{{ message }}</p>
+          </div>
+          <button type="button" class="site-notice-close" aria-label="{{ labels[kind] }} 알림 닫기" data-dismiss-notice hidden>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="m7 7 10 10M17 7 7 17"/></svg>
+          </button>
+        </div>
+      {% endfor %}
+    </section>
+  {% endif %}
+{% endwith %}

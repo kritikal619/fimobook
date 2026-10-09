@@ -2,10 +2,10 @@
 
 {% block body_class %}home-page{% endblock %}
 
-{% block title %}피모북 - FC모바일{% endblock %}
+{% block title %}피모북 | FC모바일 선수검색·갱신시간·팀경력·쿠폰{% endblock %}
 
 {% block extra_head %}
-<meta name="description" content="FC모바일 선수를 검색하고 스쿼드를 만들고 선수 세부검색을 해보세요! 쿠폰과 갱신시간 정보도 쉽게 찾을 수 있습니다.">
+<meta name="description" content="FC모바일 선수 이름, 시즌, 포지션, OVR을 빠르게 검색하세요. 선수 능력치와 시세를 확인하고 선수 비교, 세부검색, 쿠폰 정보도 이용할 수 있습니다.">
 <meta name="keywords" content="FC모바일, 쿠폰, 갱신시간, 스탯, 이적시장, 가격, 피모, 미페, 선수검색, 피모북, 데이터베이스, 세부검색, 능력치, 넥슨">
 <meta name="author" content="피모북">
 <meta name="robots" content="index, follow">
@@ -13,8 +13,8 @@
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="피모북 - FC모바일">
 <meta property="og:locale" content="ko_KR">
-<meta property="og:title" content="피모북 | FC모바일 선수 검색, 스쿼드 메이커, 선수 세부검색, 쿠폰, 갱신시간">
-<meta property="og:description" content="FC모바일 선수를 검색하고 스쿼드를 만들고 선수 세부검색을 해보세요! 쿠폰과 갱신시간 정보도 쉽게 찾을 수 있습니다.">
+<meta property="og:title" content="피모북 | FC모바일 선수검색·갱신시간·팀경력·쿠폰">
+<meta property="og:description" content="FC모바일 선수 이름, 시즌, 포지션, OVR을 검색하고 능력치와 시세를 확인하세요.">
 <meta property="og:url" content="{{ url_for('index', _external=True) }}">
 <meta property="og:image" content="{{ url_for('static', filename='images/fimobook-og.png', _external=True) }}">
 <meta property="og:image:width" content="1200">
@@ -22,12 +22,25 @@
 <meta property="og:image:alt" content="피모북">
 
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="피모북">
+<meta name="twitter:title" content="피모북 | FC모바일 선수검색·갱신시간·팀경력·쿠폰">
 <meta name="twitter:description" content="FC모바일 선수를 빠르게 검색하고 비교하세요. 19,000명 이상의 선수 데이터와 세부검색 기능을 제공합니다.">
 <meta name="twitter:image" content="{{ url_for('static', filename='images/fimobook-og.png', _external=True) }}">
 
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "피모북",
+  "alternateName": "FIMOBOOK",
+  "url": "{{ url_for('index', _external=True) }}",
+  "inLanguage": "ko-KR",
+  "description": "FC모바일 선수 검색, 능력치와 시세 확인, 선수 비교와 쿠폰 정보를 제공하는 데이터베이스"
+}
+</script>
+
 <link rel="canonical" href="https://fcbook.info/">
 <meta name="theme-color" content="#132531">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/market-trends.css') }}?v=20261009-quiet-1">
 
 <style>
   :root{
@@ -92,6 +105,18 @@
     text-align:center;
     font-family:'FCOVR', 'IBM Plex Sans KR', sans-serif;
   }
+  .seo-page-title{
+    position:absolute;
+    width:1px;
+    height:1px;
+    padding:0;
+    margin:-1px;
+    overflow:hidden;
+    clip:rect(0, 0, 0, 0);
+    clip-path:inset(50%);
+    white-space:nowrap;
+    border:0;
+  }
   .search-desc{
     font-size:14px;
     color:var(--muted);
@@ -120,7 +145,7 @@
     border:1.5px solid var(--line);
     background:#ffffff;
     height:56px;
-    padding:0 62px 0 18px;
+    padding:0 112px 0 18px;
     line-height:56px;
     box-sizing:border-box;
     transition:.25s;
@@ -143,22 +168,274 @@
     top:6px;
     width:44px;
     height:44px;
-    border-radius:14px;
-    border:none;
-    background: var(--brand);
+    border-radius:10px;
+    border:1px solid #263640;
+    background:#263640;
+    background-image:none;
     color:#fff;
     display:flex;
     align-items:center;
     justify-content:center;
     cursor:pointer;
-    box-shadow: 0 8px 18px rgba(16,185,129,.20);
-    transition: transform .18s ease, box-shadow .18s ease;
+    box-shadow:none;
+    transition: background-color .15s ease, border-color .15s ease;
   }
-  .search-icon-btn:hover{
-    transform: scale(1.03);
-    box-shadow: 0 12px 22px rgba(16,185,129,.24);
+  .search-icon-btn:active{
+    background:#0f1c23;
+    border-color:#0f1c23;
+  }
+  .search-icon-btn:focus-visible{
+    outline:3px solid rgba(16,185,129,.22);
+    outline-offset:2px;
   }
   .search-icon-btn i{ font-size:20px; }
+
+  .home-filter-btn{
+    position:absolute;
+    right:56px;
+    top:6px;
+    width:44px;
+    height:44px;
+    border:1px solid #263640;
+    border-radius:10px;
+    background:#263640;
+    color:#fff;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    transition:background-color .15s ease, border-color .15s ease;
+  }
+  .home-filter-btn.is-active{
+    border-color:var(--brand-dark);
+    background:var(--brand-dark);
+  }
+  .home-filter-btn:focus-visible{
+    outline:3px solid rgba(16,185,129,.22);
+    outline-offset:2px;
+  }
+  .home-filter-btn i{ font-size:20px; }
+  .home-filter-count{
+    position:absolute;
+    top:-5px;
+    right:-5px;
+    min-width:18px;
+    height:18px;
+    padding:0 4px;
+    border:2px solid #fff;
+    border-radius:999px;
+    background:#10b981;
+    color:#fff;
+    font-size:9px;
+    font-weight:950;
+    line-height:14px;
+    box-sizing:border-box;
+    display:none;
+  }
+  .home-filter-count.is-visible{ display:block; }
+
+  .home-filter-panel{
+    position:absolute;
+    z-index:120;
+    top:calc(100% + 8px);
+    right:0;
+    width:min(520px, 100%);
+    max-height:min(72vh, 620px);
+    overflow-y:auto;
+    padding:16px;
+    border:1px solid var(--line);
+    border-radius:16px;
+    background:#fff;
+    box-shadow:0 18px 42px rgba(15,23,42,.16);
+    box-sizing:border-box;
+    display:none;
+  }
+  .home-filter-panel.is-open{ display:block; }
+  .home-filter-heading{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    margin-bottom:14px;
+  }
+  .home-filter-title{
+    color:var(--text);
+    font-size:15px;
+    font-weight:950;
+  }
+  .home-filter-close{
+    width:30px;
+    height:30px;
+    padding:0;
+    border:0;
+    border-radius:8px;
+    background:#f1f5f9;
+    color:#475569;
+    cursor:pointer;
+  }
+  .home-filter-section{ margin-top:14px; }
+  .home-filter-label{
+    display:block;
+    margin-bottom:7px;
+    color:#475569;
+    font-size:12px;
+    font-weight:900;
+  }
+  .home-ovr-range{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);
+    align-items:center;
+    gap:8px;
+  }
+  .home-filter-control,
+  .home-class-search{
+    width:100%;
+    min-width:0;
+    height:40px;
+    padding:0 11px;
+    border:1px solid var(--line);
+    border-radius:10px;
+    background:#f8fafc;
+    color:var(--text);
+    font:inherit;
+    font-size:13px;
+    font-weight:800;
+    box-sizing:border-box;
+    outline:none;
+  }
+  .home-filter-control:focus,
+  .home-class-search:focus{
+    border-color:var(--brand);
+    box-shadow:0 0 0 3px rgba(16,185,129,.12);
+  }
+  .home-position-groups{ display:grid; gap:9px; }
+  .home-position-group{
+    padding:9px;
+    border:1px solid #e2e8f0;
+    border-radius:11px;
+    background:#f8fafc;
+  }
+  .home-position-group-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
+    margin-bottom:7px;
+  }
+  .home-position-group-title{
+    color:#334155;
+    font-size:12px;
+    font-weight:950;
+  }
+  .home-position-all{
+    padding:4px 8px;
+    border:1px solid #a7f3d0;
+    border-radius:999px;
+    background:#fff;
+    color:#047857;
+    font-size:10px;
+    font-weight:900;
+    cursor:pointer;
+  }
+  .home-position-all.is-selected{ background:#d1fae5; border-color:#34d399; }
+  .home-position-options{ display:flex; flex-wrap:wrap; gap:6px; }
+  .home-filter-check{
+    position:relative;
+    display:inline-flex;
+    align-items:center;
+    cursor:pointer;
+  }
+  .home-filter-check input{
+    position:absolute;
+    opacity:0;
+    pointer-events:none;
+  }
+  .home-filter-check span{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-height:30px;
+    padding:0 10px;
+    border:1px solid #cbd5e1;
+    border-radius:8px;
+    background:#fff;
+    color:#475569;
+    font-size:11px;
+    font-weight:900;
+  }
+  .home-filter-check input:checked + span{
+    border-color:#10b981;
+    background:#ecfdf5;
+    color:#047857;
+  }
+  .home-filter-check input:focus-visible + span{ outline:3px solid rgba(16,185,129,.18); }
+  .home-class-box{
+    border:1px solid #e2e8f0;
+    border-radius:11px;
+    background:#f8fafc;
+  }
+  .home-class-box summary{
+    padding:10px 11px;
+    color:#334155;
+    font-size:12px;
+    font-weight:900;
+    cursor:pointer;
+  }
+  .home-class-box-body{ padding:0 9px 9px; }
+  .home-class-search{ height:36px; background:#fff; }
+  .home-class-options{
+    max-height:170px;
+    margin-top:7px;
+    overflow-y:auto;
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:5px;
+  }
+  .home-class-option{
+    display:flex;
+    align-items:center;
+    gap:7px;
+    min-width:0;
+    padding:7px;
+    border-radius:7px;
+    color:#334155;
+    font-size:11px;
+    font-weight:750;
+    cursor:pointer;
+  }
+  .home-class-option input{ flex:0 0 auto; accent-color:var(--brand); }
+  .home-class-option span{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .home-filter-actions{
+    position:sticky;
+    bottom:-16px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    margin:16px -16px -16px;
+    padding:12px 16px;
+    border-top:1px solid #e2e8f0;
+    background:#fff;
+  }
+  .home-filter-reset,
+  .home-filter-apply{
+    min-height:38px;
+    padding:0 14px;
+    border-radius:9px;
+    font:inherit;
+    font-size:12px;
+    font-weight:900;
+    cursor:pointer;
+  }
+  .home-filter-reset{ border:1px solid #cbd5e1; background:#fff; color:#475569; }
+  .home-filter-apply{ border:1px solid var(--brand-dark); background:var(--brand-dark); color:#fff; }
+  .home-filter-hint{
+    margin-top:9px;
+    color:#64748b;
+    font-size:10px;
+    font-weight:700;
+    line-height:1.45;
+  }
 
   /* ===== 자동완성 ===== */
   .autocomplete-box{
@@ -184,7 +461,6 @@
     font-weight:800;
   }
   .autocomplete-item:last-child{ border-bottom:none; }
-  .autocomplete-item:hover{ background:#f1f5f9; }
   .autocomplete-item strong{ color:var(--brand-dark); }
 
   /* ===== 최근 검색어: 중앙정렬 + PC 5개 / 모바일 3개 ===== */
@@ -211,7 +487,6 @@
     user-select:none;
     max-width:100%;
   }
-  .recent-pill:hover{ transform: translateY(-1px); background:#e9eff6; }
 
   /* ===== 최신 리뷰 · 선수 장단점 ===== */
   .latest-review-section{
@@ -240,7 +515,6 @@
     font-weight:900;
     text-decoration:none;
   }
-  .latest-review-more:hover{ text-decoration:underline; text-underline-offset:3px; }
   .latest-review-list{
     display:grid;
     gap:9px;
@@ -258,12 +532,6 @@
     color:inherit;
     text-decoration:none;
     transition:transform .16s ease, border-color .16s ease, background .16s ease;
-  }
-  .latest-review-item:hover{
-    transform:translateY(-1px);
-    border-color:#86efac;
-    background:#ffffff;
-    text-decoration:none;
   }
   .latest-review-art{
     width:54px;
@@ -367,17 +635,60 @@
     text-align:center;
   }
 
-  /* ===== 프라임 교환 효율 배너 ===== */
+  /* ===== 홈 프로모션 스와이프 배너 ===== */
+  .home-promo-shell{
+    position:relative;
+    width:100%;
+    max-width:800px;
+    margin-top:16px;
+  }
+  .home-promo-rail{
+    width:100%;
+    max-width:800px;
+    padding:0 0 4px;
+    display:flex;
+    gap:10px;
+    overflow-x:auto;
+    overscroll-behavior-x:contain;
+    scroll-snap-type:x mandatory;
+    scroll-behavior:smooth;
+    scrollbar-width:none;
+    -webkit-overflow-scrolling:touch;
+  }
+  .home-promo-rail::-webkit-scrollbar{ display:none; }
+  .home-promo-nav{
+    position:absolute;
+    top:50%;
+    z-index:4;
+    width:32px;
+    height:32px;
+    margin-top:-16px;
+    border:1px solid #34d399;
+    border-radius:50%;
+    background:#ffffff;
+    color:#047857;
+    box-shadow:none;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    font-size:15px;
+    transition:border-color .15s ease, opacity .15s ease;
+  }
+  .home-promo-nav:disabled{ opacity:0; pointer-events:none; }
+  .home-promo-prev{ left:8px; }
+  .home-promo-next{ right:8px; }
   .prime-home-banner{
     position:relative;
     isolation:isolate;
-    width:100%;
-    max-width:800px;
-    min-height:132px;
-    margin-top:16px;
+    flex:0 0 100%;
+    width:auto;
+    max-width:none;
+    min-height:106px;
+    margin:0;
     overflow:hidden;
     display:grid;
-    grid-template-columns:minmax(0, 1fr) 170px;
+    grid-template-columns:minmax(0, 1fr) 135px;
     align-items:center;
     border:1px solid rgba(128,236,224,.34);
     border-radius:17px;
@@ -385,11 +696,12 @@
       radial-gradient(circle at 83% 23%, rgba(225,111,230,.35), transparent 27%),
       radial-gradient(circle at 68% 115%, rgba(61,210,200,.27), transparent 41%),
       linear-gradient(118deg, #12182c 0%, #1a1940 56%, #302063 100%);
-    box-shadow:0 14px 28px rgba(27,24,68,.16);
+    box-shadow:none;
     color:#fff;
     text-decoration:none;
     box-sizing:border-box;
-    transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+    scroll-snap-align:start;
+    transition:transform .18s ease, border-color .18s ease;
   }
   .prime-home-banner::before{
     position:absolute;
@@ -400,15 +712,9 @@
       repeating-linear-gradient(135deg, transparent 0 22px, rgba(255,255,255,.025) 22px 23px);
     content:"";
   }
-  .prime-home-banner:hover{
-    border-color:rgba(138,255,238,.62);
-    box-shadow:0 18px 34px rgba(27,24,68,.22);
-    transform:translateY(-2px);
-    text-decoration:none;
-  }
   .prime-home-content{
     min-width:0;
-    padding:20px 10px 20px 22px;
+    padding:14px 8px 14px 18px;
   }
   .prime-home-kicker{
     display:flex;
@@ -424,14 +730,14 @@
     height:6px;
     border-radius:50%;
     background:#69f4df;
-    box-shadow:0 0 0 4px rgba(105,244,223,.12);
+    box-shadow:none;
     content:"";
   }
   .prime-home-title{
     display:block;
     margin-top:7px;
     color:#fff;
-    font-size:21px;
+    font-size:18px;
     font-weight:950;
     letter-spacing:-.45px;
     line-height:1.25;
@@ -440,7 +746,7 @@
     display:block;
     margin-top:5px;
     color:#c7cbe3;
-    font-size:11px;
+    font-size:10px;
     font-weight:700;
     line-height:1.5;
   }
@@ -448,9 +754,9 @@
     display:inline-flex;
     align-items:center;
     gap:6px;
-    min-height:27px;
-    margin-top:10px;
-    padding:0 10px;
+    min-height:24px;
+    margin-top:7px;
+    padding:0 9px;
     border:1px solid rgba(164,255,241,.25);
     border-radius:999px;
     background:rgba(113,242,224,.11);
@@ -468,8 +774,8 @@
   }
   .prime-home-visual::before{
     position:absolute;
-    width:124px;
-    height:124px;
+    width:92px;
+    height:92px;
     border-radius:50%;
     background:radial-gradient(circle, rgba(169,255,244,.25), rgba(191,91,226,.13) 52%, transparent 70%);
     filter:blur(2px);
@@ -477,14 +783,109 @@
   }
   .prime-home-logo{
     position:relative;
-    width:126px;
+    width:92px;
     height:auto;
     margin-top:3px;
-    filter:drop-shadow(0 8px 10px rgba(7,5,29,.38));
+    filter:none;
     transform:rotate(3deg);
     transition:transform .2s ease;
   }
-  .prime-home-banner:hover .prime-home-logo{ transform:rotate(0) scale(1.035); }
+  .pack-home-banner{background:linear-gradient(110deg,rgba(19,13,44,.88),rgba(53,23,87,.4)),url('/static/pack-opener/images/background.png') center/cover;border-color:#a886df}
+  .pack-home-banner .prime-home-kicker{color:#e3caff;letter-spacing:0}
+  .pack-home-banner .prime-home-kicker::before{display:none}
+  .pack-home-banner .prime-home-title{margin-top:5px}
+  .pack-home-graphic{height:92px;width:auto;object-fit:contain;transform:rotate(8deg)}
+  .pack-home-moon{position:absolute;left:12px;bottom:10px;width:42px;height:44px;background:url('/static/pack-opener/images/kkaebi/moon-token.png') center/contain no-repeat;filter:drop-shadow(0 0 8px #bc8aff44)}
+  @media(max-width:740px){.pack-home-banner .prime-home-kicker{font-size:9px}.pack-home-banner .pack-home-graphic{height:78px}.pack-home-moon{left:0;bottom:7px;width:31px;height:33px}}
+  .career-home-banner{
+    border-color:#86efac;
+    background:
+      radial-gradient(circle at 84% 22%, rgba(52,211,153,.16), transparent 31%),
+      linear-gradient(118deg, #f0fdf4 0%, #ecfdf5 55%, #ecfeff 100%);
+    color:#16352c;
+  }
+  .career-home-banner::before{
+    background:repeating-linear-gradient(135deg, transparent 0 24px, rgba(5,150,105,.035) 24px 25px);
+  }
+  .career-home-banner .prime-home-kicker{ color:#047857; }
+  .career-home-banner .prime-home-kicker::before{ background:#10b981; }
+  .career-home-banner .prime-home-title{ margin-top:0; color:#16352c; }
+  .career-home-banner .prime-home-desc{ color:#4b635b; }
+  .career-home-banner .prime-home-cta{
+    border-color:#6ee7b7;
+    background:#ffffff;
+    color:#047857;
+  }
+  .career-home-visual::before{
+    width:90px;
+    height:90px;
+    border:1px solid #a7f3d0;
+    background:#ffffff;
+    filter:none;
+  }
+  .career-home-graphic{
+    position:relative;
+    width:105px;
+    max-width:88%;
+    height:auto;
+    display:block;
+  }
+  .power-ranking-home-banner{
+    border-color:#8db7ff;
+    background:
+      radial-gradient(circle at 85% 24%, rgba(85,156,255,.34), transparent 28%),
+      linear-gradient(118deg, #10254a 0%, #163b70 56%, #1d5793 100%);
+  }
+  .power-ranking-home-banner::before{
+    background:
+      linear-gradient(115deg, transparent 0 51%, rgba(255,255,255,.08) 51.2% 51.8%, transparent 52%),
+      repeating-linear-gradient(135deg, transparent 0 24px, rgba(255,255,255,.045) 24px 25px);
+  }
+  .power-ranking-home-banner .prime-home-kicker{ color:#bfdbfe; }
+  .power-ranking-home-banner .prime-home-kicker::before{ background:#93c5fd; }
+  .power-ranking-home-banner .prime-home-cta{
+    border-color:rgba(191,219,254,.4);
+    background:rgba(15,45,85,.28);
+    color:#eff6ff;
+  }
+  .power-ranking-home-visual::before{
+    width:94px;
+    height:94px;
+    background:radial-gradient(circle, rgba(191,219,254,.33), rgba(59,130,246,.16) 52%, transparent 70%);
+  }
+  .power-ranking-home-board{
+    position:relative;
+    display:grid;
+    gap:5px;
+    width:74px;
+    padding:9px 8px;
+    border:1px solid rgba(219,234,254,.45);
+    border-radius:8px;
+    background:rgba(10,31,62,.36);
+    box-shadow:0 8px 18px rgba(5,20,42,.18);
+    transform:rotate(3deg);
+  }
+  .power-ranking-home-board span{
+    display:grid;
+    grid-template-columns:14px 1fr;
+    align-items:center;
+    gap:5px;
+    height:8px;
+  }
+  .power-ranking-home-board b{
+    color:#dbeafe;
+    font-size:8px;
+    font-weight:950;
+    line-height:1;
+  }
+  .power-ranking-home-board i{
+    display:block;
+    height:5px;
+    border-radius:999px;
+    background:#93c5fd;
+  }
+  .power-ranking-home-board span:nth-child(2) i{ width:76%; background:#bfdbfe; }
+  .power-ranking-home-board span:nth-child(3) i{ width:55%; background:#dbeafe; }
 
   /* ===== 추천 툴 ===== */
   .tools-wrap{
@@ -507,111 +908,90 @@
   .quick-links{
     display:grid;
     grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-    gap:14px;
+    gap:10px;
     width:100%;
     min-width:0;
   }
   .quick-card{
     position:relative;
-    padding:9px;
-    border-radius:16px;
+    padding:10px 8px;
+    border-radius:12px;
     color:var(--text);
     text-decoration:none;
     overflow:hidden;
-    background:var(--surface);
-    box-shadow: 0 8px 18px rgba(15,23,42,0.05);
-    border:1px solid var(--line);
-    transition:.20s;
-    min-height:128px;
+    background:#ffffff;
+    box-shadow:none;
+    border:1px solid #34d399;
+    transition:border-color .18s ease, transform .18s ease;
+    min-height:88px;
     display:flex;
     flex-direction:column;
     align-items:center;
     justify-content:center;
-    gap:10px;
+    gap:7px;
     min-width:0;
     text-align:center;
   }
-  .quick-card:hover{
-    transform: translateY(-3px);
-    text-decoration:none;
-    box-shadow: 0 12px 22px rgba(15,23,42,0.07);
-  }
   .tool-glyph{
-    width:58px;
-    height:58px;
-    border-radius:17px;
-    background:#eef4f8;
+    width:36px;
+    height:36px;
+    border:1px solid #a7f3d0;
+    border-radius:10px;
+    background:#ffffff;
     color:var(--brand-dark);
     display:flex;
     align-items:center;
     justify-content:center;
-    font-size:28px;
+    font-size:20px;
     box-shadow:none;
   }
   .tool-name{
-    font-size:22px;
+    font-size:15px;
     font-weight:900;
-    letter-spacing:-0.4px;
+    letter-spacing:-0.2px;
     line-height:1.1;
   }
-  .tool-coupon{
-    background:#10b981;
-    color:#ffffff;
-    border-color:#10b981;
-    box-shadow: 0 12px 24px rgba(16,185,129,0.18);
-  }
-  .tool-coupon .tool-glyph{
-    background:rgba(255,255,255,0.16);
-    color:#ffffff;
-  }
+  .tool-coupon,
   .tool-traits,
-  .tool-times{
-    background:#374151;
-    color:#ffffff;
-    border-color:#374151;
-  }
-  .tool-community{
+  .tool-times,
+  .tool-community,
+  .tool-squad{
     background:#ffffff;
     color:var(--text);
-    border-color:var(--line);
+    border-color:#34d399;
+    box-shadow:none;
   }
-  .tool-squad{
-    background:#0f766e;
-    color:#ffffff;
-    border-color:#0f766e;
-    box-shadow: 0 12px 24px rgba(15,118,110,0.2);
-  }
+  .tool-coupon .tool-glyph,
   .tool-traits .tool-glyph,
-  .tool-times .tool-glyph{
-    background:rgba(255,255,255,0.12);
-    color:#ffffff;
-  }
+  .tool-times .tool-glyph,
+  .tool-community .tool-glyph,
   .tool-squad .tool-glyph{
-    background:rgba(255,255,255,0.12);
-    color:#ffffff;
+    border-color:#a7f3d0;
+    background:#ffffff;
+    color:var(--brand-dark);
   }
   @media (min-width: 641px){
     .quick-links{
-      grid-template-columns: repeat(5, minmax(0, 1fr));
+      grid-template-columns: repeat(6, minmax(0, 1fr));
     }
     .quick-card{
       height:auto;
-      min-height:128px;
-      padding:9px;
-      border-radius:16px;
+      min-height:88px;
+      padding:10px 8px;
+      border-radius:12px;
       flex-direction:column;
       justify-content:center;
-      gap:10px;
+      gap:7px;
       text-align:center;
     }
     .tool-glyph{
-      width:58px;
-      height:58px;
-      border-radius:17px;
-      font-size:28px;
+      width:36px;
+      height:36px;
+      border-radius:10px;
+      font-size:20px;
     }
     .tool-name{
-      font-size:18px;
+      font-size:14px;
       white-space:normal;
     }
   }
@@ -623,24 +1003,24 @@
     }
     .quick-card{
       min-height:0;
-      height:50px;
-      padding:0 18px;
-      border-radius:999px;
-      box-shadow:0 6px 14px rgba(15,23,42,0.05);
+      height:44px;
+      padding:0 12px;
+      border-radius:10px;
+      box-shadow:none;
       flex-direction:row;
       justify-content:flex-start;
-      gap:12px;
+      gap:9px;
       text-align:left;
     }
     .tool-glyph{
-      width:34px;
-      height:34px;
-      border-radius:999px;
-      font-size:18px;
+      width:28px;
+      height:28px;
+      border-radius:8px;
+      font-size:15px;
       flex:0 0 auto;
     }
     .tool-name{
-      font-size:16px;
+      font-size:14px;
       margin-top:0;
       flex:1;
       white-space:nowrap;
@@ -666,18 +1046,24 @@
       margin-top:-3px;
     }
     .latest-review-score{ font-size:11px; }
+    .home-promo-shell{ margin-top:13px; }
+    .home-promo-rail{ gap:8px; }
+    .home-promo-nav{ display:none; }
     .prime-home-banner{
-      min-height:118px;
-      grid-template-columns:minmax(0, 1fr) 112px;
-      margin-top:13px;
-      border-radius:15px;
+      flex-basis:calc(100% - 22px);
+      min-height:92px;
+      grid-template-columns:minmax(0, 1fr) 84px;
+      border-radius:13px;
     }
-    .prime-home-content{ padding:15px 0 15px 16px; }
-    .prime-home-title{ margin-top:6px; font-size:17px; }
-    .prime-home-desc{ max-width:205px; font-size:9px; }
-    .prime-home-cta{ margin-top:8px; }
-    .prime-home-logo{ width:94px; }
-    .prime-home-visual::before{ width:96px; height:96px; }
+    .prime-home-banner:only-child{ flex-basis:100%; }
+    .prime-home-content{ padding:11px 0 11px 12px; }
+    .prime-home-title{ margin-top:4px; font-size:15px; }
+    .prime-home-desc{ display:none; }
+    .prime-home-cta{ min-height:22px; margin-top:6px; padding:0 7px; font-size:8px; }
+    .prime-home-logo{ width:70px; }
+    .prime-home-visual::before{ width:72px; height:72px; }
+    .career-home-graphic{ width:70px; max-width:88%; }
+    .power-ranking-home-board{ width:58px; padding:7px; }
   }
 
   .data-source{
@@ -699,7 +1085,7 @@
   .weekly-panel{
     width:100%;
     max-width:800px;
-    margin-bottom:22px;
+    margin-bottom:16px;
   }
   .weekly-header{
     display:flex;
@@ -723,30 +1109,25 @@
   .weekly-grid{
     display:grid;
     grid-template-columns:repeat(3, minmax(0, 1fr));
-    gap:12px;
+    gap:8px;
   }
   .weekly-card{
     min-width:0;
-    display:flex;
-    flex-direction:column;
+    display:grid;
+    grid-template-columns:80px minmax(0, 1fr);
     align-items:center;
     gap:8px;
-    padding:12px 10px;
+    padding:8px;
     border:1px solid var(--line);
     border-radius:14px;
     background:#ffffff;
-    box-shadow:0 8px 18px rgba(15,23,42,0.04);
+    box-shadow:none;
     color:var(--text);
     text-decoration:none;
-    transition:transform .15s ease, box-shadow .15s ease;
-  }
-  .weekly-card:hover{
-    transform:translateY(-2px);
-    box-shadow:0 12px 24px rgba(15,23,42,0.07);
-    text-decoration:none;
+    transition:transform .15s ease;
   }
   .weekly-player-art{
-    width:min(132px, 100%);
+    width:80px;
     aspect-ratio:0.72;
     position:relative;
     border-radius:12px;
@@ -764,29 +1145,32 @@
     height:94%;
     object-fit:contain;
   }
+  .weekly-card .weekly-player-art :is(.fimo-card-rating, .fimo-card-position, .fimo-card-name){
+    text-shadow:none!important;
+  }
   .weekly-player-info{
     width:100%;
     min-width:0;
-    text-align:center;
+    text-align:left;
   }
   .weekly-player-name{
     overflow:hidden;
     text-overflow:ellipsis;
     white-space:nowrap;
     color:var(--text);
-    font-size:14px;
+    font-size:13px;
     font-weight:900;
   }
   .weekly-player-meta{
     margin-top:2px;
     color:var(--brand-dark);
-    font-size:12px;
+    font-size:11px;
     font-weight:900;
   }
   .weekly-player-price{
-    margin-top:6px;
+    margin-top:4px;
     color:#0f172a;
-    font-size:13px;
+    font-size:12px;
     font-weight:900;
   }
   .home-notice {
@@ -798,11 +1182,6 @@
     background:#f8fafc;
     color:var(--text);
     text-decoration:none;
-  }
-  .home-notice:hover {
-    text-decoration:none;
-    border-color:#cbd5e1;
-    background:#ffffff;
   }
   .home-notice-head {
     display:flex;
@@ -866,9 +1245,9 @@
     width:100%;
     display:flex;
     justify-content:space-between;
-    align-items:flex-start;
+    align-items:center;
     gap:12px;
-    margin-bottom:12px;
+    margin-bottom:10px;
     min-width:0;
   }
   .coupon-title{
@@ -880,84 +1259,96 @@
   }
   .coupon-sub{
     color:var(--muted);
-    font-size:13px;
+    font-size:12px;
     line-height:1.4;
-    margin-top:4px;
+    margin-top:2px;
     font-weight:700;
   }
   .ghost-btn{
-    padding:8px 12px;
-    border:1px solid var(--line);
-    background:#f8fafc;
+    min-height:34px;
+    padding:0 11px;
+    border:1px solid #34d399;
+    background:#ffffff;
     color:var(--brand-dark);
-    border-radius:8px;
+    border-radius:9px;
     font-weight:900;
     text-decoration:none;
-    box-shadow:0 1px 4px rgba(0,0,0,0.05);
+    box-shadow:none;
     white-space:nowrap;
     font-size:12px;
+    display:inline-flex;
+    align-items:center;
+    gap:5px;
   }
-  .ghost-btn:hover{ background:#f1f5f9; text-decoration:none; }
 
   .coupon-list{
     width:100%;
-    display:flex;
-    flex-direction:column;
+    display:grid;
+    grid-template-columns:repeat(2, minmax(0, 1fr));
     gap:10px;
     min-width:0;
   }
   .coupon-card{
     width:100%;
+    min-height:68px;
     background:#ffffff;
-    border:1px solid var(--line2);
-    border-radius:14px;
-    padding:14px 14px;
-    box-shadow:0 8px 18px rgba(15,23,42,0.04);
+    border:1px solid #d1fae5;
+    border-left:3px solid #10b981;
+    border-radius:10px;
+    padding:10px 11px;
+    box-shadow:none;
     box-sizing:border-box;
     min-width:0;
-  }
-  .coupon-card .top{
-    display:flex;
+    display:grid;
+    grid-template-columns:32px minmax(0, 1fr) 18px;
     align-items:center;
-    justify-content:space-between;
-    gap:10px;
-    margin-bottom:8px;
-    min-width:0;
-  }
-  .badge{
+    gap:9px;
     color:var(--text);
-    font-weight:900;
-    font-size:14px;
+    text-decoration:none;
   }
-  .code-row{
+  .coupon-card-icon{
+    width:30px;
+    height:30px;
+    border:1px solid #a7f3d0;
+    border-radius:8px;
+    color:var(--brand-dark);
     display:flex;
     align-items:center;
-    justify-content:space-between;
-    gap:10px;
+    justify-content:center;
+    font-size:15px;
+  }
+  .coupon-card-main{
     min-width:0;
+  }
+  .coupon-badge{
+    display:block;
+    color:var(--muted);
+    font-weight:900;
+    font-size:10px;
+    line-height:1.2;
   }
   .code-chip{
-    background:transparent;
+    display:block;
+    margin-top:3px;
     color:#0f172a;
-    padding:0;
-    border-radius:0;
     font-family:inherit;
-    font-size:15px;
+    font-size:14px;
     font-weight:900;
-    letter-spacing:0.6px;
+    letter-spacing:0.35px;
+    line-height:1.25;
     min-width:0;
-    overflow-wrap:anywhere;  /* ✅ 긴 코드 튀어나옴 방지 */
+    overflow-wrap:anywhere;
     word-break:break-word;
+  }
+  .coupon-card-arrow{
+    color:#10b981;
+    font-size:14px;
+    justify-self:end;
   }
 
   .coupon-link{
     cursor:pointer;
-    transition: transform .12s ease, box-shadow .12s ease, background .12s ease;
-  }
-  .coupon-link:hover{
-    transform: translateY(-1px);
-    box-shadow: 0 12px 24px rgba(15,23,42,0.06);
-    background:#f8fafc;
+    transition:border-color .15s ease, background .15s ease;
   }
 
   .empty{
@@ -992,25 +1383,42 @@
       height:52px;
       line-height:52px;
       font-size:16px;
-      padding:0 58px 0 14px;
+      padding:0 102px 0 14px;
       border-radius:14px;
     }
     .search-icon-btn{
-      width:40px; height:40px; border-radius:12px;
+      width:40px; height:40px; border-radius:9px;
       top:6px; right:6px;
     }
     .search-icon-btn i{ font-size:18px; }
+    .home-filter-btn{
+      width:40px;
+      height:40px;
+      right:52px;
+      border-radius:9px;
+    }
+    .home-filter-btn i{ font-size:18px; }
+    .home-filter-panel{
+      position:fixed;
+      inset:auto 10px 10px;
+      width:auto;
+      max-height:min(76vh, 620px);
+      border-radius:16px;
+    }
+    .home-class-options{ grid-template-columns:1fr; }
 
     .quick-card{ height:50px; min-height:0; padding:0 18px; }
 
     .panel{ padding:18px 0 0; border-radius:0; }
 
-    .coupon-header{ flex-direction:column; align-items:flex-start; }
-    .ghost-btn{ align-self:flex-start; width:auto; }
+    .coupon-header{ align-items:center; }
+    .ghost-btn{ width:auto; }
+    .weekly-panel{ margin-bottom:22px; }
     .weekly-header{ margin-bottom:10px; }
     .weekly-grid{ gap:8px; }
-    .weekly-card{ padding:8px 6px; border-radius:12px; gap:6px; }
+    .weekly-card{ display:flex; flex-direction:column; padding:8px 6px; border-radius:12px; gap:6px; }
     .weekly-player-art{ width:100%; max-width:92px; border-radius:10px; }
+    .weekly-player-info{ text-align:center; }
     .weekly-player-name{ font-size:12px; }
     .weekly-player-meta{ font-size:10px; }
     .weekly-player-price{ font-size:11px; margin-top:4px; }
@@ -1021,24 +1429,108 @@
     .recent-row{ gap:7px; margin-top:10px; }
     .recent-pill{ font-size:12px; padding:7px 11px; }
 
-    .coupon-card{ padding:13px 13px; }
-    .code-chip{ font-size:14px; }
+    .coupon-list{ grid-template-columns:1fr; gap:8px; }
+    .coupon-card{ min-height:62px; padding:9px 10px; }
+    .code-chip{ font-size:13px; }
 
   }
 
 </style>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/home-mobile-shortcuts.css') }}?v=20261004">
 {% endblock %}
 
 {% block content %}
 <div class="home-wrap">
   <div class="search-section" id="searchTop">
-    <form method="GET" action="/search">
+    <h1 class="seo-page-title">FC모바일 선수 검색</h1>
+    <form id="home-search-form" method="GET" action="/search" data-ga-event="search" data-ga-search-input="#names" data-ga-param-source-surface="home">
       <div class="input-area">
-        <input type="text" id="names" name="names" placeholder="벨링엄, 리오넬 메시" autocomplete="off" required>
+        <input type="text" id="names" name="names" placeholder="벨링엄, 리오넬 메시" autocomplete="off">
+        <button id="home-filter-btn" class="home-filter-btn" type="button" aria-label="선수 검색 필터 열기" aria-expanded="false" aria-controls="home-filter-panel">
+          <i class="bi bi-funnel" aria-hidden="true"></i>
+          <span id="home-filter-count" class="home-filter-count" aria-hidden="true">0</span>
+        </button>
         <button class="search-icon-btn" type="submit" aria-label="검색">
           <i class="bi bi-search"></i>
         </button>
         <div id="autocomplete-list" class="autocomplete-box"></div>
+
+        <div id="home-filter-panel" class="home-filter-panel" aria-hidden="true">
+          <div class="home-filter-heading">
+            <span class="home-filter-title">선수 검색 필터</span>
+            <button id="home-filter-close" class="home-filter-close" type="button" aria-label="필터 닫기"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
+          </div>
+
+          <div class="home-filter-section">
+            <label class="home-filter-label" for="home-min-ovr">오버롤</label>
+            <div class="home-ovr-range">
+              <input id="home-min-ovr" class="home-filter-control" type="number" name="min_ovr" min="0" max="200" placeholder="최소 OVR" inputmode="numeric">
+              <span aria-hidden="true">~</span>
+              <input class="home-filter-control" type="number" name="max_ovr" min="0" max="200" placeholder="최대 OVR" inputmode="numeric" aria-label="최대 오버롤">
+            </div>
+          </div>
+
+          <div class="home-filter-section">
+            <label class="home-filter-label" for="home-price-enhance">가격 기준 진화단계</label>
+            <select id="home-price-enhance" name="price_enhance" class="home-filter-control">
+              {% for level in price_enhance_levels %}<option value="{{ level }}">{{ level }}진 가격</option>{% endfor %}
+            </select>
+          </div>
+          <div class="home-filter-section">
+            <label class="home-filter-label" for="home-min-price">가격대 ({{ price_unit }})</label>
+            <div class="home-ovr-range">
+              <input id="home-min-price" class="home-filter-control" type="number" name="min_price" min="0" placeholder="최소 가격" inputmode="numeric">
+              <span aria-hidden="true">~</span>
+              <input class="home-filter-control" type="number" name="max_price" min="0" placeholder="최대 가격" inputmode="numeric" aria-label="최대 가격">
+            </div>
+          </div>
+
+          <div class="home-filter-section">
+            <span class="home-filter-label">포지션</span>
+            <div class="home-position-groups">
+              {% for group in position_groups %}
+                <div class="home-position-group" data-position-group="{{ group.key }}">
+                  <div class="home-position-group-head">
+                    <span class="home-position-group-title">{{ group.label }}</span>
+                    <button class="home-position-all" type="button" data-position-select-all>{{ group.label }} 전체선택</button>
+                  </div>
+                  <div class="home-position-options">
+                    {% for pos in group.positions %}
+                      <label class="home-filter-check">
+                        <input type="checkbox" name="position" value="{{ pos }}">
+                        <span>{{ pos }}</span>
+                      </label>
+                    {% endfor %}
+                  </div>
+                </div>
+              {% endfor %}
+            </div>
+          </div>
+
+          <div class="home-filter-section">
+            <span class="home-filter-label">클래스</span>
+            <details class="home-class-box">
+              <summary>클래스 선택 <span id="home-class-selected-count">0</span></summary>
+              <div class="home-class-box-body">
+                <input id="home-class-search" class="home-class-search" type="search" placeholder="클래스 검색" autocomplete="off">
+                <div class="home-class-options" data-player-class-options>
+                  {% for player_class in player_classes %}
+                    <label class="home-class-option" data-class-option data-class-text="{{ player_class|lower }}">
+                      <input type="checkbox" name="player_class" value="{{ player_class }}">
+                      <span title="{{ player_class }}">{{ player_class }}</span>
+                    </label>
+                  {% endfor %}
+                </div>
+              </div>
+            </details>
+          </div>
+
+          <div class="home-filter-hint">이름 없이 필터 조건만으로도 검색할 수 있습니다. 여러 포지션과 클래스는 선택한 값 중 하나에 해당하는 선수를 찾습니다.</div>
+          <div class="home-filter-actions">
+            <button id="home-filter-reset" class="home-filter-reset" type="button">초기화</button>
+            <button class="home-filter-apply" type="submit">필터 적용 검색</button>
+          </div>
+        </div>
       </div>
     </form>
 
@@ -1056,9 +1548,11 @@
           {% else %}
             {% set activity_url = url_for('player_detail', cid=item.player_cid, _anchor='review-summary') %}
           {% endif %}
-          <a class="latest-review-item" href="{{ activity_url }}">
-            <div class="latest-review-art" {% if item.player_bimage %}style="background-image:url('{{ item.player_bimage }}');"{% endif %}>
-              {% if item.player_pimage %}<img src="{{ item.player_pimage }}" alt="{{ item.player_name }}" loading="lazy">{% endif %}
+          <a class="latest-review-item" href="{{ activity_url }}" data-ga-event="review_content_select" data-ga-param-source-surface="home" data-ga-param-content-id="{{ item.player_cid }}">
+            {% set review_card_thumb = player_thumbnail_url('card', item.player_cid, 128) %}
+            {% set review_face_thumb = player_thumbnail_url('faceon', item.player_cid, 128) %}
+            <div class="latest-review-art" data-fimo-player-card='{{ player_card_meta(item.player_cid)|tojson }}' {% if review_card_thumb or item.player_bimage %}data-player-bg="{{ review_card_thumb or item.player_bimage }}"{% endif %}>
+              {% if review_face_thumb or item.player_pimage %}<img src="{{ review_face_thumb or item.player_pimage }}" alt="{{ item.player_name }}" loading="lazy" decoding="async">{% endif %}
             </div>
             <div class="latest-review-main">
               <div class="latest-review-topline">
@@ -1080,24 +1574,61 @@
       </div>
     </section>
 
-    <a class="prime-home-banner" href="{{ url_for('prime_exchange_page') }}" aria-label="프라임 교환 효율 순위 보기">
-      <span class="prime-home-content">
-        <span class="prime-home-kicker">PRIME EXCHANGE</span>
-        <strong class="prime-home-title">프라임 교환 효율</strong>
-     
-        <span class="prime-home-cta">효율 순위 보기 <i class="bi bi-arrow-right" aria-hidden="true"></i></span>
-      </span>
-      <span class="prime-home-visual" aria-hidden="true">
-        <img class="prime-home-logo" src="{{ url_for('static', filename='images/prime-token-mark.svg') }}" alt="">
-      </span>
-    </a>
+    <div class="home-promo-shell">
+      <div class="home-promo-rail" aria-label="추천 기능" tabindex="0">
+        <a class="prime-home-banner pack-home-banner" href="{{ url_for('pack_opener_page') }}" aria-label="팩깡 시뮬레이터 · 알쏭뚝딱 방망이 조각달 교환 팩 열기">
+          <span class="prime-home-content">
+            <span class="prime-home-kicker">알쏭뚝딱 방망이 추가</span>
+            <strong class="prime-home-title">팩깡 시뮬레이터</strong>
+            <span class="prime-home-cta">팩 열러 가기 <i class="bi bi-arrow-right" aria-hidden="true"></i></span>
+          </span>
+          <span class="prime-home-visual" aria-hidden="true"><img class="pack-home-graphic" src="{{ url_for('static', filename='pack-opener/images/pack.png') }}" alt=""><span class="pack-home-moon"></span></span>
+        </a>
+        <a class="prime-home-banner power-ranking-home-banner" href="{{ url_for('normal_mode_power_ranking') }}" id="homeRankingToggle" aria-label="일반모드 파워랭킹 메뉴 펼치기" aria-expanded="false" aria-controls="homeRankingLinks">
+          <span class="prime-home-content">
+            <strong class="prime-home-title">일반모드 파워랭킹</strong>
+            <span class="prime-home-desc">랭커들의 선수 사용 현황 · 시즌 5 상위 250위</span>
+            <span class="prime-home-cta">랭킹 선택 <i class="bi bi-chevron-down" aria-hidden="true"></i></span>
+          </span>
+          <span class="prime-home-visual power-ranking-home-visual" aria-hidden="true">
+            <span class="power-ranking-home-board">
+              <span><b>01</b><i></i></span>
+              <span><b>02</b><i></i></span>
+              <span><b>03</b><i></i></span>
+            </span>
+          </span>
+        </a>
+        <a class="prime-home-banner career-home-banner" href="{{ url_for('traits_selection') }}" aria-label="전체경력을 포함해 선수 세부검색하기">
+          <span class="prime-home-content">
+            <strong class="prime-home-title">전체경력으로 선수검색</strong>
+            <span class="prime-home-desc">현재 팀뿐 아니라 이전 소속팀 경력까지 포함해서 찾아보세요.</span>
+            <span class="prime-home-cta">선수 세부검색 열기 <i class="bi bi-arrow-right" aria-hidden="true"></i></span>
+          </span>
+          <span class="prime-home-visual career-home-visual" aria-hidden="true">
+            <img class="career-home-graphic" src="{{ url_for('static', filename='images/detail-search-graphic.svg') }}" alt="">
+          </span>
+        </a>
+      </div>
+      <button class="home-promo-nav home-promo-prev" type="button" aria-label="이전 추천 배너"><i class="bi bi-chevron-left" aria-hidden="true"></i></button>
+      <button class="home-promo-nav home-promo-next" type="button" aria-label="다음 추천 배너"><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
+
+    </div>
+
+      <nav id="homeRankingLinks" class="home-ranking-links" aria-label="일반모드 랭킹 하위 메뉴" hidden>
+        <a href="{{ url_for('normal_mode_power_ranking') }}">파워랭킹 <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
+        <a href="{{ url_for('normal_mode_season_ranking') }}">시즌 5 일반모드 랭킹 <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
+      </nav>
 
     <div class="tools-wrap">
       <div class="tools-title">바로가기</div>
       <div class="quick-links">
-        <a href="{{ url_for('squad_maker') }}" class="quick-card tool-squad">
-          <span class="tool-glyph" aria-hidden="true"><i class="bi bi-diagram-3"></i></span>
-          <span class="tool-name">스쿼드메이커</span>
+        <a href="{{ url_for('pack_opener_page') }}" class="quick-card tool-squad">
+          <span class="tool-glyph" aria-hidden="true"><i class="bi bi-box-seam"></i></span>
+          <span class="tool-name">팩 오프너</span>
+        </a>
+        <a href="{{ url_for('player_compare_page') }}" class="quick-card tool-squad">
+          <span class="tool-glyph" aria-hidden="true"><i class="bi bi-people"></i></span>
+          <span class="tool-name">선수 비교</span>
         </a>
         <a href="{{ url_for('coupons_page') }}" class="quick-card tool-coupon">
           <span class="tool-glyph" aria-hidden="true"><i class="bi bi-ticket-perforated"></i></span>
@@ -1127,23 +1658,27 @@
       </div>
       <div class="weekly-grid">
         {% for player in weekly_players %}
-          <a class="weekly-card" href="{{ url_for('player_detail', cid=player.cid) }}">
-            <div class="weekly-player-art" style="background-image:url('{{ player.bimage if player.bimage else url_for('static', filename='favicon.ico') }}');">
-              <img src="{{ player.pimage if player.pimage else url_for('static', filename='favicon.ico') }}" alt="{{ player.playerKor }}">
+          <a class="weekly-card" href="{{ url_for('player_detail', cid=player.cid) }}" data-ga-event="player_select" data-ga-param-source-surface="weekly_recommendation" data-ga-param-content-id="{{ player.cid }}">
+            {% set weekly_card_thumb = player_thumbnail_url('card', player.cid, 256) %}
+            {% set weekly_face_thumb = player_thumbnail_url('faceon', player.cid, 256) %}
+            <div class="weekly-player-art" data-fimo-player-card='{{ player_card_meta(player)|tojson }}' data-player-bg="{{ weekly_card_thumb or player.bimage or url_for('static', filename='favicon.ico') }}">
+              <img src="{{ weekly_face_thumb or player.pimage or url_for('static', filename='favicon.ico') }}" alt="{{ player.playerKor }}" loading="lazy" decoding="async">
             </div>
             <div class="weekly-player-info">
               <div class="weekly-player-name">{{ player.playerKor }}</div>
               <div class="weekly-player-meta">{{ player.position or '-' }} · OVR {{ player.ovr or '-' }}</div>
-              <div class="weekly-player-price">{{ "{:,}".format(player.price|int) if player.price else '-' }} {{ price_unit }}</div>
+              <div class="weekly-player-price" data-live-price-cid="{{ player.cid }}" data-live-price-unit="{{ price_unit }}" data-live-price-value="{{ player.price or '' }}" aria-live="polite">{{ "{:,}".format(player.price|int) if player.price else '-' }} {{ price_unit }}</div>
             </div>
           </a>
         {% endfor %}
       </div>
+      {% include '_market_trends.html' %}
+      {% include '_evolution_material_trends.html' %}
       {% if latest_notice %}
         <a class="home-notice" href="{{ url_for('post_detail', post_id=latest_notice.id) }}">
           <div class="home-notice-head">
             <span class="home-notice-label">공지사항</span>
-            <span class="home-notice-date">{{ latest_notice.created_at.strftime('%m.%d') }}</span>
+            <span class="home-notice-date">{{ latest_notice.created_at|kst_datetime('%m.%d') }}</span>
           </div>
           <div class="home-notice-title">{{ latest_notice.title }}</div>
           <div class="home-notice-preview">{{ latest_notice.content }}</div>
@@ -1159,7 +1694,7 @@
           <h3 class="coupon-title">최근 쿠폰</h3>
           <div class="coupon-sub">최신 2개</div>
         </div>
-        <a class="ghost-btn" href="{{ url_for('coupons_page') }}">전체 쿠폰</a>
+        <a class="ghost-btn" href="{{ url_for('coupons_page') }}">전체 쿠폰 <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
       </div>
 
       <div class="coupon-list" id="couponPreview">
@@ -1171,10 +1706,141 @@
   <div class="data-source">Data based on NEXON</div>
 </div>
 
+<script src="{{ url_for('static', filename='js/player-class-order.js', v='20260925-fca27-order') }}"></script>
 <script>
+  const homeRankingToggle = document.getElementById('homeRankingToggle');
+  const homeRankingLinks = document.getElementById('homeRankingLinks');
+  if (homeRankingToggle && homeRankingLinks) {
+    homeRankingToggle.addEventListener('click', function (event) {
+      event.preventDefault();
+      const open = homeRankingLinks.hidden;
+      homeRankingLinks.hidden = !open;
+      homeRankingToggle.setAttribute('aria-expanded', String(open));
+      homeRankingToggle.setAttribute('aria-label', '일반모드 파워랭킹 메뉴 ' + (open ? '접기' : '펼치기'));
+    });
+  }
+  const promoRail = document.querySelector('.home-promo-rail');
+  const promoPrev = document.querySelector('.home-promo-prev');
+  const promoNext = document.querySelector('.home-promo-next');
+
+  function updatePromoButtons(){
+    if (!promoRail || !promoPrev || !promoNext) return;
+    const maxScroll = Math.max(0, promoRail.scrollWidth - promoRail.clientWidth);
+    promoPrev.disabled = promoRail.scrollLeft <= 4;
+    promoNext.disabled = promoRail.scrollLeft >= maxScroll - 4;
+  }
+
+  function movePromo(direction){
+    if (!promoRail) return;
+    const banner = promoRail.querySelector('.prime-home-banner');
+    const gap = parseFloat(getComputedStyle(promoRail).gap) || 0;
+    const distance = (banner?.getBoundingClientRect().width || promoRail.clientWidth) + gap;
+    promoRail.scrollBy({ left: direction * distance, behavior: 'smooth' });
+  }
+
+  promoPrev?.addEventListener('click', () => movePromo(-1));
+  promoNext?.addEventListener('click', () => movePromo(1));
+  promoRail?.addEventListener('scroll', updatePromoButtons, { passive:true });
+  window.addEventListener('resize', updatePromoButtons);
+  requestAnimationFrame(updatePromoButtons);
+
   const input = document.getElementById("names");
   const box = document.getElementById("autocomplete-list");
   const recentRow = document.getElementById("recent-row");
+  const homeSearchForm = document.getElementById("home-search-form");
+  const homeFilterBtn = document.getElementById("home-filter-btn");
+  const homeFilterPanel = document.getElementById("home-filter-panel");
+  const homeFilterClose = document.getElementById("home-filter-close");
+  const homeFilterReset = document.getElementById("home-filter-reset");
+  const homeFilterCount = document.getElementById("home-filter-count");
+  const homeClassSelectedCount = document.getElementById("home-class-selected-count");
+  const homeClassSearch = document.getElementById("home-class-search");
+
+  function setHomeFilterOpen(open) {
+    homeFilterPanel.classList.toggle("is-open", open);
+    homeFilterPanel.setAttribute("aria-hidden", String(!open));
+    homeFilterBtn.setAttribute("aria-expanded", String(open));
+    if (open) {
+      box.innerHTML = "";
+      box.style.display = "none";
+    }
+  }
+
+  function updatePositionGroupState(group) {
+    const positionInputs = Array.from(group.querySelectorAll('input[name="position"]'));
+    const selectAllButton = group.querySelector("[data-position-select-all]");
+    const allSelected = positionInputs.length > 0 && positionInputs.every((control) => control.checked);
+    selectAllButton?.classList.toggle("is-selected", allSelected);
+    if (selectAllButton) {
+      const groupLabel = group.querySelector(".home-position-group-title")?.textContent.trim() || "포지션";
+      selectAllButton.textContent = allSelected ? `${groupLabel} 선택해제` : `${groupLabel} 전체선택`;
+    }
+  }
+
+  function updateHomeFilterState() {
+    const checkedPositions = homeSearchForm.querySelectorAll('input[name="position"]:checked').length;
+    const checkedClasses = homeSearchForm.querySelectorAll('input[name="player_class"]:checked').length;
+    const filledOvr = Array.from(homeSearchForm.querySelectorAll('input[name="min_ovr"], input[name="max_ovr"], input[name="min_price"], input[name="max_price"]'))
+      .filter((control) => control.value.trim()).length;
+    const activeCount = checkedPositions + checkedClasses + filledOvr
+      + (Number(homeSearchForm.elements.price_enhance.value) > 0 ? 1 : 0);
+    homeFilterCount.textContent = activeCount;
+    homeFilterCount.classList.toggle("is-visible", activeCount > 0);
+    homeFilterBtn.classList.toggle("is-active", activeCount > 0);
+    homeClassSelectedCount.textContent = checkedClasses;
+    homeSearchForm.querySelectorAll("[data-position-group]").forEach(updatePositionGroupState);
+    input.setCustomValidity("");
+  }
+
+  homeFilterBtn.addEventListener("click", () => {
+    setHomeFilterOpen(!homeFilterPanel.classList.contains("is-open"));
+  });
+  homeFilterClose.addEventListener("click", () => setHomeFilterOpen(false));
+
+  homeSearchForm.querySelectorAll("[data-position-group]").forEach((group) => {
+    group.querySelector("[data-position-select-all]")?.addEventListener("click", () => {
+      const positionInputs = Array.from(group.querySelectorAll('input[name="position"]'));
+      const shouldSelect = !positionInputs.every((control) => control.checked);
+      positionInputs.forEach((control) => { control.checked = shouldSelect; });
+      updateHomeFilterState();
+    });
+  });
+
+  homeSearchForm.querySelectorAll('input[name="position"], input[name="player_class"], input[name="min_ovr"], input[name="max_ovr"], input[name="min_price"], input[name="max_price"]')
+    .forEach((control) => control.addEventListener("input", updateHomeFilterState));
+
+  homeSearchForm.elements.price_enhance.addEventListener("change", updateHomeFilterState);
+
+  homeClassSearch.addEventListener("input", () => {
+    const query = homeClassSearch.value.trim().toLowerCase().replace(/\s+/g, "");
+    homeSearchForm.querySelectorAll("[data-class-option]").forEach((option) => {
+      const optionText = (option.dataset.classText || "").replace(/\s+/g, "");
+      option.style.display = !query || optionText.includes(query) ? "flex" : "none";
+    });
+  });
+
+  homeFilterReset.addEventListener("click", () => {
+    homeSearchForm.querySelectorAll('input[name="position"], input[name="player_class"]')
+      .forEach((control) => { control.checked = false; });
+    homeSearchForm.querySelectorAll('input[name="min_ovr"], input[name="max_ovr"], input[name="min_price"], input[name="max_price"]')
+      .forEach((control) => { control.value = ""; });
+    homeSearchForm.elements.price_enhance.value = "0";
+    homeClassSearch.value = "";
+    homeSearchForm.querySelectorAll("[data-class-option]").forEach((option) => { option.style.display = "flex"; });
+    updateHomeFilterState();
+  });
+
+  document.addEventListener("click", (event) => {
+    if (!homeFilterPanel.contains(event.target) && !homeFilterBtn.contains(event.target)) {
+      setHomeFilterOpen(false);
+    }
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") setHomeFilterOpen(false);
+  });
+
+  updateHomeFilterState();
 
   /* ===== 디바이스별 최근검색 노출 개수 ===== */
   function getRecentLimit(){
@@ -1215,7 +1881,16 @@
     localStorage.setItem("recent_keywords", JSON.stringify(r));
   }
 
-  document.querySelector("form").addEventListener("submit", () => {
+  homeSearchForm.addEventListener("submit", (event) => {
+    const hasFilter = homeSearchForm.querySelector('input[name="position"]:checked, input[name="player_class"]:checked')
+      || Array.from(homeSearchForm.querySelectorAll('input[name="min_ovr"], input[name="max_ovr"], input[name="min_price"], input[name="max_price"]')).some((control) => control.value.trim())
+      || Number(homeSearchForm.elements.price_enhance.value) > 0;
+    if (!input.value.trim() && !hasFilter) {
+      event.preventDefault();
+      input.setCustomValidity("선수 이름을 입력하거나 필터 조건을 하나 이상 선택해주세요.");
+      input.reportValidity();
+      return;
+    }
     const first = input.value.split(",")[0].trim();
     if (first) {
       saveRecent(first);
@@ -1229,6 +1904,7 @@
   /* ===== 자동완성 ===== */
   let raf = null;
   input.addEventListener("input", () => {
+    input.setCustomValidity("");
     cancelAnimationFrame(raf);
     raf = requestAnimationFrame(() => {
       const val = input.value.split(",").pop().trim();
@@ -1304,23 +1980,16 @@
       const code = escapeHtml(c.code);
 
       return `
-        <div class="coupon-card coupon-link" data-href="${couponsUrl}">
-          <div class="top">
-            <span class="badge">${escapeHtml(category)}</span>
-          </div>
-          <div class="code-row">
-            <span class="code-chip">${code}</span>
-          </div>
-        </div>
+        <a class="coupon-card coupon-link" href="${couponsUrl}">
+          <span class="coupon-card-icon" aria-hidden="true"><i class="bi bi-ticket-perforated"></i></span>
+          <span class="coupon-card-main">
+            <span class="coupon-badge">${escapeHtml(category)}</span>
+            <strong class="code-chip">${code}</strong>
+          </span>
+          <i class="bi bi-chevron-right coupon-card-arrow" aria-hidden="true"></i>
+        </a>
       `;
     }).join("");
-
-    couponPreview.querySelectorAll(".coupon-link").forEach(el => {
-      el.addEventListener("click", () => {
-        const href = el.dataset.href;
-        if (href) window.location.href = href;
-      });
-    });
   }
 
   fetch("/coupons/api?dedupe=true")
@@ -1329,5 +1998,24 @@
     .catch(() => {
       couponPreview.innerHTML = `<div class="empty">쿠폰을 불러오지 못했습니다.</div>`;
     });
+
+  const lazyPlayerBackgrounds = document.querySelectorAll("[data-player-bg]");
+  const loadPlayerBackground = (element) => {
+    if (!element.dataset.playerBg) return;
+    element.style.backgroundImage = `url("${element.dataset.playerBg}")`;
+    delete element.dataset.playerBg;
+  };
+  if ("IntersectionObserver" in window) {
+    const playerBackgroundObserver = new IntersectionObserver((entries, observer) => {
+      entries.forEach(entry => {
+        if (!entry.isIntersecting) return;
+        loadPlayerBackground(entry.target);
+        observer.unobserve(entry.target);
+      });
+    }, { rootMargin: "240px 0px" });
+    lazyPlayerBackgrounds.forEach(element => playerBackgroundObserver.observe(element));
+  } else {
+    lazyPlayerBackgrounds.forEach(loadPlayerBackground);
+  }
 </script>
 {% endblock %}

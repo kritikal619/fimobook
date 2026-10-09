@@ -1,0 +1,227 @@
+{
+  "source": "https://fcmobile.nexon.com/datacenterweb/squadmaker",
+  "retrieved": "2026-10-01",
+  "assets": [
+    {
+      "path": "static/squad/training/0.png",
+      "url": "https://fco.vod.nexoncdn.co.kr/jade_assets/ui/element/playercard/TrainingIcon/0.png",
+      "size": [
+        51,
+        54
+      ]
+    },
+    {
+      "path": "static/squad/evolution/0.png",
+      "url": "https://fco.vod.nexoncdn.co.kr/jade_assets_stage_bQ4IlcltxH6c8s5/ui/element/playercard/CraftingIcon/CRAFTING_ICON_LV_0__KR.png",
+      "size": [
+        256,
+        256
+      ]
+    },
+    {
+      "path": "static/squad/training/1.png",
+      "url": "https://fco.vod.nexoncdn.co.kr/jade_assets/ui/element/playercard/TrainingIcon/1.png",
+      "size": [
+        51,
+        54
+      ]
+    },
+    {
+      "path": "static/squad/training/2.png",
+      "url": "https://fco.vod.nexoncdn.co.kr/jade_assets/ui/element/playercard/TrainingIcon/2.png",
+      "size": [
+        51,
+        54
+      ]
+    },
+    {
+      "path": "static/squad/training/8.png",
+      "url": "https://fco.vod.nexoncdn.co.kr/jade_assets/ui/element/playercard/TrainingIcon/8.png",
+      "size": [
+        51,
+        54
+      ]
+    },
+    {
+      "path": "static/squad/training/3.png",
+      "url": "https://fco.vod.nexoncdn.co.kr/jade_assets/ui/element/playercard/TrainingIcon/3.png",
+      "size": [
+        51,
+        54
+      ]
+    },
+    {
+      "path": "static/squad/training/5.png",
+      "url": "https://fco.vod.nexoncdn.co.kr/jade_assets/ui/element/playercard/TrainingIcon/5.png",
+      "size": [
+        51,
+        54
+      ]
+    },
+    {
+      "path": "static/squad/training/4.png",
+      "url": "https://fco.vod.nexoncdn.co.kr/jade_assets/ui/element/playercard/TrainingIcon/4.png",
+      "size": [
+        51,
+        54
+      ]
+    },
+    {
+      "path": "static/squad/training/9.png",
+      "url": "https://fco.vod.nexoncdn.co.kr/jade_assets/ui/element/playercard/TrainingIcon/9.png",
+      "size": [
+        51,
+        54
+      ]
+    },
+    {
+      "path": "static/squad/training/7.png",
+      "url": "https://fco.vod.nexoncdn.co.kr/jade_assets/ui/element/playercard/TrainingIcon/7.png",
+      "size": [
+        51,
+        54
+      ]
+    },
+    {
+      "path": "static/squad/training/10.png",
+      "url": "https://fco.vod.nexoncdn.co.kr/jade_assets/ui/element/playercard/TrainingIcon/10.png",
+      "size": [
+        51,
+        54
+      ]
+    },
+    {
+      "path": "static/squad/training/6.png",
+      "url": "https://fco.vod.nexoncdn.co.kr/jade_assets/ui/element/playercard/TrainingIcon/6.png",
+      "size": [
+        51,
+        54
+      ]
+    },
+    {
+      "path": "static/squad/evolution/1.png",
+      "url": "https://fco.vod.nexoncdn.co.kr/jade_assets_stage_bQ4IlcltxH6c8s5/ui/element/playercard/CraftingIcon/CRAFTING_ICON_LV_1__KR.png",
+      "size": [
+        256,
+        256
+      ]
+    },
+    {
+      "path": "static/squad/evolution/2.png",
+      "url": "https://fco.vod.nexoncdn.co.kr/jade_assets_stage_bQ4IlcltxH6c8s5/ui/element/playercard/CraftingIcon/CRAFTING_ICON_LV_2__KR.png",
+      "size": [
+        256,
+        256
+      ]
+    },
+    {
+      "path": "static/squad/evolution/8.png",
+      "url": "https://fco.vod.nexoncdn.co.kr/jade_assets_stage_bQ4IlcltxH6c8s5/ui/element/playercard/CraftingIcon/CRAFTING_ICON_LV_8__KR.png",
+      "size": [
+        256,
+        256
+      ]
+    },
+    {
+      "path": "static/squad/evolution/7.png",
+      "url": "https://fco.vod.nexoncdn.co.kr/jade_assets_stage_bQ4IlcltxH6c8s5/ui/element/playercard/CraftingIcon/CRAFTING_ICON_LV_7__KR.png",
+      "size": [
+        256,
+        256
+      ]
+    },
+    {
+      "path": "static/squad/evolution/5.png",
+      "url": "https://fco.vod.nexoncdn.co.kr/jade_assets_stage_bQ4IlcltxH6c8s5/ui/element/playercard/CraftingIcon/CRAFTING_ICON_LV_5__KR.png",
+      "size": [
+        256,
+        256
+      ]
+    },
+    {
+      "path": "static/squad/evolution/4.png",
+      "url": "https://fco.vod.nexoncdn.co.kr/jade_assets_stage_bQ4IlcltxH6c8s5/ui/element/playercard/CraftingIcon/CRAFTING_ICON_LV_4__KR.png",
+      "size": [
+        256,
+        256
+      ]
+    },
+    {
+      "path": "static/squad/evolution/3.png",
+      "url": "https://fco.vod.nexoncdn.co.kr/jade_assets_stage_bQ4IlcltxH6c8s5/ui/element/playercard/CraftingIcon/CRAFTING_ICON_LV_3__KR.png",
+      "size": [
+        256,
+        256
+      ]
+    },
+    {
+      "path": "static/squad/evolution/6.png",
+      "url": "https://fco.vod.nexoncdn.co.kr/jade_assets_stage_bQ4IlcltxH6c8s5/ui/element/playercard/CraftingIcon/CRAFTING_ICON_LV_6__KR.png",
+      "size": [
+        256,
+        256
+      ]
+    },
+    {
+      "path": "static/squad/evolution/10.png",
+      "url": "https://fco.vod.nexoncdn.co.kr/jade_assets_stage_bQ4IlcltxH6c8s5/ui/element/playercard/CraftingIcon/CRAFTING_ICON_LV_10__KR.png",
+      "size": [
+        256,
+        256
+      ]
+    },
+    {
+      "path": "static/squad/evolution/15.png",
+      "url": "https://fco.vod.nexoncdn.co.kr/jade_assets_stage_bQ4IlcltxH6c8s5/ui/element/playercard/CraftingIcon/CRAFTING_ICON_LV_15__KR.png",
+      "size": [
+        256,
+        256
+      ]
+    },
+    {
+      "path": "static/squad/evolution/11.png",
+      "url": "https://fco.vod.nexoncdn.co.kr/jade_assets_stage_bQ4IlcltxH6c8s5/ui/element/playercard/CraftingIcon/CRAFTING_ICON_LV_11__KR.png",
+      "size": [
+        256,
+        256
+      ]
+    },
+    {
+      "path": "static/squad/evolution/12.png",
+      "url": "https://fco.vod.nexoncdn.co.kr/jade_assets_stage_bQ4IlcltxH6c8s5/ui/element/playercard/CraftingIcon/CRAFTING_ICON_LV_12__KR.png",
+      "size": [
+        256,
+        256
+      ]
+    },
+    {
+      "path": "static/squad/evolution/13.png",
+      "url": "https://fco.vod.nexoncdn.co.kr/jade_assets_stage_bQ4IlcltxH6c8s5/ui/element/playercard/CraftingIcon/CRAFTING_ICON_LV_13__KR.png",
+      "size": [
+        256,
+        256
+      ]
+    },
+    {
+      "path": "static/squad/evolution/14.png",
+      "url": "https://fco.vod.nexoncdn.co.kr/jade_assets_stage_bQ4IlcltxH6c8s5/ui/element/playercard/CraftingIcon/CRAFTING_ICON_LV_14__KR.png",
+      "size": [
+        256,
+        256
+      ]
+    },
+    {
+      "path": "static/squad/evolution/9.png",
+      "url": "https://fco.vod.nexoncdn.co.kr/jade_assets/ui/element/playercard/CraftingIcon/CRAFTING_ICON_LV_9__KR.png",
+      "size": [
+        256,
+        256
+      ]
+    }
+  ],
+  "displayRules": {
+    "evolution": "Card badge is hidden at level 0. Levels 1–15 use the original CraftingIcon PNG.",
+    "training": "Official card frame includes the gray training shield; overlay the level number only above level 0. Level selector uses the original TrainingIcon PNG.",
+    "growth": "Evolution increases OVR and stats; training changes stats for the original player position without changing OVR."
+  }
+}

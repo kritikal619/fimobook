@@ -1,0 +1,17 @@
+<script>
+  (function () {
+    var theme = "light";
+    try {
+      var saved = localStorage.getItem("fimobook-theme");
+      theme = saved === "dark" || saved === "light"
+        ? saved
+        : (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+    } catch (error) {
+      theme = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    }
+    document.documentElement.dataset.theme = theme;
+    document.documentElement.style.colorScheme = theme;
+  })();
+</script>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css', v='20261009-quiet-1') }}">
+<script defer src="{{ url_for('static', filename='js/theme.js', v='20260809-11') }}"></script>

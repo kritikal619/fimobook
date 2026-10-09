@@ -1,0 +1,67 @@
+/* Mobile-only override. Remove this stylesheet link to roll back. */
+@media (max-width: 640px) {
+  .search-section .home-promo-rail {
+    padding-bottom: 0;
+  }
+  .tools-wrap {
+    margin-top: 10px;
+    gap: 0;
+  }
+  .tools-wrap .tools-title {
+    display: none;
+  }
+  .tools-wrap .quick-links {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+  }
+  .tools-wrap .quick-card {
+    box-sizing: border-box;
+    height: 44px;
+    min-height: 44px;
+    padding: 0 3px;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    border-radius: 8px;
+    border-color: #e1e7e5;
+    background: #f5f7f8;
+    box-shadow: none;
+    text-align: left;
+  }
+  .tools-wrap .tool-glyph {
+    width: 18px;
+    height: 18px;
+    flex: 0 0 18px;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    font-size: 18px;
+    line-height: 1;
+  }
+  .tools-wrap .tool-glyph i {
+    font-size: 18px;
+    line-height: 1;
+  }
+  .tools-wrap .tool-name {
+    min-width: 0;
+    flex: 0 1 auto;
+    margin: 0;
+    font-size: 13px;
+    font-weight: 800;
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    letter-spacing: -0.3px;
+  }
+  html[data-theme="dark"] .tools-wrap .quick-card {
+    border-color: #34424e !important;
+    background: #1d2a35 !important;
+    box-shadow: none !important;
+  }
+  html[data-theme="dark"] .tools-wrap .tool-glyph {
+    border: 0 !important;
+    background: transparent !important;
+  }
+}

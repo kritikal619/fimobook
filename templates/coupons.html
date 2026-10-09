@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+
+{% set recent_coupons = (coupons | selectattr('code') | list)[:3] %}
+{% set coupon_seo = namespace(codes=[]) %}
+{% for coupon in recent_coupons %}
+  {% set coupon_seo.codes = coupon_seo.codes + [coupon.code] %}
+{% endfor %}
+{% set coupon_description = 'FC모바일 최신 등록 쿠폰: ' ~ (coupon_seo.codes | join(', ')) ~ '. 쿠폰별 보상과 만료 상태, 코드 복사 및 공식 등록 방법을 확인하세요.' if coupon_seo.codes else 'FC모바일 쿠폰 코드와 보상, 만료 상태 및 공식 쿠폰 등록 방법을 확인하세요.' %}
+{% set og_description = coupon_description %}
+
+{% block body_class %}coupon-page-body{% endblock %}
+
+{% block title %}FC모바일 쿠폰 코드와 보상, 등록 방법 | 피모북{% endblock %}
+
+{% block extra_head %}
+<meta name="description" content="{{ coupon_description }}">
+{% include "_adsense_head.html" %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/coupons-workspace.css', v='20260930-compact-3') }}">
+{% endblock %}
+
+{% block content %}
+<div class="coupon-page-outer">
+  <div class="coupon-page">
+    <section class="coupon-hero">
+      <div class="coupon-header">
+        <div class="coupon-copy">
+          <h1 class="coupon-title">FC모바일 쿠폰</h1>
+        </div>
+        <div class="coupon-actions">
+          <a class="ghost-btn coupon-input-btn" href="https://fifamobile.nexon.com/Coupon/Index" target="_blank" rel="noopener" data-ga-event="coupon_redeem_open" data-ga-param-source-surface="coupon_list">쿠폰 등록</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="coupon-alert-settings" aria-label="쿠폰 알림 설정">
+      <span><i class="bi bi-bell" aria-hidden="true"></i> 새 쿠폰 알림</span>
+      <span class="coupon-alert-state" id="coupon-push-state">{% if current_user.is_authenticated %}확인 중{% else %}로그인 필요{% endif %}</span>
+      {% if current_user.is_authenticated %}
+      <button class="coupon-small-button" id="coupon-push-toggle" type="button" disabled>알림 켜기</button>
+      <button class="coupon-small-button" id="coupon-push-test" type="button" hidden>테스트</button>
+      {% else %}
+      <a class="coupon-small-button" href="{{ url_for('login', next=url_for('coupons_page')) }}">로그인</a>
+      {% endif %}
+      <span class="coupon-push-error" id="coupon-push-error" role="status"></span>
+      <small>홈 화면 앱에서도 알림을 켜주세요. 켠 뒤 테스트로 수신을 확인할 수 있습니다.</small>
+    </section>
+
+    <div class="coupon-toolbar">
+      <div class="coupon-filters" aria-label="쿠폰 필터">
+        <button type="button" data-coupon-filter="active" aria-pressed="true">사용 가능 <span id="coupon-active-count">0</span></button>
+        <button type="button" data-coupon-filter="all" aria-pressed="false">전체 <span>{{ coupons|length }}</span></button>
+      </div>
+      <button class="coupon-small-button" id="coupon-copy-all" type="button">모두 복사</button>
+    </div>
+    <div class="coupon-inline-feedback" id="coupon-feedback" role="status" aria-live="polite"></div>
+    <button class="coupon-new-notice" id="coupon-new-notice" type="button" hidden></button>
+
+    {% set ad_layout = 'compact' %}
+    {% include "_adsense_unit.html" %}
+
+    <div class="coupon-list">
+      {% if coupons %}
+        {% for c in coupons %}
+          <div class="coupon-card{% if loop.first and not c.boolExpires %} coupon-card-featured{% endif %}" data-code="{{ c.code }}" data-active="{{ 'false' if c.boolExpires or c.manualStatus == 'unavailable' else 'true' }}">
+            <div class="coupon-code-heading">
+              <h2 class="code-chip">{{ c.code }}</h2>
+              {% if c.manualStatus == 'unavailable' %}
+                <span class="status-expired">사용 불가</span>
+              {% elif c.boolExpires %}
+                <span class="status-expired">만료</span>
+              {% else %}
+                <span class="status-live">사용 가능</span>
+              {% endif %}
+            </div>
+
+            {% set items = c.get("items") %}
+            {% if items %}
+              <div class="items-wrap" aria-label="쿠폰 보상">
+                {% if items is string %}
+                  <span class="item-line">{{ items }}</span>
+                {% elif items is iterable and not items is string %}
+                  {% for it in items %}
+                    {% if it is mapping %}
+                      <span class="item-line">{{ it.get('type', '') }}{% if it.get('amount') %} x {{ it.get('amount') }}{% endif %}</span>
+                    {% else %}
+                      <span class="item-line">{{ it }}</span>
+                    {% endif %}
+                  {% endfor %}
+                {% endif %}
+              </div>
+            {% endif %}
+
+            <div class="coupon-dates">
+              {% if c.expires and c.expires|lower not in ('unknown', 'none', '-') %}
+                <span class="expires">만료 {{ c.expires }}</span>
+              {% else %}
+                <span class="expires">만료일 미확인</span>
+              {% endif %}
+              {% if c.added %}<span>등록 {{ c.added }}</span>{% endif %}
+              {% if c.category and c.category != '미분류' %}<span>{{ c.category }}</span>{% endif %}
+              {% if c.statusOverridden %}<span>상태 수동 지정</span>{% endif %}
+            </div>
+            <button class="copy-btn" type="button" data-code="{{ c.code }}" aria-label="{{ c.code }} 코드 복사" {% if c.boolExpires or c.manualStatus == 'unavailable' %}disabled{% endif %}>복사</button>
+
+            {% if is_admin_user and c.code %}
+              <form class="coupon-admin-form" method="post" action="{{ url_for('admin_coupon_status') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <input type="hidden" name="code" value="{{ c.code }}">
+                <label for="coupon-status-{{ loop.index }}">표시 상태</label>
+                <select id="coupon-status-{{ loop.index }}" name="status" onchange="this.form.submit()">
+                  <option value="auto" {% if c.manualStatus == 'auto' %}selected{% endif %}>자동</option>
+                  <option value="available" {% if c.manualStatus == 'available' %}selected{% endif %}>사용 가능</option>
+                  <option value="unavailable" {% if c.manualStatus == 'unavailable' %}selected{% endif %}>사용 불가</option>
+                </select>
+              </form>
+            {% endif %}
+          </div>
+        {% endfor %}
+      {% else %}
+        <div class="empty">현재 사용 가능한 쿠폰이 없습니다.</div>
+      {% endif %}
+    </div>
+
+    <div class="coupon-filter-empty" id="coupon-filter-empty" hidden>현재 사용 가능한 쿠폰이 없습니다.</div>
+
+    <details class="coupon-guide">
+      <summary>이용 안내</summary>
+      <div class="coupon-guide-content" aria-labelledby="couponGuideTitle">
+        <h2 id="couponGuideTitle">FC모바일 쿠폰 등록 방법</h2>
+        <p>피모북에서 사용 가능 상태와 보상을 확인한 뒤 아래 순서로 등록할 수 있습니다.</p>
+        <ol>
+          <li>원하는 쿠폰의 <strong>코드 복사</strong> 버튼을 누릅니다.</li>
+          <li>게임 내 또는 FC모바일 공식 사이트에서 <strong>쿠폰 등록</strong> 탭으로 이동합니다.</li>
+          <li>복사한 <strong>쿠폰명</strong>을 입력하고 보상을 확인합니다.</li>
+        </ol>
+        <p class="coupon-guide-note">쿠폰별 사용 가능 여부와 만료 정보는 카드에 표시됩니다. 실제 등록 결과와 세부 조건은 FC모바일 공식 쿠폰센터 안내를 기준으로 확인해 주세요.</p>
+      </div>
+    </details>
+  </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/coupons-workspace.js', v='20261009-pwa-push-1') }}" defer></script>
+{% endblock %}

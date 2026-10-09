@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}FC모바일 시즌 5 일반모드 랭킹 | 피모북{% endblock %}
+{% block body_class %}season-ranking-page{% endblock %}
+{% block extra_head %}
+<meta name="description" content="FC모바일 시즌 5 일반모드 상위 250명의 순위, 스타, 팀 OVR을 확인하고 닉네임을 검색하세요.">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/normal-mode-season-ranking.css', v='20261008-2') }}">
+{% endblock %}
+{% block content %}
+<section class="srank-page" aria-labelledby="srankTitle">
+  {% include "_normal_mode_ranking_tabs.html" %}
+  <header class="srank-heading">
+    <h1 id="srankTitle">시즌 5 일반모드 랭킹</h1>
+    <p class="srank-date">{{ ranking_data.collected_at }} 기준</p>
+  </header>
+  <form class="srank-search" role="search" id="seasonRankingSearch">
+    <label for="seasonRankingNickname">닉네임 검색</label>
+    <div class="srank-search-controls">
+      <input type="search" id="seasonRankingNickname" placeholder="닉네임으로 순위 찾기" autocomplete="off" maxlength="100" aria-controls="seasonRankingRows">
+      <button type="button" id="seasonRankingClear" hidden>지우기</button>
+    </div>
+    <p class="srank-status" id="seasonRankingStatus" role="status" aria-live="polite" aria-atomic="true">상위 {{ ranking_data.rows | length }}명 · FC 챔피언</p>
+  </form>
+  <div class="srank-table-wrap">
+    <table class="srank-table">
+      <caption class="srank-visually-hidden">시즌 5 일반모드 상위 250위. 검색해도 실제 순위가 유지됩니다.</caption>
+      <thead><tr><th scope="col">순위</th><th scope="col">닉네임</th><th scope="col">스타</th><th scope="col">팀 OVR</th><th scope="col" class="srank-tier">디비전 티어</th></tr></thead>
+      <tbody id="seasonRankingRows">
+        {% for row in ranking_data.rows %}
+        <tr data-nickname="{{ row.nickname }}" data-rank="{{ row.rank }}" {% if row.rank <= 3 %}class="srank-top"{% endif %}>
+          <td class="srank-rank"><span>{{ row.rank }}</span><span class="srank-visually-hidden">위</span></td>
+          <th scope="row" class="srank-nickname">{{ row.nickname }}</th>
+          <td class="srank-stars">{{ row.stars }}</td><td class="srank-ovr">{{ row.ovr }}</td><td class="srank-tier">{{ row.tier }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <p class="srank-empty" id="seasonRankingEmpty" hidden>상위 250위에 없는 닉네임입니다.<br>닉네임을 확인하거나 검색어를 줄여 보세요.</p>
+  </div>
+  <p class="srank-note">게임 내 상위 250위 기준 · 이후 기록은 달라질 수 있습니다.</p>
+  <noscript><p>닉네임 검색을 이용하려면 브라우저의 JavaScript를 켜 주세요. 전체 랭킹은 아래 표에서 확인할 수 있습니다.</p></noscript>
+</section>
+{% endblock %}
+{% block extra_scripts %}<script src="{{ url_for('static', filename='js/normal-mode-season-ranking.js', v='20261008-2') }}" defer></script>{% endblock %}

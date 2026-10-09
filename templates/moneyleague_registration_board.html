@@ -1,0 +1,433 @@
+{% extends "base.html" %}
+{% block title %}머니리그 접수 | 피모북{% endblock %}
+
+{% block extra_head %}
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="피모북">
+<meta property="og:locale" content="ko_KR">
+<meta property="og:title" content="머니리그 접수 게시판 | 피모북">
+<meta property="og:description" content="머니리그 접수 현황을 확인하고 참가 접수를 등록하세요.">
+<meta property="og:url" content="{{ url_for('moneyleague_registration_board', _external=True) }}">
+<meta property="og:image" content="{{ url_for('static', filename='images/fimobook-og.png', _external=True) }}">
+<meta property="og:image:alt" content="머니리그 접수 게시판">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="머니리그 접수 게시판 | 피모북">
+<meta name="twitter:description" content="머니리그 접수 현황을 확인하고 참가 접수를 등록하세요.">
+<meta name="twitter:image" content="{{ url_for('static', filename='images/fimobook-og.png', _external=True) }}">
+<style>
+  :root {
+    --ml-navy: #0f172a;
+    --ml-blue: #1d4ed8;
+    --ml-sky: #3b82f6;
+    --ml-ink: #1f2937;
+    --ml-muted: #64748b;
+    --ml-line: #dbe5f2;
+    --ml-bg: #f8fbff;
+  }
+  .ml-shell {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .ml-hero {
+    width: 100%;
+    padding: 20px;
+    border-radius: 18px;
+    background:
+      radial-gradient(circle at 82% 20%, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0) 42%),
+      linear-gradient(125deg, #0b1c44 0%, #12337d 44%, #1d4ed8 100%);
+    color: #fff;
+    box-sizing: border-box;
+    box-shadow: 0 16px 30px rgba(15, 23, 42, 0.2);
+  }
+  .ml-title {
+    margin: 0;
+    font-size: 25px;
+    line-height: 1.2;
+    font-weight: 900;
+    letter-spacing: -0.4px;
+  }
+  .ml-sub {
+    margin-top: 8px;
+    font-size: 14px;
+    line-height: 1.5;
+    color: rgba(255, 255, 255, 0.9);
+  }
+  .ml-toolbar {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .ml-note {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--ml-ink);
+    background: #eef5ff;
+    border: 1px solid #cfe1ff;
+    border-radius: 999px;
+    padding: 8px 12px;
+  }
+  .ml-note::before {
+    content: "OPEN";
+    font-size: 11px;
+    font-weight: 800;
+    color: #1d4ed8;
+    background: #fff;
+    border-radius: 999px;
+    padding: 2px 7px;
+    border: 1px solid #dbeafe;
+  }
+  .ml-cta {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    font-weight: 800;
+    color: #fff;
+    background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%);
+    border-radius: 12px;
+    padding: 11px 16px;
+    box-shadow: 0 10px 20px rgba(37, 99, 235, 0.25);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+  }
+  .ml-cta:hover {
+    text-decoration: none;
+    filter: brightness(1.06);
+    transform: translateY(-1px);
+  }
+  .ml-error {
+    width: 100%;
+    background: #fff1f2;
+    border: 1px solid #fecdd3;
+    color: #9f1239;
+    border-radius: 12px;
+    padding: 12px 14px;
+    box-sizing: border-box;
+  }
+  .ml-list {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  .ml-card {
+    background: #fff;
+    border: 1px solid var(--ml-line);
+    border-radius: 16px;
+    padding: 14px;
+    box-sizing: border-box;
+    box-shadow: 0 8px 22px rgba(15, 23, 42, 0.06);
+  }
+  .ml-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 10px;
+  }
+  .ml-card-title {
+    margin: 0;
+    font-size: 19px;
+    line-height: 1.3;
+    font-weight: 900;
+    color: var(--ml-navy);
+  }
+  .ml-card-title a {
+    color: inherit;
+    text-decoration: none;
+  }
+  .ml-card-title a:hover {
+    text-decoration: underline;
+  }
+  .ml-date {
+    font-size: 12px;
+    color: var(--ml-muted);
+    white-space: nowrap;
+  }
+  .ml-author {
+    font-size: 13px;
+    color: var(--ml-muted);
+    margin-bottom: 10px;
+  }
+  .ml-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+  .ml-fold {
+    margin-top: 2px;
+  }
+  .ml-fold summary {
+    list-style: none;
+    cursor: pointer;
+    user-select: none;
+    border: 1px solid #d6e5fb;
+    background: #f3f8ff;
+    color: #1d4ed8;
+    border-radius: 10px;
+    padding: 9px 11px;
+    font-size: 13px;
+    font-weight: 800;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .ml-fold summary::-webkit-details-marker {
+    display: none;
+  }
+  .ml-fold summary::before {
+    content: "▸";
+    font-size: 11px;
+    transform: translateY(-1px);
+    transition: transform 0.15s ease;
+  }
+  .ml-fold[open] summary::before {
+    transform: rotate(90deg);
+  }
+  .ml-fold-body {
+    margin-top: 10px;
+  }
+  .ml-item {
+    background: var(--ml-bg);
+    border: 1px solid #e5edf8;
+    border-radius: 12px;
+    padding: 10px 11px;
+    min-width: 0;
+  }
+  .ml-thumb {
+    width: 100%;
+    border: 1px solid #dbe5f2;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #f8fbff;
+    margin-top: 10px;
+  }
+  .ml-thumb img {
+    width: 100%;
+    height: 170px;
+    object-fit: cover;
+    display: block;
+  }
+  .ml-item.wide {
+    grid-column: 1 / -1;
+  }
+  .ml-label {
+    display: block;
+    font-size: 11px;
+    color: var(--ml-muted);
+    margin-bottom: 5px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+  .ml-value {
+    color: var(--ml-ink);
+    font-size: 14px;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  .ml-line2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    white-space: normal;
+  }
+  .ml-actions {
+    margin-top: 10px;
+    display: flex;
+    justify-content: flex-end;
+  }
+  .ml-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border: 1px solid #bfdbfe;
+    background: #eff6ff;
+    color: #1d4ed8;
+    border-radius: 10px;
+    padding: 8px 12px;
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 800;
+  }
+  .ml-link:hover {
+    text-decoration: none;
+    background: #dbeafe;
+  }
+  .ml-empty {
+    width: 100%;
+    text-align: center;
+    padding: 44px 10px;
+    border: 1px dashed #c9d8ea;
+    border-radius: 16px;
+    color: var(--ml-muted);
+    background: #fcfdff;
+  }
+  @media (max-width: 720px) {
+    .ml-hero {
+      padding: 16px;
+      border-radius: 16px;
+    }
+    .ml-title {
+      font-size: 22px;
+    }
+    .ml-grid {
+      grid-template-columns: 1fr;
+    }
+    .ml-date {
+      white-space: normal;
+      text-align: right;
+    }
+  }
+  @media (max-width: 520px) {
+    .ml-shell {
+      gap: 10px;
+    }
+    .ml-hero {
+      padding: 14px;
+    }
+    .ml-title {
+      font-size: 20px;
+    }
+    .ml-sub {
+      font-size: 13px;
+      margin-top: 6px;
+    }
+    .ml-toolbar {
+      align-items: stretch;
+      gap: 8px;
+    }
+    .ml-note {
+      width: 100%;
+      box-sizing: border-box;
+      border-radius: 12px;
+      justify-content: center;
+      padding: 9px 10px;
+      font-size: 12px;
+    }
+    .ml-cta {
+      width: 100%;
+      box-sizing: border-box;
+      border-radius: 12px;
+      padding: 12px 12px;
+      font-size: 14px;
+    }
+    .ml-card {
+      border-radius: 14px;
+      padding: 12px;
+    }
+    .ml-head {
+      flex-direction: column;
+      gap: 4px;
+      margin-bottom: 8px;
+    }
+    .ml-date {
+      text-align: left;
+      font-size: 11px;
+    }
+    .ml-card-title {
+      font-size: 17px;
+    }
+    .ml-author {
+      margin-bottom: 8px;
+      font-size: 12px;
+    }
+    .ml-fold summary {
+      width: 100%;
+      justify-content: center;
+      box-sizing: border-box;
+      padding: 10px 10px;
+      font-size: 12px;
+    }
+    .ml-thumb img {
+      height: 150px;
+    }
+    .ml-actions {
+      margin-top: 8px;
+    }
+    .ml-link {
+      width: 100%;
+      justify-content: center;
+      box-sizing: border-box;
+      padding: 9px 10px;
+      font-size: 12px;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="ml-shell">
+  <div class="ml-hero">
+    <h1 class="ml-title">머니리그 접수 게시판</h1>
+    <div class="ml-sub">클랜 참가 신청 현황을 한눈에 확인하세요.</div>
+  </div>
+
+  <div class="ml-toolbar">
+    {% if registration_open %}
+      <div class="ml-note">열람/작성 모두 가능합니다.</div>
+      <a class="ml-cta" href="{{ url_for('moneyleague_registration_new') }}">접수 글 작성</a>
+    {% else %}
+      <div class="ml-note">접수 마감: 현재는 열람만 가능합니다.</div>
+    {% endif %}
+  </div>
+
+  {% if load_error %}
+    <div class="ml-error">{{ load_error }}</div>
+  {% endif %}
+
+  <section class="ml-list">
+    {% for post in posts %}
+      <article class="ml-card">
+        <div class="ml-head">
+          <h2 class="ml-card-title">
+            <a href="{{ url_for('moneyleague_registration_detail', registration_id=post.id) }}">{{ post.clan_name }}</a>
+          </h2>
+          <div class="ml-date">{{ post.created_at_display }}</div>
+        </div>
+        <div class="ml-author">작성자: {{ post.author_display or post.author_name }}</div>
+
+        <details class="ml-fold">
+          <summary>접수 내용 보기</summary>
+          <div class="ml-fold-body">
+            {% if post.clan_screenshot_path %}
+              <div class="ml-thumb">
+                <img src="{{ url_for('static', filename=post.clan_screenshot_path) }}" alt="클랜 페이지 스크린샷">
+              </div>
+            {% endif %}
+            <div class="ml-grid">
+              <div class="ml-item">
+                <span class="ml-label">참가 인원</span>
+                <div class="ml-value">{{ post.participant_count }}명</div>
+              </div>
+              <div class="ml-item wide">
+                <span class="ml-label">참가 인원 명단</span>
+                <div class="ml-value">{{ post.participant_roster }}</div>
+              </div>
+              <div class="ml-item wide">
+                <span class="ml-label">각오 한마디</span>
+                <div class="ml-value">{{ post.resolve_message }}</div>
+              </div>
+            </div>
+          </div>
+        </details>
+
+        <div class="ml-actions">
+          <a class="ml-link" href="{{ url_for('moneyleague_registration_detail', registration_id=post.id) }}">상세보기</a>
+        </div>
+      </article>
+    {% else %}
+      <div class="ml-empty">아직 접수 글이 없습니다.</div>
+    {% endfor %}
+  </section>
+</section>
+{% endblock %}

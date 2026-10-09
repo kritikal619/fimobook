@@ -1,0 +1,29 @@
+@font-face{font-family:FimoCardOVR;src:url('/static/fonts/FCOVR.otf') format('opentype');font-display:swap}
+@font-face{font-family:FimoCardPosition;src:url('/static/fonts/POSITION.otf') format('opentype');font-display:swap}
+@font-face{font-family:FimoCardName;src:url('/static/fonts/NAME.ttf') format('truetype');font-display:swap}
+.fimo-card-art{position:relative!important;display:block;aspect-ratio:1!important;height:auto!important;padding:0!important;overflow:visible!important;background-size:contain!important;background-position:center!important;background-repeat:no-repeat!important;background-color:transparent!important;border-radius:0!important;box-shadow:none!important;isolation:isolate;container-type:inline-size}
+.fimo-card-art>.fimo-card-bg{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;object-fit:contain!important;background-size:contain!important;background-position:center!important;background-repeat:no-repeat!important;border-radius:0!important;z-index:0!important}
+.fimo-card-art>.fimo-card-face{position:absolute!important;inset:2.5%!important;width:95%!important;height:95%!important;max-width:none!important;transform:none!important;object-fit:contain!important;object-position:center!important;background-size:contain!important;background-position:center!important;background-repeat:no-repeat!important;border-radius:0!important;z-index:1!important}
+.fimo-card-art .ovr-position-top,.fimo-card-art .card-meta,.fimo-card-art .meta-top,.fimo-card-art .player-card-ovr-pos{display:contents!important;position:static!important}
+.fimo-card-art .fimo-card-rating,.fimo-card-art .fimo-card-position,.fimo-card-art .fimo-card-name{position:absolute!important;z-index:3!important;padding:0!important;margin:0!important;transform:none!important;text-shadow:0 0 5px #000b!important;letter-spacing:normal!important}
+.fimo-card-art .fimo-card-rating{left:22%!important;top:10%!important;bottom:auto!important;width:auto!important;font:700 12.5cqw/1.1 FimoCardOVR,sans-serif!important;text-align:left!important}
+.fimo-card-art .fimo-card-position{left:23%!important;top:24%!important;bottom:auto!important;width:auto!important;height:auto!important;font:400 8.416667cqw/1.1 FimoCardPosition,sans-serif!important;text-align:left!important;background:none!important;border:0!important;border-radius:0!important}
+.fimo-card-art .fimo-card-name{left:22.5%!important;right:auto!important;top:auto!important;bottom:25.5%!important;width:55%!important;font:400 8.75cqw/normal FimoCardName,sans-serif!important;text-align:center!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;box-sizing:border-box!important}
+.fimo-card-art .fimo-card-symbols{position:absolute!important;bottom:16.1%!important;left:0!important;right:0!important;height:8.333333%!important;display:flex!important;align-items:center!important;justify-content:center!important;gap:9.75cqw;z-index:3!important;pointer-events:none}
+.fimo-card-art .fimo-card-symbols[data-count="3"]{gap:7.3cqw}
+.fimo-card-art .fimo-card-symbols img{position:static!important;display:block!important;inset:auto!important;width:auto!important;height:100%!important;max-width:none!important;object-fit:contain!important;transform:none!important;border:0!important;border-radius:0!important;background:none!important;box-shadow:none!important;filter:none!important;flex:none}
+.fimo-card-art[data-fimo-layout="offset"] .fimo-card-name{bottom:22%!important;left:24.5%!important}
+.fimo-card-art[data-fimo-layout="offset"] .fimo-card-symbols{bottom:14%!important;padding-left:5.5%;gap:10cqw}
+.fimo-card-art>.fimo-card-evolution{position:absolute!important;top:34%!important;left:20.9%!important;width:auto!important;height:14.166667%!important;object-fit:contain!important;z-index:3!important}
+.position:not(.filled) .fimo-card-symbols{display:none!important}
+.fimo-card-art .squad-evolution-badge{top:34%;left:20.9%;height:14.166667%;width:auto;aspect-ratio:auto}
+.v2-related-art{width:52px;flex:none}
+
+html[data-theme] body .fimo-card-art{background-color:transparent!important}
+
+/* Dark program lettering uses clean glyphs, without a glow or outline. */
+.fimo-card-art [data-fimo-ink="dark"]{text-shadow:none!important;filter:none!important;-webkit-text-stroke:0!important}
+
+/* Official squad maker: left 4%, top 6%, vertical 13% slots. */
+.fimo-card-art .fimo-card-playstyles{position:absolute!important;left:4%!important;top:6%!important;display:flex!important;flex-direction:column!important;gap:1cqw!important;z-index:8!important;pointer-events:none}
+.fimo-card-art .fimo-card-playstyles img{position:static!important;width:13cqw!important;height:13cqw!important;object-fit:contain!important;transform:none!important;margin:0!important;border:0!important;background:none!important;filter:none!important}

@@ -1,0 +1,4592 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta name="fimobook-page-token" content="{{ csrf_token }}">
+  <script src="{{ url_for('static', filename='js/page-data-access.js', v='20261004-1') }}"></script>
+  {% include "_analytics.html" %}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>스쿼드 메이커 | 피모북</title>
+    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        @font-face {
+            font-family: 'FCOVR';
+            src: url("{{ url_for('static', filename='fonts/FCOVR.otf') }}") format('opentype');
+            font-display: swap;
+        }
+        @font-face {
+            font-family: 'FCName';
+            src: url("{{ url_for('static', filename='fonts/NAME.ttf') }}") format('truetype');
+            font-display: swap;
+        }
+        @font-face {
+            font-family: 'FCPosition';
+            src: url("{{ url_for('static', filename='fonts/POSITION.otf') }}") format('opentype');
+            font-display: swap;
+        }
+
+        :root {
+            --bg-top: #f4f8fb;
+            --bg-bottom: #dfe8f0;
+            --panel: rgba(255, 255, 255, 0.86);
+            --line: #d7dee7;
+            --line-strong: #cbd5e1;
+            --text: #1f2937;
+            --sub: #64748b;
+            --brand: #10b981;
+            --brand-dark: #059669;
+            --navy: #374151;
+            --danger: #ef4444;
+            --slot-accent: #31d86b;
+            --shadow: 0 18px 38px rgba(15, 23, 42, 0.10);
+            --slot-width: 117px;
+            --slot-height: 151px;
+        }
+
+        * { box-sizing: border-box; }
+        html, body { margin: 0; min-height: 100%; }
+        body {
+            font-family: 'IBM Plex Sans KR', 'Apple SD Gothic Neo', sans-serif;
+            background:
+                radial-gradient(circle at top left, rgba(16,185,129,0.12), transparent 26%),
+                linear-gradient(180deg, var(--bg-top) 0%, var(--bg-bottom) 100%);
+            color: var(--text);
+        }
+
+        body.modal-open {
+            overflow: hidden;
+        }
+
+        a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        button,
+        input,
+        select {
+            font: inherit;
+        }
+
+        .app-shell {
+            min-height: 100dvh;
+            padding: 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .brandbar {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            color: var(--navy);
+            font-weight: 700;
+            font-size: 20px;
+            letter-spacing: -0.6px;
+        }
+
+        .brandbar img {
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            box-shadow: 0 8px 18px rgba(15, 23, 42, 0.06);
+        }
+
+        .topbar-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .ghost-link,
+        .ghost-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            min-height: 42px;
+            padding: 0 14px;
+            border-radius: 12px;
+            border: 1px solid var(--line);
+            background: rgba(255,255,255,0.72);
+            color: var(--navy);
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 8px 18px rgba(15,23,42,0.04);
+            backdrop-filter: blur(14px);
+        }
+
+        .ghost-btn:hover,
+        .ghost-link:hover {
+            background: #ffffff;
+            border-color: var(--line-strong);
+        }
+
+        .primary-btn,
+        .secondary-btn,
+        .danger-btn {
+            min-height: 46px;
+            padding: 0 16px;
+            border: none;
+            border-radius: 12px;
+            color: #fff;
+            font-weight: 800;
+            cursor: pointer;
+            box-shadow: 0 14px 24px rgba(15,23,42,0.08);
+            white-space: nowrap;
+        }
+
+        .primary-btn {
+            background: linear-gradient(90deg, var(--brand-dark) 0%, var(--brand) 100%);
+        }
+
+        .secondary-btn {
+            background: linear-gradient(90deg, #0f172a 0%, #334155 100%);
+        }
+
+        .danger-btn {
+            background: linear-gradient(90deg, #dc2626 0%, #ef4444 100%);
+        }
+
+        .primary-btn:disabled,
+        .secondary-btn:disabled,
+        .danger-btn:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        #selected-detail-btn,
+        #selected-compare-btn,
+        #mobile-overlay-detail-btn,
+        #mobile-overlay-compare-btn {
+            display: none;
+        }
+
+        .workspace {
+            flex: 1;
+            min-height: 0;
+            display: grid;
+            grid-template-columns: minmax(300px, 340px) minmax(0, 1fr);
+            gap: 18px;
+            align-items: stretch;
+        }
+
+        .control-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            min-height: 0;
+        }
+
+        .panel-card {
+            background: var(--panel);
+            backdrop-filter: blur(18px);
+            border: 1px solid rgba(255,255,255,0.65);
+            border-radius: 22px;
+            box-shadow: var(--shadow);
+            padding: 18px;
+        }
+
+        .panel-eyebrow {
+            display: inline-flex;
+            align-items: center;
+            padding: 6px 10px;
+            border-radius: 999px;
+            background: #ecfdf5;
+            color: var(--brand-dark);
+            font-size: 11px;
+            font-weight: 900;
+            letter-spacing: 0.08em;
+            margin-bottom: 12px;
+        }
+
+        .panel-title {
+            margin: 0;
+            font-size: 28px;
+            line-height: 1.05;
+            letter-spacing: -0.9px;
+        }
+
+        .field-label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--sub);
+            font-size: 13px;
+            font-weight: 800;
+            letter-spacing: 0.02em;
+        }
+
+        .form-select,
+        .form-input {
+            width: 100%;
+            min-height: 46px;
+            border-radius: 14px;
+            border: 1px solid var(--line);
+            background: #ffffff;
+            color: var(--text);
+            padding: 0 14px;
+            outline: none;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 0;
+            margin-top: 14px;
+            border-top: 1px solid #e5eaf1;
+        }
+
+        .summary-card {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 0;
+            background: transparent;
+            border: 0;
+            border-bottom: 1px solid #e5eaf1;
+            border-radius: 0;
+            box-shadow: none;
+        }
+
+        .summary-label {
+            font-size: 12px;
+            font-weight: 800;
+            color: var(--sub);
+            margin-bottom: 2px;
+        }
+
+        .summary-value {
+            font-size: 18px;
+            font-weight: 900;
+            color: var(--text);
+            letter-spacing: -0.5px;
+            text-align: right;
+        }
+
+        .summary-sub {
+            color: var(--sub);
+            font-size: 11px;
+            margin-top: 0;
+            line-height: 1.4;
+            grid-column: 1 / 2;
+        }
+
+        .action-stack {
+            display: grid;
+            gap: 10px;
+            margin-top: 14px;
+        }
+
+        #autosave-status {
+            display: none;
+        }
+
+        body:not(.mobile-layout) #selected-slot-card,
+        body:not(.mobile-layout) #filled-count-card {
+            display: none;
+        }
+
+        .slot-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-top: 14px;
+            padding-top: 14px;
+            border-top: 1px solid #e5eaf1;
+        }
+
+        .toggle-copy {
+            min-width: 0;
+        }
+
+        .toggle-title {
+            font-size: 14px;
+            font-weight: 800;
+            color: var(--text);
+        }
+
+        .toggle-desc {
+            font-size: 12px;
+            color: var(--sub);
+            line-height: 1.45;
+            margin-top: 3px;
+        }
+
+        .switch {
+            position: relative;
+            width: 48px;
+            height: 28px;
+            flex: 0 0 auto;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            inset: 0;
+            border-radius: 999px;
+            background: #cbd5e1;
+            transition: 0.2s ease;
+            cursor: pointer;
+        }
+
+        .slider::before {
+            content: "";
+            position: absolute;
+            width: 22px;
+            height: 22px;
+            left: 3px;
+            top: 3px;
+            border-radius: 50%;
+            background: #fff;
+            transition: 0.2s ease;
+            box-shadow: 0 4px 12px rgba(15,23,42,0.12);
+        }
+
+        .switch input:checked + .slider {
+            background: var(--brand);
+        }
+
+        .switch input:checked + .slider::before {
+            transform: translateX(20px);
+        }
+
+        .helper-text {
+            color: var(--sub);
+            font-size: 12px;
+            line-height: 1.45;
+            margin-top: 12px;
+        }
+
+        .field-panel {
+            min-height: 0;
+            display: grid;
+            grid-template-rows: auto minmax(0, 1fr);
+            gap: 12px;
+        }
+
+        .field-toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .mobile-value-pill {
+            display: none;
+        }
+
+        .formation-pill,
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            border-radius: 999px;
+            background: rgba(255,255,255,0.72);
+            border: 1px solid rgba(255,255,255,0.7);
+            box-shadow: 0 8px 18px rgba(15,23,42,0.04);
+            color: var(--navy);
+            font-weight: 800;
+            font-size: 13px;
+        }
+
+        .field-scroll {
+            width: 100%;
+            min-height: 0;
+            display: flex;
+        }
+
+        .field-frame {
+            position: relative;
+            flex: 1;
+            min-height: 740px;
+            display: flex;
+            align-items: stretch;
+            justify-content: center;
+            padding: 24px;
+            border-radius: 28px;
+            background:
+                linear-gradient(180deg, rgba(22, 56, 43, 0.95), rgba(12, 38, 29, 0.86)),
+                radial-gradient(circle at top, rgba(52, 211, 153, 0.14), transparent 34%);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        .mobile-field-controls {
+            display: none;
+        }
+
+        .field-frame::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0));
+            pointer-events: none;
+        }
+
+        .squad-div {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            background: url("{{ url_for('static', filename='field_background.webp') }}") center/cover no-repeat;
+            border-radius: 22px;
+            overflow: hidden;
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.1);
+            padding-bottom: 14px;
+        }
+
+        .squad-div::before,
+        .squad-div::after {
+            content: "";
+            position: absolute;
+            left: 50%;
+            pointer-events: none;
+            opacity: 0.34;
+        }
+
+        .squad-div::before {
+            top: 8%;
+            bottom: 8%;
+            width: 1px;
+            background: rgba(255,255,255,0.42);
+            transform: translateX(-50%);
+        }
+
+        .squad-div::after {
+            top: 50%;
+            width: 16%;
+            display: none;
+            transform: translate(-50%, -50%);
+        }
+
+        .position {
+            position: absolute;
+            width: var(--slot-width);
+            height: var(--slot-height);
+            transition: transform 0.18s ease, filter 0.18s ease;
+            cursor: pointer;
+        }
+
+        .position.selected {
+            transform: translateY(-4px) scale(1.02);
+            z-index: 6;
+        }
+
+        .position.dragging {
+            z-index: 20;
+            opacity: 0.55;
+        }
+
+        .slot-badge {
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            min-width: 44px;
+            padding: 5px 10px;
+            border-radius: 999px;
+            background: rgba(15, 23, 42, 0.82);
+            color: #ffffff;
+            font-family: 'IBM Plex Sans KR', 'Apple SD Gothic Neo', sans-serif;
+            font-size: 11px;
+            letter-spacing: 0.04em;
+            text-align: center;
+            z-index: 7;
+            box-shadow: 0 8px 18px rgba(15,23,42,0.22);
+        }
+
+        .player-card {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            border-radius: 20px;
+            overflow: hidden;
+            background: rgba(6, 25, 18, 0.36);
+            box-shadow: 0 22px 34px rgba(0,0,0,0.30);
+        }
+
+        .position.filled .player-card {
+            background: transparent;
+            border: none;
+            border-radius: 0;
+            overflow: visible;
+            box-shadow: none;
+        }
+
+        .position.filled .card-background {
+            inset: 0 -10px;
+            background-size: contain;
+            background-position: center top;
+        }
+
+        .position:not(.filled) .player-card {
+            border: none;
+            border-radius: 0;
+            background:
+                center / 100% 100% no-repeat
+                url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 120'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0%25' stop-color='%23081d14'/%3E%3Cstop offset='100%25' stop-color='%230b2419'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpolygon points='50,2 93,25 93,95 50,118 7,95 7,25' fill='url(%23g)' stroke='%2331d86b' stroke-width='2'/%3E%3C/svg%3E");
+            box-shadow: none;
+            filter:
+                drop-shadow(0 0 10px rgba(49, 216, 107, 0.12))
+                drop-shadow(0 18px 24px rgba(0,0,0,0.22));
+        }
+
+        .position:not(.filled) .card-background,
+        .position:not(.filled) .player-image,
+        .position:not(.filled) .player-name-bottom,
+        .position:not(.filled) .ovr-position-top,
+        .position:not(.filled) .card-overlay {
+            display: none;
+        }
+
+        .position:not(.filled) .slot-plus {
+            width: auto;
+            height: auto;
+            border-radius: 0;
+            background: none;
+            box-shadow: none;
+            color: var(--slot-accent);
+            font-size: 52px;
+            font-weight: 300;
+            text-shadow: 0 0 18px rgba(49,216,107,0.28);
+        }
+
+        .card-background,
+        .player-image {
+            position: absolute;
+            inset: 0;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+
+        .card-background {
+            z-index: 1;
+        }
+
+        .player-image {
+            z-index: 2;
+            background-size: contain;
+        }
+
+        body:not(.mobile-layout) .player-image {
+            background-position: center 10px;
+        }
+
+        .card-overlay {
+            position: absolute;
+            inset: 0;
+            
+            z-index: 2;
+        }
+
+        .ovr-position-top {
+            position: absolute;
+            top: 12px;
+            left: 13px;
+            z-index: 3;
+            color: #fff;
+            line-height: 1;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.55);
+        }
+
+        .ovr {
+            font-family: 'IBM Plex Sans KR', sans-serif;
+            font-weight: 900;
+            font-size: 21px;
+            margin-bottom: 2px;
+        }
+
+        .pos-text {
+            font-family: 'IBM Plex Sans KR', sans-serif;
+            font-size: 13px;
+        }
+
+        .player-name-bottom {
+            position: absolute;
+            left: 50%;
+            bottom: 40px;
+            transform: translateX(-50%);
+            width: 82%;
+            text-align: center;
+            color: #fff;
+            font-family: 'IBM Plex Sans KR', 'Apple SD Gothic Neo', sans-serif;
+            font-weight: 700;
+            font-size: 11px;
+            line-height: 1;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.58);
+            z-index: 3;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+
+        body:not(.mobile-layout) .player-name-bottom {
+            bottom: 44px;
+        }
+
+        .slot-plus {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #ffffff;
+            font-size: 24px;
+            font-weight: 600;
+            background: rgba(15,23,42,0.42);
+            z-index: 3;
+            box-shadow: 0 10px 18px rgba(15,23,42,0.20);
+        }
+
+        .position.filled .slot-plus {
+            display: none;
+        }
+
+        .detail-btn,
+        .remove-btn,
+        .compare-btn {
+            position: absolute;
+            width: 28px;
+            height: 28px;
+            border: none;
+            border-radius: 50%;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            z-index: 8;
+            cursor: pointer;
+            box-shadow: 0 10px 18px rgba(15,23,42,0.22);
+        }
+
+        .detail-btn {
+            right: 8px;
+            bottom: 8px;
+            background: rgba(255,255,255,0.92);
+            color: var(--navy);
+            font-size: 13px;
+        }
+
+        .remove-btn {
+            right: 8px;
+            top: 8px;
+            background: rgba(239,68,68,0.92);
+            color: #fff;
+            font-size: 15px;
+        }
+
+        .compare-btn {
+            left: 8px;
+            bottom: 8px;
+            background: rgba(16,185,129,0.92);
+            color: #fff;
+            font-size: 11px;
+        }
+
+        .position.filled:hover .detail-btn,
+        .position.filled:hover .remove-btn,
+        .position.filled:hover .compare-btn {
+            display: inline-flex;
+        }
+
+        body.mobile-layout .position.filled.selected .remove-btn {
+            display: inline-flex;
+        }
+
+        body.mobile-layout .position .detail-btn,
+        body.mobile-layout .position .compare-btn {
+            display: none !important;
+        }
+
+        body.mobile-layout .position.filled.selected:not(.action-ready) .remove-btn {
+            pointer-events: none;
+        }
+
+        .search-modal {
+            position: fixed;
+            inset: 0;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            background: rgba(15, 23, 42, 0.5);
+            z-index: 1000;
+            padding: 16px;
+        }
+
+        .search-modal.open {
+            display: flex;
+        }
+
+        .search-modal-content {
+            width: min(820px, 100%);
+            max-height: min(88dvh, 920px);
+            display: flex;
+            flex-direction: column;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 24px;
+            box-shadow: 0 26px 52px rgba(15,23,42,0.22);
+            overflow: hidden;
+        }
+
+        .modal-head {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 18px 18px 0;
+        }
+
+        .modal-slot-chip {
+            display: inline-flex;
+            align-items: center;
+            padding: 6px 10px;
+            border-radius: 999px;
+            background: #ecfdf5;
+            color: var(--brand-dark);
+            font-size: 11px;
+            font-weight: 900;
+            letter-spacing: 0.08em;
+            margin-bottom: 10px;
+        }
+
+        .modal-title {
+            margin: 0;
+            font-size: 24px;
+            letter-spacing: -0.7px;
+        }
+
+        .modal-subtitle {
+            margin: 8px 0 0;
+            color: var(--sub);
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .close-button {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            border: 1px solid var(--line);
+            background: #f8fafc;
+            color: var(--navy);
+            font-size: 22px;
+            cursor: pointer;
+        }
+
+        .modal-head-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .mobile-search-back-btn {
+            display: none;
+            min-height: 40px;
+            padding: 0 12px;
+            border-radius: 12px;
+            border: 1px solid var(--line);
+            background: #f8fafc;
+            color: var(--navy);
+            font-weight: 800;
+            cursor: pointer;
+        }
+
+        .modal-controls {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 140px auto;
+            gap: 10px;
+            padding: 18px;
+        }
+
+        .modal-career-controls {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+            gap: 10px;
+            align-items: center;
+            padding: 0 18px 18px;
+        }
+
+        .modal-career-toggle {
+            min-height: 46px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 0 14px;
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            background: #f8fafc;
+            color: var(--navy);
+            font-size: 13px;
+            font-weight: 800;
+            white-space: nowrap;
+            cursor: pointer;
+        }
+
+        #search-modal .search-modal-content {
+            width: min(1040px, 100%);
+        }
+
+        .modal-filter-shell {
+            min-height: 0;
+            overflow-y: auto;
+            padding: 18px;
+            border-bottom: 1px solid #e2e8f0;
+            background: #ffffff;
+        }
+
+        body:not(.mobile-layout) #search-modal .modal-filter-shell {
+            flex: 0 0 auto;
+            max-height: min(56dvh, 520px);
+        }
+
+        .modal-filter-basics {
+            display: grid;
+            grid-template-columns: minmax(180px, 1.2fr) repeat(4, minmax(140px, 1fr));
+            gap: 10px;
+        }
+
+        .modal-filter-field {
+            min-width: 0;
+            display: grid;
+            gap: 6px;
+            color: var(--sub);
+            font-size: 11px;
+            font-weight: 900;
+        }
+
+        .modal-range-inputs {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+            gap: 5px;
+            align-items: center;
+        }
+
+        .modal-range-inputs .form-input {
+            min-width: 0;
+            padding: 0 8px;
+            text-align: center;
+        }
+
+        .modal-range-inputs i {
+            color: var(--sub);
+            font-style: normal;
+        }
+
+        .modal-filter-groups {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .modal-filter-group {
+            min-width: 0;
+            border: 1px solid var(--line);
+            border-radius: 13px;
+            background: #f8fafc;
+            overflow: hidden;
+        }
+
+        .modal-filter-group summary {
+            min-height: 42px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            padding: 0 12px;
+            color: var(--navy);
+            font-size: 12px;
+            font-weight: 900;
+            cursor: pointer;
+            list-style: none;
+        }
+
+        .modal-filter-group summary::-webkit-details-marker { display: none; }
+
+        .modal-filter-group summary::after {
+            content: "⌄";
+            margin-left: auto;
+            color: var(--sub);
+        }
+
+        .modal-filter-group[open] summary::after { transform: rotate(180deg); }
+
+        .modal-filter-group summary b {
+            min-width: 23px;
+            height: 23px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            order: 2;
+            border-radius: 999px;
+            background: #dcfce7;
+            color: var(--brand-dark);
+            font-size: 11px;
+        }
+
+        .modal-filter-option-search {
+            width: calc(100% - 16px);
+            min-height: 34px;
+            margin: 0 8px 7px;
+            padding: 0 9px;
+            border: 1px solid var(--line);
+            border-radius: 9px;
+            background: #fff;
+            box-sizing: border-box;
+        }
+
+        .modal-filter-options {
+            max-height: 172px;
+            overflow-y: auto;
+            padding: 0 7px 8px;
+        }
+
+        .modal-filter-options label {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            min-height: 32px;
+            padding: 0 7px;
+            border-radius: 8px;
+            color: #334155;
+            font-size: 12px;
+            font-weight: 750;
+            cursor: pointer;
+        }
+
+        .modal-filter-options label:hover { background: #eef2f7; }
+        .modal-filter-options label.is-disabled { opacity: .4; cursor: not-allowed; }
+        .modal-filter-options input { accent-color: var(--brand); }
+
+        .modal-filter-note {
+            padding: 0 9px 7px;
+            color: var(--sub);
+            font-size: 10px;
+            font-weight: 750;
+        }
+
+        .modal-filter-career { grid-column: span 2; }
+
+        .modal-filter-career .modal-career-controls {
+            grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+            padding: 0 8px 8px;
+        }
+
+        .modal-filter-actions {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .modal-filter-action-buttons {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-left: auto;
+        }
+
+        .modal-filter-status {
+            color: var(--sub);
+            font-size: 12px;
+            font-weight: 800;
+        }
+
+        .modal-filter-sort {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            color: var(--sub);
+            font-size: 12px;
+            font-weight: 850;
+        }
+
+        .modal-filter-sort .form-select {
+            min-height: 42px;
+            width: auto;
+            min-width: 132px;
+            padding-right: 32px;
+        }
+
+        .squad-div.export-fonts .slot-badge,
+        .squad-div.export-fonts .pos-text {
+            font-family: 'FCPosition', sans-serif;
+        }
+
+        .squad-div.export-fonts .ovr {
+            font-family: 'FCOVR', sans-serif;
+        }
+
+        .squad-div.export-fonts .player-name-bottom {
+            font-family: 'FCName', sans-serif;
+        }
+
+        .modal-search-submit {
+            min-height: 46px;
+            padding: 0 16px;
+            border: none;
+            border-radius: 14px;
+            background: linear-gradient(90deg, var(--brand-dark) 0%, var(--brand) 100%);
+            color: #fff;
+            font-weight: 800;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .modal-results-list {
+            flex: 1 1 240px;
+            min-height: 0;
+            padding: 0 18px 18px;
+            overflow: auto;
+            display: grid;
+            gap: 10px;
+        }
+
+        .modal-results-list.hidden {
+            display: none;
+        }
+
+        .modal-results-summary {
+            padding: 4px 2px 0;
+            color: var(--sub);
+            font-size: 12px;
+            font-weight: 850;
+        }
+
+        .modal-empty {
+            padding: 42px 16px;
+            border-radius: 18px;
+            background: #f8fafc;
+            border: 1px dashed #dbe3ec;
+            color: var(--sub);
+            text-align: center;
+            font-weight: 700;
+        }
+
+        .modal-result-item {
+            display: grid;
+            grid-template-columns: 62px minmax(0, 1fr) auto;
+            gap: 12px;
+            align-items: center;
+            padding: 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 18px;
+            background: #ffffff;
+            cursor: pointer;
+            transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+        }
+
+        .modal-result-item:hover {
+            transform: translateY(-1px);
+            border-color: #bfd1e2;
+            box-shadow: 0 14px 24px rgba(15,23,42,0.08);
+        }
+
+        .result-thumb {
+            width: 62px;
+            height: 78px;
+            border-radius: 12px;
+            overflow: hidden;
+            background: #f1f5f9;
+            position: relative;
+            background-size: cover;
+            background-position: center;
+        }
+
+        .result-thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .result-body {
+            min-width: 0;
+        }
+
+        .result-head {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .result-name {
+            font-size: 15px;
+            font-weight: 800;
+            color: var(--text);
+        }
+
+        .result-class {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 8px;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4f46e5;
+            font-size: 11px;
+            font-weight: 900;
+        }
+
+        .result-meta,
+        .result-sub {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px 10px;
+            margin-top: 6px;
+            color: var(--sub);
+            font-size: 13px;
+        }
+
+        .result-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 8px;
+            border-radius: 999px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            color: var(--navy);
+            font-weight: 700;
+        }
+
+        .result-playstyles {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-top: 7px;
+        }
+
+        .result-playstyle {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            min-width: 0;
+            padding: 2px 7px 2px 4px;
+            border-radius: 999px;
+            background: #f1f5f9;
+            color: #334155;
+            font-size: 11px;
+            font-weight: 800;
+        }
+
+        .result-playstyle img {
+            width: 18px;
+            height: 18px;
+            object-fit: contain;
+            flex: 0 0 auto;
+        }
+
+        .result-value {
+            text-align: right;
+            min-width: 96px;
+        }
+
+        .result-ovr {
+            font-size: 24px;
+            font-weight: 900;
+            letter-spacing: -0.8px;
+            color: var(--text);
+        }
+
+        .result-price {
+            margin-top: 6px;
+            color: var(--sub);
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .compare-panel {
+            position: fixed;
+            inset: 0;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            background: rgba(15, 23, 42, 0.65);
+            z-index: 1100;
+            padding: 14px;
+        }
+
+        .compare-panel.open {
+            display: flex;
+        }
+
+        .compare-content {
+            width: min(1040px, 100%);
+            max-height: min(92dvh, 1000px);
+            overflow: auto;
+            border-radius: 20px;
+            border: 1px solid #dbe3ec;
+            background: #ffffff;
+            box-shadow: 0 24px 60px rgba(15,23,42,0.35);
+        }
+
+        .compare-head {
+            position: sticky;
+            top: 0;
+            z-index: 5;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            padding: 14px 16px;
+            border-bottom: 1px solid #e2e8f0;
+            background: #fff;
+        }
+
+        .compare-title {
+            font-size: 18px;
+            font-weight: 900;
+            color: var(--text);
+        }
+
+        .compare-body {
+            padding: 14px 16px 18px;
+        }
+
+        .compare-top {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+
+        .compare-player {
+            display: grid;
+            grid-template-columns: 64px minmax(0, 1fr);
+            gap: 10px;
+            padding: 10px;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            background: #f8fafc;
+        }
+
+        .compare-thumb {
+            width: 64px;
+            height: 82px;
+            border-radius: 10px;
+            background-size: cover;
+            background-position: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .compare-thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .compare-name {
+            font-size: 14px;
+            font-weight: 900;
+            color: var(--text);
+            margin-bottom: 4px;
+        }
+
+        .compare-sub {
+            font-size: 12px;
+            color: var(--sub);
+            line-height: 1.4;
+        }
+
+        .compare-actions {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 14px;
+        }
+
+        .compare-replace-btn {
+            min-height: 42px;
+            padding: 0 22px;
+            border: 2px solid #7c6cff;
+            border-radius: 999px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: #050505;
+            color: #fff;
+            font-weight: 800;
+            font-size: 14px;
+            letter-spacing: -0.02em;
+            cursor: pointer;
+            box-shadow: none;
+        }
+
+        .compare-group {
+            margin-top: 12px;
+        }
+
+        .compare-group-title {
+            font-size: 14px;
+            font-weight: 900;
+            color: #334155;
+            margin-bottom: 6px;
+        }
+
+        .compare-row {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 110px minmax(0, 1fr);
+            gap: 10px;
+            align-items: center;
+            min-height: 34px;
+            border-bottom: 1px solid #edf2f7;
+            font-size: 13px;
+        }
+
+        .compare-stat-name {
+            text-align: center;
+            color: #64748b;
+            font-weight: 700;
+        }
+
+        .compare-stat-value {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: #334155;
+            font-weight: 700;
+        }
+
+        .compare-stat-value.right {
+            justify-content: flex-end;
+        }
+
+        .compare-stat-main.higher {
+            color: #0f766e;
+        }
+
+        .compare-diff {
+            font-size: 11px;
+            color: #dc2626;
+            font-weight: 900;
+        }
+
+        body.hide-card-meta .position.filled .slot-badge,
+        body.hide-card-meta .position.filled .ovr-position-top {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        @media (min-width: 1280px) {
+            :root {
+                --slot-width: 127px;
+                --slot-height: 164px;
+            }
+
+            .workspace {
+                grid-template-columns: 360px minmax(0, 1fr);
+                gap: 20px;
+            }
+
+            .panel-card {
+                padding: 20px;
+            }
+
+            .panel-title {
+                font-size: 32px;
+            }
+
+            .field-frame {
+                min-height: 800px;
+                padding: 26px;
+            }
+
+            .ovr {
+                font-size: 23px;
+            }
+
+            .player-name-bottom {
+                font-size: 11px;
+            }
+        }
+
+        @media (max-width: 1080px) {
+            :root {
+                --slot-width: 101px;
+                --slot-height: 133px;
+            }
+
+            .workspace {
+                grid-template-columns: 1fr;
+            }
+
+            .field-frame {
+                min-height: 640px;
+            }
+        }
+
+        @media (max-width: 900px) {
+            :root {
+                --slot-width: 68px;
+                --slot-height: 88px;
+            }
+
+            .app-shell {
+                min-height: 100dvh;
+                height: 100dvh;
+                padding: 10px;
+                gap: 10px;
+                overflow-x: hidden;
+                overflow-y: auto;
+            }
+
+            .topbar {
+                display: flex;
+                gap: 8px;
+            }
+
+            .brandbar {
+                gap: 8px;
+                padding: 8px 10px;
+                font-size: 15px;
+                border-radius: 14px;
+                background: rgba(255,255,255,0.76);
+                border: 1px solid rgba(255,255,255,0.74);
+                box-shadow: 0 8px 16px rgba(15,23,42,0.05);
+                backdrop-filter: blur(12px);
+            }
+
+            .brandbar img {
+                width: 20px;
+                height: 20px;
+            }
+
+            .topbar-actions {
+                gap: 6px;
+                margin-left: auto;
+            }
+
+            .ghost-link {
+                display: none;
+            }
+
+            .ghost-btn {
+                min-height: 34px;
+                padding: 0 10px;
+                font-size: 11px;
+                border-radius: 10px;
+            }
+
+            .workspace {
+                display: flex;
+                flex-direction: column;
+                gap: 10px;
+                min-height: 0;
+                overflow: visible;
+                position: relative;
+            }
+
+            .control-panel {
+                position: absolute;
+                top: 12px;
+                right: 12px;
+                z-index: 16;
+                width: clamp(168px, 34vw, 220px);
+                gap: 0;
+                order: 2;
+                pointer-events: none;
+            }
+
+            .control-panel > .panel-card:first-child {
+                display: none;
+            }
+
+            .control-panel > .panel-card:last-child {
+                display: grid;
+                grid-template-columns: 1fr;
+                gap: 10px;
+                padding: 12px;
+                pointer-events: auto;
+                border-radius: 18px;
+                background: rgba(255,255,255,0.86);
+                border: 1px solid rgba(255,255,255,0.75);
+                box-shadow: 0 16px 32px rgba(15,23,42,0.14);
+                backdrop-filter: blur(14px);
+            }
+
+            .control-panel > .panel-card:last-child > .field-label {
+                display: none;
+            }
+
+            .field-label {
+                margin-bottom: 6px;
+                font-size: 11px;
+            }
+
+            .control-panel > .panel-card:last-child > .form-select {
+                width: 100%;
+                min-width: 0;
+                max-width: none;
+            }
+
+            .form-select {
+                min-height: 34px;
+                padding: 0 10px;
+                border-radius: 10px;
+                font-size: 11px;
+            }
+
+            .summary-grid {
+                display: none;
+            }
+
+            .action-stack {
+                margin-top: 0;
+                display: grid;
+                grid-template-columns: 1fr;
+                gap: 8px;
+                width: 100%;
+            }
+
+            .primary-btn,
+            .secondary-btn,
+            .danger-btn {
+                min-height: 40px;
+                width: 100%;
+                padding: 0 12px;
+                font-size: 12px;
+                border-radius: 12px;
+            }
+
+            .slot-toggle {
+                margin-top: 0;
+                padding: 5px 8px;
+                border-top: 0;
+                border: 1px solid #e2e8f0;
+                border-radius: 12px;
+                background: #f8fafc;
+                min-width: 0;
+                gap: 8px;
+            }
+
+            .toggle-title {
+                font-size: 10px;
+                line-height: 1.2;
+            }
+
+            .toggle-desc,
+            .helper-text {
+                display: none;
+            }
+
+            .field-panel {
+                display: flex;
+                flex-direction: column;
+                flex: 1 1 auto;
+                gap: 8px;
+                min-height: 0;
+            }
+
+            .field-toolbar {
+                display: none;
+            }
+
+            .field-scroll {
+                display: flex;
+                min-height: 0;
+                flex: 1;
+                height: var(--mobile-field-height, auto);
+                overflow: visible;
+            }
+
+            .field-frame {
+                flex: 1 1 auto;
+                min-height: 0;
+                height: var(--mobile-field-height, 100%);
+                padding: 8px;
+                border-radius: 18px;
+                align-items: stretch;
+            }
+
+            .squad-div {
+                width: 100%;
+                height: var(--mobile-field-height, 100%);
+                min-height: 0;
+                max-height: none;
+                aspect-ratio: auto;
+                border-radius: 18px;
+                background-size: 100% 100%;
+            }
+
+            .slot-badge {
+                top: -8px;
+                min-width: 30px;
+                padding: 3px 6px;
+                font-size: 8px;
+            }
+
+            .ovr {
+                font-size: 14px;
+            }
+
+            .player-name-bottom {
+                bottom: 15px;
+                font-size: 5px;
+            }
+
+            .slot-plus {
+                width: 24px;
+                height: 24px;
+                font-size: 16px;
+            }
+
+            .detail-btn,
+            .remove-btn,
+            .compare-btn {
+                width: 20px;
+                height: 20px;
+            }
+
+            .search-modal {
+                padding: 10px;
+            }
+
+            .search-modal-content {
+                width: min(760px, 100%);
+                max-height: calc(100dvh - 20px);
+                border-radius: 20px;
+            }
+
+            .modal-head {
+                padding: 14px 14px 0;
+            }
+
+            .modal-title {
+                font-size: 20px;
+            }
+
+            .modal-subtitle {
+                font-size: 12px;
+            }
+
+            .modal-controls {
+                grid-template-columns: minmax(0, 1fr) 120px;
+                gap: 8px;
+                padding: 14px;
+            }
+
+            .modal-career-controls {
+                grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+                gap: 8px;
+                padding: 0 14px 14px;
+            }
+
+            .modal-career-toggle {
+                grid-column: 1 / -1;
+            }
+
+            .modal-filter-basics {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .modal-filter-name { grid-column: 1 / -1; }
+            .modal-filter-groups { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .modal-filter-career { grid-column: 1 / -1; }
+
+            .modal-results-list {
+                padding: 0 14px 14px;
+            }
+
+            .modal-result-item {
+                grid-template-columns: 56px minmax(0, 1fr) auto;
+                gap: 10px;
+                padding: 10px;
+            }
+
+            .result-thumb {
+                width: 56px;
+                height: 72px;
+            }
+
+            .result-name {
+                font-size: 14px;
+            }
+
+            .result-meta,
+            .result-sub {
+                font-size: 12px;
+            }
+
+            .result-ovr {
+                font-size: 18px;
+            }
+
+            .result-price {
+                margin-top: 3px;
+                font-size: 11px;
+            }
+
+            .compare-top {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        body.mobile-layout {
+            --slot-width: 68px;
+            --slot-height: 88px;
+        }
+
+        body.mobile-layout .app-shell {
+            min-height: 100dvh;
+            height: 100dvh;
+            padding: 10px;
+            gap: 10px;
+            overflow-x: hidden;
+            overflow-y: auto;
+        }
+
+        body.mobile-layout .topbar {
+            display: flex;
+            gap: 8px;
+            margin-top: calc(env(safe-area-inset-top, 0px) + 8px);
+        }
+
+        body.mobile-layout .brandbar {
+            gap: 8px;
+            padding: 8px 10px;
+            font-size: 15px;
+            border-radius: 14px;
+            background: rgba(255,255,255,0.76);
+            border: 1px solid rgba(255,255,255,0.74);
+            box-shadow: 0 8px 16px rgba(15,23,42,0.05);
+            backdrop-filter: blur(12px);
+        }
+
+        body.mobile-layout .brandbar img {
+            width: 20px;
+            height: 20px;
+        }
+
+        body.mobile-layout .topbar-actions {
+            gap: 6px;
+            margin-left: auto;
+        }
+
+        body.mobile-layout .ghost-link {
+            display: none;
+        }
+
+        body.mobile-layout .ghost-btn {
+            min-height: 34px;
+            padding: 0 10px;
+            font-size: 11px;
+            border-radius: 10px;
+        }
+
+        body.mobile-layout .workspace {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            min-height: 0;
+            overflow: visible;
+            position: relative;
+            --slot-width: clamp(60px, 15.6vmin, 83px);
+            --slot-height: calc(var(--slot-width) * 1.31);
+        }
+
+        body.mobile-layout .control-panel {
+            display: none;
+        }
+
+        body.mobile-layout .mobile-field-controls {
+            position: absolute;
+            top: 14px;
+            right: 14px;
+            width: clamp(156px, 34%, 220px);
+            z-index: 16;
+            display: grid;
+            grid-template-columns: minmax(0, 1fr);
+            align-items: stretch;
+            justify-items: end;
+            gap: 8px;
+            padding: 0;
+            background: transparent;
+            border: 0;
+            box-shadow: none;
+            backdrop-filter: none;
+        }
+
+        body.mobile-layout .mobile-overlay-select {
+            grid-column: 1 / -1;
+            min-width: 0;
+            width: 70%;
+            justify-self: end;
+            min-height: 38px;
+            padding: 0 10px;
+            border-radius: 10px;
+            font-size: 11px;
+            background: rgba(255,255,255,0.96);
+            border: 1px solid rgba(191,219,254,0.95);
+            box-shadow: 0 10px 20px rgba(15,23,42,0.10);
+        }
+
+        body.mobile-layout #mobile-overlay-reset-btn,
+        body.mobile-layout #mobile-overlay-detail-btn,
+        body.mobile-layout #mobile-overlay-compare-btn {
+            width: 50%;
+            justify-self: end;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 0;
+            line-height: 1.2;
+            text-align: center;
+            padding: 0 12px;
+            box-shadow: 0 12px 24px rgba(15,23,42,0.16);
+        }
+
+        body.mobile-layout #mobile-overlay-detail-btn,
+        body.mobile-layout #mobile-overlay-compare-btn {
+            grid-column: 1 / -1;
+        }
+
+        body.mobile-layout #mobile-overlay-reset-btn {
+            background: linear-gradient(90deg, #f97316 0%, #fb7185 100%);
+        }
+
+        body.mobile-layout #mobile-overlay-detail-btn {
+            background: linear-gradient(90deg, #2563eb 0%, #38bdf8 100%);
+        }
+
+        body.mobile-layout #mobile-overlay-compare-btn {
+            background: linear-gradient(90deg, #0f766e 0%, #14b8a6 100%);
+        }
+
+
+
+
+
+        body.mobile-layout.mobile-compact .mobile-field-controls {
+            width: clamp(148px, 36%, 204px);
+            gap: 6px;
+        }
+
+        body.mobile-layout.mobile-compact {
+            --slot-width: clamp(57px, 15.6vmin, 73px);
+            --slot-height: calc(var(--slot-width) * 1.28);
+        }
+
+        body.mobile-layout.mobile-compact .mobile-overlay-select,
+        body.mobile-layout.mobile-compact #mobile-overlay-reset-btn,
+        body.mobile-layout.mobile-compact #mobile-overlay-detail-btn,
+        body.mobile-layout.mobile-compact #mobile-overlay-compare-btn {
+            min-height: 34px;
+            font-size: 11px;
+        }
+
+
+
+        body.mobile-layout .summary-grid {
+            display: none;
+        }
+
+        body.mobile-layout .action-stack {
+            display: contents;
+        }
+
+        body.mobile-layout #open-search-btn,
+        body.mobile-layout #selected-detail-btn,
+        body.mobile-layout #selected-compare-btn {
+            display: none;
+        }
+
+        body.mobile-layout .position .detail-btn,
+        body.mobile-layout .position .compare-btn {
+            display: none !important;
+        }
+
+        body.mobile-layout #mobile-overlay-detail-btn,
+        body.mobile-layout #mobile-overlay-compare-btn {
+            display: inline-flex;
+        }
+
+        body.mobile-layout .primary-btn,
+        body.mobile-layout .secondary-btn,
+        body.mobile-layout .danger-btn {
+            min-height: 40px;
+            width: auto;
+            padding: 0 12px;
+            font-size: 12px;
+            border-radius: 12px;
+            white-space: nowrap;
+        }
+
+        body.mobile-layout .slot-toggle {
+            margin-top: 0;
+            padding: 5px 8px;
+            border-top: 0;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            background: #f8fafc;
+            min-width: 0;
+            gap: 8px;
+        }
+
+        body.mobile-layout .toggle-title {
+            font-size: 10px;
+            line-height: 1.2;
+        }
+
+        body.mobile-layout .toggle-desc,
+        body.mobile-layout .helper-text {
+            display: none;
+        }
+
+        body.mobile-layout .field-panel {
+            display: flex;
+            flex-direction: column;
+            flex: 1 1 auto;
+            gap: 8px;
+            min-height: 0;
+            order: 1;
+        }
+
+        body.mobile-layout .field-toolbar {
+            display: none;
+        }
+
+        body.mobile-layout .field-scroll {
+            display: flex;
+            min-height: 0;
+            flex: 1;
+            height: var(--mobile-field-height, auto);
+            overflow: visible;
+        }
+
+        body.mobile-layout .field-frame {
+            flex: 1 1 auto;
+            min-height: 0;
+            height: var(--mobile-field-height, 100%);
+            padding: 8px;
+            border-radius: 18px;
+            align-items: stretch;
+        }
+
+        body.mobile-layout .squad-div {
+            width: 100%;
+            height: var(--mobile-field-height, 100%);
+            min-height: 0;
+            max-height: none;
+            aspect-ratio: auto;
+            border-radius: 18px;
+            background-size: 100% 100%;
+        }
+
+        body.mobile-layout .slot-badge {
+            top: -8px;
+            min-width: 30px;
+            padding: 3px 6px;
+            font-size: 8px;
+        }
+
+        body.mobile-layout .ovr {
+            font-size: 14px;
+        }
+
+        body.mobile-layout .player-name-bottom {
+            bottom: 16px;
+            font-size: 5px;
+        }
+
+        body.mobile-layout .slot-plus {
+            width: 24px;
+            height: 24px;
+            font-size: 16px;
+        }
+
+        body.mobile-layout .position:not(.filled) .slot-plus {
+            width: auto;
+            height: auto;
+            font-size: 34px;
+        }
+
+        body.mobile-layout .detail-btn,
+        body.mobile-layout .remove-btn,
+        body.mobile-layout .compare-btn {
+            width: 20px;
+            height: 20px;
+        }
+
+        body.mobile-layout .search-modal {
+            padding: 0;
+        }
+
+        body.mobile-layout .search-modal-content {
+            width: 100vw;
+            height: 100dvh;
+            max-height: none;
+            border-radius: 0;
+        }
+
+        body.mobile-layout .modal-head {
+            padding: 14px 14px 10px;
+            border-bottom: 1px solid #e2e8f0;
+            background: #ffffff;
+        }
+
+        body.mobile-layout .search-modal.mobile-results-only .modal-slot-chip,
+        body.mobile-layout .search-modal.mobile-results-only .modal-subtitle,
+        body.mobile-layout .search-modal.mobile-results-only .modal-controls,
+        body.mobile-layout .search-modal.mobile-results-only .modal-career-controls,
+        body.mobile-layout .search-modal.mobile-results-only .modal-filter-shell {
+            display: none;
+        }
+
+        body.mobile-layout .search-modal.mobile-results-only .modal-head {
+            padding-bottom: 14px;
+        }
+
+        body.mobile-layout .search-modal.mobile-results-only .mobile-search-back-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        body.mobile-layout .modal-title {
+            font-size: 20px;
+        }
+
+        body.mobile-layout .modal-subtitle {
+            font-size: 12px;
+        }
+
+        body.mobile-layout .modal-controls {
+            grid-template-columns: 1fr;
+            gap: 8px;
+            padding: 14px;
+            background: #ffffff;
+        }
+
+        body.mobile-layout .modal-career-controls {
+            grid-template-columns: 1fr;
+            gap: 8px;
+            padding: 0 14px 14px;
+            background: #ffffff;
+        }
+
+        body.mobile-layout .modal-career-toggle {
+            grid-column: auto;
+        }
+
+        body.mobile-layout .modal-filter-shell {
+            flex: 1 1 auto;
+            padding: 14px;
+        }
+
+        body.mobile-layout .modal-filter-basics,
+        body.mobile-layout .modal-filter-groups {
+            grid-template-columns: 1fr;
+        }
+
+        body.mobile-layout .modal-filter-name,
+        body.mobile-layout .modal-filter-career {
+            grid-column: auto;
+        }
+
+        body.mobile-layout .modal-filter-career .modal-career-controls {
+            grid-template-columns: 1fr;
+            padding: 0 8px 8px;
+        }
+
+        body.mobile-layout .modal-filter-actions,
+        body.mobile-layout .modal-filter-action-buttons {
+            align-items: stretch;
+            width: 100%;
+        }
+
+        body.mobile-layout .modal-filter-action-buttons {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto auto;
+            margin-left: 0;
+        }
+
+        body.mobile-layout .modal-filter-sort {
+            min-width: 0;
+            display: grid;
+            grid-template-columns: auto minmax(0, 1fr);
+        }
+
+        body.mobile-layout .modal-filter-sort .form-select {
+            width: 100%;
+            min-width: 0;
+        }
+
+        body.mobile-layout .modal-results-list {
+            flex: 1 1 auto;
+            min-height: 0;
+            padding: 0 14px 14px;
+        }
+
+        body.mobile-layout .modal-result-item {
+            grid-template-columns: 56px minmax(0, 1fr) auto;
+            gap: 10px;
+            padding: 10px;
+        }
+
+        body.mobile-layout .result-thumb {
+            width: 56px;
+            height: 72px;
+        }
+
+        body.mobile-layout .result-name {
+            font-size: 14px;
+        }
+
+        body.mobile-layout .result-meta,
+        body.mobile-layout .result-sub {
+            font-size: 12px;
+        }
+
+        body.mobile-layout .result-ovr {
+            font-size: 18px;
+        }
+
+        body.mobile-layout .result-price {
+            margin-top: 3px;
+            font-size: 11px;
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        body.mobile-layout.mobile-compact .app-shell {
+            padding: 8px;
+            gap: 8px;
+        }
+
+        body.mobile-layout.mobile-compact .brandbar {
+            font-size: 14px;
+            padding: 7px 9px;
+        }
+
+        body.mobile-layout.mobile-compact .ghost-btn {
+            min-height: 32px;
+            padding: 0 9px;
+            font-size: 10px;
+        }
+
+        body.mobile-layout.mobile-compact .field-label {
+            font-size: 10px;
+        }
+
+        body.mobile-layout.mobile-compact .form-select {
+            min-height: 32px;
+            padding: 0 9px;
+            font-size: 11px;
+        }
+
+        body.mobile-layout.mobile-compact .slot-toggle {
+            padding: 6px 7px;
+        }
+
+        body.mobile-layout.mobile-compact .toggle-title {
+            font-size: 10px;
+        }
+
+        body.mobile-layout.mobile-compact .player-name-bottom {
+            bottom: 24px;
+            font-size: 7px;
+        }
+
+        body.mobile-layout.mobile-compact .slot-plus {
+            width: 30px;
+            height: 30px;
+            font-size: 20px;
+        }
+
+        body.mobile-layout.mobile-compact .modal-controls {
+            grid-template-columns: 1fr;
+        }
+
+        body.mobile-layout.mobile-compact .modal-result-item {
+            grid-template-columns: 52px minmax(0, 1fr);
+        }
+
+        body.mobile-layout.mobile-compact .result-thumb {
+            width: 52px;
+            height: 68px;
+        }
+
+        body.mobile-layout.mobile-compact .result-value {
+            grid-column: 2;
+            min-width: 0;
+            text-align: left;
+        }
+
+        body.mobile-layout.mobile-large {
+            --slot-width: clamp(62px, 16.1vmin, 88px);
+            --slot-height: calc(var(--slot-width) * 1.31);
+        }
+
+        body.mobile-layout.mobile-large .app-shell {
+            padding: 12px;
+            gap: 12px;
+        }
+
+        body.mobile-layout.mobile-large .brandbar {
+            gap: 10px;
+            padding: 10px 12px;
+            font-size: 17px;
+        }
+
+        body.mobile-layout.mobile-large .brandbar img {
+            width: 22px;
+            height: 22px;
+        }
+
+        body.mobile-layout.mobile-large .ghost-btn,
+        body.mobile-layout.mobile-large .primary-btn,
+        body.mobile-layout.mobile-large .secondary-btn,
+        body.mobile-layout.mobile-large .danger-btn,
+        body.mobile-layout.mobile-large .form-select {
+            min-height: 38px;
+            font-size: 12px;
+        }
+
+        body.mobile-layout.mobile-large .control-panel > .panel-card:last-child {
+            gap: 10px;
+            padding: 10px 12px;
+        }
+
+        body.mobile-layout.mobile-large .control-panel > .panel-card:last-child > .form-select {
+            min-width: 170px;
+            max-width: 240px;
+        }
+
+        body.mobile-layout.mobile-large .slot-toggle {
+            padding: 7px 10px;
+        }
+
+        body.mobile-layout.mobile-large .toggle-title {
+            font-size: 11px;
+        }
+
+        body.mobile-layout.mobile-large .field-panel {
+            gap: 10px;
+        }
+
+        body.mobile-layout.mobile-large .field-frame {
+            padding: 10px;
+        }
+
+        body.mobile-layout.mobile-large .squad-div {
+            border-radius: 20px;
+        }
+
+        body.mobile-layout.mobile-large .slot-badge {
+            top: -9px;
+            min-width: 36px;
+            padding: 4px 8px;
+            font-size: 9px;
+        }
+
+        body.mobile-layout.mobile-large .ovr-position-top {
+            top: 10px;
+            left: 10px;
+        }
+
+        body.mobile-layout.mobile-large .ovr {
+            font-size: 15px;
+        }
+
+        body.mobile-layout.mobile-large .pos-text {
+            font-size: 10px;
+        }
+
+        body.mobile-layout.mobile-large .player-name-bottom {
+            bottom: 19px;
+            width: 86%;
+            font-size: 6.5px;
+        }
+
+        body.mobile-layout.mobile-large .slot-plus {
+            width: 26px;
+            height: 26px;
+            font-size: 17px;
+        }
+
+        body.mobile-layout.mobile-large .detail-btn,
+        body.mobile-layout.mobile-large .remove-btn,
+        body.mobile-layout.mobile-large .compare-btn {
+            width: 21px;
+            height: 21px;
+        }
+
+        body.mobile-layout.mobile-large .detail-btn {
+            right: 6px;
+            bottom: 6px;
+            font-size: 10px;
+        }
+
+        body.mobile-layout.mobile-large .remove-btn {
+            right: 6px;
+            top: 6px;
+            font-size: 12px;
+        }
+
+        body.mobile-layout.mobile-large .compare-btn {
+            left: 6px;
+            bottom: 6px;
+            font-size: 10px;
+        }
+
+
+
+
+
+        @media (max-width: 640px) {
+            :root {
+                --slot-width: 60px;
+                --slot-height: 75px;
+            }
+
+            .app-shell {
+                padding: 8px;
+                gap: 8px;
+            }
+
+            .brandbar {
+                font-size: 14px;
+                padding: 7px 9px;
+            }
+
+            .ghost-btn {
+                min-height: 32px;
+                padding: 0 9px;
+                font-size: 10px;
+            }
+
+            .field-label {
+                font-size: 10px;
+            }
+
+            .form-select {
+                min-height: 32px;
+                padding: 0 9px;
+                font-size: 11px;
+            }
+
+            .slot-toggle {
+                padding: 6px 7px;
+            }
+
+            .toggle-title {
+                font-size: 10px;
+            }
+
+            .player-name-bottom {
+                bottom: 22px;
+                font-size: 7px;
+            }
+
+            .slot-plus {
+                width: 30px;
+                height: 30px;
+                font-size: 20px;
+            }
+
+            .modal-controls {
+                grid-template-columns: 1fr;
+            }
+
+            .modal-result-item {
+                grid-template-columns: 52px minmax(0, 1fr);
+            }
+
+            .result-thumb {
+                width: 52px;
+                height: 68px;
+            }
+
+            .result-value {
+                grid-column: 2;
+                min-width: 0;
+                text-align: left;
+            }
+
+            .compare-row {
+                grid-template-columns: minmax(0, 1fr) 88px minmax(0, 1fr);
+                font-size: 12px;
+            }
+        }
+
+
+    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/player-art-ratio.css') }}">
+    {% include "_theme_head.html" %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/squad-maker.css') }}?v=20261004-playstyles1">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/player-card-art.css', v='20261003-4') }}">
+<script src="{{ url_for('static', filename='js/player-card-art.js', v='20261003-4') }}"></script>
+</head>
+<body>
+    <div class="app-shell">
+        <header class="topbar">
+            <div class="squad-brand-group">
+                <a class="brandbar" href="{{ url_for('index') }}">
+                    <img src="{{ url_for('static', filename='favicon.ico') }}" alt="로고">
+                    피모북
+                </a>
+                <h1 class="squad-page-title">스쿼드 메이커</h1>
+            </div>
+            <div class="topbar-actions">
+                <a class="ghost-link" href="{{ url_for('index') }}">홈</a>
+                <select class="theme-select theme-select--compact" data-theme-select aria-label="화면 모드">
+                    <option value="system">기기 설정</option>
+                    <option value="light">라이트</option>
+                    <option value="dark">다크</option>
+                </select>
+                <button id="save-image-btn" class="ghost-btn" type="button">이미지 저장</button>
+            </div>
+        </header>
+
+        <div class="workspace">
+            <aside class="control-panel">
+                <section class="panel-card squad-controls" aria-label="스쿼드 설정">
+                    <label class="field-label" for="formation-select">포메이션</label>
+                    <select class="form-select" id="formation-select"></select>
+
+                    <div class="summary-grid">
+                        <div class="summary-card squad-value-card">
+                            <div class="summary-label">구단 가치 <small>진화 기준</small></div>
+                            <div class="summary-value" id="team-enhanced-value" aria-live="polite">0 {{ price_unit }}</div>
+                            <div class="summary-sub squad-value-missing" id="team-value-missing" hidden></div>
+                            <div class="squad-base-value"><span>0진 기준</span><span id="team-value">0 {{ price_unit }}</span></div>
+                            <div class="summary-sub" id="squad-price-status">최신 시세 자동 반영</div>
+                        </div>
+                        <div class="summary-card" id="selected-slot-card">
+                            <div class="summary-label">선택 슬롯</div>
+                            <div class="summary-value" id="selected-slot">미선택</div>
+                            <div class="summary-sub" id="selected-slot-sub">슬롯을 누르면 추천 검색</div>
+                        </div>
+                        <div class="summary-card" id="filled-count-card">
+                            <div class="summary-label">배치 선수</div>
+                            <div class="summary-value" id="filled-count">0 / 11</div>
+                        </div>
+                        <div class="summary-card">
+                            <div class="summary-label">평균 OVR</div>
+                            <div class="summary-value" id="team-ovr">0</div>
+                        </div>
+                    </div>
+
+                    <div class="action-stack">
+                        <button id="open-search-btn" class="primary-btn" type="button">선수 찾기</button>
+                        <button id="bulk-config-btn" class="secondary-btn" type="button">성장 일괄 설정</button>
+                        <button id="reset-squad-btn" class="danger-btn" type="button">초기화</button>
+                        <button id="selected-detail-btn" class="secondary-btn" type="button" disabled>선수 세부사항</button>
+                        <button id="selected-compare-btn" class="secondary-btn" type="button" disabled>선수 비교</button>
+                    </div>
+
+                    <div class="squad-file-actions">
+                        <button id="squad-download-btn" class="ghost-btn" type="button">파일 저장</button>
+                        <button id="squad-upload-btn" class="ghost-btn" type="button">불러오기</button>
+                        <input id="squad-upload-input" type="file" accept=".json,application/json" hidden>
+                    </div>
+                </section>
+            </aside>
+
+            <main class="field-panel">
+                <div class="field-toolbar">
+                    <div class="formation-pill" id="formation-pill">4-3-3 ATTACK</div>
+                    <div class="status-pill" id="squad-growth-summary">선수 카드에서 성장 설정</div>
+                    <div class="status-pill squad-mobile-ovr">평균 OVR <b id="squad-mobile-ovr">0</b></div>
+                    <div class="status-pill mobile-value-pill" id="mobile-team-value-pill" aria-label="구단 가치">
+                        <div class="squad-mobile-value-row"><span>진화 기준</span><b id="mobile-enhanced-team-value">0 {{ price_unit }}</b></div>
+                        <div class="squad-mobile-value-row squad-mobile-base-value"><span>0진 기준</span><span id="mobile-base-team-value">0 {{ price_unit }}</span></div>
+                    </div>
+                    <div class="status-pill" id="autosave-status">자동 저장 준비됨</div>
+                </div>
+                <div class="mobile-field-controls" id="mobile-field-controls">
+                    <select class="form-select mobile-overlay-select" id="mobile-overlay-formation-select" aria-label="포메이션 변경"></select>
+                    <button id="mobile-overlay-detail-btn" class="secondary-btn" type="button" disabled>선수 세부사항</button>
+                    <button id="mobile-overlay-compare-btn" class="secondary-btn" type="button" disabled>선수 비교</button>
+                    <details class="squad-mobile-actions">
+                        <summary>설정</summary>
+                        <div class="squad-mobile-menu">
+                            <button class="ghost-btn" type="button" data-squad-proxy="bulk-config-btn">성장 일괄 설정</button>
+                            <button class="ghost-btn" type="button" data-squad-proxy="squad-download-btn">파일 저장</button>
+                            <button class="ghost-btn" type="button" data-squad-proxy="squad-upload-btn">불러오기</button>
+                            <button id="mobile-overlay-reset-btn" class="danger-btn" type="button">스쿼드 초기화</button>
+                        </div>
+                    </details>
+                </div>
+                <div class="field-scroll">
+                    <div class="field-frame">
+                        <div class="squad-div" id="squad-div"></div>
+                    </div>
+                </div>
+            </main>
+        </div>
+
+    </div>
+
+    <div id="search-modal" class="search-modal" role="dialog" aria-modal="true" aria-labelledby="modal-search-title">
+        <div class="search-modal-content">
+            <div class="modal-head">
+                <div>
+                    <div class="modal-slot-chip" id="modal-slot-chip">SLOT</div>
+                    <h2 class="modal-title" id="modal-search-title">선수 추가</h2>
+                </div>
+                <div class="modal-head-actions">
+                    <button class="mobile-search-back-btn" id="mobile-search-back-btn" type="button">검색 다시</button>
+                    <button class="close-button" type="button" aria-label="선수 검색 닫기">×</button>
+                </div>
+            </div>
+            <div class="squad-search-body">
+            <form id="modal-filter-form" class="modal-filter-shell">
+                <div class="squad-search-quick">
+                    <label class="modal-filter-field modal-filter-name">
+                        <span>선수 이름</span>
+                        <input type="search" id="modal-search-input" name="q" class="form-input" placeholder="예: 호날두" enterkeyhint="search">
+                    </label>
+                    <button id="modal-search-submit-btn" class="modal-search-submit" type="submit">검색</button>
+                </div>
+                <div class="squad-search-primary-filters">
+                    <label class="modal-filter-field" for="modal-position-filter"><span>포지션</span>
+                        <select id="modal-position-filter" name="position" class="form-select">
+                            <option value="">전체 포지션</option>
+                            {% for pos in positions %}<option value="{{ pos }}">{{ pos }}</option>{% endfor %}
+                        </select>
+                    </label>
+                        <label class="modal-filter-field" for="modal-sort-filter">정렬
+                            <select id="modal-sort-filter" name="sort" class="form-select">
+                                <option value="recommend">추천순</option>
+                                <option value="ovr_desc">OVR 높은순</option>
+                                <option value="ovr_asc">OVR 낮은순</option>
+                                <option value="price_desc">가격 높은순</option>
+                                <option value="price_asc">가격 낮은순</option>
+                                <option value="name">이름순</option>
+                            </select>
+                        </label>
+                </div>
+                <section class="squad-career-filter" aria-labelledby="squad-career-title">
+                    <h3 id="squad-career-title">팀 경력</h3>
+                    <div class="modal-career-controls">
+                        <select id="modal-league-filter" name="league" class="form-select" aria-label="리그 필터"><option value="">전체 리그</option></select>
+                        <select id="modal-team-filter" name="team" class="form-select" aria-label="팀 필터" disabled><option value="">리그를 먼저 선택</option></select>
+                        <label class="modal-career-toggle" for="modal-all-career-filter"><input id="modal-all-career-filter" name="all_career" value="1" type="checkbox">전체 경력 포함</label>
+                    </div>
+                </section>
+                <details class="squad-search-filters">
+
+                    <summary>상세 필터 <span id="squad-search-condition-count"></span></summary>
+                <label class="squad-sub-position-toggle"><input type="checkbox" name="include_sub_position" value="1">부 포지션 포함</label>
+                <div class="modal-filter-basics">
+                    <label class="modal-filter-field">
+                        <span>OVR</span>
+                        <span class="modal-range-inputs">
+                            <input type="number" name="min_ovr" class="form-input" min="0" max="200" placeholder="최소" aria-label="최소 OVR">
+                            <i>~</i>
+                            <input type="number" name="max_ovr" class="form-input" min="0" max="200" placeholder="최대" aria-label="최대 OVR">
+                        </span>
+                    </label>
+                    <label class="modal-filter-field">
+                        <span>가격 기준 진화단계</span>
+                        <select name="price_enhance" class="form-select">
+                            {% for level in price_enhance_levels %}<option value="{{ level }}">{{ level }}진 가격</option>{% endfor %}
+                        </select>
+                    </label>
+                    <label class="modal-filter-field">
+                        <span>가격대 ({{ price_unit }})</span>
+                        <span class="modal-range-inputs">
+                            <input type="number" name="min_price" class="form-input" min="0" placeholder="최소" aria-label="최소 가격">
+                            <i>~</i>
+                            <input type="number" name="max_price" class="form-input" min="0" placeholder="최대" aria-label="최대 가격">
+                        </span>
+                    </label>
+                    <label class="modal-filter-field">
+                        <span>키 (cm)</span>
+                        <span class="modal-range-inputs">
+                            <input type="number" name="min_height" class="form-input" min="{{ min_player_height }}" max="{{ max_player_height }}" placeholder="최소" aria-label="최소 키">
+                            <i>~</i>
+                            <input type="number" name="max_height" class="form-input" min="{{ min_player_height }}" max="{{ max_player_height }}" placeholder="최대" aria-label="최대 키">
+                        </span>
+                    </label>
+                    <label class="modal-filter-field">
+                        <span>약발</span>
+                        <select name="weak_foot_min" class="form-select">
+                            <option value="">전체</option>
+                            <option value="3">3 이상</option>
+                            <option value="4">4 이상</option>
+                            <option value="5">5</option>
+                        </select>
+                    </label>
+                </div>
+
+                <div class="modal-filter-groups">
+                    <details class="modal-filter-group" data-squad-filter-group>
+                        <summary>클래스 <b data-filter-count>0</b></summary>
+                        <input class="modal-filter-option-search" type="search" placeholder="클래스 검색" data-filter-search>
+                        <div class="modal-filter-options">
+                            {% for player_class in player_classes %}
+                            <label data-filter-option data-filter-text="{{ player_class|lower }}"><input type="checkbox" name="player_class" value="{{ player_class }}"><span>{{ player_class }}</span></label>
+                            {% endfor %}
+                        </div>
+                    </details>
+                    <details class="modal-filter-group" data-squad-filter-group data-exclusive-filter="skill">
+                        <summary>스킬/스킬부스트 <b data-filter-count>0</b></summary>
+                        <input class="modal-filter-option-search" type="search" placeholder="스킬 검색" data-filter-search>
+                        <div class="modal-filter-options">
+                            {% for item in skill_or_boost_names %}
+                            <label data-filter-option data-filter-text="{{ item|lower }}"><input type="checkbox" name="skill_or_boost" value="{{ item }}"><span>{{ item }}</span></label>
+                            {% endfor %}
+                        </div>
+                    </details>
+                    <details class="modal-filter-group" data-squad-filter-group data-exclusive-filter="raised-stat">
+                        <summary>상승 스탯 <b data-filter-count>0</b></summary>
+                        <input class="modal-filter-option-search" type="search" placeholder="스탯 검색" data-filter-search>
+                        <div class="modal-filter-note">최대 5개 · 스킬/스킬부스트와 동시 선택 불가</div>
+                        <div class="modal-filter-options">
+                            {% for stat in raised_stat_options %}
+                            <label data-filter-option data-filter-text="{{ stat.label|lower }}"><input type="checkbox" name="raised_stat" value="{{ stat.code }}"><span>{{ stat.label }}</span></label>
+                            {% endfor %}
+                        </div>
+                    </details>
+                    <details class="modal-filter-group" data-squad-filter-group>
+                        <summary>개인기 등급 <b data-filter-count>0</b></summary>
+                        <div class="modal-filter-options">
+                            {% for level in skill_levels %}
+                            <label data-filter-option data-filter-text="개인기 등급 {{ level + 1 }}성"><input type="checkbox" name="skill_level" value="{{ level }}"><span>개인기 등급 {{ level + 1 }}성</span></label>
+                            {% endfor %}
+                        </div>
+                    </details>
+                    <details class="modal-filter-group" data-squad-filter-group>
+                        <summary>고유 개인기 <b data-filter-count>0</b></summary>
+                        <input class="modal-filter-option-search" type="search" placeholder="고유 개인기 검색" data-filter-search>
+                        <div class="modal-filter-options">
+                            {% for move in skill_moves %}
+                            <label data-filter-option data-filter-text="{{ move|lower }}"><input type="checkbox" name="skill_move" value="{{ move }}"><span>{{ move }}</span></label>
+                            {% endfor %}
+                        </div>
+                    </details>
+                    <details class="modal-filter-group" data-squad-filter-group>
+                        <summary>활동량 <b data-filter-count>0</b></summary>
+                        <div class="modal-filter-options">
+                            {% for work_rate in work_rate_options %}
+                            <label data-filter-option data-filter-text="{{ work_rate.label }}"><input type="checkbox" name="work_rate" value="{{ work_rate.value }}"><span>{{ work_rate.label }}</span></label>
+                            {% endfor %}
+                        </div>
+                    </details>
+                    <details class="modal-filter-group" data-squad-filter-group>
+                        <summary>플레이스타일 <b data-filter-count>0</b></summary>
+                        <input class="modal-filter-option-search" type="search" placeholder="플레이스타일 검색" data-filter-search>
+                        <div class="modal-filter-options">
+                            {% for playstyle in playstyles %}
+                            <label data-filter-option data-filter-text="{{ playstyle|lower }}"><input type="checkbox" name="playstyle" value="{{ playstyle }}"><span>{{ playstyle }}</span></label>
+                            {% endfor %}
+                        </div>
+                    </details>
+                    <details class="modal-filter-group" data-squad-filter-group>
+                        <summary>특성 <b data-filter-count>0</b></summary>
+                        <input class="modal-filter-option-search" type="search" placeholder="특성 검색" data-filter-search>
+                        <div class="modal-filter-options">
+                            {% for trait in traits %}
+                            <label data-filter-option data-filter-text="{{ trait|lower }}"><input type="checkbox" name="trait" value="{{ trait }}"><span>{{ trait }}</span></label>
+                            {% endfor %}
+                        </div>
+                    </details>
+                </div>
+                </details>
+                <div class="modal-filter-actions">
+                    <span id="modal-filter-status" class="modal-filter-status" aria-live="polite"></span>
+                    <div class="modal-filter-action-buttons">
+                        <button id="modal-filter-reset-btn" class="secondary-btn" type="button">필터 초기화</button>
+                    </div>
+                </div>
+            </form>
+            <div id="modal-autocomplete-list" class="modal-results-list hidden" aria-live="polite"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="compare-search-modal" class="search-modal">
+        <div class="search-modal-content">
+            <div class="modal-head">
+                <div>
+                    <div class="modal-slot-chip" id="compare-slot-chip">VS</div>
+                    <h2 class="modal-title">비교할 선수 선택</h2>
+                    <p class="modal-subtitle" id="compare-subtitle">비교할 선수를 검색해서 선택해 주세요.</p>
+                </div>
+                <div class="modal-head-actions">
+                    <button class="mobile-search-back-btn" id="compare-mobile-search-back-btn" type="button">검색 다시</button>
+                    <button class="close-button" id="compare-search-close-btn" type="button">×</button>
+                </div>
+            </div>
+            <div class="modal-controls">
+                <input type="search" id="compare-search-input" class="form-input" placeholder="선수 이름 검색" enterkeyhint="search">
+                <input type="text" id="compare-class-filter" class="form-input" placeholder="클래스명 필터">
+                <button id="compare-search-submit-btn" class="modal-search-submit" type="button">검색</button>
+            </div>
+            <div id="compare-result-list" class="modal-results-list hidden"></div>
+        </div>
+    </div>
+
+    <div id="compare-panel" class="compare-panel">
+        <div class="compare-content">
+            <div class="compare-head">
+                <div class="compare-title">선수 비교</div>
+                <button class="close-button" id="compare-panel-close-btn" type="button">×</button>
+            </div>
+            <div class="compare-body" id="compare-panel-body"></div>
+        </div>
+    </div>
+
+    <dialog id="squad-player-editor" class="squad-dialog" aria-labelledby="squad-editor-title">
+        <div class="squad-dialog-head">
+            <div><span class="squad-dialog-eyebrow" id="squad-editor-slot">선수 설정</span><h2 id="squad-editor-title">선수 설정</h2></div>
+            <button class="ghost-btn" type="button" data-close-squad-dialog aria-label="선수 설정 닫기">×</button>
+        </div>
+        <div id="squad-editor-body"></div>
+        <div class="squad-dialog-footer">
+            <button class="primary-btn" type="button" data-close-squad-dialog>완료</button>
+        </div>
+    </dialog>
+    <dialog id="squad-bulk-editor" class="squad-dialog squad-bulk-dialog" aria-labelledby="squad-bulk-title">
+        <div class="squad-dialog-head">
+            <div><h2 id="squad-bulk-title">진화·훈련 일괄 설정</h2></div>
+            <button class="ghost-btn" type="button" data-close-squad-dialog aria-label="일괄 설정 닫기">×</button>
+        </div>
+        <div class="squad-level-grid">
+            <label>진화 단계<select id="squad-bulk-enhance" class="form-select"></select></label>
+            <label>훈련 단계<select id="squad-bulk-training" class="form-select"></select></label>
+        </div>
+        <label class="squad-default-check"><input id="squad-bulk-default" type="checkbox" checked>새로 추가하는 선수에도 적용</label>
+        <div class="squad-dialog-footer"><span id="squad-bulk-count"></span><button id="squad-bulk-apply" class="primary-btn" type="button">적용하기</button></div>
+    </dialog>
+    <dialog id="squad-image-preview" class="squad-dialog" aria-labelledby="squad-image-title">
+        <div class="squad-dialog-head"><h2 id="squad-image-title">스쿼드 이미지</h2><button class="ghost-btn" type="button" data-close-squad-dialog aria-label="이미지 닫기">×</button></div>
+        <img id="squad-export-image" alt="저장할 스쿼드 이미지" width="2400" height="2000">
+        <div class="squad-dialog-footer"><a id="squad-export-download" class="primary-btn" download>PNG 저장</a></div>
+    </dialog>
+    <div id="squad-toast" class="squad-toast" role="status" aria-live="polite"></div>
+
+    <script src="{{ url_for('static', filename='js/squad-export.js') }}?v=20261004-playstyles1"></script>
+    <script src="{{ url_for('static', filename='js/squad-maker.js') }}?v=20261004-playstyles1"></script>
+    <script>
+    const rawFormationData = [{"name": "4-3-3 ATTACK", "pos": [{"name": "gk", "text": "GK", "xy": "452px,530px"}, {"name": "df1", "text": "LB", "xy": "232px,400px"}, {"name": "df2", "text": "CB", "xy": "382px,400px"}, {"name": "df3", "text": "CB", "xy": "532px,400px"}, {"name": "df4", "text": "RB", "xy": "682px,400px"}, {"name": "mf1", "text": "CM", "xy": "304px,300px"}, {"name": "mf2", "text": "CAM", "xy": "454px,280px"}, {"name": "mf3", "text": "CM", "xy": "604px,300px"}, {"name": "fw1", "text": "LW", "xy": "304px,160px"}, {"name": "fw2", "text": "ST", "xy": "454px,160px"}, {"name": "fw3", "text": "RW", "xy": "604px,160px"}]},
+        {"name": "4-3-3 DEFEND", "pos": [{"name": "gk", "text": "GK", "xy": "452px,530px"}, {"name": "df1", "text": "LB", "xy": "232px,400px"}, {"name": "df2", "text": "CB", "xy": "382px,400px"}, {"name": "df3", "text": "CB", "xy": "532px,400px"}, {"name": "df4", "text": "RB", "xy": "682px,400px"}, {"name": "mf1", "text": "CDM", "xy": "304px,300px"}, {"name": "mf2", "text": "CM", "xy": "454px,280px"}, {"name": "mf3", "text": "CDM", "xy": "604px,300px"}, {"name": "fw1", "text": "LW", "xy": "304px,160px"}, {"name": "fw2", "text": "ST", "xy": "454px,160px"}, {"name": "fw3", "text": "RW", "xy": "604px,160px"}]},
+        {"name": "4-3-3 HOLDING", "pos": [{"name": "gk", "text": "GK", "xy": "452px,530px"}, {"name": "df1", "text": "LB", "xy": "232px,400px"}, {"name": "df2", "text": "CB", "xy": "382px,400px"}, {"name": "df3", "text": "CB", "xy": "532px,400px"}, {"name": "df4", "text": "RB", "xy": "682px,400px"}, {"name": "mf1", "text": "CM", "xy": "304px,280px"}, {"name": "mf2", "text": "CDM", "xy": "454px,300px"}, {"name": "mf3", "text": "CM", "xy": "604px,280px"}, {"name": "fw1", "text": "LW", "xy": "304px,160px"}, {"name": "fw2", "text": "ST", "xy": "454px,160px"}, {"name": "fw3", "text": "RW", "xy": "604px,160px"}]},
+        {"name": "4-3-3", "pos": [{"name": "gk", "text": "GK", "xy": "452px,530px"}, {"name": "df1", "text": "LB", "xy": "232px,400px"}, {"name": "df2", "text": "CB", "xy": "382px,400px"}, {"name": "df3", "text": "CB", "xy": "532px,400px"}, {"name": "df4", "text": "RB", "xy": "682px,400px"}, {"name": "mf1", "text": "CM", "xy": "304px,280px"}, {"name": "mf2", "text": "CM", "xy": "454px,280px"}, {"name": "mf3", "text": "CM", "xy": "604px,280px"}, {"name": "fw1", "text": "LW", "xy": "304px,160px"}, {"name": "fw2", "text": "ST", "xy": "454px,160px"}, {"name": "fw3", "text": "RW", "xy": "604px,160px"}]},
+        {"name": "4-4-2 FLAT", "pos": [{"name": "gk", "text": "GK", "xy": "452px,530px"}, {"name": "df1", "text": "LB", "xy": "232px,400px"}, {"name": "df2", "text": "CB", "xy": "382px,400px"}, {"name": "df3", "text": "CB", "xy": "532px,400px"}, {"name": "df4", "text": "RB", "xy": "682px,400px"}, {"name": "mf1", "text": "LM", "xy": "270px,280px"}, {"name": "mf2", "text": "CM", "xy": "394px,280px"}, {"name": "mf3", "text": "CM", "xy": "530px,280px"}, {"name": "mf4", "text": "RM", "xy": "650px,280px"}, {"name": "fw1", "text": "ST", "xy": "382px,160px"}, {"name": "fw2", "text": "ST", "xy": "532px,160px"}]},
+        {"name": "4-2-4", "pos": [{"name": "gk", "text": "GK", "xy": "452px,530px"}, {"name": "df1", "text": "LB", "xy": "232px,400px"}, {"name": "df2", "text": "CB", "xy": "382px,400px"}, {"name": "df3", "text": "CB", "xy": "532px,400px"}, {"name": "df4", "text": "RB", "xy": "682px,400px"}, {"name": "mf1", "text": "CM", "xy": "382px,280px"}, {"name": "mf2", "text": "CM", "xy": "532px,280px"}, {"name": "fw1", "text": "LW", "xy": "262px,200px"}, {"name": "fw2", "text": "ST", "xy": "382px,160px"}, {"name": "fw3", "text": "ST", "xy": "532px,160px"}, {"name": "fw4", "text": "RW", "xy": "652px,200px"}]},
+        {"name": "4-2-3-1 WIDE", "pos": [{"name": "gk", "text": "GK", "xy": "452px,530px"}, {"name": "df1", "text": "LB", "xy": "246px,400px"}, {"name": "df2", "text": "CB", "xy": "382px,400px"}, {"name": "df3", "text": "CB", "xy": "532px,400px"}, {"name": "df4", "text": "RB", "xy": "660px,400px"}, {"name": "mf1", "text": "LM", "xy": "234px,280px"}, {"name": "mf2", "text": "CDM", "xy": "338px,300px"}, {"name": "mf3", "text": "CAM", "xy": "454px,280px"}, {"name": "mf4", "text": "CDM", "xy": "568px,300px"}, {"name": "mf5", "text": "RM", "xy": "682px,280px"}, {"name": "fw2", "text": "ST", "xy": "454px,160px"}]},
+        {"name": "4-1-2-1-2 WIDE", "pos": [{"name": "gk", "text": "GK", "xy": "452px,530px"}, {"name": "df1", "text": "LB", "xy": "232px,400px"}, {"name": "df2", "text": "CB", "xy": "382px,400px"}, {"name": "df3", "text": "CB", "xy": "532px,400px"}, {"name": "df4", "text": "RB", "xy": "682px,400px"}, {"name": "mf1", "text": "LM", "xy": "304px,280px"}, {"name": "mf2", "text": "CDM", "xy": "454px,300px"}, {"name": "mf3", "text": "RM", "xy": "604px,280px"}, {"name": "fw1", "text": "ST", "xy": "304px,160px"}, {"name": "fw2", "text": "CAM", "xy": "454px,180px"}, {"name": "fw3", "text": "ST", "xy": "604px,160px"}]},
+        {"name": "4-4-1-1 ATTACK", "pos": [{"name": "gk", "text": "GK", "xy": "452px,530px"}, {"name": "df1", "text": "LB", "xy": "246px,400px"}, {"name": "df2", "text": "CB", "xy": "382px,400px"}, {"name": "df3", "text": "CB", "xy": "532px,400px"}, {"name": "df4", "text": "RB", "xy": "660px,400px"}, {"name": "mf1", "text": "LM", "xy": "224px,300px"}, {"name": "mf2", "text": "CM", "xy": "338px,300px"}, {"name": "mf3", "text": "CF", "xy": "454px,280px"}, {"name": "mf4", "text": "CM", "xy": "568px,300px"}, {"name": "mf5", "text": "RM", "xy": "682px,300px"}, {"name": "fw2", "text": "ST", "xy": "454px,160px"}]},
+        {"name": "4-1-2-1-2 NARROW", "pos": [{"name": "gk", "text": "GK", "xy": "452px,530px"}, {"name": "df1", "text": "LB", "xy": "232px,400px"}, {"name": "df2", "text": "CB", "xy": "382px,400px"}, {"name": "df3", "text": "CB", "xy": "532px,400px"}, {"name": "df4", "text": "RB", "xy": "682px,400px"}, {"name": "mf1", "text": "CM", "xy": "304px,280px"}, {"name": "mf2", "text": "CDM", "xy": "454px,300px"}, {"name": "mf3", "text": "CM", "xy": "604px,280px"}, {"name": "fw1", "text": "ST", "xy": "304px,160px"}, {"name": "fw2", "text": "CAM", "xy": "454px,180px"}, {"name": "fw3", "text": "ST", "xy": "604px,160px"}]},
+        {"name": "3-4-3 DIAMOND", "pos": [{"name": "gk", "text": "GK", "xy": "452px,530px"}, {"name": "df1", "text": "CB", "xy": "338px,400px"}, {"name": "df2", "text": "CB", "xy": "454px,400px"}, {"name": "df3", "text": "CB", "xy": "568px,400px"}, {"name": "mf1", "text": "LM", "xy": "254px,280px"}, {"name": "mf2", "text": "CDM", "xy": "378px,300px"}, {"name": "mf3", "text": "CAM", "xy": "504px,280px"}, {"name": "mf4", "text": "RM", "xy": "634px,280px"}, {"name": "fw1", "text": "LW", "xy": "304px,160px"}, {"name": "fw2", "text": "ST", "xy": "454px,160px"}, {"name": "fw3", "text": "RW", "xy": "604px,160px"}]},
+        {"name": "3-4-3 FLAT", "pos": [{"name": "gk", "text": "GK", "xy": "452px,530px"}, {"name": "df1", "text": "CB", "xy": "338px,400px"}, {"name": "df2", "text": "CB", "xy": "454px,400px"}, {"name": "df3", "text": "CB", "xy": "568px,400px"}, {"name": "mf1", "text": "LM", "xy": "264px,280px"}, {"name": "mf2", "text": "CM", "xy": "393px,280px"}, {"name": "mf3", "text": "CM", "xy": "509px,280px"}, {"name": "mf4", "text": "RM", "xy": "634px,280px"}, {"name": "fw1", "text": "LW", "xy": "304px,160px"}, {"name": "fw2", "text": "ST", "xy": "454px,160px"}, {"name": "fw3", "text": "RW", "xy": "604px,160px"}]},
+        {"name": "3-5-1-1", "pos": [{"name": "gk", "text": "GK", "xy": "452px,530px"}, {"name": "df1", "text": "CB", "xy": "338px,400px"}, {"name": "df2", "text": "CB", "xy": "454px,400px"}, {"name": "df3", "text": "CB", "xy": "568px,400px"}, {"name": "mf1", "text": "LM", "xy": "224px,280px"}, {"name": "mf2", "text": "CDM", "xy": "338px,300px"}, {"name": "mf3", "text": "CM", "xy": "454px,280px"}, {"name": "mf4", "text": "CDM", "xy": "568px,300px"}, {"name": "mf5", "text": "RM", "xy": "682px,280px"}, {"name": "fw1", "text": "ST", "xy": "382px,140px"}, {"name": "fw2", "text": "CF", "xy": "532px,160px"}]},
+        {"name": "5-2-1-2", "pos": [{"name": "gk", "text": "GK", "xy": "452px,530px"}, {"name": "df1", "text": "LWB", "xy": "214px,400px"}, {"name": "df2", "text": "CB", "xy": "330px,420px"}, {"name": "df3", "text": "CB", "xy": "454px,420px"}, {"name": "df4", "text": "CB", "xy": "582px,420px"}, {"name": "df5", "text": "RWB", "xy": "698px,400px"}, {"name": "mf1", "text": "CM", "xy": "304px,300px"}, {"name": "mf2", "text": "CAM", "xy": "454px,280px"}, {"name": "mf3", "text": "CM", "xy": "604px,300px"}, {"name": "fw1", "text": "ST", "xy": "382px,160px"}, {"name": "fw2", "text": "ST", "xy": "532px,160px"}]},
+        {"name": "4-5-1 FLAT", "pos": [{"name": "gk", "text": "GK", "xy": "452px,530px"}, {"name": "df1", "text": "LB", "xy": "232px,400px"}, {"name": "df2", "text": "CB", "xy": "382px,400px"}, {"name": "df3", "text": "CB", "xy": "532px,400px"}, {"name": "df4", "text": "RB", "xy": "682px,400px"}, {"name": "mf1", "text": "LM", "xy": "219px,280px"}, {"name": "mf2", "text": "CM", "xy": "338px,280px"}, {"name": "mf3", "text": "CM", "xy": "454px,280px"}, {"name": "mf4", "text": "CM", "xy": "573px,280px"}, {"name": "mf5", "text": "RM", "xy": "687px,280px"}, {"name": "fw1", "text": "ST", "xy": "454px,160px"}]},
+        {"name": "4-3-2-1", "pos": [{"name": "gk", "text": "GK", "xy": "452px,530px"}, {"name": "df1", "text": "LB", "xy": "232px,400px"}, {"name": "df2", "text": "CB", "xy": "382px,400px"}, {"name": "df3", "text": "CB", "xy": "532px,400px"}, {"name": "df4", "text": "RB", "xy": "682px,400px"}, {"name": "mf1", "text": "CM", "xy": "304px,280px"}, {"name": "mf2", "text": "CM", "xy": "454px,280px"}, {"name": "mf3", "text": "CM", "xy": "604px,280px"}, {"name": "fw1", "text": "LF", "xy": "304px,160px"}, {"name": "fw2", "text": "ST", "xy": "454px,140px"}, {"name": "fw3", "text": "RF", "xy": "604px,160px"}]},
+        {"name": "5-3-2", "pos": [{"name": "gk", "text": "GK", "xy": "452px,530px"}, {"name": "df1", "text": "LWB", "xy": "214px,380px"}, {"name": "df2", "text": "CB", "xy": "330px,400px"}, {"name": "df3", "text": "CB", "xy": "454px,400px"}, {"name": "df4", "text": "CB", "xy": "582px,400px"}, {"name": "df5", "text": "RWB", "xy": "698px,380px"}, {"name": "mf1", "text": "CM", "xy": "304px,280px"}, {"name": "mf2", "text": "CM", "xy": "454px,280px"}, {"name": "mf3", "text": "CM", "xy": "604px,280px"}, {"name": "fw1", "text": "ST", "xy": "382px,160px"}, {"name": "fw2", "text": "ST", "xy": "532px,160px"}]},
+        {"name": "4-3-3 FALSE 9", "pos": [{"name": "gk", "text": "GK", "xy": "452px,530px"}, {"name": "df1", "text": "LB", "xy": "232px,400px"}, {"name": "df2", "text": "CB", "xy": "382px,400px"}, {"name": "df3", "text": "CB", "xy": "532px,400px"}, {"name": "df4", "text": "RB", "xy": "682px,400px"}, {"name": "mf1", "text": "CM", "xy": "304px,280px"}, {"name": "mf2", "text": "CDM", "xy": "454px,300px"}, {"name": "mf3", "text": "CM", "xy": "604px,280px"}, {"name": "fw1", "text": "LW", "xy": "304px,140px"}, {"name": "fw2", "text": "CF", "xy": "454px,160px"}, {"name": "fw3", "text": "RW", "xy": "604px,140px"}]},
+        {"name": "3-4-1-2", "pos": [{"name": "gk", "text": "GK", "xy": "452px,530px"}, {"name": "df1", "text": "CB", "xy": "338px,400px"}, {"name": "df2", "text": "CB", "xy": "454px,400px"}, {"name": "df3", "text": "CB", "xy": "568px,400px"}, {"name": "mf1", "text": "LM", "xy": "224px,280px"}, {"name": "mf2", "text": "CM", "xy": "338px,280px"}, {"name": "mf3", "text": "CAM", "xy": "454px,260px"}, {"name": "mf4", "text": "CM", "xy": "568px,280px"}, {"name": "mf5", "text": "RM", "xy": "682px,280px"}, {"name": "fw1", "text": "ST", "xy": "382px,140px"}, {"name": "fw2", "text": "ST", "xy": "532px,140px"}]},
+        {"name": "4-2-2-2", "pos": [{"name": "gk", "text": "GK", "xy": "452px,530px"}, {"name": "df1", "text": "LB", "xy": "232px,400px"}, {"name": "df2", "text": "CB", "xy": "382px,400px"}, {"name": "df3", "text": "CB", "xy": "532px,400px"}, {"name": "df4", "text": "RB", "xy": "682px,400px"}, {"name": "mf1", "text": "CAM", "xy": "270px,260px"}, {"name": "mf2", "text": "CDM", "xy": "394px,280px"}, {"name": "mf3", "text": "CDM", "xy": "530px,280px"}, {"name": "mf4", "text": "CAM", "xy": "650px,260px"}, {"name": "fw1", "text": "ST", "xy": "382px,140px"}, {"name": "fw2", "text": "ST", "xy": "532px,140px"}]},
+        {"name": "4-4-2 HOLDING", "pos": [{"name": "gk", "text": "GK", "xy": "452px,530px"}, {"name": "df1", "text": "LB", "xy": "232px,400px"}, {"name": "df2", "text": "CB", "xy": "382px,400px"}, {"name": "df3", "text": "CB", "xy": "532px,400px"}, {"name": "df4", "text": "RB", "xy": "682px,400px"}, {"name": "mf1", "text": "LM", "xy": "270px,260px"}, {"name": "mf2", "text": "CDM", "xy": "394px,280px"}, {"name": "mf3", "text": "CDM", "xy": "530px,280px"}, {"name": "mf4", "text": "RM", "xy": "650px,260px"}, {"name": "fw1", "text": "ST", "xy": "382px,160px"}, {"name": "fw2", "text": "ST", "xy": "532px,160px"}]},
+        {"name": "4-1-4-1", "pos": [{"name": "gk", "text": "GK", "xy": "452px,530px"}, {"name": "df1", "text": "LB", "xy": "232px,400px"}, {"name": "df2", "text": "CB", "xy": "382px,400px"}, {"name": "df3", "text": "CB", "xy": "532px,400px"}, {"name": "df4", "text": "RB", "xy": "682px,400px"}, {"name": "mf1", "text": "LM", "xy": "219px,260px"}, {"name": "mf2", "text": "CM", "xy": "338px,260px"}, {"name": "mf3", "text": "CDM", "xy": "454px,280px"}, {"name": "mf4", "text": "CM", "xy": "573px,260px"}, {"name": "mf5", "text": "RM", "xy": "687px,260px"}, {"name": "fw1", "text": "ST", "xy": "454px,140px"}]},
+        {"name": "5-2-2-1", "pos": [{"name": "gk", "text": "GK", "xy": "452px,530px"}, {"name": "df1", "text": "LWB", "xy": "214px,380px"}, {"name": "df2", "text": "CB", "xy": "330px,400px"}, {"name": "df3", "text": "CB", "xy": "454px,400px"}, {"name": "df4", "text": "CB", "xy": "582px,400px"}, {"name": "df5", "text": "RWB", "xy": "698px,380px"}, {"name": "mf1", "text": "CM", "xy": "382px,280px"}, {"name": "mf2", "text": "CM", "xy": "532px,280px"}, {"name": "fw1", "text": "LW", "xy": "304px,160px"}, {"name": "fw2", "text": "ST", "xy": "454px,140px"}, {"name": "fw3", "text": "RW", "xy": "604px,160px"}]},
+        {"name": "4-3-1-2", "pos": [{"name": "gk", "text": "GK", "xy": "452px,530px"}, {"name": "df1", "text": "LB", "xy": "232px,400px"}, {"name": "df2", "text": "CB", "xy": "382px,400px"}, {"name": "df3", "text": "CB", "xy": "532px,400px"}, {"name": "df4", "text": "RB", "xy": "682px,400px"}, {"name": "mf1", "text": "CM", "xy": "304px,280px"}, {"name": "mf2", "text": "CM", "xy": "454px,280px"}, {"name": "mf3", "text": "CM", "xy": "604px,280px"}, {"name": "fw1", "text": "ST", "xy": "304px,140px"}, {"name": "fw2", "text": "CAM", "xy": "454px,160px"}, {"name": "fw3", "text": "ST", "xy": "604px,140px"}]},
+        {"name": "4-2-3-1 NARROW", "pos": [{"name": "gk", "text": "GK", "xy": "452px,530px"}, {"name": "df1", "text": "LB", "xy": "232px,400px"}, {"name": "df2", "text": "CB", "xy": "382px,400px"}, {"name": "df3", "text": "CB", "xy": "532px,400px"}, {"name": "df4", "text": "RB", "xy": "682px,400px"}, {"name": "mf1", "text": "CAM", "xy": "219px,260px"}, {"name": "mf2", "text": "CDM", "xy": "338px,280px"}, {"name": "mf3", "text": "CAM", "xy": "454px,260px"}, {"name": "mf4", "text": "CDM", "xy": "573px,280px"}, {"name": "mf5", "text": "CAM", "xy": "687px,260px"}, {"name": "fw1", "text": "ST", "xy": "454px,140px"}]},
+        {"name": "3-4-2-1", "pos": [{"name": "gk", "text": "GK", "xy": "452px,530px"}, {"name": "df1", "text": "CB", "xy": "338px,400px"}, {"name": "df2", "text": "CB", "xy": "454px,400px"}, {"name": "df3", "text": "CB", "xy": "568px,400px"}, {"name": "mf1", "text": "LM", "xy": "264px,280px"}, {"name": "mf2", "text": "CM", "xy": "393px,280px"}, {"name": "mf3", "text": "CM", "xy": "509px,280px"}, {"name": "mf4", "text": "RM", "xy": "634px,280px"}, {"name": "fw1", "text": "LF", "xy": "304px,160px"}, {"name": "fw2", "text": "ST", "xy": "454px,140px"}, {"name": "fw3", "text": "RF", "xy": "604px,160px"}]},
+        {"name": "4-5-1", "pos": [{"name": "gk", "text": "GK", "xy": "452px,530px"}, {"name": "df1", "text": "LB", "xy": "232px,400px"}, {"name": "df2", "text": "CB", "xy": "382px,400px"}, {"name": "df3", "text": "CB", "xy": "532px,400px"}, {"name": "df4", "text": "RB", "xy": "682px,400px"}, {"name": "mf1", "text": "LM", "xy": "219px,280px"}, {"name": "mf2", "text": "CAM", "xy": "338px,260px"}, {"name": "mf3", "text": "CM", "xy": "454px,280px"}, {"name": "mf4", "text": "CAM", "xy": "573px,260px"}, {"name": "mf5", "text": "RM", "xy": "687px,280px"}, {"name": "fw1", "text": "ST", "xy": "454px,160px"}]},
+        {"name": "5-4-1", "pos": [{"name": "gk", "text": "GK", "xy": "452px,530px"}, {"name": "df1", "text": "LWB", "xy": "214px,400px"}, {"name": "df2", "text": "CB", "xy": "330px,420px"}, {"name": "df3", "text": "CB", "xy": "454px,420px"}, {"name": "df4", "text": "CB", "xy": "582px,420px"}, {"name": "df5", "text": "RWB", "xy": "698px,400px"}, {"name": "mf1", "text": "LM", "xy": "270px,280px"}, {"name": "mf2", "text": "CDM", "xy": "394px,300px"}, {"name": "mf3", "text": "CAM", "xy": "530px,260px"}, {"name": "mf4", "text": "RM", "xy": "650px,280px"}, {"name": "fw2", "text": "ST", "xy": "454px,160px"}]}
+    ];
+
+    const STORAGE_KEY = "fimobook-squad-maker-v2";
+    const BENCH_SLOT_NAMES = Array.from({ length: 7 }, (_, index) => `bench${index + 1}`);
+    const SKILL_ID_NAME_MAP = {{ skill_id_name_map|tojson }};
+    const CURRENT_LEAGUE_TEAMS = {{ current_league_teams|tojson }};
+    const ALL_LEAGUE_TEAMS = {{ all_league_teams|tojson }};
+    const PLAYER_THUMBNAIL_VERSION = "v2";
+    const SQUAD_CONFIG = {{ squad_config|tojson }};
+    const formationData = {};
+    rawFormationData.forEach(form => {
+        const positions = {};
+        form.pos.forEach(pos => {
+            if (pos.xy === "0") return;
+            const [x, y] = pos.xy.replace(/px/g, "").split(",");
+            positions[pos.name] = {
+                text: pos.text,
+                left: (parseInt(x, 10) / 900 * 100),
+                top: (parseInt(y, 10) / 580 * 100),
+            };
+        });
+        formationData[form.name] = positions;
+    });
+
+    const G = {
+        squad: {},
+        bench: {},
+        currentFormation: "4-3-3 ATTACK",
+        currentSlotName: null,
+        selectedSlotName: null,
+        draggedSlotName: null,
+        searchTimer: null,
+        searchRequestController: null,
+        compareSearchRequestController: null,
+        squadPriceRequestController: null,
+        squadPriceRefreshTimer: null,
+        resizeTimer: null,
+        compareSourceSlotName: null,
+        compareSourcePlayer: null,
+        compareTargetPlayer: null,
+        mobileActionReadyTimer: null,
+        defaultConfig: { enhance: 0, training: 0 },
+    };
+    const PRICE_UNIT = "{{ price_unit }}";
+    const MAX_ENHANCE_LEVEL = 15;
+
+    function trackAnalytics(eventName, params = {}, options = {}) {
+        window.fimoAnalytics?.track?.(eventName, params, options);
+    }
+
+    function getStarterCount() {
+        return Object.values(G.squad).filter(slot => slot?.playerData).length;
+    }
+
+    function isLikelyMobileDevice() {
+        const userAgent = navigator.userAgent || navigator.vendor || window.opera || "";
+        const mobileUserAgent = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
+        const coarsePointer = window.matchMedia("(pointer: coarse)").matches;
+        const noHover = window.matchMedia("(hover: none)").matches;
+        const narrowScreen = Math.min(window.innerWidth, window.innerHeight) <= 1024;
+        return mobileUserAgent || (coarsePointer && noHover && narrowScreen);
+    }
+
+    function isMobileLayout() {
+        return window.matchMedia("(max-width: 900px)").matches
+            || window.matchMedia("(orientation: landscape) and (max-height: 600px) and (max-width: 1200px)").matches
+            || isLikelyMobileDevice();
+    }
+
+    function syncLayoutMode() {
+        const mobileLayout = isMobileLayout();
+        const mobileLandscape = mobileLayout && window.matchMedia("(orientation: landscape)").matches;
+        const mobileCompact = mobileLayout && window.innerWidth <= 640;
+        const mobileLarge = mobileLayout && window.innerWidth >= 430;
+        document.body.classList.toggle("mobile-layout", mobileLayout);
+        document.body.classList.toggle("mobile-landscape", mobileLandscape);
+        document.body.classList.toggle("mobile-compact", mobileCompact);
+        document.body.classList.toggle("mobile-large", mobileLarge);
+    }
+
+    const DOM = {
+        appShell: document.querySelector(".app-shell"),
+        topbar: document.querySelector(".topbar"),
+        controlPanel: document.querySelector(".control-panel"),
+        fieldPanel: document.querySelector(".field-panel"),
+        fieldScroll: document.querySelector(".field-scroll"),
+        squadDiv: document.getElementById("squad-div"),
+        benchSlots: null,
+        formationSelect: document.getElementById("formation-select"),
+        mobileOverlayFormationSelect: document.getElementById("mobile-overlay-formation-select"),
+        mobileOverlayResetBtn: document.getElementById("mobile-overlay-reset-btn"),
+        mobileOverlayDetailBtn: document.getElementById("mobile-overlay-detail-btn"),
+        mobileOverlayCompareBtn: document.getElementById("mobile-overlay-compare-btn"),
+        modal: document.getElementById("search-modal"),
+        modalCloseBtn: document.querySelector(".close-button"),
+        modalFilterForm: document.getElementById("modal-filter-form"),
+        modalFilterResetBtn: document.getElementById("modal-filter-reset-btn"),
+        modalFilterStatus: document.getElementById("modal-filter-status"),
+        modalSearchInput: document.getElementById("modal-search-input"),
+        modalResultList: document.getElementById("modal-autocomplete-list"),
+        modalLeagueFilter: document.getElementById("modal-league-filter"),
+        modalTeamFilter: document.getElementById("modal-team-filter"),
+        modalAllCareerFilter: document.getElementById("modal-all-career-filter"),
+        modalSortFilter: document.getElementById("modal-sort-filter"),
+        modalSearchSubmitBtn: document.getElementById("modal-search-submit-btn"),
+        mobileSearchBackBtn: document.getElementById("mobile-search-back-btn"),
+        modalSlotChip: document.getElementById("modal-slot-chip"),
+        compareSearchModal: document.getElementById("compare-search-modal"),
+        compareSearchCloseBtn: document.getElementById("compare-search-close-btn"),
+        compareSearchInput: document.getElementById("compare-search-input"),
+        compareClassFilter: document.getElementById("compare-class-filter"),
+        compareSearchSubmitBtn: document.getElementById("compare-search-submit-btn"),
+        compareMobileSearchBackBtn: document.getElementById("compare-mobile-search-back-btn"),
+        compareResultList: document.getElementById("compare-result-list"),
+        compareSlotChip: document.getElementById("compare-slot-chip"),
+        compareSubtitle: document.getElementById("compare-subtitle"),
+        comparePanel: document.getElementById("compare-panel"),
+        comparePanelCloseBtn: document.getElementById("compare-panel-close-btn"),
+        comparePanelBody: document.getElementById("compare-panel-body"),
+        saveBtn: document.getElementById("save-image-btn"),
+        resetBtn: document.getElementById("reset-squad-btn"),
+        openSearchBtn: document.getElementById("open-search-btn"),
+        selectedDetailBtn: document.getElementById("selected-detail-btn"),
+        selectedCompareBtn: document.getElementById("selected-compare-btn"),
+        teamOvr: document.getElementById("team-ovr"),
+        teamValue: document.getElementById("team-value"),
+        teamEnhancedValue: document.getElementById("team-enhanced-value"),
+        teamValueMissing: document.getElementById("team-value-missing"),
+        squadPriceStatus: document.getElementById("squad-price-status"),
+        mobileTeamValuePill: document.getElementById("mobile-team-value-pill"),
+        mobileEnhancedTeamValue: document.getElementById("mobile-enhanced-team-value"),
+        mobileBaseTeamValue: document.getElementById("mobile-base-team-value"),
+        filledCount: document.getElementById("filled-count"),
+        selectedSlot: document.getElementById("selected-slot"),
+        selectedSlotSub: document.getElementById("selected-slot-sub"),
+        formationPill: document.getElementById("formation-pill"),
+        autosaveStatus: document.getElementById("autosave-status"),
+    };
+
+    function isBenchSlot(slotName) {
+        return BENCH_SLOT_NAMES.includes(slotName);
+    }
+
+    function getBenchSlotIndex(slotName) {
+        return BENCH_SLOT_NAMES.indexOf(slotName) + 1;
+    }
+
+    function ensureBenchState() {
+        if (!G.bench || typeof G.bench !== "object") {
+            G.bench = {};
+        }
+        BENCH_SLOT_NAMES.forEach(slotName => {
+            if (!G.bench[slotName] || typeof G.bench[slotName] !== "object") {
+                G.bench[slotName] = { playerData: null };
+            }
+        });
+    }
+
+    function getSlotState(slotName) {
+        return isBenchSlot(slotName) ? G.bench[slotName] : G.squad[slotName];
+    }
+
+    function getSlotPlayer(slotName) {
+        return getSlotState(slotName)?.playerData || null;
+    }
+
+    function getSlotLabel(slotName) {
+        if (isBenchSlot(slotName)) {
+            return `교체 ${getBenchSlotIndex(slotName)}`;
+        }
+        return formationData[G.currentFormation]?.[slotName]?.text || "SLOT";
+    }
+
+    function getSlotSearchPosition(slotName) {
+        if (isBenchSlot(slotName)) {
+            return "";
+        }
+        return formationData[G.currentFormation]?.[slotName]?.text || "";
+    }
+
+    function getCompareSlotSearchPosition(slotName) {
+        if (isBenchSlot(slotName)) {
+            return getSlotPlayer(slotName)?.position || "";
+        }
+        return formationData[G.currentFormation]?.[slotName]?.text || "";
+    }
+
+    function init() {
+        syncLayoutMode();
+        rebuildCareerLeagueOptions();
+        Object.keys(formationData).forEach(name => {
+            DOM.formationSelect.add(new Option(name, name));
+            if (DOM.mobileOverlayFormationSelect) {
+                DOM.mobileOverlayFormationSelect.add(new Option(name, name));
+            }
+        });
+        loadPersistedState();
+        ensureBenchState();
+        DOM.formationSelect.value = G.currentFormation;
+        if (DOM.mobileOverlayFormationSelect) {
+            DOM.mobileOverlayFormationSelect.value = G.currentFormation;
+        }
+        changeFormation(G.currentFormation, { preserveExisting: true });
+        setupSquadSearchFilters();
+        setupEventListeners();
+        FimoSquad.setup();
+        updateAll();
+        refreshSquadMarketPrices();
+        G.squadPriceRefreshTimer = window.setInterval(() => {
+            if (!document.hidden) refreshSquadMarketPrices();
+        }, 5 * 60 * 1000);
+        requestAnimationFrame(updateMobileFieldHeight);
+    }
+
+    function loadPersistedState() {
+        try {
+            const raw = localStorage.getItem(STORAGE_KEY);
+            if (!raw) return;
+            const saved = JSON.parse(raw);
+            if (saved && formationData[saved.formation]) {
+                G.currentFormation = saved.formation;
+            }
+            if (saved && saved.squad && typeof saved.squad === "object") {
+                G.squad = saved.squad;
+            }
+            if (saved && saved.bench && typeof saved.bench === "object") {
+                G.bench = saved.bench;
+            }
+            G.defaultConfig = FimoSquad.normalizeConfig(saved?.defaultConfig);
+            if (saved && saved.selectedSlotName) {
+                G.selectedSlotName = isBenchSlot(saved.selectedSlotName) ? null : saved.selectedSlotName;
+            }
+            [...Object.values(G.squad), ...Object.values(G.bench)].forEach(slot => {
+                const player = slot?.playerData;
+                if (!player) return;
+                if (
+                    String(player.pimage || "").includes("/static/faceon/")
+                    && !String(player.pimage || "").includes("?v=v2")
+                ) {
+                    delete player.pimage;
+                }
+                ["pimageThumb", "pimageThumbSmall"].forEach(key => {
+                    if (
+                        String(player[key] || "").includes("/media/player/v1/faceon/")
+                    ) {
+                        delete player[key];
+                    }
+                });
+                ["bimage", "bimageThumb", "bimageThumbSmall"].forEach(key => {
+                    if (/^https?:\/\//i.test(String(player[key] || ""))) {
+                        delete player[key];
+                    }
+                });
+            });
+        } catch (error) {
+            console.warn("Failed to load squad state", error);
+        }
+    }
+
+    function persistState(message = "자동 저장됨") {
+        const payload = {
+            formation: G.currentFormation,
+            selectedSlotName: G.selectedSlotName,
+            squad: G.squad,
+            bench: G.bench,
+            defaultConfig: G.defaultConfig,
+        };
+        try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+            DOM.autosaveStatus.textContent = message;
+        } catch (error) {
+            DOM.autosaveStatus.textContent = "자동 저장 실패 · 스쿼드 파일로 저장해 주세요";
+        }
+    }
+
+    function changeFormation(formationName, options = {}) {
+        const preserveExisting = options.preserveExisting !== false;
+        const previousPositions = formationData[G.currentFormation];
+        G.currentFormation = formationName;
+        DOM.formationSelect.value = formationName;
+        DOM.formationPill.textContent = formationName;
+        if (DOM.mobileOverlayFormationSelect) {
+            DOM.mobileOverlayFormationSelect.value = formationName;
+        }
+        DOM.squadDiv.innerHTML = "";
+
+        const previousSquad = preserveExisting ? { ...G.squad } : {};
+        const positions = formationData[formationName];
+        G.squad = FimoSquad.remapFormation(previousSquad, positions, previousPositions);
+        updateMobileFieldHeight();
+        Object.keys(positions).forEach(name => {
+            createSlot(name, positions[name]);
+        });
+        layoutSquadSlots(positions);
+
+        if (!G.selectedSlotName || !G.squad[G.selectedSlotName]) {
+            G.selectedSlotName = Object.keys(G.squad)[0] || null;
+        }
+        updateAll();
+        persistState("포메이션 저장됨");
+    }
+
+    function updateMobileFieldHeight() {
+        if (!DOM.fieldScroll || !DOM.appShell) return;
+        if (!isMobileLayout() || document.body.classList.contains("mobile-landscape")) {
+            document.documentElement.style.removeProperty("--mobile-field-height");
+            return;
+        }
+        const bottomPadding = parseFloat(window.getComputedStyle(DOM.appShell).paddingBottom) || 0;
+        const availableHeight = Math.max(420, Math.floor(
+            window.innerHeight - DOM.fieldScroll.getBoundingClientRect().top
+            - window.scrollY - DOM.appShell.scrollTop - bottomPadding
+        ));
+        document.documentElement.style.setProperty("--mobile-field-height", `${availableHeight}px`);
+    }
+
+    function getSlotMetrics(element) {
+        const styles = window.getComputedStyle(element);
+        return { width: parseFloat(styles.width), height: parseFloat(styles.height) };
+    }
+
+    function getSlotPlacement(name, posData, portrait = document.body.classList.contains("mobile-layout") && !document.body.classList.contains("mobile-landscape")) {
+        const slotText = (posData.text || "").toUpperCase();
+        let left = 50 + (posData.left - 50) * (portrait ? 1.48 : 1.25);
+        let top = posData.top;
+        if (["LW", "RW", "ST", "CF", "LF", "RF"].includes(slotText)) top -= 6;
+        else if (["LM", "RM", "CM", "CDM", "CAM"].includes(slotText)) top -= 3;
+        else if (name.startsWith("df")) top -= 5;
+        if (name === "gk" || slotText === "GK") {
+            left = 50;
+            top = 89;
+        }
+        left = Math.max(12, Math.min(88, left));
+        top = Math.max(12, Math.min(89, top));
+        return { left, top };
+    }
+
+    function calculateSquadLayout(positions, field, { landscape = false, portrait = false } = {}) {
+        let cardWidth = 1;
+        const placements = new Map(Object.entries(positions).map(([name, position]) =>
+            [name, getSlotPlacement(name, position, portrait)]
+        ));
+        if (portrait) {
+            // Use the phone's full width for each line while preserving player order.
+            for (const line of ["df", "mf", "fw"]) {
+                const players = [...placements].filter(([name]) => name.startsWith(line))
+                    .sort((a, b) => a[1].left - b[1].left || a[1].top - b[1].top);
+                const columns = [];
+                players.forEach(player => {
+                    const last = columns[columns.length - 1];
+                    if (last && Math.abs(last[0][1].left - player[1].left) < 2) last.push(player);
+                    else columns.push([player]);
+                });
+                const edge = ({ 1: 50, 2: 32, 3: 24, 4: 14, 5: 12 })[columns.length];
+                columns.forEach((column, index) => {
+                    column.forEach(([name]) => {
+                        placements.get(name).left = columns.length === 1 ? 50
+                            : edge + index * (100 - edge * 2) / (columns.length - 1);
+                    });
+                });
+            }
+        }
+        {
+            if (!field.width || !field.height) return null;
+            const centers = [...placements].map(([name, placement]) => ({
+                name, x: field.width * placement.left / 100, y: field.height * placement.top / 100,
+            })).sort((a, b) => a.y - b.y);
+            const rows = [];
+            const rowForCenter = centers.map((center, index) => {
+                const last = rows[rows.length - 1];
+                if (!landscape && last && Math.abs(last.y - center.y) < .01) last.indices.push(index);
+                else rows.push({ y: center.y, indices: [index] });
+                return rows.length - 1;
+            });
+            const labelHeight = landscape ? 12 : (portrait ? 18 : 20);
+            const gap = landscape ? 6 : (portrait ? 8 : 12);
+            // Preserve formation order and spread crowded rows before shrinking cards.
+            function fit(width) {
+                const spacing = width * 1.2 + labelHeight + gap;
+                const minimum = rows.map(() => width * .6 + labelHeight + gap);
+                const maximum = rows.map(() => field.height - width * .6 - gap);
+                const predecessors = centers.map((center, index) =>
+                    centers.slice(0, index).map((other, previous) => ({ other, previous }))
+                        .filter(({ other }) => Math.abs(center.x - other.x) < width + gap)
+                        .map(({ previous }) => ({ previous, distance: spacing }))
+                );
+                if (!landscape) {
+                    centers.forEach((center, index) => {
+                        if (!index) return;
+                        const delta = center.y - centers[index - 1].y;
+                        if (delta < field.height * .08 && !predecessors[index].some(link => link.previous === index - 1)) {
+                            predecessors[index].push({ previous: index - 1, distance: delta });
+                        }
+                    });
+                }
+                const rowPredecessors = rows.map(row => row.indices.flatMap(index =>
+                    predecessors[index].map(link => ({ previous: rowForCenter[link.previous], distance: link.distance }))
+                        .filter(link => link.previous !== rowForCenter[index])
+                ));
+                rows.forEach((_, index) => {
+                    rowPredecessors[index].forEach(({ previous, distance }) => {
+                        minimum[index] = Math.max(minimum[index], minimum[previous] + distance);
+                    });
+                });
+                for (let index = rows.length - 1; index >= 0; index--) {
+                    rowPredecessors[index].forEach(({ previous, distance }) => {
+                        maximum[previous] = Math.min(maximum[previous], maximum[index] - distance);
+                    });
+                }
+                if (minimum.some((value, index) => value > maximum[index])) return null;
+                const result = [];
+                rows.forEach((row, index) => {
+                    let y = Math.max(minimum[index], Math.min(maximum[index], row.y));
+                    rowPredecessors[index].forEach(({ previous, distance }) => { y = Math.max(y, result[previous] + distance); });
+                    result.push(y);
+                });
+                return rowForCenter.map(index => result[index]);
+            }
+            const preferredWidth = landscape ? 76 : Math.min(portrait ? 132 : 140, field.width * (portrait ? .23 : .15));
+            const rowWidths = landscape ? [] : centers.flatMap((center, index) =>
+                centers.slice(0, index)
+                    .filter(other => Math.abs(center.y - other.y) < field.height * .065 && Math.abs(center.x - other.x) > 1)
+                    .map(other => Math.abs(center.x - other.x) - gap)
+            );
+            let width = Math.max(1, Math.floor(Math.min(preferredWidth, ...rowWidths, ...centers.map(center =>
+                2 * Math.min(center.x, field.width - center.x) - gap
+            ))));
+            let fitted = fit(width);
+            while (!fitted && width > 1) fitted = fit(--width);
+            cardWidth = width;
+            centers.forEach((center, index) => {
+                placements.get(center.name).top = fitted[index] / field.height * 100;
+            });
+        }
+        return { width: cardWidth, placements };
+    }
+
+    function layoutSquadSlots(positions) {
+        DOM.squadDiv.style.removeProperty("--slot-width");
+        const landscape = document.body.classList.contains("mobile-landscape");
+        const portrait = document.body.classList.contains("mobile-layout") && !landscape;
+        const layout = calculateSquadLayout(positions, DOM.squadDiv.getBoundingClientRect(), { landscape, portrait });
+        if (!layout) return;
+        const { placements } = layout;
+        DOM.squadDiv.style.setProperty("--slot-width", `${layout.width}px`);
+        Object.entries(positions).forEach(([name, position]) => {
+            const element = document.getElementById(`pos-${name}`);
+            const metrics = getSlotMetrics(element);
+            const placement = placements.get(name);
+            element.style.left = `calc(${placement.left}% - ${metrics.width / 2}px)`;
+            element.style.top = `calc(${placement.top}% - ${metrics.height / 2}px)`;
+        });
+    }
+
+    function createSlot(name, posData, options = {}) {
+        const isBenchPosition = options.bench === true;
+        const slotEl = document.createElement("div");
+        slotEl.className = isBenchPosition ? "position bench-position" : "position";
+        slotEl.id = `pos-${name}`;
+        slotEl.dataset.name = name;
+        slotEl.dataset.slot = getSlotLabel(name);
+        (isBenchPosition ? DOM.benchSlots : DOM.squadDiv).appendChild(slotEl);
+
+        if (!isBenchPosition && posData) {
+            const { width: slotWidth, height: slotHeight } = getSlotMetrics(slotEl);
+            const placement = getSlotPlacement(name, posData);
+            slotEl.style.left = `calc(${placement.left}% - ${slotWidth / 2}px)`;
+            slotEl.style.top = `calc(${placement.top}% - ${slotHeight / 2}px)`;
+        }
+
+        slotEl.innerHTML = `
+            <div class="slot-badge">${options.badgeText || getSlotLabel(name)}</div>
+            <div class="player-card">
+                <div class="card-background"></div>
+                <div class="player-image"></div>
+                <div class="card-overlay"></div>
+                <div class="ovr-position-top">
+                    <div class="ovr"></div>
+                    <div class="pos-text"></div>
+                </div>
+                <div class="player-name-bottom"></div>
+                <div class="squad-card-growth"></div>
+                <div class="squad-card-playstyles"></div>
+                <div class="slot-plus">+</div>
+                <button class="compare-btn" type="button" aria-label="선수 비교">vs</button>
+                <a class="detail-btn" target="_self" aria-label="상세 보기">↗</a>
+                <button class="remove-btn" type="button" aria-label="선수 제거">×</button>
+            </div>
+        `;
+
+        slotEl.addEventListener("click", event => {
+            if (
+                event.target.closest(".remove-btn")
+                || event.target.closest(".detail-btn")
+                || event.target.closest(".compare-btn")
+            ) {
+                return;
+            }
+            selectSlot(name);
+            if (getSlotPlayer(name)) {
+                FimoSquad.openPlayer(name);
+                return;
+            }
+            openSearchModal(name);
+        });
+
+        slotEl.querySelector(".remove-btn").addEventListener("click", event => {
+            event.stopPropagation();
+            if (isMobileLayout() && !slotEl.classList.contains("action-ready")) return;
+            const slotState = getSlotState(name);
+            if (!slotState) return;
+            slotState.playerData = null;
+            selectSlot(name);
+            updateAll();
+            persistState("선수 제거됨");
+        });
+
+        slotEl.querySelector(".detail-btn").addEventListener("click", event => {
+            event.stopPropagation();
+            if (isMobileLayout()) {
+                event.preventDefault();
+                return;
+            }
+        });
+
+        slotEl.querySelector(".compare-btn").addEventListener("click", event => {
+            event.stopPropagation();
+            if (isMobileLayout()) return;
+            if (!getSlotPlayer(name)) return;
+            openCompareSearchModal(name);
+        });
+
+        slotEl.tabIndex = 0;
+        slotEl.setAttribute("role", "button");
+        slotEl.addEventListener("keydown", event => {
+            if (event.target !== slotEl || !["Enter", " "].includes(event.key)) return;
+            event.preventDefault();
+            slotEl.click();
+        });
+    }
+
+    function selectSlot(name) {
+        clearTimeout(G.mobileActionReadyTimer);
+        G.selectedSlotName = name;
+        updateSelectedSlotCopy();
+        updateSelectedPlayerActionButtons();
+        document.querySelectorAll(".position").forEach(node => {
+            node.classList.toggle("selected", node.dataset.name === name);
+            node.classList.remove("action-ready");
+        });
+
+        if (!isMobileLayout() || !name || !getSlotPlayer(name)) return;
+
+        G.mobileActionReadyTimer = setTimeout(() => {
+            if (G.selectedSlotName !== name) return;
+            const slotEl = document.getElementById(`pos-${name}`);
+            if (slotEl) {
+                slotEl.classList.add("action-ready");
+            }
+        }, 220);
+    }
+
+    function clearSlotSelection() {
+        if (!G.selectedSlotName) return;
+        selectSlot(null);
+    }
+
+    function isOverlayOpen() {
+        return DOM.modal.classList.contains("open")
+            || DOM.compareSearchModal.classList.contains("open")
+            || DOM.comparePanel.classList.contains("open")
+            || !!document.querySelector(".squad-dialog[open]");
+    }
+
+    function getCareerLeagueTeams() {
+        return DOM.modalAllCareerFilter.checked ? ALL_LEAGUE_TEAMS : CURRENT_LEAGUE_TEAMS;
+    }
+
+    function rebuildCareerTeamOptions(preferredTeam = "") {
+        const teams = getCareerLeagueTeams()[DOM.modalLeagueFilter.value] || [];
+        DOM.modalTeamFilter.innerHTML = "";
+        if (!DOM.modalLeagueFilter.value) {
+            DOM.modalTeamFilter.disabled = true;
+            DOM.modalTeamFilter.append(new Option("리그를 먼저 선택", ""));
+            return;
+        }
+        DOM.modalTeamFilter.disabled = false;
+        DOM.modalTeamFilter.append(new Option("전체 팀", ""));
+        teams.forEach(team => DOM.modalTeamFilter.append(new Option(team, team)));
+        if (preferredTeam && teams.includes(preferredTeam)) {
+            DOM.modalTeamFilter.value = preferredTeam;
+        }
+    }
+
+    function rebuildCareerLeagueOptions() {
+        const previousLeague = DOM.modalLeagueFilter.value;
+        const previousTeam = DOM.modalTeamFilter.value;
+        const leagueTeams = getCareerLeagueTeams();
+        DOM.modalLeagueFilter.innerHTML = "";
+        DOM.modalLeagueFilter.append(new Option("전체 리그", ""));
+        Object.keys(leagueTeams).forEach(league => {
+            DOM.modalLeagueFilter.append(new Option(league, league));
+        });
+        if (previousLeague && Object.hasOwn(leagueTeams, previousLeague)) {
+            DOM.modalLeagueFilter.value = previousLeague;
+        }
+        rebuildCareerTeamOptions(previousTeam);
+    }
+
+    function updateSquadFilterCounts() {
+        DOM.modalFilterForm.querySelectorAll("[data-squad-filter-group]").forEach(group => {
+            const checkboxCount = group.querySelectorAll('input[type="checkbox"]:checked').length;
+            const selectedCount = Array.from(group.querySelectorAll("select")).filter(select => select.value).length;
+            const count = group.querySelector("[data-filter-count]");
+            if (count) count.textContent = String(checkboxCount + selectedCount);
+        });
+        const activeFilterCount = Array.from(DOM.modalFilterForm.elements).filter(field => {
+            if (!field.name || ["sort", "q"].includes(field.name) || field.disabled) return false;
+            if (field.name === "price_enhance") return Number(field.value) > 0;
+            if (field.type === "checkbox" || field.type === "radio") return field.checked;
+            return Boolean(String(field.value || "").trim());
+        }).length;
+        if (DOM.modalFilterStatus) {
+            DOM.modalFilterStatus.textContent = activeFilterCount
+                ? `선택한 필터 ${activeFilterCount}개`
+                : "";
+        }
+        const conditionCount = document.getElementById("squad-search-condition-count");
+        const count = [...DOM.modalFilterForm.querySelectorAll(".squad-search-filters input, .squad-search-filters select")].filter(field =>
+            field.name && !field.disabled && (field.name === "price_enhance" ? Number(field.value) > 0 : (field.type === "checkbox" ? field.checked : String(field.value || "").trim()))
+        ).length;
+        if (conditionCount) conditionCount.textContent = count ? `${count}개` : "";
+    }
+
+    function syncSquadExclusiveFilters() {
+        const skillInputs = Array.from(DOM.modalFilterForm.querySelectorAll('input[name="skill_or_boost"]'));
+        const raisedInputs = Array.from(DOM.modalFilterForm.querySelectorAll('input[name="raised_stat"]'));
+        const hasSkill = skillInputs.some(input => input.checked);
+        const hasRaised = raisedInputs.some(input => input.checked);
+        skillInputs.forEach(input => {
+            input.disabled = hasRaised && !input.checked;
+            input.closest("label")?.classList.toggle("is-disabled", input.disabled);
+        });
+        raisedInputs.forEach(input => {
+            input.disabled = hasSkill && !input.checked;
+            input.closest("label")?.classList.toggle("is-disabled", input.disabled);
+        });
+    }
+
+    function resetSquadSearchFilters() {
+        DOM.modalFilterForm.reset();
+        DOM.modalFilterForm.querySelectorAll("[data-filter-search]").forEach(input => {
+            input.value = "";
+        });
+        DOM.modalFilterForm.querySelectorAll("[data-filter-option]").forEach(option => {
+            option.hidden = false;
+        });
+        syncSquadExclusiveFilters();
+        rebuildCareerLeagueOptions();
+        updateSquadFilterCounts();
+    }
+
+    function setupSquadSearchFilters() {
+        DOM.modalFilterForm.querySelectorAll("[data-filter-search]").forEach(searchInput => {
+            searchInput.addEventListener("input", () => {
+                const query = searchInput.value.trim().toLowerCase().replace(/\s+/g, "");
+                const group = searchInput.closest("[data-squad-filter-group]");
+                group?.querySelectorAll("[data-filter-option]").forEach(option => {
+                    const optionText = (option.dataset.filterText || "").replace(/\s+/g, "");
+                    option.hidden = Boolean(query && !optionText.includes(query));
+                });
+            });
+        });
+
+        DOM.modalFilterForm.addEventListener("input", event => {
+            if (event.target.matches("[data-filter-search], input[type='checkbox'], select")) return;
+            updateSquadFilterCounts();
+            handleModalSearchInput();
+        });
+        DOM.modalFilterForm.addEventListener("change", event => {
+            if (event.target.name === "raised_stat") {
+                const selectedRaised = DOM.modalFilterForm.querySelectorAll('input[name="raised_stat"]:checked');
+                if (selectedRaised.length > 5) {
+                    event.target.checked = false;
+                    window.alert("상승 스탯은 최대 5개까지 선택할 수 있습니다.");
+                }
+            }
+            if (event.target === DOM.modalLeagueFilter) {
+                rebuildCareerTeamOptions();
+            } else if (event.target === DOM.modalAllCareerFilter) {
+                rebuildCareerLeagueOptions();
+            }
+            syncSquadExclusiveFilters();
+            updateSquadFilterCounts();
+            handleModalSearchInput();
+        });
+        DOM.modalFilterForm.addEventListener("submit", event => {
+            event.preventDefault();
+            runManualSearch();
+        });
+        DOM.modalFilterResetBtn.addEventListener("click", () => {
+            clearTimeout(G.searchTimer);
+            if (G.searchRequestController) {
+                G.searchRequestController.abort();
+                G.searchRequestController = null;
+            }
+            resetSquadSearchFilters();
+            DOM.modalResultList.classList.remove("hidden");
+            runSearch();
+            if (!isMobileLayout()) DOM.modalSearchInput.focus();
+        });
+    }
+
+    function handleModalSearchInput() {
+        DOM.modalResultList.classList.remove("hidden");
+        scheduleSearch();
+    }
+
+    function runManualSearch() {
+        clearTimeout(G.searchTimer);
+        DOM.modalResultList.classList.remove("hidden");
+        if (isMobileLayout()) {
+            if (typeof document.activeElement?.blur === "function") {
+                document.activeElement.blur();
+            }
+            DOM.modalFilterForm.querySelector(".squad-search-filters").open = false;
+            DOM.modalResultList.scrollTop = 0;
+        }
+        runSearch();
+    }
+
+    function setMobileSearchResultsMode() {
+        DOM.modal.classList.remove("mobile-results-only");
+    }
+
+    function setMobileCompareResultsMode(enabled) {
+        if (!isMobileLayout()) {
+            DOM.compareSearchModal.classList.remove("mobile-results-only");
+            return;
+        }
+        DOM.compareSearchModal.classList.toggle("mobile-results-only", enabled);
+    }
+
+    function handleMobileCompareSearchSubmit(event) {
+        if (event.key !== "Enter") return;
+        event.preventDefault();
+        if (typeof event.target.blur === "function") {
+            event.target.blur();
+        }
+        DOM.compareResultList.classList.remove("hidden");
+        setMobileCompareResultsMode(true);
+        runCompareSearch();
+    }
+
+    function updateSelectedSlotCopy() {
+        if (!DOM.selectedSlot) return;
+        if (!G.selectedSlotName || !getSlotState(G.selectedSlotName)) {
+            DOM.selectedSlot.textContent = "미선택";
+            if (DOM.selectedSlotSub) {
+                DOM.selectedSlotSub.textContent = "슬롯을 누르면 추천 검색";
+            }
+            return;
+        }
+        const slotText = getSlotLabel(G.selectedSlotName);
+        const assigned = getSlotPlayer(G.selectedSlotName);
+        DOM.selectedSlot.textContent = slotText;
+        if (DOM.selectedSlotSub) {
+            DOM.selectedSlotSub.textContent = assigned
+                ? `${assigned.playerKor} 배치 중`
+                : "이 슬롯에 넣을 선수를 찾는 중";
+        }
+    }
+
+    function updateSelectedPlayerActionButtons() {
+        const player = getSlotPlayer(G.selectedSlotName);
+        const disabled = !player;
+        if (DOM.selectedDetailBtn) {
+            DOM.selectedDetailBtn.disabled = disabled;
+        }
+        if (DOM.selectedCompareBtn) {
+            DOM.selectedCompareBtn.disabled = disabled;
+        }
+        if (DOM.mobileOverlayDetailBtn) {
+            DOM.mobileOverlayDetailBtn.disabled = disabled;
+        }
+        if (DOM.mobileOverlayCompareBtn) {
+            DOM.mobileOverlayCompareBtn.disabled = disabled;
+        }
+    }
+
+    function openSelectedPlayerDetail() {
+        const player = getSlotPlayer(G.selectedSlotName);
+        if (!player) return;
+        window.location.href = FimoSquad.detailUrl(player);
+    }
+
+    function openSelectedPlayerCompare() {
+        const player = getSlotPlayer(G.selectedSlotName);
+        if (!player || !G.selectedSlotName) return;
+        openCompareSearchModal(G.selectedSlotName);
+    }
+
+    function openSearchModal(slotName) {
+        G.currentSlotName = slotName;
+        selectSlot(slotName);
+        setMobileSearchResultsMode(false);
+        DOM.modalResultList.classList.add("hidden");
+        DOM.modalResultList.innerHTML = "";
+        const slotText = getSlotLabel(slotName);
+        DOM.modalSlotChip.textContent = slotText;
+        document.getElementById("modal-search-title").textContent = `${slotText} · 선수 ${getSlotPlayer(slotName) ? "교체" : "추가"}`;
+        document.body.classList.add("modal-open");
+        DOM.modal.classList.add("open");
+        updateSquadFilterCounts();
+        DOM.modalResultList.classList.remove("hidden");
+        runSearch();
+        if (!isMobileLayout()) DOM.modalSearchInput.focus();
+        else DOM.modalCloseBtn.focus();
+    }
+
+    function closeSearchModal() {
+        const wasOpen = DOM.modal.classList.contains("open");
+        clearTimeout(G.searchTimer);
+        if (G.searchRequestController) {
+            G.searchRequestController.abort();
+            G.searchRequestController = null;
+        }
+        setMobileSearchResultsMode(false);
+        DOM.modalResultList.classList.add("hidden");
+        DOM.modal.classList.remove("open");
+        if (wasOpen) document.getElementById(`pos-${G.currentSlotName}`)?.focus();
+        if (!DOM.compareSearchModal.classList.contains("open") && !DOM.comparePanel.classList.contains("open")) {
+            document.body.classList.remove("modal-open");
+        }
+    }
+
+    function closeCompareSearchModal() {
+        if (G.compareSearchRequestController) {
+            G.compareSearchRequestController.abort();
+            G.compareSearchRequestController = null;
+        }
+        setMobileCompareResultsMode(false);
+        DOM.compareResultList.classList.add("hidden");
+        DOM.compareSearchModal.classList.remove("open");
+        if (!DOM.modal.classList.contains("open") && !DOM.comparePanel.classList.contains("open")) {
+            document.body.classList.remove("modal-open");
+        }
+    }
+
+    function closeComparePanel() {
+        DOM.comparePanel.classList.remove("open");
+        if (!DOM.modal.classList.contains("open") && !DOM.compareSearchModal.classList.contains("open")) {
+            document.body.classList.remove("modal-open");
+        }
+    }
+
+    function formatPrice(price, emptyText = "가격 없음") {
+        const numericPrice = Number(price);
+        return Number.isFinite(numericPrice) && numericPrice > 0
+            ? `${numericPrice.toLocaleString()} ${PRICE_UNIT}`
+            : emptyText;
+    }
+
+    function getOptimizedPlayerImage(player, kind, width = 256) {
+        if (!player || !["card", "faceon"].includes(kind)) return "";
+        const thumbKey = width <= 128
+            ? (kind === "card" ? "bimageThumbSmall" : "pimageThumbSmall")
+            : (kind === "card" ? "bimageThumb" : "pimageThumb");
+        const originalKey = kind === "card" ? "bimage" : "pimage";
+        if (player[thumbKey]) return player[thumbKey];
+        const original = player[originalKey] || "";
+        const cid = Number(player.cid);
+        if (cid && original.includes(`/static/${kind}/`)) {
+            return `/media/player/${PLAYER_THUMBNAIL_VERSION}/${kind}/${cid}-${width}.webp`;
+        }
+        return original || (cid ? `/media/player/${PLAYER_THUMBNAIL_VERSION}/${kind}/${cid}-${width}.webp` : "");
+    }
+
+    function normalizeMarketPrices(raw) {
+        const prices = {};
+        if (!raw || typeof raw !== "object" || Array.isArray(raw)) return prices;
+        for (let level = 0; level <= MAX_ENHANCE_LEVEL; level += 1) {
+            const value = Number(raw[level]);
+            if (Number.isFinite(value) && value > 0) prices[level] = value;
+        }
+        return prices;
+    }
+
+    function getPlayerMarketPrice(player, enhance = 0) {
+        if (!player || typeof player !== "object") return 0;
+        const level = Math.max(0, Math.min(MAX_ENHANCE_LEVEL, Math.trunc(Number(enhance) || 0)));
+        // An API snapshot is authoritative, including an empty/missing level.
+        // Never substitute a different evolution level's market price.
+        if (player.priceByEnhance && typeof player.priceByEnhance === "object") {
+            const value = Number(player.priceByEnhance[level]);
+            return Number.isFinite(value) && value > 0 ? value : 0;
+        }
+        const exactKey = `n8Price${level}`;
+        if (Object.prototype.hasOwnProperty.call(player, exactKey)) {
+            const value = Number(player[exactKey]);
+            return Number.isFinite(value) && value > 0 ? value : 0;
+        }
+        const numericKeys = level === 0 ? ["n8Price", "price"] : [];
+        for (const key of numericKeys) {
+            const value = Number(player[key]);
+            if (Number.isFinite(value) && value > 0) return value;
+        }
+        return 0;
+    }
+
+    function getSquadMarketValue(squad, enhanced = false) {
+        const summary = { total: 0, playerCount: 0, missingCount: 0 };
+        Object.values(squad).forEach(slot => {
+            const player = slot?.playerData;
+            if (!player) return;
+            const level = enhanced ? FimoSquad.normalizeConfig(player.squadConfig).enhance : 0;
+            const price = getPlayerMarketPrice(player, level);
+            summary.playerCount += 1;
+            if (price) summary.total += price;
+            else summary.missingCount += 1;
+        });
+        return summary;
+    }
+
+    function formatSquadMarketValue(summary, includeMissing = false) {
+        const value = formatPrice(summary.total, summary.playerCount ? "시세 없음" : `0 ${PRICE_UNIT}`);
+        return includeMissing && summary.total && summary.missingCount
+            ? `${value} · ${summary.missingCount}명 시세 없음` : value;
+    }
+
+    async function hydratePlayerMarketPrices(players, rerender, options = {}) {
+        if (!Array.isArray(players) || !players.length) {
+            return { total: 0, resolvedCount: 0, liveCount: 0 };
+        }
+        const cids = [...new Set(players.map(player => Number(player.cid)).filter(Number.isFinite))];
+        if (!cids.length) return { total: 0, resolvedCount: 0, liveCount: 0 };
+        try {
+            const response = await fetch(
+                `/api/player_prices?cids=${encodeURIComponent(cids.join(","))}`,
+                options.signal ? { signal: options.signal } : undefined,
+            );
+            if (!response.ok) return { total: cids.length, resolvedCount: 0, liveCount: 0 };
+            const payload = await response.json();
+            if (options.isCurrent && !options.isCurrent()) {
+                return { total: cids.length, resolvedCount: 0, liveCount: 0 };
+            }
+            const prices = payload?.prices || {};
+            const artwork = payload?.artwork || {};
+            const artworkKeys = [
+                "pimage", "pimageThumb", "pimageThumbSmall",
+                "bimage", "bimageThumb", "bimageThumbSmall", "cardArt",
+            ];
+            let resolvedCount = 0;
+            let liveCount = 0;
+            players.forEach(player => {
+                const livePrice = prices[String(player.cid)];
+                if (!livePrice) return;
+                const canonicalArtwork = artwork[String(player.cid)] || {};
+                const numericPrice = Number(livePrice.price);
+                if (Number.isFinite(numericPrice) && numericPrice > 0) {
+                    player.price = numericPrice;
+                    resolvedCount += 1;
+                }
+                if (livePrice.priceByEnhance && typeof livePrice.priceByEnhance === "object") {
+                    player.priceByEnhance = normalizeMarketPrices(livePrice.priceByEnhance);
+                }
+                player.priceSource = livePrice.source;
+                player.priceCheckedAt = livePrice.checked_at;
+                artworkKeys.forEach(key => {
+                    if (canonicalArtwork[key]) player[key] = canonicalArtwork[key];
+                    else delete player[key];
+                });
+                if (livePrice.source === "live") liveCount += 1;
+            });
+            if (typeof rerender === "function" && (!options.isCurrent || options.isCurrent())) {
+                rerender(players);
+            }
+            return { total: cids.length, resolvedCount, liveCount };
+        } catch (error) {
+            if (error?.name === "AbortError") {
+                return { total: cids.length, resolvedCount: 0, liveCount: 0 };
+            }
+            console.debug("실시간 가격 조회 실패, 로컬 가격을 유지합니다.", error);
+            return { total: cids.length, resolvedCount: 0, liveCount: 0 };
+        }
+    }
+
+    function getSearchPriceEnhance() {
+        return Math.max(0, Math.min(MAX_ENHANCE_LEVEL,
+            Math.trunc(Number(DOM.modalFilterForm.elements.price_enhance?.value) || 0)));
+    }
+
+    function getSearchPriceBounds() {
+        const parseValue = name => {
+            const raw = DOM.modalFilterForm.elements[name]?.value;
+            const value = Number(String(raw || "").replace(/,/g, ""));
+            return Number.isFinite(value) && value >= 0 && String(raw || "").trim() ? value : null;
+        };
+        let minPrice = parseValue("min_price");
+        let maxPrice = parseValue("max_price");
+        if (minPrice !== null && maxPrice !== null && minPrice > maxPrice) {
+            [minPrice, maxPrice] = [maxPrice, minPrice];
+        }
+        return { minPrice, maxPrice };
+    }
+
+    function prepareLatestPriceSearchResults(players, sortBy = DOM.modalSortFilter?.value || "recommend") {
+        const priceEnhance = getSearchPriceEnhance();
+        const { minPrice, maxPrice } = getSearchPriceBounds();
+        const prepared = players.filter(player => {
+            if (minPrice === null && maxPrice === null) return true;
+            const price = getPlayerMarketPrice(player, priceEnhance);
+            if (!price) return false;
+            if (minPrice !== null && price < minPrice) return false;
+            if (maxPrice !== null && price > maxPrice) return false;
+            return true;
+        });
+
+        const byName = (left, right) => String(left.playerKor || "").localeCompare(
+            String(right.playerKor || ""),
+            "ko",
+        );
+        if (sortBy === "ovr_desc") {
+            prepared.sort((left, right) => Number(right.ovr || 0) - Number(left.ovr || 0) || byName(left, right));
+        } else if (sortBy === "ovr_asc") {
+            prepared.sort((left, right) => Number(left.ovr || 0) - Number(right.ovr || 0) || byName(left, right));
+        } else if (sortBy === "price_desc" || sortBy === "price_asc") {
+            prepared.sort((left, right) => {
+                const leftPrice = getPlayerMarketPrice(left, priceEnhance);
+                const rightPrice = getPlayerMarketPrice(right, priceEnhance);
+                if (!leftPrice && rightPrice) return 1;
+                if (leftPrice && !rightPrice) return -1;
+                const priceDiff = sortBy === "price_asc" ? leftPrice - rightPrice : rightPrice - leftPrice;
+                return priceDiff || Number(right.ovr || 0) - Number(left.ovr || 0) || byName(left, right);
+            });
+        } else if (sortBy === "name") {
+            prepared.sort(byName);
+        }
+        return prepared;
+    }
+
+    async function refreshSquadMarketPrices() {
+        const playersByCid = new Map();
+        [...Object.values(G.squad), ...Object.values(G.bench)].forEach(slot => {
+            const player = slot?.playerData;
+            const cid = Number(player?.cid);
+            if (!player || !Number.isFinite(cid)) return;
+            if (!playersByCid.has(cid)) playersByCid.set(cid, []);
+            playersByCid.get(cid).push(player);
+        });
+        if (!playersByCid.size) {
+            if (DOM.squadPriceStatus) DOM.squadPriceStatus.textContent = "최신 시세 자동 반영";
+            return;
+        }
+
+        if (G.squadPriceRequestController) G.squadPriceRequestController.abort();
+        const requestController = new AbortController();
+        G.squadPriceRequestController = requestController;
+        if (DOM.squadPriceStatus) DOM.squadPriceStatus.textContent = "최신 시세 확인 중…";
+        const representatives = Array.from(playersByCid.values(), group => group[0]);
+        const result = await hydratePlayerMarketPrices(representatives, null, {
+            signal: requestController.signal,
+            isCurrent: () => G.squadPriceRequestController === requestController,
+        });
+        if (G.squadPriceRequestController !== requestController) return;
+
+        representatives.forEach(representative => {
+            playersByCid.get(Number(representative.cid))?.forEach(player => {
+                player.price = representative.price;
+                player.priceSource = representative.priceSource;
+                player.priceCheckedAt = representative.priceCheckedAt;
+                if (representative.priceByEnhance) player.priceByEnhance = { ...representative.priceByEnhance };
+                [
+                    "pimage", "pimageThumb", "pimageThumbSmall",
+                    "bimage", "bimageThumb", "bimageThumbSmall", "cardArt",
+                ].forEach(key => {
+                    if (representative[key]) player[key] = representative[key];
+                    else delete player[key];
+                });
+            });
+        });
+        updateAll();
+        persistState("최신 시세 반영됨");
+        if (DOM.squadPriceStatus) {
+            DOM.squadPriceStatus.textContent = result.liveCount === result.total
+                ? "최신 시세 반영됨"
+                : `최신 시세 ${result.liveCount}/${result.total}명 반영`;
+        }
+        G.squadPriceRequestController = null;
+    }
+
+    function getPlayerSkillText(player) {
+        if (player?.skillBoostName) {
+            return player.skillBoostName;
+        }
+        function getSkillName(id) {
+            const normalized = String(id || "").trim();
+            if (!normalized) return "";
+            if (SKILL_ID_NAME_MAP[normalized]) return SKILL_ID_NAME_MAP[normalized];
+            if (/^260\d{2}$/.test(normalized)) {
+                const converted = `261${normalized.slice(-3)}`;
+                if (SKILL_ID_NAME_MAP[converted]) return SKILL_ID_NAME_MAP[converted];
+            }
+            return `스킬 ${normalized}`;
+        }
+        if (Array.isArray(player?.skillLabels) && player.skillLabels.length) {
+            return player.skillLabels.join(", ");
+        }
+        if (Array.isArray(player?.skills) && player.skills.length) {
+            return player.skills
+                .map(skill => {
+                    if (typeof skill === "string") return skill;
+                    const id = String(skill?.id || "").trim();
+                    if (!id) return "";
+                    const level = skill?.level ?? skill?.lv;
+                    const name = getSkillName(id);
+                    return level === undefined || level === null || String(level).trim() === "" ? name : `${name} Lv.${level}`;
+                })
+                .filter(Boolean)
+                .join(", ");
+        }
+        if (Array.isArray(player?.skillInfo) && player.skillInfo.length) {
+            return player.skillInfo
+                .map(skill => {
+                    const id = String(skill?.id || "").trim();
+                    if (!id) return "";
+                    const level = skill?.lv ?? skill?.level;
+                    const name = getSkillName(id);
+                    return level === undefined || level === null || String(level).trim() === "" ? name : `${name} Lv.${level}`;
+                })
+                .filter(Boolean)
+                .join(", ");
+        }
+        if (player?.skillStyleId) {
+            return getSkillName(player.skillStyleId);
+        }
+        return "";
+    }
+
+    function getCurrentSlotText() {
+        if (!G.currentSlotName || !getSlotState(G.currentSlotName)) {
+            return "";
+        }
+        return getSlotSearchPosition(G.currentSlotName);
+    }
+
+    function renderResults(players) {
+        if (!players.length) {
+            DOM.modalResultList.innerHTML = `<div class="modal-empty">검색 결과가 없습니다.</div>`;
+            return;
+        }
+
+        const scrollTop = DOM.modalResultList.scrollTop;
+        const resultLabel = players.length >= 60 ? "상위 60명" : `${players.length}명`;
+        DOM.modalResultList.innerHTML = `
+            <div class="modal-results-summary">${resultLabel}</div>
+            ${players.map(buildPlayerSearchResultItem).join("")}
+        `;
+
+        DOM.modalResultList.scrollTop = scrollTop;
+        DOM.modalResultList.querySelectorAll(".modal-result-item").forEach(button => {
+            button.addEventListener("click", () => {
+                const cid = Number(button.dataset.cid);
+                const player = players.find(item => Number(item.cid) === cid);
+                if (!player || !G.currentSlotName) return;
+                const slotState = getSlotState(G.currentSlotName);
+                if (!slotState) return;
+                slotState.playerData = player;
+                FimoSquad.assignDefaults(player);
+                updateAll();
+                persistState("선수 배치됨");
+                const starterCount = getStarterCount();
+                trackAnalytics("squad_player_add", {
+                    content_id: player.cid,
+                    slot_name: getSlotLabel(G.currentSlotName),
+                    starter_count: starterCount,
+                    formation: G.currentFormation,
+                });
+                if (starterCount === Object.keys(G.squad).length) {
+                    trackAnalytics("squad_complete", {
+                        starter_count: starterCount,
+                        formation: G.currentFormation,
+                    }, { onceKey: "squad_complete" });
+                }
+                closeSearchModal();
+            });
+        });
+    }
+
+    function buildPlayerSearchResultItem(player) {
+        const playstyleHtml = Array.isArray(player.playstyles) && player.playstyles.length
+            ? `<div class="result-playstyles">${player.playstyles.slice(0, 3).map(playstyle => `
+                <span class="result-playstyle">
+                    <img src="${playstyle.imageUrl || ""}" alt="" loading="lazy">
+                    <span>${playstyle.name || "-"}</span>
+                </span>
+            `).join("")}</div>`
+            : "";
+        return `
+            <button class="modal-result-item" type="button" data-cid="${player.cid}">
+                <div class="result-thumb" data-fimo-card-cid="${player.cid}" style="background-image:url('${getOptimizedPlayerImage(player, "card", 96)}')">
+                    <img src="${getOptimizedPlayerImage(player, "faceon", 96)}" alt="${player.playerKor || ""}" loading="lazy">
+                </div>
+                <div class="result-body">
+                    <div class="result-head">
+                        <div class="result-name">${player.playerKor || "-"}</div>
+                    </div>
+                    <div class="result-meta">
+                        <span class="result-position">${player.position || "-"}</span>
+                        ${(player.potentialPositions || []).length ? `<span class="result-alternate-positions">부 ${(player.potentialPositions || []).slice(0, 4).join(", ")}</span>` : ""}
+                    </div>
+                    <div class="result-sub">
+                        ${player.className ? `<span>${player.className}</span>` : ""}
+                        ${player.team ? `<span>${player.team}</span>` : ""}
+                        ${(player.footL || player.footR) ? `<span class="result-feet">왼발 ${player.footL || "-"} · 오른발 ${player.footR || "-"}</span>` : ""}
+                    </div>
+                    ${playstyleHtml}
+                </div>
+                <div class="result-value">
+                    <div class="result-ovr">${player.ovr || 0}</div>
+                    <div class="result-price">${getSearchPriceEnhance()}진 · ${formatPrice(getPlayerMarketPrice(player, getSearchPriceEnhance()))}</div>
+                </div>
+            </button>
+        `;
+    }
+
+    function openCompareSearchModal(slotName) {
+        const sourcePlayer = getSlotPlayer(slotName);
+        if (!sourcePlayer) return;
+        G.compareSourceSlotName = slotName;
+        G.compareSourcePlayer = sourcePlayer;
+        G.compareTargetPlayer = null;
+        setMobileCompareResultsMode(false);
+        DOM.compareResultList.classList.add("hidden");
+        DOM.compareResultList.innerHTML = "";
+        DOM.compareSlotChip.textContent = `${getSlotLabel(slotName)} VS`;
+        DOM.compareSubtitle.textContent = `${sourcePlayer.playerKor || "선수"} · ${getSlotLabel(slotName)}`;
+        DOM.compareSearchInput.value = "";
+        DOM.compareClassFilter.value = "";
+        document.body.classList.add("modal-open");
+        DOM.compareSearchModal.classList.add("open");
+        DOM.compareSearchInput.focus();
+    }
+
+    function renderCompareSearchResults(players) {
+        if (!G.compareSourcePlayer) return;
+        const sourceCid = Number(G.compareSourcePlayer.cid);
+        const filteredPlayers = players.filter(player => Number(player.cid) !== sourceCid);
+        if (!filteredPlayers.length) {
+            DOM.compareResultList.innerHTML = `<div class="modal-empty">비교할 선수를 찾지 못했습니다. 다른 검색어를 입력해 보세요.</div>`;
+            return;
+        }
+        DOM.compareResultList.innerHTML = filteredPlayers.map(buildPlayerSearchResultItem).join("");
+
+        DOM.compareResultList.querySelectorAll(".modal-result-item").forEach(button => {
+            button.addEventListener("click", async () => {
+                const targetCid = Number(button.dataset.cid);
+                const targetPlayer = filteredPlayers.find(player => Number(player.cid) === targetCid);
+                await openComparePanel(targetCid, targetPlayer);
+            });
+        });
+    }
+
+    async function runCompareSearch() {
+        if (!G.compareSourcePlayer) return;
+        const q = DOM.compareSearchInput.value.trim();
+        const classFilter = DOM.compareClassFilter.value.trim();
+        DOM.compareResultList.innerHTML = `<div class="modal-empty">선수 목록을 불러오는 중입니다.</div>`;
+
+        const url = new URL("/api/squad_players", window.location.origin);
+        url.searchParams.set("limit", "60");
+        if (q) url.searchParams.set("q", q);
+        if (classFilter) url.searchParams.set("class", classFilter);
+        const slot = getCompareSlotSearchPosition(G.compareSourceSlotName);
+        if (slot && !q && !classFilter) url.searchParams.set("slot", slot);
+
+        if (G.compareSearchRequestController) {
+            G.compareSearchRequestController.abort();
+        }
+        const requestController = new AbortController();
+        G.compareSearchRequestController = requestController;
+
+        try {
+            const response = await fetch(url.toString(), { signal: requestController.signal });
+            const players = await response.json();
+            if (G.compareSearchRequestController !== requestController) return;
+            const playerList = Array.isArray(players) ? players : [];
+            renderCompareSearchResults(playerList);
+            await hydratePlayerMarketPrices(playerList, renderCompareSearchResults, {
+                signal: requestController.signal,
+                isCurrent: () => G.compareSearchRequestController === requestController,
+            });
+        } catch (error) {
+            if (error?.name === "AbortError") return;
+            console.error(error);
+            DOM.compareResultList.innerHTML = `<div class="modal-empty">검색 중 오류가 발생했습니다.</div>`;
+        } finally {
+            if (G.compareSearchRequestController === requestController) {
+                G.compareSearchRequestController = null;
+            }
+        }
+    }
+
+    function runManualCompareSearch() {
+        DOM.compareResultList.classList.remove("hidden");
+        if (isMobileLayout()) {
+            if (typeof document.activeElement?.blur === "function") {
+                document.activeElement.blur();
+            }
+            setMobileCompareResultsMode(true);
+        }
+        runCompareSearch();
+    }
+
+    function renderComparePanel(sourcePlayer, targetPlayer, statGroups) {
+        const toNumber = value => (typeof value === "number" ? value : Number(value));
+        const renderValuePair = (leftRaw, rightRaw) => {
+            const leftNum = toNumber(leftRaw);
+            const rightNum = toNumber(rightRaw);
+            const bothNumeric = Number.isFinite(leftNum) && Number.isFinite(rightNum);
+            const leftHigher = bothNumeric && leftNum >= rightNum;
+            const rightHigher = bothNumeric && rightNum >= leftNum;
+            const leftDiff = bothNumeric && leftNum > rightNum ? `▲${leftNum - rightNum}` : "";
+            const rightDiff = bothNumeric && rightNum > leftNum ? `▲${rightNum - leftNum}` : "";
+            return {
+                leftMain: leftRaw ?? "-",
+                rightMain: rightRaw ?? "-",
+                leftHigher,
+                rightHigher,
+                leftDiff,
+                rightDiff,
+            };
+        };
+
+        const groupBlocks = Object.entries(statGroups || {}).map(([groupName, stats]) => {
+            const rows = Object.entries(stats || {}).map(([code, label]) => {
+                const v = renderValuePair(sourcePlayer[code], targetPlayer[code]);
+                return `
+                    <div class="compare-row">
+                        <div class="compare-stat-value right">
+                            ${v.leftDiff ? `<span class="compare-diff">${v.leftDiff}</span>` : ""}
+                            <span class="compare-stat-main ${v.leftHigher ? "higher" : ""}">${v.leftMain}</span>
+                        </div>
+                        <div class="compare-stat-name">${label}</div>
+                        <div class="compare-stat-value">
+                            <span class="compare-stat-main ${v.rightHigher ? "higher" : ""}">${v.rightMain}</span>
+                            ${v.rightDiff ? `<span class="compare-diff">${v.rightDiff}</span>` : ""}
+                        </div>
+                    </div>
+                `;
+            }).join("");
+            return `<section class="compare-group"><div class="compare-group-title">${groupName}</div>${rows}</section>`;
+        }).join("");
+
+        DOM.comparePanelBody.innerHTML = `
+            <div class="compare-actions">
+                <button class="compare-replace-btn" id="compare-replace-btn" type="button">선수 교체하기</button>
+            </div>
+            <div class="compare-top">
+                <article class="compare-player">
+                    <div class="compare-thumb" data-fimo-card-cid="${sourcePlayer.cid}" data-fimo-card-ovr="${sourcePlayer.ovr}" style="background-image:url('${getOptimizedPlayerImage(sourcePlayer, "card", 128)}')">
+                        <img src="${getOptimizedPlayerImage(sourcePlayer, "faceon", 128)}" alt="${sourcePlayer.playerKor || ""}" loading="lazy">
+                    </div>
+                    <div>
+                        <div class="compare-name">${sourcePlayer.playerKor || "-"}</div>
+                        <div class="compare-sub">${sourcePlayer.className || "-"} · ${sourcePlayer.position || "-"}</div>
+                        <div class="compare-sub">OVR ${sourcePlayer.ovr || 0} · ${sourcePlayer.team || "-"}</div>
+                        <div class="compare-sub">${sourcePlayer.squadGrowthLabel || "0진화 · 훈련 0단계"}</div>
+                    </div>
+                </article>
+                <article class="compare-player">
+                    <div class="compare-thumb" data-fimo-card-cid="${targetPlayer.cid}" data-fimo-card-ovr="${targetPlayer.ovr}" style="background-image:url('${getOptimizedPlayerImage(targetPlayer, "card", 128)}')">
+                        <img src="${getOptimizedPlayerImage(targetPlayer, "faceon", 128)}" alt="${targetPlayer.playerKor || ""}" loading="lazy">
+                    </div>
+                    <div>
+                        <div class="compare-name">${targetPlayer.playerKor || "-"}</div>
+                        <div class="compare-sub">${targetPlayer.className || "-"} · ${targetPlayer.position || "-"}</div>
+                        <div class="compare-sub">OVR ${targetPlayer.ovr || 0} · ${targetPlayer.team || "-"}</div>
+                        <div class="compare-sub">${targetPlayer.squadGrowthLabel || "0진화 · 훈련 0단계"}</div>
+                    </div>
+                </article>
+            </div>
+            ${groupBlocks}
+        `;
+
+        const replaceBtn = document.getElementById("compare-replace-btn");
+        if (replaceBtn) {
+            replaceBtn.addEventListener("click", replaceComparedPlayer);
+        }
+    }
+
+    async function fetchComparePlayer(cid) {
+        const response = await fetch(`/api/player_compare?cid=${encodeURIComponent(cid)}`);
+        if (!response.ok) {
+            throw new Error("Failed to fetch compare player");
+        }
+        return response.json();
+    }
+
+    async function openComparePanel(targetCid, targetSeedPlayer = null) {
+        if (!G.compareSourcePlayer) return;
+        try {
+            DOM.compareResultList.innerHTML = `<div class="modal-empty">비교 데이터를 불러오는 중입니다.</div>`;
+            const [sourcePayload, targetPayload] = await Promise.all([
+                fetchComparePlayer(G.compareSourcePlayer.cid),
+                fetchComparePlayer(targetCid),
+            ]);
+            G.compareTargetPlayer = {
+                ...(targetSeedPlayer || {}),
+                ...(targetPayload.player || {}),
+            };
+            const sourceConfig = FimoSquad.normalizeConfig(G.compareSourcePlayer.squadConfig);
+            G.compareTargetPlayer.squadConfig = { ...sourceConfig, playstyles: {} };
+            renderComparePanel(
+                FimoSquad.adjustedPlayer(sourcePayload.player, G.compareSourcePlayer),
+                FimoSquad.adjustedPlayer(targetPayload.player, G.compareTargetPlayer),
+                sourcePayload.stat_groups,
+            );
+            closeCompareSearchModal();
+            document.body.classList.add("modal-open");
+            DOM.comparePanel.classList.add("open");
+        } catch (error) {
+            console.error(error);
+            DOM.compareResultList.innerHTML = `<div class="modal-empty">비교 데이터를 불러오지 못했습니다.</div>`;
+        }
+    }
+
+    function replaceComparedPlayer() {
+        if (!G.compareSourceSlotName || !G.compareTargetPlayer) return;
+        const slotState = getSlotState(G.compareSourceSlotName);
+        if (!slotState) return;
+        slotState.playerData = G.compareTargetPlayer;
+        G.selectedSlotName = G.compareSourceSlotName;
+        G.compareSourcePlayer = G.compareTargetPlayer;
+        updateAll();
+        persistState("비교 선수로 교체됨");
+        closeComparePanel();
+    }
+
+    async function runSearch() {
+        const slot = getCurrentSlotText();
+        DOM.modalResultList.innerHTML = `<div class="modal-empty">선수 목록을 불러오는 중입니다.</div>`;
+
+        const url = new URL("/api/squad_players", window.location.origin);
+        const selectedSort = DOM.modalSortFilter?.value || "recommend";
+        const { minPrice, maxPrice } = getSearchPriceBounds();
+        const needsLatestPriceProcessing = minPrice !== null
+            || maxPrice !== null
+            || selectedSort === "price_asc"
+            || selectedSort === "price_desc";
+        url.searchParams.set("limit", "60");
+        const formData = new FormData(DOM.modalFilterForm);
+        // Slot suggestions apply only to an unfiltered search. Explicit searches span every position.
+        const hasSearchCriteria = [...formData].some(([key, value]) =>
+            !["sort", "include_sub_position", "all_career"].includes(key) && (key === "price_enhance" ? Number(value) > 0 : String(value || "").trim())
+        );
+        if (slot && !hasSearchCriteria) url.searchParams.set("slot", slot);
+        formData.forEach((value, key) => {
+            const cleanValue = String(value || "").trim();
+            if (cleanValue) url.searchParams.append(key, cleanValue);
+        });
+        // Apply the selected stage and price bounds before the server limits candidates to 60.
+
+        if (G.searchRequestController) {
+            G.searchRequestController.abort();
+        }
+        const requestController = new AbortController();
+        G.searchRequestController = requestController;
+
+        try {
+            const response = await fetch(url.toString(), { signal: requestController.signal });
+            const players = await response.json();
+            if (G.searchRequestController !== requestController) return;
+            const playerList = Array.isArray(players) ? players : [];
+            if (needsLatestPriceProcessing) {
+                DOM.modalResultList.innerHTML = `<div class="modal-empty">최신 시세를 확인하고 있습니다.</div>`;
+            } else {
+                renderResults(prepareLatestPriceSearchResults(playerList, selectedSort));
+            }
+            await hydratePlayerMarketPrices(playerList, null, {
+                signal: requestController.signal,
+                isCurrent: () => G.searchRequestController === requestController,
+            });
+            if (G.searchRequestController !== requestController) return;
+            renderResults(prepareLatestPriceSearchResults(playerList, selectedSort));
+        } catch (error) {
+            if (error?.name === "AbortError") return;
+            console.error(error);
+            DOM.modalResultList.innerHTML = `<div class="modal-empty">검색 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.</div>`;
+        } finally {
+            if (G.searchRequestController === requestController) {
+                G.searchRequestController = null;
+            }
+        }
+    }
+
+    function scheduleSearch() {
+        clearTimeout(G.searchTimer);
+        G.searchTimer = setTimeout(runSearch, 400);
+    }
+
+    function renderSlot(name, slotEl) {
+        if (!slotEl) return null;
+
+        const player = getSlotPlayer(name);
+        const cardBgEl = slotEl.querySelector(".card-background");
+        const playerImgEl = slotEl.querySelector(".player-image");
+        const ovrEl = slotEl.querySelector(".ovr");
+        const positionEl = slotEl.querySelector(".pos-text");
+        const nameEl = slotEl.querySelector(".player-name-bottom");
+        const detailBtn = slotEl.querySelector(".detail-btn");
+
+        if (player) {
+            slotEl.classList.add("filled");
+            slotEl.draggable = true;
+            const cardImage = getOptimizedPlayerImage(player, "card", 256);
+            const faceImage = getOptimizedPlayerImage(player, "faceon", 256);
+            cardBgEl.style.backgroundImage = cardImage ? `url(${cardImage})` : "";
+            playerImgEl.style.backgroundImage = faceImage ? `url(${faceImage})` : "";
+            ovrEl.textContent = FimoSquad.ovr(player);
+            positionEl.textContent = player.position || "";
+            nameEl.textContent = player.playerKor || "";
+            detailBtn.href = FimoSquad.detailUrl(player);
+            FimoSquad.renderCard(player, slotEl);
+            return player;
+        }
+
+        slotEl.classList.remove("filled");
+        slotEl.draggable = false;
+        cardBgEl.style.backgroundImage = "";
+        playerImgEl.style.backgroundImage = "";
+        ovrEl.textContent = "";
+        positionEl.textContent = "";
+        nameEl.textContent = "";
+        detailBtn.removeAttribute("href");
+        FimoSquad.renderCard(null, slotEl);
+        return null;
+    }
+
+    function updateAll() {
+        document.body.classList.remove("hide-card-meta");
+        let totalStarterOvr = 0;
+        let starterCount = 0;
+
+        Object.keys(G.squad).forEach(name => {
+            const player = renderSlot(name, document.getElementById(`pos-${name}`));
+            if (!player) return;
+            starterCount += 1;
+            totalStarterOvr += FimoSquad.ovr(player);
+        });
+
+        if (DOM.teamOvr) {
+            DOM.teamOvr.textContent = starterCount ? Math.round(totalStarterOvr / starterCount) : 0;
+        }
+        const baseValue = getSquadMarketValue(G.squad);
+        const enhancedValue = getSquadMarketValue(G.squad, true);
+        DOM.teamValue.textContent = formatSquadMarketValue(baseValue, true);
+        DOM.teamEnhancedValue.textContent = formatSquadMarketValue(enhancedValue);
+        DOM.teamValueMissing.hidden = !enhancedValue.missingCount;
+        DOM.teamValueMissing.textContent = enhancedValue.total
+            ? `${enhancedValue.missingCount}명 시세 없음 · 부분 합계`
+            : `${enhancedValue.missingCount}명 시세 없음`;
+        DOM.mobileEnhancedTeamValue.textContent = formatSquadMarketValue(enhancedValue, true);
+        DOM.mobileBaseTeamValue.textContent = formatSquadMarketValue(baseValue, true);
+        DOM.filledCount.textContent = `${starterCount} / ${Object.keys(G.squad).length}`;
+        FimoSquad.updateSummary();
+        updateSelectedSlotCopy();
+        updateSelectedPlayerActionButtons();
+        selectSlot(G.selectedSlotName);
+        if (document.body.classList.contains("mobile-layout") && !document.body.classList.contains("mobile-landscape")) {
+            requestAnimationFrame(() => {
+                updateMobileFieldHeight();
+                layoutSquadSlots(formationData[G.currentFormation]);
+            });
+        }
+    }
+
+    function handleDragStart(event) {
+        const target = event.target.closest(".position");
+        if (!target || !target.classList.contains("filled")) return;
+        G.draggedSlotName = target.dataset.name;
+        event.dataTransfer.effectAllowed = "move";
+        setTimeout(() => target.classList.add("dragging"), 0);
+    }
+
+    function handleDragEnd(event) {
+        const target = event.target.closest(".position");
+        if (target) target.classList.remove("dragging");
+        G.draggedSlotName = null;
+    }
+
+    function handleDragOver(event) {
+        event.preventDefault();
+    }
+
+    function handleDrop(event) {
+        event.preventDefault();
+        const target = event.target.closest(".position");
+        if (!target) return;
+        const targetSlotName = target.dataset.name;
+        if (!G.draggedSlotName || !targetSlotName || G.draggedSlotName === targetSlotName) return;
+
+        const sourceSlotState = getSlotState(G.draggedSlotName);
+        const targetSlotState = getSlotState(targetSlotName);
+        if (!sourceSlotState || !targetSlotState) return;
+
+        const sourcePlayerData = sourceSlotState.playerData;
+        sourceSlotState.playerData = targetSlotState.playerData;
+        targetSlotState.playerData = sourcePlayerData;
+        G.selectedSlotName = targetSlotName;
+        updateAll();
+        persistState("선수 위치 변경됨");
+    }
+
+    async function exportImage() {
+        if (DOM.saveBtn.disabled) return;
+        const originalLabel = DOM.saveBtn.textContent;
+        DOM.saveBtn.disabled = true;
+        DOM.saveBtn.textContent = "이미지 준비 중";
+        try {
+            await refreshSquadMarketPrices();
+            const formation = G.currentFormation;
+            const squad = JSON.parse(JSON.stringify(G.squad));
+            const positions = formationData[formation];
+            const players = Object.values(squad).map(slot => slot.playerData).filter(Boolean);
+            const blob = await FimoSquadExport.render({
+                formation, squad, positions,
+                layout: calculateSquadLayout(positions, { width: 1200, height: 920 }),
+                artwork: player => ({
+                    ...FimoSquad.cardArtwork(player),
+                    card: getOptimizedPlayerImage(player, "card", 512),
+                    face: getOptimizedPlayerImage(player, "faceon", 512),
+                }),
+                averageOvr: players.length ? Math.round(players.reduce((sum, player) => sum + FimoSquad.ovr(player), 0) / players.length) : 0,
+                priceText: `진화 기준 구단 가치 ${formatSquadMarketValue(getSquadMarketValue(squad, true), true)}`,
+            });
+            const imageSource = await new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = () => reject(new Error("PNG 파일을 읽지 못했습니다."));
+                reader.readAsDataURL(blob);
+            });
+            const link = document.getElementById("squad-export-download");
+            link.href = imageSource;
+            link.download = `피모북_스쿼드_${formation}.png`;
+            document.getElementById("squad-export-image").src = imageSource;
+            document.getElementById("squad-image-preview").showModal();
+            trackAnalytics("squad_export", { starter_count: players.length, formation });
+        } catch (error) {
+            console.error(error);
+            window.alert("선수 이미지를 불러오지 못했습니다. 다시 저장해 주세요.");
+        } finally {
+            DOM.saveBtn.disabled = false;
+            DOM.saveBtn.textContent = originalLabel;
+        }
+    }
+
+    function resetSquad() {
+        if (!window.confirm("현재 스쿼드를 초기화하시겠습니까?")) return;
+        Object.keys(G.squad).forEach(name => {
+            G.squad[name] = { playerData: null };
+        });
+        persistState("스쿼드 초기화됨");
+        updateAll();
+    }
+
+    function openSearchForCurrentSlot() {
+        const nextSlot = G.selectedSlotName
+            || Object.keys(G.squad).find(name => !getSlotPlayer(name))
+            || Object.keys(G.squad)[0];
+        if (!nextSlot) return;
+        openSearchModal(nextSlot);
+    }
+
+    function handleViewportResize() {
+        clearTimeout(G.resizeTimer);
+        G.resizeTimer = setTimeout(() => {
+            syncLayoutMode();
+            updateMobileFieldHeight();
+            changeFormation(G.currentFormation, { preserveExisting: true });
+        }, 120);
+    }
+
+    function setupEventListeners() {
+        DOM.formationSelect.addEventListener("change", event => changeFormation(event.target.value));
+        if (DOM.mobileOverlayFormationSelect) {
+            DOM.mobileOverlayFormationSelect.addEventListener("change", event => changeFormation(event.target.value));
+        }
+        DOM.modalCloseBtn.addEventListener("click", closeSearchModal);
+        DOM.mobileSearchBackBtn.addEventListener("click", () => {
+            setMobileSearchResultsMode(false);
+            DOM.modalResultList.classList.add("hidden");
+            DOM.modalSearchInput.focus();
+        });
+        DOM.modal.addEventListener("click", event => {
+            if (event.target === DOM.modal) closeSearchModal();
+        });
+        DOM.compareSearchCloseBtn.addEventListener("click", closeCompareSearchModal);
+        DOM.compareSearchModal.addEventListener("click", event => {
+            if (event.target === DOM.compareSearchModal) closeCompareSearchModal();
+        });
+        DOM.compareMobileSearchBackBtn.addEventListener("click", () => {
+            setMobileCompareResultsMode(false);
+            DOM.compareResultList.classList.add("hidden");
+            DOM.compareSearchInput.focus();
+        });
+        DOM.compareSearchInput.addEventListener("keydown", handleMobileCompareSearchSubmit);
+        DOM.compareClassFilter.addEventListener("keydown", handleMobileCompareSearchSubmit);
+        DOM.compareSearchSubmitBtn.addEventListener("click", runManualCompareSearch);
+        DOM.comparePanelCloseBtn.addEventListener("click", closeComparePanel);
+        DOM.comparePanel.addEventListener("click", event => {
+            if (event.target === DOM.comparePanel) closeComparePanel();
+        });
+        document.addEventListener("pointerdown", event => {
+            if (!isMobileLayout() || isOverlayOpen()) return;
+            if (!event.target.closest("#squad-div")) return;
+            if (event.target.closest(".position")) return;
+            clearSlotSelection();
+        });
+        DOM.saveBtn.addEventListener("click", exportImage);
+        DOM.resetBtn.addEventListener("click", resetSquad);
+        DOM.openSearchBtn.addEventListener("click", openSearchForCurrentSlot);
+        DOM.selectedDetailBtn.addEventListener("click", openSelectedPlayerDetail);
+        DOM.selectedCompareBtn.addEventListener("click", openSelectedPlayerCompare);
+        if (DOM.mobileOverlayResetBtn) {
+            DOM.mobileOverlayResetBtn.addEventListener("click", resetSquad);
+        }
+        if (DOM.mobileOverlayDetailBtn) {
+            DOM.mobileOverlayDetailBtn.addEventListener("click", openSelectedPlayerDetail);
+        }
+        if (DOM.mobileOverlayCompareBtn) {
+            DOM.mobileOverlayCompareBtn.addEventListener("click", openSelectedPlayerCompare);
+        }
+        DOM.squadDiv.addEventListener("dragstart", handleDragStart);
+        DOM.squadDiv.addEventListener("dragend", handleDragEnd);
+        DOM.squadDiv.addEventListener("dragover", handleDragOver);
+        DOM.squadDiv.addEventListener("drop", handleDrop);
+        window.addEventListener("resize", handleViewportResize);
+        window.addEventListener("orientationchange", handleViewportResize);
+        window.addEventListener("keydown", event => {
+            if (event.key === "Tab" && DOM.modal.classList.contains("open")) {
+                const focusable = [...DOM.modal.querySelectorAll("button, input, select, summary")].filter(element =>
+                    !element.disabled && element.getClientRects().length
+                );
+                const first = focusable[0], last = focusable[focusable.length - 1];
+                if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); }
+                else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
+            }
+            if (event.key === "Escape") {
+                closeSearchModal();
+                closeCompareSearchModal();
+                closeComparePanel();
+            }
+        });
+    }
+
+    init();
+    </script>
+    {% include "_site_footer.html" %}
+</body>
+</html>

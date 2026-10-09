@@ -6,5 +6,8 @@ Flask-SQLAlchemy
 Flask-Migrate
 Flask-Login
 Flask-Mail
+google-auth
 firebase-admin
 Pillow
+
+pywebpush==2.0.3

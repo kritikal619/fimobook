@@ -1,0 +1,63 @@
+{% set materials = evolution_material_trends|default({'targets': [], 'source': 'local', 'updated_at': '', 'error': false}) %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/evolution-material-trends.css') }}?v=20261004-5">
+<section class="evolution-panel" data-evolution-materials data-endpoint="{{ url_for('evolution_material_trends_api') }}" data-price-unit="{{ price_unit }}" aria-labelledby="evolution-title">
+  <div class="evolution-heading">
+    <div class="evolution-title-wrap">
+      <h3 id="evolution-title" class="weekly-title">진화재료 가격동향</h3>
+      <details class="evolution-info">
+        <summary aria-label="가격 산정 기준">ⓘ</summary>
+        <div class="evolution-info-content">
+          <strong>가격 산정 기준</strong>
+          <p>136·137 진재는 133부터, 138 이상은 134부터 비교합니다. 1~9진만 포함합니다.<br>25TOTS · 25TOTY · 26TOTY 제외.</p>
+          <p>조합별 싼 10명·비싼 20명을 뺀 평균입니다. 가격 표본이 30명 이하이면 산정하지 않습니다.</p>
+          <p data-evolution-updated>{% if materials.source == 'local' %}현재 선수 데이터 기준{% endif %}</p>
+        </div>
+      </details>
+    </div>
+  </div>
+  {% if materials.targets %}
+  <div class="evolution-overview" aria-label="오버롤별 가장 싼 진화재료">
+    <div class="evolution-overview-head" aria-hidden="true"><span>OVR</span><span>가장 싼 조합</span><span>가격 ({{ price_unit }})</span><span></span></div>
+    {% for target in materials.targets %}
+    <div class="evolution-overview-entry" data-evolution-entry="{{ target.ovr }}"{% if target.ovr not in [138, 139, 140] %} data-evolution-extra hidden{% endif %}>
+      <div class="evolution-overview-row">
+        <strong class="evolution-target-number">{{ target.ovr }}<span>진재</span></strong>
+        <span class="evolution-overview-combo" data-overview-combo>{% if target.best %}{{ target.best.ovr }} <span>· {{ target.best.level }}진</span>{% else %}—{% endif %}</span>
+        <strong class="evolution-overview-price" data-overview-price>{{ '{:,}'.format(target.best.price) if target.best else '산정 불가' }}</strong>
+        <button class="evolution-open" type="button" data-evolution-open="{{ target.ovr }}" aria-expanded="false" aria-controls="evolution-detail" aria-label="{{ target.ovr }} 진재 다른 조합 보기"><span data-evolution-open-label>자세히</span><span class="evolution-chevron" aria-hidden="true">⌄</span></button>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% if materials.targets|length > 3 %}<button class="evolution-more" type="button" data-evolution-more aria-expanded="false">다른 OVR 보기 <span aria-hidden="true">⌄</span></button>{% endif %}
+  {% set target = materials.targets[0] %}
+  <div class="evolution-detail" id="evolution-detail" data-evolution-detail hidden>
+    <div class="evolution-detail-heading"><h4 data-evolution-detail-title>{{ target.ovr }} 진재 조합</h4><span>{{ price_unit }}</span></div>
+  <ul class="evolution-comparisons" data-evolution-rows aria-label="재료 조합별 가격 비교">
+    {% for item in target.combinations %}
+    <li class="evolution-comparison{% if item.best %} evolution-best-row{% endif %}">
+      <strong class="evolution-combo-name">{{ item.ovr }} <span>· {{ item.level }}진</span></strong>
+      <div class="evolution-bar-track" aria-hidden="true"><span class="evolution-bar"></span></div>
+      <div class="evolution-combo-price"><strong>{{ '{:,}'.format(item.price) if item.price is not none else ('표본 부족' if item.count else '가격 없음') }}</strong><span class="evolution-difference">{% if item.best %}최저가{% elif item.price is not none and target.best %}+{{ '{:,}'.format(item.price - target.best.price) }}{% endif %}</span></div>
+    </li>
+    {% endfor %}
+  </ul>
+  <div class="evolution-chart-heading">
+    <h4>가격 추세</h4>
+    <label class="evolution-series-label" hidden><span class="evolution-sr-only">추세를 볼 재료 조합</span><select data-evolution-series><option value="best">가장 싼 조합</option></select></label>
+  </div>
+  <div class="evolution-chart" data-evolution-chart hidden>
+    <svg viewBox="0 0 680 220" role="img" aria-labelledby="evolution-chart-title" data-evolution-svg><title id="evolution-chart-title">진화재료 대표가격 추세</title></svg>
+    <p class="evolution-chart-range" data-evolution-range></p>
+  </div>
+  <div class="evolution-empty" data-evolution-empty>
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M4 4v16h16M7 14l4-4 4 2 5-7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <span data-evolution-empty-message>가격 추세 준비 중</span>
+  </div>
+  <p class="evolution-status" data-evolution-status role="status"></p>
+  <details class="evolution-history-details" data-evolution-history-details hidden><summary>가격 이력</summary><div class="evolution-table-scroll"><table class="evolution-table"><caption class="evolution-sr-only">수집 시점별 실제 가격</caption><thead><tr><th scope="col">수집 시점</th><th scope="col">재료 조합</th><th scope="col">가격 ({{ price_unit }})</th></tr></thead><tbody data-evolution-history-rows></tbody></table></div></details>
+  </div>
+  <script type="application/json" data-evolution-data>{{ materials|tojson }}</script>
+  {% else %}<p class="evolution-empty">가격 준비 중</p>{% endif %}
+</section>
+<script src="{{ url_for('static', filename='js/evolution-material-trends.js') }}?v=20261004-4" defer></script>

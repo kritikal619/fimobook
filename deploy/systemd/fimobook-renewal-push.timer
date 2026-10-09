@@ -1,0 +1,11 @@
+[Unit]
+Description=Check Fimobook renewal times every 15 seconds
+
+[Timer]
+OnBootSec=20s
+OnUnitActiveSec=15s
+AccuracySec=1s
+Unit=fimobook-renewal-push.service
+
+[Install]
+WantedBy=timers.target

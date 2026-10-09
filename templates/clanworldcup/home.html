@@ -1,0 +1,746 @@
+{% extends "base.html" %}
+
+{% block title %}머니리그 | 피모북{% endblock %}
+
+{% block extra_head %}
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="피모북">
+<meta property="og:locale" content="ko_KR">
+<meta property="og:title" content="머니리그 | 피모북">
+<meta property="og:description" content="FC모바일 클랜 대항전 머니리그 경기 일정, 브라켓, 매치 정보를 확인하세요.">
+<meta property="og:url" content="{{ url_for('clanworldcup_home', _external=True) }}">
+<meta property="og:image" content="{{ url_for('static', filename='images/clanworldcup-logo.jpg', _external=True) }}">
+<meta property="og:image:alt" content="머니리그 대회 로고">
+<style>
+  :root{
+    --cw-bg:#f6f8fc;
+    --cw-card:#ffffff;
+    --cw-text:#0f172a;
+    --cw-sub:#475569;
+    --cw-line:#e6edf5;
+    --cw-brand:#1d4ed8;
+    --cw-brand2:#228be6;
+    --cw-soft:#eef2ff;
+    --cw-shadow:0 10px 28px rgba(15,23,42,0.08);
+    --cw-radius:16px;
+  }
+
+  /* ✅ 모바일 가로 튀어나옴 “안전장치” */
+  html, body { overflow-x: hidden; }
+  *, *::before, *::after { box-sizing: border-box; } /* 🔥 튀어나옴 방지 핵심 */
+
+  .cw-page{
+    width:100%;
+    max-width: 100%;
+    display:flex;
+    justify-content:center;
+    padding: 18px 0; /* ✅ PC 그대로 */
+    overflow-x: hidden; /* 🔥 */
+  }
+
+  .cw-container{
+    width:100%;
+    max-width: 980px;   /* ✅ PC 그대로 */
+    margin: 0 auto;
+    padding: 0 14px;    /* ✅ PC 그대로 */
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+    min-width: 0;       /* 🔥 flex/grid 내부 오버플로우 방지 */
+  }
+
+  .cw-hero{
+    width:100%;
+    border-radius: var(--cw-radius);
+    padding: 22px 20px;
+    color:#fff;
+    box-shadow: 0 16px 36px rgba(29,78,216,0.22);
+    background: radial-gradient(1200px 400px at 20% 20%, rgba(255,255,255,0.18), transparent 60%),
+                linear-gradient(135deg, var(--cw-brand) 0%, var(--cw-brand2) 65%, #4dabf7 100%);
+  }
+  .cw-hero-top{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    flex-wrap:wrap;
+    margin-bottom: 8px;
+  }
+  .cw-logo{
+    width: 200px;
+    max-width: 100%;
+    height: auto;
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.35);
+    box-shadow: 0 10px 24px rgba(15,23,42,0.2);
+  }
+
+  .cw-hero h1{
+    margin: 10px 0 6px;
+    font-size: 24px;
+    letter-spacing:-0.5px;
+  }
+  .cw-hero p{
+    margin: 0 0 14px;
+    color: rgba(255,255,255,0.92);
+    font-weight: 600;
+    line-height:1.45;
+  }
+
+  .cw-badges{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+  }
+  .cw-badge{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    padding:7px 10px;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.14);
+    border: 1px solid rgba(255,255,255,0.2);
+    font-weight:800;
+    font-size: 12px;
+    max-width: 100%;
+  }
+
+  .cw-actions{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    margin-top: 6px;
+    width:100%;
+    min-width:0;
+  }
+  .cw-link{
+    padding:10px 14px;
+    border-radius: 12px;
+    background: rgba(255,255,255,0.14);
+    border: 1px solid rgba(255,255,255,0.22);
+    color:#fff;
+    font-weight: 800;
+    text-decoration:none;
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    max-width: 100%;
+  }
+  .cw-link:hover{ background: rgba(255,255,255,0.22); }
+
+  .cw-grid{
+    display:grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 12px;
+    width:100%;
+    min-width:0;
+  }
+
+  .cw-card{
+    width:100%;
+    background: var(--cw-card);
+    border: 1px solid var(--cw-line);
+    border-radius: var(--cw-radius);
+    padding: 16px 18px;
+    box-shadow: 0 8px 22px rgba(15,23,42,0.06);
+    overflow: hidden;
+    min-width:0;
+  }
+
+  .cw-card h3{
+    margin:0 0 10px;
+    font-size: 16px;
+    color: var(--cw-text);
+    letter-spacing:-0.2px;
+  }
+
+  .cw-meta{
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+    color: var(--cw-sub);
+    font-size: 14px;
+    line-height: 1.5;
+    max-width: 100%;
+    min-width:0;
+  }
+
+  .cw-subtext{
+    color: var(--cw-sub);
+    font-size: 14px;
+    margin: 0 0 10px;
+    line-height:1.55;
+    max-width: 100%;
+  }
+
+  .cw-row{
+    width:100%;
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    align-items:center;
+    min-width: 0;
+  }
+
+  .cw-input, .cw-select{
+    padding: 10px 12px;
+    border-radius: 12px;
+    border: 1px solid #d7e3f4;
+    background:#fff;
+    min-width: 160px;
+    font-family: inherit;
+    outline:none;
+    max-width: 100%;
+  }
+  .cw-input:focus, .cw-select:focus{
+    border-color: rgba(29,78,216,0.55);
+    box-shadow: 0 0 0 4px rgba(29,78,216,0.12);
+  }
+
+  .cw-btn{
+    padding: 10px 14px;
+    border-radius: 12px;
+    border:none;
+    font-weight: 800;
+    cursor:pointer;
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    max-width: 100%;
+  }
+  .cw-btn.primary{ background: var(--cw-brand2); color:#fff; }
+  .cw-btn.primary:hover{ filter: brightness(0.98); }
+  .cw-btn.ghost{
+    background: #f2f5fb;
+    color:#0f172a;
+    border: 1px solid #d7e3f4;
+  }
+  .cw-btn.ghost:hover{ background:#eaf0fa; }
+
+  .cw-status{
+    margin-top: 10px;
+    font-size: 13px;
+    color: var(--cw-sub);
+    max-width: 100%;
+    word-break: break-word;
+  }
+
+  .cw-alert{
+    margin-top: 10px;
+    padding: 10px 12px;
+    border-radius: 12px;
+    background: #eef6ff;
+    border: 1px solid #cfe4ff;
+    color:#0f3d73;
+    font-size: 14px;
+    max-width: 100%;
+  }
+
+  .cw-list{
+    padding-left: 18px;
+    margin: 6px 0 0;
+    color: var(--cw-sub);
+    line-height:1.6;
+    font-size: 14px;
+    max-width: 100%;
+  }
+
+  .cw-match-grid{
+    display:grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 10px;
+    width:100%;
+    min-width:0;
+  }
+
+  .cw-match-card{
+    background:#fff;
+    border: 1px solid var(--cw-line);
+    border-radius: 14px;
+    padding: 12px 14px;
+    box-shadow: 0 6px 16px rgba(15,23,42,0.05);
+    font-size: 14px;
+    color: var(--cw-text);
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  .cw-tag{
+    display:inline-flex;
+    align-items:center;
+    padding: 5px 10px;
+    border-radius: 999px;
+    background:#f2f5fb;
+    border:1px solid #d7e3f4;
+    font-weight:900;
+    font-size: 12px;
+    color:#0f172a;
+    max-width: 100%;
+  }
+
+  .cw-small{
+    font-size: 12px;
+    color: #64748b;
+    line-height: 1.5;
+    max-width: 100%;
+    word-break: break-word;
+  }
+
+  .cw-link-btn{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    padding: 9px 12px;
+    border-radius: 12px;
+    border:1px solid #d7e3f4;
+    background:#fff;
+    color:#0f172a;
+    font-weight: 800;
+    text-decoration:none;
+    max-width: 100%;
+  }
+  .cw-link-btn:hover{ background:#f2f5fb; }
+
+  .cw-rule-columns{
+    display:grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px,1fr));
+    gap: 12px;
+    width:100%;
+    min-width:0;
+  }
+  .cw-rule-item{
+    background:#fff;
+    border:1px solid var(--cw-line);
+    border-radius: 14px;
+    padding: 14px 16px;
+    box-shadow: 0 6px 16px rgba(15,23,42,0.045);
+    min-width:0;
+    overflow:hidden;
+  }
+  .cw-rule-item h4{
+    margin:0 0 8px;
+    font-size: 14px;
+    color: var(--cw-text);
+  }
+  .cw-rule-item ul{
+    margin:0;
+    padding-left: 18px;
+    color: var(--cw-sub);
+    line-height: 1.6;
+    font-size: 14px;
+  }
+
+  /* ✅ 모바일에서만: 상단은 base.html에서 처리했고, 여기선 “오른쪽 튀어나옴” 확실히 차단 */
+  @media (max-width: 640px){
+    .cw-page{
+      padding: 10px 0;
+      max-width: 100%;
+      overflow-x: hidden;
+    }
+
+    .cw-container{
+      padding: 0 8px;
+      max-width: min(980px, 100vw); /* 🔥 뷰포트 초과 방지 */
+      width: 100%;
+      overflow-x: hidden;
+    }
+
+    .cw-hero{ padding: 20px 16px; }
+    .cw-logo{ width: 170px; }
+    .cw-hero h1{ font-size: 22px; }
+
+    .cw-actions{ width:100%; }
+    .cw-link{ flex: 1 1 auto; justify-content:center; }
+
+    /* 🔥 인풋/셀렉트가 min-width로 튀는 것 완전 차단 */
+    .cw-input, .cw-select{ min-width: 0; width:100%; }
+
+    .cw-row{ flex-direction: column; align-items: stretch; }
+    .cw-row .cw-btn,
+    .cw-row .cw-link-btn{ width:100%; justify-content:center; }
+
+    .cw-match-card{ padding: 12px; }
+    .cw-rule-columns{ grid-template-columns: 1fr; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="cw-page">
+  <div class="cw-container">
+
+    <div class="cw-hero">
+      <div class="cw-hero-top">
+        <img class="cw-logo" src="{{ url_for('static', filename='images/clanworldcup-logo.jpg') }}" alt="머니리그 로고">
+      </div>
+      <div class="cw-badges">
+        <span class="cw-badge">FC모바일 대회</span>
+        <span class="cw-badge">클랜 대회</span>
+      </div>
+
+      <h1>머니리그</h1>
+      <p>21개 클랜이 조별리그와 토너먼트로 겨루는 FC모바일 클랜 최강전.</p>
+
+      <div class="cw-actions">
+        <a class="cw-link" href="{{ url_for('clanworldcup_bracket') }}">브라켓</a>
+        <a class="cw-link" href="{{ url_for('clanworldcup_groups') }}">조별리그</a>
+      </div>
+    </div>
+
+    <div class="cw-grid">
+      <div class="cw-card">
+        <h3>대회 개요</h3>
+        <div class="cw-meta">
+          <div>종목: FC모바일</div>
+          <div>참가: 클랜 21팀</div>
+          <div>구조: 조별리그(4개 조, 1조 6팀/2~4조 5팀) → 8강 → 4강 → 결승</div>
+          <div>매치: 5슬롯 1:1 개인전 · 단판(1차전)</div>
+        </div>
+      </div>
+
+      <div class="cw-card">
+        <h3>멤버코드</h3>
+        <p class="cw-subtext">멤버 코드는 클랜장이 가지고 있음.</p>
+
+        <div class="cw-row">
+          <input class="cw-input" id="cwCodeInput" type="text" placeholder="멤버코드 입력" aria-label="멤버코드" />
+          <button class="cw-btn primary" id="cwSaveBtn" type="button">저장</button>
+          <button class="cw-btn ghost" id="cwClearBtn" type="button">삭제</button>
+        </div>
+
+        <div class="cw-status" id="cwStatus">저장된 멤버코드 없음</div>
+      </div>
+    </div>
+
+    <div class="cw-card">
+      <h3>진행 구조</h3>
+      <ul class="cw-list">
+        <li>조별리그: A~D 조 (1조 6팀 / 2~4조 5팀) / 각 조 상위 2팀 진출</li>
+        <li>토너먼트: 8강 → 4강 → 결승</li>
+        <li>승점: 승리 1회당 3점 (무승부 없음)</li>
+      </ul>
+
+      <div class="cw-alert" id="cwNavHint">멤버코드 입력 후 매치 상세에서 결과 입력 가능</div>
+
+
+    </div>
+
+    <div class="cw-card" id="live-bracket">
+      <h3>매치 리스트</h3>
+
+      <div class="cw-row" style="margin-bottom:10px;">
+        <select class="cw-select" id="phaseFilter" aria-label="페이즈 필터">
+          <option value="__NONE__" selected>페이즈 선택</option>
+          <option value="GROUP">조별리그</option>
+          <option value="QF">8강</option>
+          <option value="SF">4강</option>
+          <option value="F">결승</option>
+        </select>
+
+        <select class="cw-select" id="groupFilter" aria-label="조 필터" disabled>
+          <option value="">조 선택</option>
+          <option value="ALL">전체 조</option>
+          <option value="A">A조</option><option value="B">B조</option><option value="C">C조</option><option value="D">D조</option>
+        </select>
+
+        <button class="cw-btn ghost" id="refreshMatches" type="button">조회</button>
+        <a class="cw-link-btn" href="{{ url_for('clanworldcup_bracket') }}">브라켓</a>
+
+      </div>
+
+      <div class="cw-match-grid" id="matchGrid">
+        <div class="cw-small">페이즈를 선택한 뒤 “조회”를 눌러주세요.</div>
+      </div>
+
+      <div class="cw-small" style="margin-top:8px;">
+        목록은 누구나 볼 수 있고, 결과 입력은 매치 상세에서 멤버코드가 필요합니다.
+      </div>
+    </div>
+
+    <div class="cw-card">
+      <h3>클랜 매치 규칙</h3>
+      <div class="cw-rule-columns">
+        <div class="cw-rule-item">
+          <h4>매치 구성</h4>
+          <ul>
+            <li>클랜 대 클랜, 슬롯 1~5의 1:1 개인전</li>
+            <li>양 팀은 순번(1~5)을 제출, 같은 순번끼리 대결</li>
+            <li>매치 승자는 홈 승수 / 원정 승수 비교로만 결정</li>
+          </ul>
+        </div>
+
+        <div class="cw-rule-item">
+          <h4>라운드별 방식</h4>
+          <ul>
+            <li>조별리그·8강: 5경기 모두 완료</li>
+            <li>4강·결승: 한쪽 3승 시 즉시 종료(잔여 슬롯은 미진행)</li>
+          </ul>
+        </div>
+
+        <div class="cw-rule-item">
+          <h4>경기 결과</h4>
+          <ul>
+            <li>정규시간 1:1, 연장/승부차기로 승패 확정</li>
+            <li>점수는 동점 없이 입력(동점 입력은 무효)</li>
+          </ul>
+        </div>
+
+        <div class="cw-rule-item">
+          <h4>점수 업로드</h4>
+          <ul>
+            <li>스크린샷과 함께 점수 업로드</li>
+            
+          </ul>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  const cwStorageKey = "clanworldcup_memberCode";
+  const codeInput = document.getElementById("cwCodeInput");
+  const saveBtn = document.getElementById("cwSaveBtn");
+  const clearBtn = document.getElementById("cwClearBtn");
+  const statusEl = document.getElementById("cwStatus");
+  const hint = document.getElementById("cwNavHint");
+
+  const matchGrid = document.getElementById("matchGrid");
+  const phaseFilter = document.getElementById("phaseFilter");
+  const groupFilter = document.getElementById("groupFilter");
+  const refreshBtn = document.getElementById("refreshMatches");
+
+  function updateStatus(code) {
+    statusEl.textContent = code ? `저장됨: ${code}` : "저장된 멤버코드 없음";
+    hint.textContent = code
+      ? "저장된 멤버코드로 매치 상세에서 결과 입력 가능"
+      : "멤버코드 입력 후 매치 상세에서 결과 입력 가능";
+  }
+
+  const existing = localStorage.getItem(cwStorageKey);
+  if (existing) {
+    codeInput.value = existing;
+    updateStatus(existing);
+  }
+
+  saveBtn.addEventListener("click", () => {
+    const code = (codeInput.value || "").trim();
+    if (!code) return;
+    localStorage.setItem(cwStorageKey, code);
+    updateStatus(code);
+  });
+
+  clearBtn.addEventListener("click", () => {
+    localStorage.removeItem(cwStorageKey);
+    codeInput.value = "";
+    updateStatus("");
+  });
+
+  function updateGroupFilterEnabled() {
+    const phase = phaseFilter.value;
+    const enable = (phase === "GROUP");
+    groupFilter.disabled = !enable;
+    if (!enable) groupFilter.value = "";
+  }
+
+  let clanMap = {};
+
+  async function loadClans() {
+    try {
+      const res = await fetch("/clanworldcup/api/clans", { headers: { "Accept": "application/json" } });
+      const data = await res.json();
+      if (data && data.ok && Array.isArray(data.clans)) {
+        clanMap = {};
+        data.clans.forEach(c => { clanMap[c.clanId] = c.name || c.clanId; });
+      }
+    } catch (e) {
+      clanMap = {};
+    }
+  }
+
+  function requireSelectionHint(msg) {
+    matchGrid.innerHTML = `<div class="cw-small">${msg || '페이즈를 선택한 뒤 “조회”를 눌러주세요.'}</div>`;
+  }
+
+  async function loadMatches() {
+    const phase = phaseFilter.value;
+    const group = groupFilter.value;
+
+    if (!phase || phase === "__NONE__") {
+      requireSelectionHint('페이즈를 선택한 뒤 “조회”를 눌러주세요.');
+      return;
+    }
+
+    if (phase === "GROUP" && !group) {
+      requireSelectionHint('조별리그는 조(A~D) 또는 전체 조를 선택한 뒤 “조회”를 눌러주세요.');
+      return;
+    }
+
+    matchGrid.innerHTML = '<div class="cw-small">매치를 불러오는 중...</div>';
+
+    const params = new URLSearchParams();
+    params.set("phase", phase);
+    if (phase === "GROUP" && group) params.set("group", group);
+
+    const url = `/clanworldcup/api/matches?${params.toString()}`;
+
+    try {
+      await loadClans();
+      const res = await fetch(url, { headers: { "Accept": "application/json" } });
+      const data = await res.json();
+
+      if (!data || !data.ok) {
+        matchGrid.innerHTML = `<div class="cw-small">${(data && data.error) ? data.error : "매치를 불러올 수 없습니다."}</div>`;
+        return;
+      }
+
+      renderMatches(Array.isArray(data.matches) ? data.matches : []);
+    } catch (e) {
+      matchGrid.innerHTML = '<div class="cw-small">매치를 불러올 수 없습니다.</div>';
+    }
+  }
+
+  function escapeHtml(str) {
+    return String(str)
+      .replaceAll("&","&amp;")
+      .replaceAll("<","&lt;")
+      .replaceAll(">","&gt;")
+      .replaceAll('"',"&quot;")
+      .replaceAll("'","&#039;");
+  }
+
+  function renderMatches(list) {
+    if (!list.length) {
+      matchGrid.innerHTML = '<div class="cw-small">등록된 매치가 없습니다.</div>';
+      return;
+    }
+
+    matchGrid.innerHTML = "";
+    list.forEach(m => {
+      const homeName = nameOf(m.homeClanId) || "미정";
+      const awayName = nameOf(m.awayClanId) || "미정";
+
+      const div = document.createElement("div");
+      div.className = "cw-match-card";
+
+      const phase = m.phase || "-";
+      const status = m.status || "PENDING";
+      const winsHome = (m.homeWins ?? 0);
+      const winsAway = (m.awayWins ?? 0);
+      const groupVal = m.group || "-";
+      const mode = m.bestOfMode || "-";
+
+      const matchId = m.id || "";
+      const matchHref = `/clanworldcup/match/${encodeURIComponent(matchId)}`;
+
+      div.innerHTML = `
+        <div class="cw-row" style="justify-content:space-between; gap:10px;">
+          <div class="cw-tag">${escapeHtml(phaseLabel(phase))}</div>
+        ${statusLabel(status) ? `<div class=\"cw-small\">${escapeHtml(statusLabel(status))}</div>` : ""}
+        </div>
+
+        <div style="margin:8px 0 6px;">
+          <strong>${escapeHtml(homeName)} 대 ${escapeHtml(awayName)}</strong>
+        </div>
+
+        <div class="cw-small">승수: ${winsHome} - ${winsAway}</div>
+        <div class="cw-small">${groupVal && groupVal !== "-" ? `조: ${escapeHtml(groupVal)} · ` : ""}방식: ${escapeHtml(modeLabel(mode))}</div>
+
+        <div style="margin-top:10px;">
+          <a class="cw-link-btn" href="${matchHref}">매치 상세</a>
+        </div>
+      `;
+
+      matchGrid.appendChild(div);
+    });
+  }
+
+  refreshBtn.addEventListener("click", loadMatches);
+
+  phaseFilter.addEventListener("change", () => {
+    updateGroupFilterEnabled();
+    requireSelectionHint('“조회”를 눌러 매치를 불러오세요.');
+  });
+
+  groupFilter.addEventListener("change", () => {
+    if (phaseFilter.value === "GROUP") {
+      requireSelectionHint('“조회”를 눌러 매치를 불러오세요.');
+    }
+  });
+
+  updateGroupFilterEnabled();
+  requireSelectionHint();
+
+  async function applyQueryFilters() {
+    const params = new URLSearchParams(window.location.search);
+    const phaseParam = (params.get("phase") || "").toUpperCase();
+    const groupParam = (params.get("group") || "").toUpperCase();
+    if (phaseParam) {
+      phaseFilter.value = phaseParam;
+      updateGroupFilterEnabled();
+      if (phaseParam === "GROUP" && groupParam) {
+        groupFilter.value = groupParam;
+      }
+      await loadMatches();
+      const target = document.getElementById("live-bracket");
+      if (target) {
+        requestAnimationFrame(() => {
+          target.scrollIntoView({ behavior: "smooth", block: "start" });
+        });
+      }
+    }
+  }
+
+  applyQueryFilters();
+
+  function nameOf(clanId) {
+    if (!clanId) return "미정";
+    if (clanMap[clanId]) return clanMap[clanId];
+    
+    if (String(clanId).startsWith("WIN-")) {
+      return "미정 (" + clanId.replace("WIN-", "") + ")";
+    }
+    const seedMatch = String(clanId).match(/^([A-D])([12])$/);
+    if (seedMatch) {
+      return "미정 (" + seedMatch[1] + "조 " + seedMatch[2] + "위)";
+    }
+    
+    return clanId;
+  }
+
+  function isPlaceholderName(name) {
+    if (!name) return true;
+    return /^team\\s*\\d+$/i.test(String(name).trim());
+  }
+
+  function statusLabel(status) {
+    const key = String(status || "").toUpperCase();
+    const map = {
+      "FINAL": "종료",
+      "NOT_PLAYED": "미진행",
+    };
+    if (key === "PENDING" || key === "IN_PROGRESS") return "";
+    return map[key] || status || "-";
+  }
+
+  function phaseLabel(phase) {
+    const key = String(phase || "").toUpperCase();
+    const map = {
+      "GROUP": "조별리그",
+      "QF": "8강",
+      "SF": "4강",
+      "F": "결승",
+    };
+    return map[key] || phase || "-";
+  }
+
+  function modeLabel(mode) {
+    const key = String(mode || "").toUpperCase();
+    const map = {
+      "ALL5": "5판제",
+      "FIRST3": "3선승",
+    };
+    return map[key] || mode || "-";
+  }
+</script>
+{% endblock %}

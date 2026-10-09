@@ -1,0 +1,30 @@
+/* Quiet surfaces; feedback belongs to controls that perform an action. */
+:is(.home-page, .times-page) a:hover {
+  text-decoration: none;
+}
+
+:is(.home-page, .times-page) :is(a[href], button, summary):focus-visible {
+  outline: 2px solid #059669;
+  outline-offset: 3px;
+}
+
+.material-state-layer {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: inherit;
+  pointer-events: none;
+  color: inherit;
+}
+
+.material-ripple {
+  position: absolute;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0;
+  pointer-events: none;
+}
+
+html[data-theme="dark"] :is(.home-page, .times-page) :is(a[href], button, summary):focus-visible {
+  outline-color: #6ee7b7;
+}

@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% set pack_seo_title = 'FC모바일 팩깡 시뮬레이터 · 팩오프너 | 피모북' %}
+{% set pack_seo_description = 'FC모바일 팩깡 시뮬레이터, 피모북 팩오프너에서 무료로 선수팩을 열어보세요. 넥슨 공식 상점 확률표를 바탕으로 선수 카드 뽑기, 시즌별 오프닝 연출, 획득 기록과 가치를 확인할 수 있습니다. 실제 게임 계정에 보상이 지급되지 않는 체험 기능입니다.' %}
+{% set og_title = pack_seo_title %}
+{% set og_description = pack_seo_description %}
+{% block title %}{{ pack_seo_title }}{% endblock %}
+{% block body_class %}pack-opener-page{% endblock %}
+{% block extra_head %}
+{% include "_adsense_head.html" %}
+<meta name="csrf-token" content="{{ csrf_token }}">
+<meta name="description" content="{{ pack_seo_description }}">
+<meta name="twitter:title" content="{{ pack_seo_title }}">
+<meta name="twitter:description" content="{{ pack_seo_description }}">
+<script type="application/ld+json">
+{{ {
+  '@context': 'https://schema.org',
+  '@type': 'WebApplication',
+  '@id': 'https://fcbook.info/pack-opener#app',
+  'name': 'FC모바일 팩깡 시뮬레이터 · 피모북 팩오프너',
+  'alternateName': ['FC모바일 팩오프너', 'FC모바일 팩 오프너', 'FC Mobile Pack Opener'],
+  'url': 'https://fcbook.info/pack-opener',
+  'description': pack_seo_description,
+  'inLanguage': 'ko-KR',
+  'applicationCategory': 'GameApplication',
+  'operatingSystem': 'Any',
+  'isAccessibleForFree': true,
+  'offers': {'@type': 'Offer', 'price': '0', 'priceCurrency': 'KRW'},
+  'featureList': ['공식 상점 확률표 기반 선수팩 시뮬레이션', '시즌별 팩 오프닝 연출', '획득 기록과 가치 확인']
+} | tojson }}
+</script>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/pack-opener.css', v='20261008-shop-2') }}">
+{% endblock %}
+{% block content %}
+<section class="pack-workspace">
+  <header class="pack-heading">
+    <h1>팩 오프너</h1>
+    <button id="choose-bat-pack" class="choose-bat-pack" type="button"><img src="{{ url_for('static', filename='pack-opener/images/kkaebi/moon-token.png') }}" alt="" width="30" height="30"><span>알쏭뚝딱 방망이 팩 선택</span><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
+  </header>
+  <div class="pack-layout">
+    <button id="choose-pack" class="choose-pack" type="button">팩 선택 <span id="mobile-pack-name"></span><i class="bi bi-chevron-down" aria-hidden="true"></i></button>
+    <dialog id="pack-shop-dialog" class="pack-shop-dialog" aria-label="상점 팩 선택"><div id="mobile-shop-host"></div></dialog>
+    <div id="desktop-shop-host"><aside class="pack-shop" aria-label="상점 팩 선택">
+      <div class="shop-heading"><h2>상점</h2><button id="close-pack-shop" type="button" aria-label="팩 선택 닫기">×</button><span id="pack-count"></span></div>
+      <div class="shop-filters shop-categories" role="group" aria-label="팩 상품 섹션"><button type="button" data-category="all" class="active" aria-pressed="true">전체</button><button type="button" data-category="STORE" aria-pressed="false">상점</button><button type="button" data-category="FV_RELAY" aria-pressed="false">FV 릴레이</button><button type="button" data-category="KKAEBI_BAT" aria-pressed="false">알쏭뚝딱 방망이</button></div><label class="pack-search"><i class="bi bi-search" aria-hidden="true"></i><input id="pack-search" type="search" placeholder="팩 이름 검색" aria-label="팩 이름 검색"></label>
+      <div id="pack-type-filters" class="shop-filters" role="group" aria-label="팩 종류"><button type="button" data-filter="all" class="active" aria-pressed="true">전체</button><button type="button" data-filter="player" aria-pressed="false">선수팩</button><button type="button" data-filter="set" aria-pressed="false">세트</button></div>
+      <div class="pack-list" id="pack-list" aria-busy="true"></div>
+      <p class="shop-source">넥슨 공식 확률표 기준<br><span id="source-date"></span> <a href="https://fcmobile.nexon.com/ForumProbability" target="_blank" rel="noopener">원본 보기 ↗</a></p>
+    </aside></div>
+    <div class="pack-main">
+      <div class="stage-frame" id="stage-frame">
+
+      <div class="opening-stage initial-loading" id="opening-stage" data-phase="loading" aria-label="팩 오프닝 화면">
+      <div id="pack-loading" class="pack-loading" aria-label="자료 준비"><img class="pack-loading-logo" src="{{ url_for('static', filename='pack-opener/images/loading-logo-animated.png') }}" width="160" height="160" alt="" aria-hidden="true"></div>
+        <div class="stage-background"></div>
+        <video id="cinematic-video" class="stage-video" muted playsinline webkit-playsinline preload="metadata" aria-hidden="true"></video>
+        <div class="stage-top"><span id="stage-pack-name">상점 팩을 선택해주세요</span><div class="stage-tools"><button id="sound-toggle" type="button" aria-label="소리 켜기" aria-pressed="false" title="소리 켜기"><i class="bi bi-volume-mute" aria-hidden="true"></i></button><button id="fullscreen-toggle" type="button" aria-label="전체 화면" title="전체 화면"><i class="bi bi-arrows-fullscreen" aria-hidden="true"></i></button></div></div>
+        <div class="pack-idle" id="pack-idle"><div class="pack-aura"></div><div class="pack-shockwave"></div><img class="opening-pack" src="{{ url_for('static', filename='pack-opener/images/pack.png') }}" alt="FC모바일 선수팩" draggable="false"><span class="pack-idle-caption">팩을 열어 선수를 만나보세요</span></div>
+        <div class="opening-flash" id="opening-flash" aria-hidden="true"></div>
+        <canvas id="opening-particles" aria-hidden="true"></canvas>
+        <div class="reveal-hint" id="reveal-hint" aria-hidden="true"></div>
+        <div id="hero-reward" class="hero-reward"></div>
+        <section id="reward-flow" class="reward-flow" hidden aria-label="팩 보상 확인">
+          <h2 id="reward-flow-title"></h2>
+          <div id="reward-step" class="reward-step" hidden>
+            <button id="reward-pack" class="reward-pack" type="button" aria-label="다음 보상 열기"><span id="reward-remaining" class="reward-remaining"></span><img src="{{ url_for('static', filename='pack-opener/images/pack.png') }}" alt="남은 보상 팩" draggable="false"></button>
+            <button id="reward-current" class="reward-current" type="button" aria-label="다음 보상 확인"></button>
+          </div>
+          <div id="reward-summary" class="reward-summary" tabindex="0" aria-label="전체 획득 보상 스크롤 영역" hidden><div id="reward-summary-grid" class="reward-summary-grid"></div></div>
+          <p id="reward-flow-status" class="reward-flow-status" role="status" aria-live="polite"></p>
+          <div class="reward-flow-actions"><button id="flow-replay" class="flow-replay" type="button" hidden>다시 보기</button><button id="reveal-all" type="button" hidden>모두 열기</button><button id="reward-next" type="button" hidden>다음 →</button></div>
+        </section>
+        <div class="stage-bottom"><span id="stage-status" role="status" aria-live="polite"></span><button id="open-pack" type="button" disabled>팩 열기 <span aria-hidden="true">→</span></button><button id="show-results" type="button" hidden>다음</button><button id="resume-opening" type="button" hidden>연출 계속하기 ▶</button></div>
+      </div>
+      </div>
+      <div class="selected-pack-info"><div><div class="selected-pack-title"><strong id="selected-pack-name"></strong><span id="selected-pack-price"></span></div><p class="shop-source" id="selected-pack-note" hidden></p></div><button id="show-odds" type="button" disabled><i class="bi bi-list-ul" aria-hidden="true"></i> 확률표</button></div>
+      <div class="pack-quantity-controls"><label for="pack-quantity">열 팩 수량</label><input id="pack-quantity" type="number" min="1" max="100" step="1" value="1" inputmode="numeric"><span>개</span><span id="pack-quantity-cost" aria-live="polite"></span></div>
+      <div id="pack-error" class="pack-error" role="alert" hidden></div>
+      <details class="pack-results" id="pack-results" hidden><summary>획득 상세 · 확률 · 선수 정보</summary><div class="results-heading"><h2>획득 결과</h2><div><button id="replay-opening" type="button">다시 보기</button><button id="open-again" type="button" class="accent-button">한 번 더 열기</button></div></div><div id="result-grid" class="result-grid"></div></details>
+      {% with ad_layout="compact" %}{% include "_adsense_unit.html" %}{% endwith %}
+      <section class="pack-history"><div class="history-heading"><h2>최근 획득</h2><div class="history-actions"><span id="history-total">0개 오픈</span><button id="history-undo" type="button" hidden>초기화 되돌리기</button><button id="history-reset" type="button">초기화</button></div></div><div class="history-totals" aria-live="polite"><div><span>사용 FV</span><strong id="history-fv">0 FV</strong></div><div><span>총 획득 가치</span><strong id="history-value">0 MP</strong></div><div><span>순수 MP</span><strong id="history-mp">0 MP</strong></div><div><span>선수 가치</span><strong id="history-players">0 MP</strong></div></div><div class="history-return"><span>상점 획득 배율</span><strong id="history-return">—</strong><small id="history-won"></small></div><div class="event-history-totals"><strong>알쏭뚝딱 방망이</strong><div class="history-totals"><div><span>사용 조각달</span><strong id="history-event-moon">0개</strong></div><div><span>환산 사용 금액</span><strong id="history-event-cost">0원</strong></div><div><span>이벤트 획득 가치</span><strong id="history-event-value">0 MP</strong></div></div><div class="history-return"><span>이벤트 획득 배율</span><strong id="history-event-return">—</strong><small id="history-event-note"></small></div></div><div id="history-pending" class="history-pending" role="status" hidden><span aria-hidden="true">?</span>보상 확인 중…</div><div id="history-list" class="history-list"><p class="history-empty">팩을 열면 이곳에 획득 기록이 쌓여요.</p></div></section>
+      <details class="pack-guide"><summary>이용안내</summary><p class="pack-disclaimer">피모북 팩오프너는 FC모바일 팩깡 시뮬레이터입니다. 상점에서 선수팩 또는 세트를 선택하고 팩 열기를 누르면 시즌별 오프닝 연출과 뽑기 결과를 확인할 수 있습니다. 넥슨 공식 상점 확률표를 바탕으로 하며, 확률표 버튼에서 상세 확률을 보고 최근 획득에서 기록과 가치를 확인할 수 있습니다.</p><p class="history-value-note">상점 배율 = 상점 획득 가치(MP) ÷ 사용 FV · 1,000 FV = 7,000원. 이벤트 재화와 획득 가치는 별도로 집계합니다. 조각달은 500개 = 25,000원으로 환산하며, 이벤트 배율은 5만원에 5억 MP = 10만배의 표시 기준(획득 가치 ÷ 환산 원화 × 10)을 사용합니다.</p><p id="history-value-note" class="history-value-note"></p><p class="pack-disclaimer">게임 재화가 들지 않는 체험 기능입니다. 결과는 실제 게임 계정에 지급되지 않습니다. 확률은 표시된 수집 시점 기준이며, 제공된 영상에 없는 시즌은 기본 연출을 사용합니다. 획득 기록은 이 브라우저에 저장됩니다.</p></details>
+    </div>
+  </div>
+</section>
+<dialog id="odds-dialog" class="odds-dialog"><div class="odds-heading"><h2>공식 확률표</h2><button id="close-odds" type="button" aria-label="확률표 닫기">×</button></div><div class="odds-breadcrumb"><button id="odds-back" type="button" hidden>← 이전 표</button><strong id="odds-title"></strong></div><p class="odds-note">항목을 누르면 선수별·진화별 상세 확률을 볼 수 있어요. 100% 항목은 확정 적용되며, 나머지 항목 중 하나가 추첨됩니다. 차감 항목은 소모되는 아이템입니다.</p><div class="odds-scroll"><table><thead><tr><th>아이템명</th><th>수량</th><th>OVR</th><th>진화</th><th>확률</th></tr></thead><tbody id="odds-body"></tbody></table></div><div class="odds-footer"><button id="odds-prev" type="button">이전</button><span id="odds-page"></span><button id="odds-next" type="button">다음</button></div><a class="odds-source" href="https://fcmobile.nexon.com/ForumProbability" target="_blank" rel="noopener">넥슨 공식 확률표 ↗</a></dialog>
+{% endblock %}
+{% block extra_scripts %}<script src="{{ url_for('static', filename='js/pack-opener.js', v='20261008-shop-2') }}" defer></script>{% endblock %}

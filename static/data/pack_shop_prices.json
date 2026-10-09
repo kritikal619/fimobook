@@ -1,0 +1,645 @@
+{
+  "source": "User-supplied FC Mobile shop screenshots and confirmed KL26 prices",
+  "asOf": "2026-10-03",
+  "currency": "FV",
+  "prices": {
+    "STORE_PAID_STORE_CP_261001_26TOTS_142_148_C0_C6_MONTHLY": 5000,
+    "STORE_PAID_STORE_CP_261001_26TOTS_147_148_C0_C6_MONTHLY": 54000,
+    "STORE_PAID_STORE_CP_261001_WG26_CMP26_SS26_142_146_C0_C6_MONTHLY": 6500,
+    "STORE_PAID_STORE_CP_261001_26TOTS_139_148_C10_MONTHLY": 6990,
+    "STORE_PAID_STORE_CPM_261001_ALL_136_148_C0_C6": 250,
+    "STORE_PAID_STORE_CPM_261001_ALL_138_148_C0_C6": 500,
+    "STORE_PAID_STORE_CPM_261001_ALL_140_148_C0_C6_26UTOTS_1PER": 1750,
+    "STORE_PAID_STORE_CP_260922_FCA27_136_146_C0_C3": 70,
+    "STORE_PAID_STORE_CP_260922_FCA27_140_146_C0_C3": 680,
+    "STORE_PAID_STORE_CPM_260922_ALL_138_148_C3_C8": 1000,
+    "STORE_PAID_STORE_CPM_260922_ALL_142_148_C3_C8": 2000,
+    "STORE_PAID_STORE_CP_261008_TOP200_132_148_C4_C6": 15900,
+    "STORE_PAID_STORE_CPM_261008_ALL_136_148_C3_C6": 100,
+    "STORE_PAID_STORE_CPM_261008_ALL_136_148_C3_C6_SET": 2400,
+    "STORE_PAID_STORE_CPM_261008_ALL_139_148_C3_C6": 320,
+    "STORE_PAID_STORE_CPM_261008_ALL_139_148_C3_C6_SET": 5120,
+    "STORE_PAID_STORE_CPM_261008_ALL_142_148_C3_C6": 1250,
+    "STORE_PAID_STORE_CPM_261008_RELAY_BRONZE_01": 600,
+    "STORE_PAID_STORE_CP_261008_RELAY_BRONZE_02": 1950,
+    "STORE_PAID_STORE_CP_261008_RELAY_BRONZE_03": 3000,
+    "STORE_PAID_STORE_CP_261008_RELAY_BRONZE_04": 3700,
+    "STORE_PAID_STORE_FV_261008_RELAY_BRONZE_05": 0,
+    "STORE_PAID_STORE_CP_261008_RELAY_SILVER_01": 3000,
+    "STORE_PAID_STORE_CP_261008_RELAY_SILVER_02": 4100,
+    "STORE_PAID_STORE_P_261008_RELAY_SILVER_03": 5600,
+    "STORE_PAID_STORE_P_261008_RELAY_SILVER_04": 6900,
+    "STORE_PAID_STORE_FV_261008_RELAY_SILVER_05": 0,
+    "STORE_PAID_STORE_PM_261008_RELAY_GOLD_01": 7600,
+    "STORE_PAID_STORE_P_261008_RELAY_GOLD_02": 9100,
+    "STORE_PAID_STORE_P_261008_RELAY_GOLD_03": 15000,
+    "STORE_PAID_STORE_CP_261008_RELAY_GOLD_04": 24000,
+    "STORE_PAID_STORE_FV_261008_RELAY_GOLD_05": 0,
+    "STORE_PAID_STORE_P_261008_RELAY_FINAL": 23000,
+    "STORE_PAID_STORE_CP_261001_FCA27_144_146_C0_C6_MONTHLY": 5900
+  },
+  "products": {
+    "STORE_PAID_PROMO_CLAIM_REWARD_260922_CPM_138_148_C0_C6": {
+      "categoryId": "KKAEBI_BAT",
+      "categoryName": "알쏭뚝딱 방망이",
+      "price": 30,
+      "currency": "조각달",
+      "priceAsOf": "2026-10-07",
+      "art": {
+        "src": "/static/pack-opener/images/kkaebi/shop-01.jpg",
+        "crop": [
+          217,
+          165,
+          192,
+          218
+        ],
+        "size": [
+          1280,
+          591
+        ]
+      }
+    },
+    "STORE_PAID_PROMO_CLAIM_REWARD_260922_CPM_137_148_C3_C6": {
+      "categoryId": "KKAEBI_BAT",
+      "categoryName": "알쏭뚝딱 방망이",
+      "price": 60,
+      "currency": "조각달",
+      "priceAsOf": "2026-10-07",
+      "art": {
+        "src": "/static/pack-opener/images/kkaebi/shop-01.jpg",
+        "crop": [
+          417,
+          165,
+          192,
+          218
+        ],
+        "size": [
+          1280,
+          591
+        ]
+      }
+    },
+    "STORE_PAID_PROMO_CLAIM_REWARD_260922_CPM_142_148_C0_C6": {
+      "categoryId": "KKAEBI_BAT",
+      "categoryName": "알쏭뚝딱 방망이",
+      "price": 95,
+      "currency": "조각달",
+      "priceAsOf": "2026-10-07",
+      "art": {
+        "src": "/static/pack-opener/images/kkaebi/shop-01.jpg",
+        "crop": [
+          617,
+          165,
+          192,
+          218
+        ],
+        "size": [
+          1280,
+          591
+        ]
+      }
+    },
+    "STORE_PAID_PROMO_CLAIM_REWARD_260922_CPM_140_148_C3_C6": {
+      "categoryId": "KKAEBI_BAT",
+      "categoryName": "알쏭뚝딱 방망이",
+      "price": 140,
+      "currency": "조각달",
+      "priceAsOf": "2026-10-07",
+      "art": {
+        "src": "/static/pack-opener/images/kkaebi/shop-01.jpg",
+        "crop": [
+          817,
+          165,
+          192,
+          218
+        ],
+        "size": [
+          1280,
+          591
+        ]
+      }
+    },
+    "STORE_PAID_PROMO_CLAIM_REWARD_260922_MP_100M_1B": {
+      "categoryId": "KKAEBI_BAT",
+      "categoryName": "알쏭뚝딱 방망이",
+      "price": 225,
+      "currency": "조각달",
+      "priceAsOf": "2026-10-07",
+      "art": {
+        "src": "/static/pack-opener/images/kkaebi/shop-01.jpg",
+        "crop": [
+          1017,
+          165,
+          192,
+          218
+        ],
+        "size": [
+          1280,
+          591
+        ]
+      }
+    },
+    "STORE_PAID_PROMO_CLAIM_REWARD_260922_CP_139_146_C0": {
+      "categoryId": "KKAEBI_BAT",
+      "categoryName": "알쏭뚝딱 방망이",
+      "price": 85,
+      "currency": "조각달",
+      "priceAsOf": "2026-10-07",
+      "art": {
+        "src": "/static/pack-opener/images/kkaebi/shop-02.jpg",
+        "crop": [
+          217,
+          170,
+          192,
+          218
+        ],
+        "size": [
+          1280,
+          591
+        ]
+      }
+    },
+    "STORE_PAID_PROMO_CLAIM_REWARD_260922_CP_139_146_C6_C11": {
+      "categoryId": "KKAEBI_BAT",
+      "categoryName": "알쏭뚝딱 방망이",
+      "price": 200,
+      "currency": "조각달",
+      "priceAsOf": "2026-10-07",
+      "art": {
+        "src": "/static/pack-opener/images/kkaebi/shop-02.jpg",
+        "crop": [
+          417,
+          170,
+          192,
+          218
+        ],
+        "size": [
+          1280,
+          591
+        ]
+      }
+    },
+    "STORE_PAID_PROMO_CLAIM_REWARD_260922_CP_142_146_C6_C11": {
+      "categoryId": "KKAEBI_BAT",
+      "categoryName": "알쏭뚝딱 방망이",
+      "price": 437,
+      "currency": "조각달",
+      "priceAsOf": "2026-10-07",
+      "art": {
+        "src": "/static/pack-opener/images/kkaebi/shop-02.jpg",
+        "crop": [
+          617,
+          170,
+          192,
+          218
+        ],
+        "size": [
+          1280,
+          591
+        ]
+      }
+    },
+    "STORE_PAID_PROMO_CLAIM_REWARD_260922_CP_139_146_C7_C13": {
+      "categoryId": "KKAEBI_BAT",
+      "categoryName": "알쏭뚝딱 방망이",
+      "price": 767,
+      "currency": "조각달",
+      "priceAsOf": "2026-10-07",
+      "art": {
+        "src": "/static/pack-opener/images/kkaebi/shop-02.jpg",
+        "crop": [
+          817,
+          170,
+          192,
+          218
+        ],
+        "size": [
+          1280,
+          591
+        ]
+      }
+    },
+    "STORE_PAID_PROMO_CLAIM_REWARD_260922_MP_400M_4B": {
+      "categoryId": "KKAEBI_BAT",
+      "categoryName": "알쏭뚝딱 방망이",
+      "price": 900,
+      "currency": "조각달",
+      "priceAsOf": "2026-10-07",
+      "art": {
+        "src": "/static/pack-opener/images/kkaebi/shop-02.jpg",
+        "crop": [
+          1017,
+          170,
+          192,
+          218
+        ],
+        "size": [
+          1280,
+          591
+        ]
+      }
+    },
+    "STORE_PAID_PROMO_CLAIM_REWARD_260922_CP_TOP900_C0_C5": {
+      "categoryId": "KKAEBI_BAT",
+      "categoryName": "알쏭뚝딱 방망이",
+      "price": 320,
+      "currency": "조각달",
+      "priceAsOf": "2026-10-07",
+      "art": {
+        "src": "/static/pack-opener/images/kkaebi/shop-03.jpg",
+        "crop": [
+          217,
+          174,
+          192,
+          218
+        ],
+        "size": [
+          1280,
+          591
+        ]
+      }
+    },
+    "STORE_PAID_PROMO_CLAIM_REWARD_260922_CP_TOP600_C0_C5": {
+      "categoryId": "KKAEBI_BAT",
+      "categoryName": "알쏭뚝딱 방망이",
+      "price": 668,
+      "currency": "조각달",
+      "priceAsOf": "2026-10-07",
+      "art": {
+        "src": "/static/pack-opener/images/kkaebi/shop-03.jpg",
+        "crop": [
+          417,
+          174,
+          192,
+          218
+        ],
+        "size": [
+          1280,
+          591
+        ]
+      }
+    },
+    "STORE_PAID_PROMO_CLAIM_REWARD_260922_CP_TOP300_C0_C5": {
+      "categoryId": "KKAEBI_BAT",
+      "categoryName": "알쏭뚝딱 방망이",
+      "price": 1200,
+      "currency": "조각달",
+      "priceAsOf": "2026-10-07",
+      "art": {
+        "src": "/static/pack-opener/images/kkaebi/shop-03.jpg",
+        "crop": [
+          617,
+          174,
+          192,
+          218
+        ],
+        "size": [
+          1280,
+          591
+        ]
+      }
+    },
+    "STORE_PAID_PROMO_CLAIM_REWARD_260922_CP_TOP100_C0_C5": {
+      "categoryId": "KKAEBI_BAT",
+      "categoryName": "알쏭뚝딱 방망이",
+      "price": 2865,
+      "currency": "조각달",
+      "priceAsOf": "2026-10-07",
+      "art": {
+        "src": "/static/pack-opener/images/kkaebi/shop-03.jpg",
+        "crop": [
+          817,
+          174,
+          192,
+          218
+        ],
+        "size": [
+          1280,
+          591
+        ]
+      }
+    },
+    "STORE_PAID_PROMO_CLAIM_REWARD_260922_MP_1B_10B": {
+      "categoryId": "KKAEBI_BAT",
+      "categoryName": "알쏭뚝딱 방망이",
+      "price": 2248,
+      "currency": "조각달",
+      "priceAsOf": "2026-10-07",
+      "art": {
+        "src": "/static/pack-opener/images/kkaebi/shop-03.jpg",
+        "crop": [
+          1017,
+          174,
+          192,
+          218
+        ],
+        "size": [
+          1280,
+          591
+        ]
+      }
+    },
+    "STORE_PAID_PROMO_CLAIM_REWARD_260922_CP_141_148_C12_C13": {
+      "categoryId": "KKAEBI_BAT",
+      "categoryName": "알쏭뚝딱 방망이",
+      "price": 4014,
+      "currency": "조각달",
+      "priceAsOf": "2026-10-07",
+      "art": {
+        "src": "/static/pack-opener/images/kkaebi/shop-04.jpg",
+        "crop": [
+          217,
+          294,
+          192,
+          218
+        ],
+        "size": [
+          1280,
+          591
+        ]
+      }
+    },
+    "STORE_PAID_PROMO_CLAIM_REWARD_260922_CP_148_C8_C9": {
+      "categoryId": "KKAEBI_BAT",
+      "categoryName": "알쏭뚝딱 방망이",
+      "price": 68820,
+      "currency": "조각달",
+      "priceAsOf": "2026-10-07",
+      "art": {
+        "src": "/static/pack-opener/images/kkaebi/shop-04.jpg",
+        "crop": [
+          417,
+          294,
+          192,
+          218
+        ],
+        "size": [
+          1280,
+          591
+        ]
+      }
+    },
+    "STORE_PAID_STORE_CP_261008_TOP200_132_148_C4_C6": {
+      "price": 15900,
+      "currency": "FV",
+      "priceAsOf": "2026-10-08",
+      "priceSource": "사용자 제공 게임 상점 사진 7388·7390",
+      "purchaseLimit": "계정당 2회",
+      "purchaseNote": "계정당 2회"
+    },
+    "STORE_PAID_STORE_CPM_261008_ALL_136_148_C3_C6": {
+      "price": 100,
+      "currency": "FV",
+      "priceAsOf": "2026-10-08",
+      "priceSource": "사용자 제공 게임 상점 사진 7388·7390"
+    },
+    "STORE_PAID_STORE_CPM_261008_ALL_136_148_C3_C6_SET": {
+      "price": 2400,
+      "currency": "FV",
+      "priceAsOf": "2026-10-08",
+      "priceSource": "사용자 제공 게임 상점 사진 7388·7390",
+      "bundleCount": 30,
+      "purchaseLimit": "계정당 5회",
+      "purchaseNote": "30개 세트 · 계정당 5회"
+    },
+    "STORE_PAID_STORE_CPM_261008_ALL_139_148_C3_C6": {
+      "price": 320,
+      "currency": "FV",
+      "priceAsOf": "2026-10-08",
+      "priceSource": "사용자 제공 게임 상점 사진 7388·7390"
+    },
+    "STORE_PAID_STORE_CPM_261008_ALL_139_148_C3_C6_SET": {
+      "price": 5120,
+      "currency": "FV",
+      "priceAsOf": "2026-10-08",
+      "priceSource": "사용자 제공 게임 상점 사진 7388·7390",
+      "bundleCount": 20,
+      "purchaseLimit": "계정당 5회",
+      "purchaseNote": "20개 세트 · 계정당 5회"
+    },
+    "STORE_PAID_STORE_CPM_261008_ALL_142_148_C3_C6": {
+      "price": 1250,
+      "currency": "FV",
+      "priceAsOf": "2026-10-08",
+      "priceSource": "사용자 제공 게임 상점 사진 7388·7390"
+    },
+    "STORE_PAID_STORE_CPM_261008_RELAY_BRONZE_01": {
+      "price": 600,
+      "currency": "FV",
+      "priceAsOf": "2026-10-08",
+      "categoryId": "FV_RELAY",
+      "categoryName": "FV 릴레이",
+      "purchaseLimit": "계정당 3회",
+      "purchaseNote": "계정당 3회 · 첫번째 주자 · 시뮬레이터에서는 개별 체험",
+      "priceSource": "사용자 제공 게임 상점 사진 7380·7382·7384·7386"
+    },
+    "STORE_PAID_STORE_CP_261008_RELAY_BRONZE_02": {
+      "price": 1950,
+      "currency": "FV",
+      "priceAsOf": "2026-10-08",
+      "categoryId": "FV_RELAY",
+      "categoryName": "FV 릴레이",
+      "purchaseLimit": "계정당 3회",
+      "purchaseNote": "계정당 3회 · 이전 주자 구매 후 해제 · 시뮬레이터에서는 개별 체험",
+      "priceSource": "사용자 제공 게임 상점 사진 7380·7382·7384·7386"
+    },
+    "STORE_PAID_STORE_CP_261008_RELAY_BRONZE_03": {
+      "price": 3000,
+      "currency": "FV",
+      "priceAsOf": "2026-10-08",
+      "categoryId": "FV_RELAY",
+      "categoryName": "FV 릴레이",
+      "purchaseLimit": "계정당 3회",
+      "purchaseNote": "계정당 3회 · 이전 주자 구매 후 해제 · 시뮬레이터에서는 개별 체험",
+      "priceSource": "사용자 제공 게임 상점 사진 7380·7382·7384·7386"
+    },
+    "STORE_PAID_STORE_CP_261008_RELAY_BRONZE_04": {
+      "price": 3700,
+      "currency": "FV",
+      "priceAsOf": "2026-10-08",
+      "categoryId": "FV_RELAY",
+      "categoryName": "FV 릴레이",
+      "purchaseLimit": "계정당 3회",
+      "purchaseNote": "계정당 3회 · 이전 주자 구매 후 해제 · 시뮬레이터에서는 개별 체험",
+      "priceSource": "사용자 제공 게임 상점 사진 7380·7382·7384·7386"
+    },
+    "STORE_PAID_STORE_FV_261008_RELAY_BRONZE_05": {
+      "price": 0,
+      "currency": "FV",
+      "priceAsOf": "2026-10-08",
+      "categoryId": "FV_RELAY",
+      "categoryName": "FV 릴레이",
+      "purchaseLimit": "계정당 3회",
+      "purchaseNote": "계정당 3회 · 네번째 주자 구매 후 해제 · 시뮬레이터에서는 개별 체험",
+      "priceSource": "사용자 제공 게임 상점 사진 7380·7382·7384·7386"
+    },
+    "STORE_PAID_STORE_CP_261008_RELAY_SILVER_01": {
+      "price": 3000,
+      "currency": "FV",
+      "priceAsOf": "2026-10-08",
+      "categoryId": "FV_RELAY",
+      "categoryName": "FV 릴레이",
+      "purchaseLimit": "계정당 3회",
+      "purchaseNote": "계정당 3회 · 첫번째 주자 · 시뮬레이터에서는 개별 체험",
+      "priceSource": "사용자 제공 게임 상점 사진 7380·7382·7384·7386"
+    },
+    "STORE_PAID_STORE_CP_261008_RELAY_SILVER_02": {
+      "price": 4100,
+      "currency": "FV",
+      "priceAsOf": "2026-10-08",
+      "categoryId": "FV_RELAY",
+      "categoryName": "FV 릴레이",
+      "purchaseLimit": "계정당 3회",
+      "purchaseNote": "계정당 3회 · 이전 주자 구매 후 해제 · 시뮬레이터에서는 개별 체험",
+      "priceSource": "사용자 제공 게임 상점 사진 7380·7382·7384·7386"
+    },
+    "STORE_PAID_STORE_P_261008_RELAY_SILVER_03": {
+      "price": 5600,
+      "currency": "FV",
+      "priceAsOf": "2026-10-08",
+      "categoryId": "FV_RELAY",
+      "categoryName": "FV 릴레이",
+      "purchaseLimit": "계정당 3회",
+      "purchaseNote": "계정당 3회 · 이전 주자 구매 후 해제 · 시뮬레이터에서는 개별 체험",
+      "priceSource": "사용자 제공 게임 상점 사진 7380·7382·7384·7386"
+    },
+    "STORE_PAID_STORE_P_261008_RELAY_SILVER_04": {
+      "price": 6900,
+      "currency": "FV",
+      "priceAsOf": "2026-10-08",
+      "categoryId": "FV_RELAY",
+      "categoryName": "FV 릴레이",
+      "purchaseLimit": "계정당 3회",
+      "purchaseNote": "계정당 3회 · 이전 주자 구매 후 해제 · 시뮬레이터에서는 개별 체험",
+      "priceSource": "사용자 제공 게임 상점 사진 7380·7382·7384·7386"
+    },
+    "STORE_PAID_STORE_FV_261008_RELAY_SILVER_05": {
+      "price": 0,
+      "currency": "FV",
+      "priceAsOf": "2026-10-08",
+      "categoryId": "FV_RELAY",
+      "categoryName": "FV 릴레이",
+      "purchaseLimit": "계정당 3회",
+      "purchaseNote": "계정당 3회 · 네번째 주자 구매 후 해제 · 시뮬레이터에서는 개별 체험",
+      "priceSource": "사용자 제공 게임 상점 사진 7380·7382·7384·7386"
+    },
+    "STORE_PAID_STORE_PM_261008_RELAY_GOLD_01": {
+      "price": 7600,
+      "currency": "FV",
+      "priceAsOf": "2026-10-08",
+      "categoryId": "FV_RELAY",
+      "categoryName": "FV 릴레이",
+      "purchaseLimit": "계정당 3회",
+      "purchaseNote": "계정당 3회 · 첫번째 주자 · 시뮬레이터에서는 개별 체험",
+      "priceSource": "사용자 제공 게임 상점 사진 7380·7382·7384·7386"
+    },
+    "STORE_PAID_STORE_P_261008_RELAY_GOLD_02": {
+      "price": 9100,
+      "currency": "FV",
+      "priceAsOf": "2026-10-08",
+      "categoryId": "FV_RELAY",
+      "categoryName": "FV 릴레이",
+      "purchaseLimit": "계정당 3회",
+      "purchaseNote": "계정당 3회 · 이전 주자 구매 후 해제 · 시뮬레이터에서는 개별 체험",
+      "priceSource": "사용자 제공 게임 상점 사진 7380·7382·7384·7386"
+    },
+    "STORE_PAID_STORE_P_261008_RELAY_GOLD_03": {
+      "price": 15000,
+      "currency": "FV",
+      "priceAsOf": "2026-10-08",
+      "categoryId": "FV_RELAY",
+      "categoryName": "FV 릴레이",
+      "purchaseLimit": "계정당 3회",
+      "purchaseNote": "계정당 3회 · 이전 주자 구매 후 해제 · 시뮬레이터에서는 개별 체험",
+      "priceSource": "사용자 제공 게임 상점 사진 7380·7382·7384·7386"
+    },
+    "STORE_PAID_STORE_CP_261008_RELAY_GOLD_04": {
+      "price": 24000,
+      "currency": "FV",
+      "priceAsOf": "2026-10-08",
+      "categoryId": "FV_RELAY",
+      "categoryName": "FV 릴레이",
+      "purchaseLimit": "계정당 3회",
+      "purchaseNote": "계정당 3회 · 이전 주자 구매 후 해제 · 시뮬레이터에서는 개별 체험",
+      "priceSource": "사용자 제공 게임 상점 사진 7380·7382·7384·7386"
+    },
+    "STORE_PAID_STORE_FV_261008_RELAY_GOLD_05": {
+      "price": 0,
+      "currency": "FV",
+      "priceAsOf": "2026-10-08",
+      "categoryId": "FV_RELAY",
+      "categoryName": "FV 릴레이",
+      "purchaseLimit": "계정당 3회",
+      "purchaseNote": "계정당 3회 · 네번째 주자 구매 후 해제 · 시뮬레이터에서는 개별 체험",
+      "priceSource": "사용자 제공 게임 상점 사진 7380·7382·7384·7386"
+    },
+    "STORE_PAID_STORE_P_261008_RELAY_FINAL": {
+      "price": 23000,
+      "currency": "FV",
+      "priceAsOf": "2026-10-08",
+      "categoryId": "FV_RELAY",
+      "categoryName": "FV 릴레이",
+      "purchaseLimit": "계정당 3회",
+      "purchaseNote": "계정당 3회 · 릴레이 01·02·03 완주 보상 획득 후 해제 · 시뮬레이터에서는 개별 체험",
+      "priceSource": "사용자 제공 게임 상점 사진 7380·7382·7384·7386"
+    },
+    "STORE_PAID_STORE_CP_261001_FCA27_144_146_C0_C6_MONTHLY": {
+      "price": 5900,
+      "currency": "FV",
+      "priceAsOf": "2026-10-08",
+      "purchaseLimit": "계정당 10회",
+      "purchaseNote": "계정당 10회",
+      "priceSource": "사용자 제공 게임 상점 사진 7392"
+    },
+    "STORE_PAID_STORE_CP_261001_26TOTS_142_148_C0_C6_MONTHLY": {
+      "price": 5000,
+      "currency": "FV",
+      "priceAsOf": "2026-10-08",
+      "purchaseLimit": "계정당 5회",
+      "purchaseNote": "계정당 5회",
+      "priceSource": "사용자 제공 게임 상점 사진 7392"
+    },
+    "STORE_PAID_STORE_CP_261001_WG26_CMP26_SS26_142_146_C0_C6_MONTHLY": {
+      "price": 6500,
+      "currency": "FV",
+      "priceAsOf": "2026-10-08",
+      "purchaseLimit": "계정당 5회",
+      "purchaseNote": "계정당 5회",
+      "priceSource": "사용자 제공 게임 상점 사진 7392"
+    },
+    "STORE_PAID_STORE_CP_261001_26TOTS_139_148_C10_MONTHLY": {
+      "price": 6990,
+      "currency": "FV",
+      "priceAsOf": "2026-10-08",
+      "purchaseLimit": "계정당 5회",
+      "purchaseNote": "계정당 5회",
+      "priceSource": "사용자 제공 게임 상점 사진 7392"
+    },
+    "STORE_PAID_STORE_CP_261001_26TOTS_147_148_C0_C6_MONTHLY": {
+      "price": 54000,
+      "currency": "FV",
+      "priceAsOf": "2026-10-08",
+      "purchaseLimit": "계정당 1회",
+      "purchaseNote": "계정당 1회",
+      "priceSource": "사용자 제공 게임 상점 사진 7392"
+    }
+  },
+  "tokenArt": {
+    "조각달": {
+      "src": "/static/pack-opener/images/kkaebi/moon-token.png"
+    },
+    "교환 토큰": {
+      "src": "/static/pack-opener/images/kkaebi/shop-02.jpg",
+      "crop": [
+        442,
+        310,
+        62,
+        64
+      ],
+      "size": [
+        1280,
+        591
+      ]
+    }
+  }
+}

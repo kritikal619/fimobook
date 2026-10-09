@@ -55,7 +55,10 @@ def main() -> None:
     pages_urls = [
         _abs("/"),
         _abs("/players"),
+        _abs("/pack-opener"),
         _abs("/traits_selection"),
+        _abs("/player_compare"),
+        _abs("/normal-mode-power-ranking"),
         _abs("/coupons/"),
         _abs("/times"),
     ]

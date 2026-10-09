@@ -4,3 +4,13 @@
 /instance/.secret_key
 /*firebase-adminsdk*.json
 **/*firebase-adminsdk*.json
+
+# Android/TWA local build outputs and signing material
+/android/.gradle/
+/android/app/build/
+/android/build/
+/android/local.properties
+/android/*.keystore
+/android/*.jks
+/android/app-release-*.apk
+/android/app-release-*.aab

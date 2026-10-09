@@ -1,0 +1,17 @@
+[Unit]
+Description=Fimobook full player data and image refresh
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+User=ubuntu
+Group=ubuntu
+WorkingDirectory=/home/ubuntu/fimobook
+Environment=PYTHONUNBUFFERED=1
+ExecStart=/home/ubuntu/fimobook/venv/bin/python -u /home/ubuntu/fimobook/jobs/player_refresh_job.py
+Nice=10
+IOSchedulingClass=idle
+TimeoutStartSec=125min
+KillMode=control-group
+

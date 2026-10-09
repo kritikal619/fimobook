@@ -1,0 +1,40 @@
+<link rel="stylesheet" href="{{ url_for('static', filename='css/player-role-analysis.css', v='20260813-5') }}">
+<section
+  class="player-analysis"
+  data-player-analysis
+  data-reference-url="{{ url_for('static', filename='data/player-analysis-reference.json', v='20260819-1') }}"
+  aria-labelledby="player-analysis-title"
+>
+  <script type="application/json" data-player-analysis-context>
+    {
+      "cid": {{ (player.review_cid or player.cid)|tojson }},
+      "name": {{ player.playerKor|tojson }},
+      "position": {{ player.position|tojson }},
+      "potentialPositions": {{ (player.potentialPositions or [])|tojson }},
+      "baseOvr": {{ player.ovr|tojson }},
+      "footL": {{ player.footL|tojson }},
+      "footR": {{ player.footR|tojson }},
+      "mainFoot": {{ player.mainFoot|tojson }},
+      "skillMovesLevel": {{ player.skillMovesLevel|tojson }},
+      "attWorkRate": {{ player.attWorkRate|tojson }},
+      "defWorkRate": {{ player.defWorkRate|tojson }},
+      "height": {{ player.height|tojson }},
+      "weight": {{ player.weight|tojson }},
+      "traits": {{ (player.traits or [])|tojson }},
+      "playstyles": {{ ((player.playstyles or []) | map(attribute='name') | list)|tojson }}
+    }
+  </script>
+  <div class="player-analysis__head">
+    <div>
+      <h2 id="player-analysis-title">역할·경기 성향</h2>
+      <p>현재 선택한 진화, 훈련, 스킬 설정 기준입니다.</p>
+    </div>
+    <span class="player-analysis__live">설정 변경 시 자동 반영</span>
+  </div>
+  <div class="player-analysis__state" data-player-analysis-state role="status" aria-live="polite">
+    <span class="player-analysis__spinner" aria-hidden="true"></span>
+    비교 데이터를 불러오는 중입니다.
+  </div>
+  <div class="player-analysis__results" data-player-analysis-results hidden></div>
+</section>
+<script src="{{ url_for('static', filename='js/player-role-analysis.js', v='20260819-1') }}" defer></script>

@@ -1,0 +1,127 @@
+{% extends "v2/base.html" %}
+{% set active_page = "search" %}
+
+{% block title %}{% if player %}{{ player.playerKor }} {{ player.className }} | 피모북{% else %}선수를 찾을 수 없어요 | 피모북{% endif %}{% endblock %}
+{% block body_class %}player-detail-page{% endblock %}
+
+{% block main %}
+{% if not player %}
+  <section class="not-found-state">
+    <h1>선수를 찾을 수 없어요</h1>
+    <p>주소가 정확한지 확인하거나 선수 찾기에서 다시 검색해 주세요.</p>
+    <a class="primary-button" href="{{ url_for('v2_index') }}">선수 찾기로 이동</a>
+  </section>
+{% else %}
+  <nav class="breadcrumb" aria-label="현재 위치">
+    <a href="{{ url_for('v2_index') }}">선수 찾기</a>
+    <span aria-hidden="true">/</span>
+    <span>{{ player.playerKor }}</span>
+  </nav>
+
+  {% set detail_card_image = player.bimageThumb or player.bimage or '' %}
+  {% set detail_face_image = player.pimageThumb or player.pimage or '' %}
+  {% set has_detail_card = detail_card_image and 'card-background-placeholder' not in detail_card_image %}
+  {% set has_detail_face = detail_face_image and 'apple-touch-icon' not in detail_face_image and 'favicon' not in detail_face_image %}
+  <section class="player-summary">
+    <div data-fimo-player-card='{{ player_card_meta(player)|tojson }}' class="player-artwork {% if not has_detail_card and not has_detail_face %}is-placeholder{% endif %}"{% if has_detail_card %} style="--card-image: url('{{ detail_card_image }}')"{% endif %}>
+      {% if has_detail_face %}
+        <img src="{{ detail_face_image }}" alt="{{ player.playerKor }}" width="220" height="220">
+      {% elif not has_detail_card %}
+        <span class="detail-initial" aria-hidden="true">{{ (player.playerKor or '?')[:1] }}</span>
+      {% endif %}
+    </div>
+    <div class="summary-content">
+      <div class="summary-badges">
+        <span class="class-badge">{{ player.className or '클래스 미확인' }}</span>
+        <span>{{ player.position or '포지션 미확인' }}</span>
+      </div>
+      <h1>{{ player.playerKor }}</h1>
+      {% if player.playerEng %}<p class="english-name">{{ player.playerEng }}</p>{% endif %}
+      <dl class="summary-data">
+        <div><dt>OVR</dt><dd>{{ player.ovr or '—' }}</dd></div>
+        <div><dt>주발</dt><dd>{{ player.mainFootLabel or '—' }}</dd></div>
+        <div><dt>개인기</dt><dd>{{ player.skillMovesDisplay or '—' }}</dd></div>
+        <div><dt>키 / 몸무게</dt><dd>{% if player.height %}{{ player.height }}cm{% else %}—{% endif %} / {% if player.weight %}{{ player.weight }}kg{% else %}—{% endif %}</dd></div>
+      </dl>
+      <div class="summary-affiliation">
+        {% if player.team %}<span>{{ player.team }}</span>{% endif %}
+        {% if player.nation %}<span>{{ player.nation }}</span>{% endif %}
+      </div>
+      <div class="summary-actions">
+        <a class="primary-button" href="{{ url_for('player_detail', cid=player.cid) }}">리뷰·강화 계산 전체 보기</a>
+        <a class="secondary-button" href="{{ url_for('player_compare_page') }}">비교하기</a>
+      </div>
+    </div>
+  </section>
+
+  <div class="detail-layout">
+    <div class="detail-main">
+      <section class="detail-section" aria-labelledby="stats-title">
+        <div class="detail-section-heading">
+          <div><h2 id="stats-title">세부 능력치</h2><p>기본 카드 능력치 기준</p></div>
+        </div>
+        <div class="stat-groups">
+          {% for group_name, group_stats in stat_groups.items() %}
+            {% if group_name != '기본' %}
+              <section class="stat-group">
+                <h3>{{ group_name }}</h3>
+                <dl>
+                  {% for code, label in group_stats.items() %}
+                    {% set stat_value = player.get(code) %}
+                    <div><dt>{{ label }}</dt><dd class="{% if stat_value is number and stat_value >= 200 %}is-high{% endif %}">{{ stat_value if stat_value is not none else '—' }}</dd></div>
+                  {% endfor %}
+                </dl>
+              </section>
+            {% endif %}
+          {% endfor %}
+        </div>
+      </section>
+
+      {% if player.traits or player.skillLabels or player.playstyles %}
+        <section class="detail-section" aria-labelledby="features-title">
+          <div class="detail-section-heading"><div><h2 id="features-title">특성과 스킬</h2><p>선수에게 적용된 고유 요소</p></div></div>
+          <div class="feature-groups">
+            {% if player.traits %}
+              <div><h3>특성</h3><div class="tag-list">{% for item in player.traits %}<span>{{ item }}</span>{% endfor %}</div></div>
+            {% endif %}
+            {% if player.skillLabels %}
+              <div><h3>스킬</h3><div class="tag-list">{% for item in player.skillLabels %}<span>{{ item }}</span>{% endfor %}</div></div>
+            {% endif %}
+            {% if player.playstyles %}
+              <div><h3>플레이스타일</h3><div class="tag-list">{% for item in player.playstyles %}<span>{{ item.name if item is mapping else item }}</span>{% endfor %}</div></div>
+            {% endif %}
+          </div>
+        </section>
+      {% endif %}
+    </div>
+
+    <aside class="detail-aside">
+      <section class="price-panel">
+        <div class="detail-section-heading"><div><h2>진화별 기준가</h2><p>현재 저장된 가격 정보</p></div></div>
+        <div class="price-list">
+          {% for enhance, price in player.priceByEnhance.items() %}
+            {% if price %}
+              <div class="{% if enhance|int == 0 %}is-current{% endif %}"><span>{% if enhance|int == 0 %}기본{% else %}+{{ enhance }}{% endif %}</span><strong>{{ "{:,}".format(price|int) }} MP</strong></div>
+            {% endif %}
+          {% endfor %}
+        </div>
+      </section>
+
+      {% if other_classes %}
+        <section class="other-classes">
+          <div class="detail-section-heading"><div><h2>다른 클래스</h2><p>같은 선수의 다른 카드</p></div></div>
+          <div class="other-class-list">
+            {% for item in other_classes %}
+              <a href="{{ url_for('v2_player_detail', cid=item.cid) }}">
+                <span class="v2-related-art" data-fimo-player-card='{{ player_card_meta(item)|tojson }}' style="background-image:url('{{ item.bimageThumbSmall or item.bimage }}')"><img src="{{ item.pimageThumbSmall or item.pimage }}" alt="" loading="lazy"></span>
+                <span><strong>{{ item.className or '클래스 미확인' }}</strong><small>{{ item.position or '—' }}</small></span>
+                <b>{{ item.ovr or '—' }}</b>
+              </a>
+            {% endfor %}
+          </div>
+        </section>
+      {% endif %}
+    </aside>
+  </div>
+{% endif %}
+{% endblock %}

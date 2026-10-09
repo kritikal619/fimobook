@@ -1,0 +1,549 @@
+{% extends "base.html" %}
+
+{% block title %}머니리그 매치 {{ match_id }} | 피모북{% endblock %}
+
+{% block extra_head %}
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="피모북">
+<meta property="og:locale" content="ko_KR">
+<meta property="og:title" content="머니리그 매치 {{ match_id }} | 피모북">
+<meta property="og:description" content="머니리그 매치 상세 정보와 결과를 확인하세요.">
+<meta property="og:url" content="{{ url_for('clanworldcup_match_detail', match_id=match_id, _external=True) }}">
+<meta property="og:image" content="{{ url_for('static', filename='images/clanworldcup-logo.jpg', _external=True) }}">
+<meta property="og:image:alt" content="머니리그 대회 로고">
+<style>
+  .cw-container { width: 100%; display: flex; flex-direction: column; gap: 18px; }
+  .cw-hero { width: 100%; background: linear-gradient(135deg,#1d4ed8 0%,#2563eb 55%,#38bdf8 100%); color: #fff; border-radius: 16px; padding: 20px 18px; box-shadow: 0 12px 30px rgba(28,71,155,0.26); box-sizing: border-box; }
+  .cw-hero-top { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .cw-logo { width: 180px; max-width: 100%; height: auto; border-radius: 12px; border: 1px solid rgba(255,255,255,0.35); box-shadow: 0 10px 22px rgba(15,23,42,0.2); }
+  .cw-hero h1 { margin: 0 0 6px; font-size: 23px; letter-spacing: -0.4px; }
+  .cw-hero p { margin: 4px 0 10px; color: rgba(255,255,255,0.9); font-weight: 600; }
+  .cw-card { width: 100%; background: #f8fbff; border: 1px solid #e6edf5; border-radius: 14px; padding: 16px 18px; box-sizing: border-box; box-shadow: 0 6px 18px rgba(39,73,125,0.06); }
+  .cw-card h3 { margin: 0 0 10px; font-size: 17px; color: #1f2d3d; }
+  .cw-subtext { color: #475569; font-size: 14px; margin: 0 0 6px; line-height: 1.5; }
+  .cw-badge { display: inline-flex; align-items: center; gap: 6px; padding: 7px 10px; border-radius: 10px; background: #e8f1ff; color: #1d4ed8; font-weight: 700; font-size: 13px; border: 1px solid #d6e6ff; }
+  .cw-status { font-size: 13px; color: #475569; }
+  .cw-table-wrap { width: 100%; overflow-x: auto; }
+  .cw-table { width: 100%; min-width: 640px; border-collapse: collapse; margin-top: 6px; }
+  .cw-table th, .cw-table td { border: 1px solid #e2e8f0; padding: 10px; text-align: center; font-size: 14px; color: #1f2937; }
+  .cw-table th { background: #e7f0ff; font-weight: 800; color: #1d4ed8; }
+  .cw-tag { display: inline-block; padding: 6px 10px; border-radius: 10px; background: #eef2f7; border: 1px solid #d7e3f4; font-weight: 700; font-size: 13px; }
+  .cw-list { padding-left: 18px; margin: 6px 0 0; color: #334155; line-height: 1.5; }
+  .cw-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+  .cw-input { padding: 9px 10px; border: 1px solid #d7e3f4; border-radius: 10px; font-family: inherit; }
+  .cw-btn { padding: 9px 12px; border-radius: 10px; border: none; font-weight: 700; cursor: pointer; }
+  .cw-btn.primary { background: #228be6; color: #fff; }
+  .cw-btn.ghost { background: #eef2f7; color: #1f2937; border: 1px solid #d7e3f4; }
+  .cw-btn.danger { background: #fff1f0; color: #b91c1c; border: 1px solid #f5c2c0; }
+  .cw-shot-actions { display: flex; align-items: center; gap: 10px; justify-content: center; }
+  .cw-shot-delete {
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+  }
+  .cw-shot-delete svg { width: 16px; height: 16px; stroke: #b91c1c; }
+  .cw-alert { padding: 10px 12px; border-radius: 10px; background: #e8f5ff; color: #0f3d73; border: 1px solid #b6d7ff; font-size: 14px; }
+  .cw-alert.error { background: #fff1f0; color: #b91c1c; border-color: #f5c2c0; }
+  .cw-muted { color: #6b7280; font-size: 13px; }
+  .cw-meta-line { margin: 4px 0; }
+  .cw-label { display: inline-block; width: 70px; color: #475569; font-weight: 700; }
+  @media (max-width: 640px) {
+    .cw-hero { padding: 18px 14px; }
+    .cw-hero h1 { font-size: 20px; }
+    .cw-logo { width: 160px; }
+    .cw-row { flex-direction: column; align-items: stretch; }
+    .cw-input, .cw-btn { width: 100%; box-sizing: border-box; }
+    .cw-table .cw-score { width: 72px; max-width: 72px; padding: 6px 8px; }
+    .cw-table .cw-status-select { width: 86px; max-width: 86px; padding: 6px 6px; }
+    .cw-label { width: 64px; }
+    .cw-table { min-width: 560px; }
+    .cw-table th, .cw-table td { font-size: 12px; padding: 8px; }
+    .cw-card { padding: 14px; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="cw-container">
+  <div class="cw-hero">
+    <div class="cw-hero-top">
+      <img class="cw-logo" src="{{ url_for('static', filename='images/clanworldcup-logo.jpg') }}" alt="머니리그 로고">
+    </div>
+    <div class="cw-badge">매치 ID: {{ match_id }}</div>
+    <h1 id="matchTitle">머니리그 매치 상세</h1>
+    <p id="matchSubtitle">클랜 대 클랜, 슬롯 1~5 개인전 결과 기반. 멤버코드 사용자만 결과 입력 가능.</p>
+  </div>
+
+  <div class="cw-card">
+    <h3>멤버코드 인증</h3>
+    <div class="cw-row" style="margin-bottom:10px;">
+      <input class="cw-input" id="cwCodeInput" type="text" placeholder="멤버코드 입력" aria-label="멤버코드">
+      <button class="cw-btn primary" id="cwVerifyBtn" type="button">인증</button>
+      <button class="cw-btn ghost" id="cwClearBtn" type="button">삭제</button>
+    </div>
+    <div class="cw-alert" id="cwStatus">멤버코드: 저장된 값 없음</div>
+  </div>
+
+  <div class="cw-card">
+    <h3>매치 정보</h3>
+    <div id="matchMeta" class="cw-subtext">데이터 불러오는 중...</div>
+  </div>
+
+  <div class="cw-card" id="leg1Card">
+    <h3 id="leg1Title">1차전</h3>
+    <div class="cw-muted" id="editHint">멤버코드 인증 후 입력 가능합니다.</div>
+    <div class="cw-table-wrap">
+      <table class="cw-table" id="gamesTableLeg1">
+        <thead>
+          <tr>
+            <th>슬롯</th>
+            <th>홈 점수</th>
+            <th>원정 점수</th>
+            <th>상태</th>
+            <th>입력</th>
+            <th>스샷</th>
+          </tr>
+        </thead>
+        <tbody>
+        </tbody>
+      </table>
+    </div>
+    <div class="cw-alert error" id="cwError" style="display:none;"></div>
+  </div>
+
+  <div class="cw-card" id="leg2Card" style="display:none;">
+    <h3 id="leg2Title">2차전</h3>
+    <div class="cw-muted" id="editHintLeg2">멤버코드 인증 후 입력 가능합니다.</div>
+    <div class="cw-table-wrap">
+      <table class="cw-table" id="gamesTableLeg2">
+        <thead>
+          <tr>
+            <th>슬롯</th>
+            <th>홈 점수</th>
+            <th>원정 점수</th>
+            <th>상태</th>
+            <th>입력</th>
+            <th>스샷</th>
+          </tr>
+        </thead>
+        <tbody>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="cw-card">
+    <h3>매치 규칙</h3>
+    <ul class="cw-list">
+      <li>조별리그·8강: 5판제 (슬롯 1~5 모두 종료되어야 매치 확정)</li>
+      <li>4강·결승: 3선승 (3승 선승, 잔여 슬롯은 미진행)</li>
+      <li>매치 승자: 홈 승수 > 원정 승수 → 홈 승 / 반대면 원정 승 (무승부 없음)</li>
+      <li>멤버 경기: 홈 점수 ≠ 원정 점수 이어야 유효</li>
+    </ul>
+  </div>
+
+
+<script>
+  const matchId = "{{ match_id }}";
+  const codeKey = "clanworldcup_memberCode";
+  const statusEl = document.getElementById("cwStatus");
+  const errorEl = document.getElementById("cwError");
+  const codeInput = document.getElementById("cwCodeInput");
+  const verifyBtn = document.getElementById("cwVerifyBtn");
+  const clearBtn = document.getElementById("cwClearBtn");
+  const metaEl = document.getElementById("matchMeta");
+  const tableBodyLeg1 = document.querySelector("#gamesTableLeg1 tbody");
+  const tableBodyLeg2 = document.querySelector("#gamesTableLeg2 tbody");
+  const editHint = document.getElementById("editHint");
+  const editHintLeg2 = document.getElementById("editHintLeg2");
+  const leg1Title = document.getElementById("leg1Title");
+  const leg1Card = document.getElementById("leg1Card");
+  const leg2Card = document.getElementById("leg2Card");
+  const matchTitle = document.getElementById("matchTitle");
+  const matchSubtitle = document.getElementById("matchSubtitle");
+
+  let memberInfo = null;
+  let clanMap = {};
+
+  function escapeHtml(str) {
+    return String(str)
+      .replaceAll("&","&amp;")
+      .replaceAll("<","&lt;")
+      .replaceAll(">","&gt;")
+      .replaceAll('"',"&quot;")
+      .replaceAll("'","&#039;");
+  }
+
+  function nameOf(clanId) {
+    if (!clanId) return "미정";
+    return clanMap[clanId] || clanId;
+  }
+
+  function setStatus(msg, isError=false) {
+    statusEl.textContent = msg;
+    statusEl.classList.toggle("error", isError);
+  }
+  function setError(msg) {
+    if (!msg) { errorEl.style.display = "none"; return; }
+    errorEl.textContent = msg;
+    errorEl.style.display = "block";
+  }
+  function maybeShowPermissionPopup(msg) {
+    if (!msg) return false;
+    if (msg.includes("다른 팀의 경기 결과는 수정할 수 없습니다")) {
+      alert("다른 팀의 경기 결과는 수정할 수 없습니다.");
+      return true;
+    }
+    return false;
+  }
+  function loadStoredCode() {
+    const stored = localStorage.getItem(codeKey);
+    if (stored) {
+      codeInput.value = stored;
+      setStatus(`멤버코드 저장됨: ${stored}`);
+    } else {
+      setStatus("멤버코드: 저장된 값 없음");
+    }
+  }
+
+  async function verifyCode() {
+    setError("");
+    const code = codeInput.value.trim();
+    if (!code) {
+      setStatus("코드를 입력하세요.", true);
+      return;
+    }
+    try {
+      const res = await fetch("/clanworldcup/api/auth/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code }),
+      });
+      const data = await res.json();
+      if (!data.ok) {
+        setStatus(data.error || "인증 실패", true);
+        memberInfo = null;
+        return;
+      }
+      memberInfo = data.member;
+      localStorage.setItem(codeKey, code);
+      const clanName = nameOf(memberInfo.clanId);
+      setStatus(`인증 완료: ${code} (클랜: ${clanName}${memberInfo.admin ? ", 관리자" : ""})`);
+      enableInputs(true);
+    } catch (e) {
+      setStatus("인증 중 오류가 발생했습니다.", true);
+    }
+  }
+
+  function clearCode() {
+    localStorage.removeItem(codeKey);
+    codeInput.value = "";
+    memberInfo = null;
+    setStatus("멤버코드: 저장된 값 없음");
+    enableInputs(false);
+  }
+
+  function enableInputs(enabled) {
+    document.querySelectorAll(".cw-score, .cw-status-select, .cw-save, .cw-upload, .cw-delete").forEach(el => {
+      el.disabled = !enabled;
+    });
+    const msg = enabled ? "입력 가능: 점수 수정 후 저장" : "멤버코드 인증 후 입력 가능합니다.";
+    editHint.textContent = msg;
+    if (editHintLeg2) {
+      editHintLeg2.textContent = msg;
+    }
+  }
+
+  async function loadMatch() {
+    metaEl.textContent = "데이터 불러오는 중...";
+    try {
+      await loadClans();
+      const res = await fetch(`/clanworldcup/api/match/${matchId}`);
+      const data = await res.json();
+      if (!data.ok) {
+        metaEl.textContent = data.error || "매치 데이터를 불러올 수 없습니다.";
+        return;
+      }
+      const mainMatch = data.match;
+      renderMatch(mainMatch);
+      renderLeg(mainMatch, data.games || []);
+    } catch (e) {
+      metaEl.textContent = "매치 데이터를 불러올 수 없습니다.";
+    }
+  }
+
+  async function loadClans() {
+    try {
+      const res = await fetch("/clanworldcup/api/clans", { headers: { "Accept": "application/json" } });
+      const data = await res.json();
+      if (data && data.ok && Array.isArray(data.clans)) {
+        clanMap = {};
+        data.clans.forEach(c => { clanMap[c.clanId] = c.name || c.clanId; });
+      }
+    } catch (e) {
+      clanMap = {};
+    }
+  }
+
+  function renderMatch(match) {
+    const homeId = match?.homeClanId || "홈";
+    const awayId = match?.awayClanId || "원정";
+    const home = nameOf(homeId);
+    const away = nameOf(awayId);
+    const homeWins = match?.homeWins ?? 0;
+    const awayWins = match?.awayWins ?? 0;
+    const status = match?.status || "PENDING";
+    const bestOf = match?.bestOfMode || "ALL5";
+    const legLabel = match?.leg ? `${match.leg}차전` : "-";
+    const winner = nameOf(match?.winnerClanId || "미정");
+    const statusText = statusLabel(status);
+    const statusLine = statusText ? `<div class="cw-meta-line"><span class="cw-label">상태</span> ${escapeHtml(statusText)} / 방식: ${escapeHtml(modeLabel(bestOf))}</div>` : `<div class="cw-meta-line"><span class="cw-label">방식</span> ${escapeHtml(modeLabel(bestOf))}</div>`;
+    metaEl.innerHTML = `
+      <div class="cw-meta-line"><span class="cw-label">홈</span> ${escapeHtml(home)}</div>
+      <div class="cw-meta-line"><span class="cw-label">원정</span> ${escapeHtml(away)}</div>
+      <div class="cw-meta-line"><span class="cw-label">승수</span> ${escapeHtml(homeWins)} - ${escapeHtml(awayWins)}</div>
+      ${statusLine}
+      <div class="cw-meta-line"><span class="cw-label">라운드</span> ${escapeHtml(phaseLabel(match?.phase))} / 조: ${escapeHtml(match?.group || "-")} / ${escapeHtml(legLabel)}</div>
+      <div class="cw-meta-line"><span class="cw-label">승자</span> ${escapeHtml(winner)}</div>
+    `;
+    if (matchTitle) matchTitle.textContent = `${home} 대 ${away}`;
+    if (matchSubtitle) {
+      const statusPart = statusText ? ` / 상태: ${statusText}` : "";
+      matchSubtitle.textContent = `슬롯 1~5 개인전 / ${legLabel} / 방식: ${modeLabel(bestOf)}${statusPart}`;
+    }
+  }
+
+  function renderLeg(match, games) {
+    leg2Card.style.display = "none";
+    tableBodyLeg2.innerHTML = "";
+    if (!match) {
+      leg1Title.textContent = "경기 슬롯";
+      renderGames(null, [], tableBodyLeg1);
+      enableInputs(!!memberInfo);
+      return;
+    }
+    const phase = String(match.phase || "").toUpperCase();
+    leg1Title.textContent = phase === "GROUP" ? `${match.leg || 1}차전` : "경기 슬롯";
+    renderGames(match, games || [], tableBodyLeg1);
+    enableInputs(!!memberInfo);
+    document.querySelectorAll(".cw-save").forEach(btn => btn.addEventListener("click", onSaveSlot));
+    document.querySelectorAll(".cw-upload").forEach(btn => btn.addEventListener("click", onUploadClick));
+    document.querySelectorAll(".cw-delete").forEach(btn => btn.addEventListener("click", onDeleteClick));
+    document.querySelectorAll(".cw-file").forEach(inp => inp.addEventListener("change", onFileChange));
+  }
+
+  function renderGames(match, games, targetBody) {
+    if (!targetBody) return;
+    targetBody.innerHTML = "";
+    if (!match) {
+      return;
+    }
+    const bySlot = {};
+    games.forEach(g => { if (g.slot) bySlot[g.slot] = g; });
+    const home = nameOf(match?.homeClanId || "홈");
+    const away = nameOf(match?.awayClanId || "원정");
+    const matchKey = match?.id || "";
+    for (let slot = 1; slot <= 5; slot++) {
+      const g = bySlot[slot] || { slot, status: "PENDING" };
+      const row = document.createElement("tr");
+      const hasShot = !!g.screenshotUrl;
+      row.innerHTML = `
+        <td>${slot}</td>
+        <td><div class="cw-muted">${escapeHtml(home)}-${slot}</div><input class="cw-input cw-score" data-match="${escapeHtml(matchKey)}" data-slot="${slot}" data-side="home" type="number" min="0" value="${g.homeScore ?? ''}"></td>
+        <td><div class="cw-muted">${escapeHtml(away)}-${slot}</div><input class="cw-input cw-score" data-match="${escapeHtml(matchKey)}" data-slot="${slot}" data-side="away" type="number" min="0" value="${g.awayScore ?? ''}"></td>
+        <td>
+          <select class="cw-input cw-status-select" data-match="${escapeHtml(matchKey)}" data-slot="${slot}">
+            <option value="FINAL" ${g.status === "FINAL" ? "selected" : ""}>종료</option>
+            <option value="NOT_PLAYED" ${g.status === "NOT_PLAYED" ? "selected" : ""}>미진행</option>
+          </select>
+        </td>
+        <td><button class="cw-btn primary cw-save" data-match="${escapeHtml(matchKey)}" data-slot="${slot}">저장</button></td>
+        <td>
+          <div class="cw-shot-actions">
+            ${hasShot ? `<a class="cw-btn ghost cw-view" href="${g.screenshotUrl}" target="_blank" rel="noopener">보기</a>` : `<button class="cw-btn ghost cw-upload" data-match="${escapeHtml(matchKey)}" data-slot="${slot}">업로드</button>`}
+            ${hasShot ? `
+              <button class="cw-btn danger cw-delete cw-shot-delete" data-match="${escapeHtml(matchKey)}" data-slot="${slot}" aria-label="스샷 삭제">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M3 6h18"></path>
+                  <path d="M8 6v-2h8v2"></path>
+                  <path d="M6 6l1 14h10l1-14"></path>
+                </svg>
+              </button>
+            ` : ``}
+          </div>
+          <input type="file" accept="image/*" class="cw-file" data-match="${escapeHtml(matchKey)}" data-slot="${slot}" style="display:none;">
+        </td>
+      `;
+      targetBody.appendChild(row);
+    }
+  }
+
+  async function onSaveSlot(e) {
+    setError("");
+    const slot = e.target.getAttribute("data-slot");
+    const targetMatchId = e.target.getAttribute("data-match") || matchId;
+    const code = memberInfo ? memberInfo.code || localStorage.getItem(codeKey) : localStorage.getItem(codeKey);
+    if (!code) {
+      setStatus("멤버코드를 인증하세요.", true);
+      return;
+    }
+    const homeInput = document.querySelector(`.cw-score[data-match='${targetMatchId}'][data-slot='${slot}'][data-side='home']`);
+    const awayInput = document.querySelector(`.cw-score[data-match='${targetMatchId}'][data-slot='${slot}'][data-side='away']`);
+    const statusSelect = document.querySelector(`.cw-status-select[data-match='${targetMatchId}'][data-slot='${slot}']`);
+    const payload = {
+      code: code,
+      homeScore: homeInput.value !== "" ? Number(homeInput.value) : null,
+      awayScore: awayInput.value !== "" ? Number(awayInput.value) : null,
+      status: statusSelect.value,
+    };
+    try {
+      const res = await fetch(`/clanworldcup/api/match/${encodeURIComponent(targetMatchId)}/games/${slot}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (!data.ok) {
+        const errMsg = data.error || "저장 실패";
+        maybeShowPermissionPopup(errMsg);
+        setError(errMsg);
+        return;
+      }
+      loadMatch();
+      setStatus(`슬롯 ${slot} 저장됨`);
+    } catch (err) {
+      setError("저장 중 오류가 발생했습니다.");
+    }
+  }
+
+  function getStoredCode() {
+    return memberInfo ? memberInfo.code || localStorage.getItem(codeKey) : localStorage.getItem(codeKey);
+  }
+
+  function onUploadClick(e) {
+    const slot = e.target.getAttribute("data-slot");
+    const targetMatchId = e.target.getAttribute("data-match") || matchId;
+    const code = getStoredCode();
+    if (!code) {
+      alert("멤버인증이 해야지 삭제/업로드를 할 수 있습니다.");
+      setStatus("멤버인증이 해야지 삭제/업로드를 할 수 있습니다.", true);
+      return;
+    }
+    const input = document.querySelector(`.cw-file[data-match='${targetMatchId}'][data-slot='${slot}']`);
+    if (input) input.click();
+  }
+
+  async function onDeleteClick(e) {
+    setError("");
+    const slot = e.target.getAttribute("data-slot");
+    const targetMatchId = e.target.getAttribute("data-match") || matchId;
+    const code = getStoredCode();
+    if (!code) {
+      alert("멤버인증이 해야지 삭제/업로드를 할 수 있습니다.");
+      setStatus("멤버인증이 해야지 삭제/업로드를 할 수 있습니다.", true);
+      return;
+    }
+    if (!confirm("정말로 삭제하시겠습니다?")) return;
+    try {
+      const res = await fetch(`/clanworldcup/api/match/${encodeURIComponent(targetMatchId)}/games/${slot}/screenshot`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code }),
+      });
+      const data = await res.json();
+      if (!data.ok) {
+        const errMsg = data.error || "삭제 실패";
+        maybeShowPermissionPopup(errMsg);
+        setError(errMsg);
+        return;
+      }
+      loadMatch();
+      setStatus(`슬롯 ${slot} 스샷 삭제 완료`);
+    } catch (err) {
+      setError("삭제 중 오류가 발생했습니다.");
+    }
+  }
+
+  async function onFileChange(e) {
+    setError("");
+    const input = e.target;
+    const slot = input.getAttribute("data-slot");
+    const targetMatchId = input.getAttribute("data-match") || matchId;
+    const file = input.files[0];
+    if (!file) return;
+    const code = getStoredCode();
+    if (!code) {
+      setStatus("멤버코드를 인증하세요.", true);
+      input.value = "";
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      setError("스샷은 10MB 이하만 업로드 가능합니다.");
+      input.value = "";
+      return;
+    }
+    const form = new FormData();
+    form.append("code", code);
+    form.append("file", file);
+    try {
+      const res = await fetch(`/clanworldcup/api/match/${encodeURIComponent(targetMatchId)}/games/${slot}/upload`, {
+        method: "POST",
+        body: form,
+      });
+      const data = await res.json();
+      if (!data.ok) {
+        const errMsg = data.error || "업로드 실패";
+        maybeShowPermissionPopup(errMsg);
+        setError(errMsg);
+        input.value = "";
+        return;
+      }
+      loadMatch();
+      setStatus(`슬롯 ${slot} 스샷 업로드 완료`);
+    } catch (err) {
+      setError("업로드 중 오류가 발생했습니다.");
+    } finally {
+      input.value = "";
+    }
+  }
+
+  verifyBtn.addEventListener("click", verifyCode);
+  clearBtn.addEventListener("click", clearCode);
+  loadStoredCode();
+  loadMatch();
+
+  function statusLabel(status) {
+    const key = String(status || "").toUpperCase();
+    const map = {
+      "FINAL": "종료",
+      "NOT_PLAYED": "미진행",
+    };
+    if (key === "PENDING" || key === "IN_PROGRESS") return "";
+    return map[key] || status || "-";
+  }
+
+  function phaseLabel(phase) {
+    const key = String(phase || "").toUpperCase();
+    const map = {
+      "GROUP": "조별리그",
+      "QF": "8강",
+      "SF": "4강",
+      "F": "결승",
+    };
+    return map[key] || phase || "-";
+  }
+
+  function modeLabel(mode) {
+    const key = String(mode || "").toUpperCase();
+    const map = {
+      "ALL5": "5판제",
+      "FIRST3": "3선승",
+    };
+    return map[key] || mode || "-";
+  }
+</script>
+{% endblock %}

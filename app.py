@@ -1,23 +1,34 @@
 import math
+import heapq
 import re
 import secrets
+import hmac
+import ipaddress
 import time
 import threading
+from concurrent.futures import ThreadPoolExecutor
+import fcntl
 import json
 import uuid
+import hashlib
+import hmac
+import ipaddress
+import warnings
+import stat
 import requests
 from io import BytesIO
-from urllib.parse import quote, urljoin, urlparse
+from urllib.parse import quote, unquote, urljoin, urlparse
 from flask import Flask, request, render_template, redirect, url_for, jsonify, flash, Response, send_from_directory, send_file, abort, session, has_request_context
 from bs4 import BeautifulSoup
 import os
+from contextlib import contextmanager, nullcontext
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from datetime import datetime, date, timezone, timedelta
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import LoginManager, UserMixin, login_user, logout_user, current_user, login_required
 from flask_mail import Mail, Message
-from itsdangerous import URLSafeTimedSerializer, SignatureExpired
+from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadSignature
 from flask_wtf.csrf import CSRFProtect, generate_csrf
 from flask_wtf import FlaskForm
 from werkzeug.utils import secure_filename
@@ -26,12 +37,26 @@ from flask.sessions import SecureCookieSessionInterface
 from wtforms import StringField, TextAreaField
 from wtforms.validators import DataRequired
 import firebase_admin
-from firebase_admin import credentials, firestore
+from firebase_admin import credentials, exceptions, firestore, messaging
+from google.auth.exceptions import GoogleAuthError
+from google.auth.transport import requests as google_auth_requests
+from google.oauth2 import id_token as google_id_token
 from google.cloud.firestore_v1 import FieldFilter
-from sqlalchemy import func
+from sqlalchemy import func, or_, update, select
+from sqlalchemy.dialects.sqlite import insert as sqlite_insert
+from sqlalchemy.exc import IntegrityError
 from PIL import Image, ImageDraw, ImageFont
+from price_history import load_player_price_history, load_market_price_changes
+from evolution_materials import build_evolution_material_trends
+from derived_cache import shared_derived_cache
+from renewal import renewal_occurrences, renewal_reminder, renewal_is_quiet
+from renewal_webpush import public_key as renewal_public_key, validate_subscription, send_push as send_renewal_push
+from pack_opener import get_catalog as get_pack_catalog
+from player_card_art import card_art_metadata
+from scraping_protection import install_scraping_protection
 
 app = Flask(__name__)
+install_scraping_protection(app)
 
 
 def _load_or_create_secret_key():
@@ -73,28 +98,135 @@ def _load_or_create_secret_key():
 
 
 app.config["SECRET_KEY"] = _load_or_create_secret_key()
-db_path = os.path.join(app.instance_path, "board.db")
+db_path = (
+    os.getenv("FIMOBOOK_DATABASE_PATH", "").strip()
+    or os.path.join(app.instance_path, "board.db")
+)
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///" + db_path
+app.config["PUSH_MAX_TOKENS_PER_CLIENT"] = int(
+    os.getenv("FIMOBOOK_PUSH_MAX_TOKENS_PER_CLIENT", "50")
+)
+app.config["PUSH_MAX_TOKEN_ROWS"] = int(
+    os.getenv("FIMOBOOK_PUSH_MAX_TOKEN_ROWS", "10000")
+)
+app.config["PUSH_REGISTER_MAX_BODY_BYTES"] = 2048
+PUSH_TOKEN_MAX_LENGTH = 512
+PUSH_TOKEN_STALE_DAYS = 90
+PUSH_STALE_PRUNE_BATCH_SIZE = 100
+PUSH_ENROLLMENT_RESERVATION_TTL_MINUTES = 10
+app.config["PLAYER_PRICE_HISTORY_DB"] = os.getenv(
+    "FIMOBOOK_PRICE_HISTORY_DB",
+    os.path.join(app.instance_path, "player_price_history.db"),
+)
 app.config["MONEYLEAGUE_REGISTRATION_OPEN"] = (
     os.getenv("MONEYLEAGUE_REGISTRATION_OPEN", "false").strip().lower() in {"1", "true", "yes", "on"}
 )
 app.config["PLAYER_SUMMARY_ADMIN_PASSWORD"] = os.getenv("PLAYER_SUMMARY_ADMIN_PASSWORD", "").strip()
 app.config["FIMOBOOK_ADMIN_SETUP_PASSWORD"] = os.getenv("FIMOBOOK_ADMIN_SETUP_PASSWORD", "").strip()
+app.config["FIMOBOOK_ADMIN_SETUP_EMAIL"] = os.getenv("FIMOBOOK_ADMIN_SETUP_EMAIL", "").strip()
 app.config["FIMOBOOK_ADMIN_USER_IDS"] = os.getenv("FIMOBOOK_ADMIN_USER_IDS", "").strip()
 app.config["FIMOBOOK_ADMIN_EMAILS"] = os.getenv(
     "FIMOBOOK_ADMIN_EMAILS",
     "",
 ).strip()
-app.config["FIMOBOOK_ADMIN_USERNAMES"] = os.getenv("FIMOBOOK_ADMIN_USERNAMES", "").strip()
 app.config["FIMOBOOK_ADMIN_USER_DELETE_PASSWORD"] = os.getenv("FIMOBOOK_ADMIN_USER_DELETE_PASSWORD", "").strip()
 app.config["GA_MEASUREMENT_ID"] = os.getenv("GA_MEASUREMENT_ID", "G-J8ZL7VF352").strip()
+app.config["FIMOBOOK_ANALYTICS_DISABLED"] = (
+    os.getenv("FIMOBOOK_ANALYTICS_DISABLED", "false").strip().lower()
+    in {"1", "true", "yes", "on"}
+)
+app.config["GOOGLE_CLIENT_ID"] = os.getenv("GOOGLE_CLIENT_ID", "").strip()
+app.config["REMEMBER_COOKIE_DURATION"] = timedelta(days=30)
+app.config["REMEMBER_COOKIE_HTTPONLY"] = True
+app.config["REMEMBER_COOKIE_SECURE"] = (
+    os.getenv("FIMOBOOK_COOKIE_SECURE", "true").strip().lower() in {"1", "true", "yes", "on"}
+)
+app.config["REMEMBER_COOKIE_SAMESITE"] = "Lax"
+app.config["SESSION_COOKIE_HTTPONLY"] = True
+app.config["SESSION_COOKIE_SECURE"] = app.config["REMEMBER_COOKIE_SECURE"]
+app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
+app.config["RECAPTCHA_SITE_KEY"] = os.getenv("RECAPTCHA_SITE_KEY", "").strip()
+app.config["RECAPTCHA_SECRET_KEY"] = os.getenv("RECAPTCHA_SECRET_KEY", "").strip()
+app.config["RECAPTCHA_ALLOWED_HOSTNAMES"] = os.getenv(
+    "RECAPTCHA_ALLOWED_HOSTNAMES",
+    "fcbook.info,www.fcbook.info",
+).strip()
+app.config["PUBLIC_BASE_URL"] = os.getenv(
+    "PUBLIC_BASE_URL",
+    "https://fcbook.info",
+).strip().rstrip("/")
+app.config["EMAIL_VERIFICATION_MAX_AGE"] = int(
+    os.getenv("EMAIL_VERIFICATION_MAX_AGE", "86400")
+)
+app.config["EMAIL_VERIFICATION_RESEND_SECONDS"] = int(
+    os.getenv("EMAIL_VERIFICATION_RESEND_SECONDS", "60")
+)
+app.config["PASSWORD_RESET_MAX_AGE"] = 30 * 60
+app.config["MAIL_SERVER"] = os.getenv("MAIL_SERVER", "smtp.gmail.com").strip()
+app.config["MAIL_PORT"] = int(os.getenv("MAIL_PORT", "587"))
+app.config["MAIL_USE_TLS"] = os.getenv(
+    "MAIL_USE_TLS",
+    "true",
+).strip().lower() in {"1", "true", "yes", "on"}
+app.config["MAIL_USE_SSL"] = os.getenv(
+    "MAIL_USE_SSL",
+    "false",
+).strip().lower() in {"1", "true", "yes", "on"}
+app.config["MAIL_USERNAME"] = os.getenv("MAIL_USERNAME", "").strip()
+app.config["MAIL_PASSWORD"] = os.getenv("MAIL_PASSWORD", "").strip()
+app.config["MAIL_DEFAULT_SENDER"] = (
+    os.getenv("MAIL_DEFAULT_SENDER", "").strip()
+    or app.config["MAIL_USERNAME"]
+)
+app.config["MAIL_SUPPRESS_SEND"] = os.getenv(
+    "MAIL_SUPPRESS_SEND",
+    "false",
+).strip().lower() in {"1", "true", "yes", "on"}
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+mail = Mail(app)
 app.config['UPLOAD_FOLDER'] = os.path.join(app.root_path, 'static', 'uploads')
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
 app.config['ALLOWED_IMAGE_EXTENSIONS'] = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
 app.config['MAX_SCREENSHOT_BYTES'] = 10 * 1024 * 1024
+
+# Money League accepts anonymous registrations, so bound request parsing,
+# decoded image work, and the cumulative Firestore/filesystem footprint.
+MONEYLEAGUE_MAX_REQUEST_BYTES = app.config['MAX_SCREENSHOT_BYTES'] + 2 * 1024 * 1024
+MONEYLEAGUE_MAX_COMMENT_REQUEST_BYTES = 16 * 1024
+MONEYLEAGUE_MAX_IMAGE_PIXELS = 40_000_000
+MONEYLEAGUE_MAX_IMAGE_FRAMES = 20
+MONEYLEAGUE_MAX_ACTIVE_REGISTRATIONS = 2_000
+MONEYLEAGUE_MAX_ACTIVE_IMAGE_BYTES = 2 * 1024 * 1024 * 1024
+MONEYLEAGUE_MAX_ACTIVE_COMMENTS = 10_000
+MONEYLEAGUE_MAX_ACTIVE_COMMENT_BYTES = 64 * 1024 * 1024
+MONEYLEAGUE_MAX_TOTAL_COMMENT_WRITES = 10_000
+MONEYLEAGUE_MAX_DAILY_WRITES = 1_000
+MONEYLEAGUE_MAX_DAILY_CLIENT_WRITES = 30
+MONEYLEAGUE_MAX_DAILY_CLIENT_BYTES = 50 * 1024 * 1024
+MONEYLEAGUE_QUOTA_COLLECTION = 'moneyleague_registration_quotas'
+MONEYLEAGUE_SCREENSHOT_NAME_RE = re.compile(
+    r"mreg_[0-9]+_[0-9a-f]{8}\.(?:png|jpg|jpeg|gif|webp)\Z"
+)
+BOARD_MAX_IMAGE_BYTES = 10 * 1024 * 1024
+BOARD_MAX_REQUEST_BYTES = BOARD_MAX_IMAGE_BYTES + 8 * 1024 * 1024
+BOARD_MAX_IMAGE_PIXELS = 40_000_000
+BOARD_MAX_IMAGE_FRAMES = 20
+BOARD_MAX_ACTIVE_IMAGES_PER_USER = 50
+BOARD_MAX_ACTIVE_IMAGE_BYTES_PER_USER = 500 * 1024 * 1024
+BOARD_MAX_ACTIVE_IMAGES = 10_000
+BOARD_MAX_ACTIVE_IMAGE_BYTES = 2 * 1024 * 1024 * 1024
+BOARD_IMAGE_FORMATS = {
+    "jpg": "JPEG",
+    "jpeg": "JPEG",
+    "png": "PNG",
+    "gif": "GIF",
+    "webp": "WEBP",
+}
+BOARD_POST_IMAGE_NAME_RE = re.compile(
+    r"board_[0-9a-f]{32}\.(?:png|jpg|jpeg|gif|webp)\Z"
+)
 
 
 # ---------------------------
@@ -607,7 +739,53 @@ class NoVarySessionInterface(SecureCookieSessionInterface):
 app.session_interface = NoVarySessionInterface()
 
 def _canonical(path: str) -> str:
-    return urljoin(request.url_root, path.lstrip("/"))
+    base_url = app.config.get("PUBLIC_BASE_URL", "https://fcbook.info").rstrip("/") + "/"
+    return urljoin(base_url, path.lstrip("/"))
+
+
+def _absolute_public_url(value):
+    """Return an absolute URL on the configured public origin when needed."""
+    if not value:
+        return ""
+    return urljoin(_canonical("/"), str(value))
+
+@app.after_request
+def add_security_headers(response):
+    response.headers.setdefault("X-Content-Type-Options", "nosniff")
+    response.headers.setdefault("X-Frame-Options", "SAMEORIGIN")
+    response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
+    if request.endpoint in {"find_id", "forgot_password", "reset_password"}:
+        response.headers["Cache-Control"] = "no-store, max-age=0"
+        response.headers["Referrer-Policy"] = "no-referrer"
+        response.headers["X-Robots-Tag"] = "noindex, nofollow"
+    response.headers.setdefault(
+        "Permissions-Policy", "camera=(), microphone=(), geolocation=()"
+    )
+
+    # Start with document protections. Script/style allowlists need a separate
+    # rollout because Google sign-in, AdSense and inline scripts are in use.
+    policy = (
+        "base-uri 'self'; object-src 'none'; "
+        "frame-ancestors 'self'; form-action 'self'"
+    )
+    public_origin = urlparse(app.config.get("PUBLIC_BASE_URL", ""))
+    request_hostname = urlparse("//" + request.host).hostname
+    # TLS terminates at the public proxy, so request.is_secure alone does not
+    # identify public HTTPS traffic. Keep local HTTP development unaffected.
+    is_public_https = (
+        public_origin.scheme == "https"
+        and public_origin.hostname is not None
+        and request_hostname in {
+            public_origin.hostname, "www." + public_origin.hostname
+        }
+    )
+    if is_public_https:
+        # Do not opt subdomains into HSTS or preload without checking them.
+        response.headers.setdefault("Strict-Transport-Security", "max-age=31536000")
+        policy += "; upgrade-insecure-requests"
+    response.headers.setdefault("Content-Security-Policy", policy)
+    return response
+
 
 @app.after_request
 def add_x_robots_tag(response):
@@ -681,7 +859,32 @@ if not firebase_admin._apps:
 
 @app.route("/manifest.json")
 def manifest():
-    return send_from_directory(app.root_path, "manifest.json", mimetype="application/manifest+json")
+    return send_from_directory(
+        app.root_path,
+        "manifest.json",
+        mimetype="application/manifest+json",
+        max_age=3600,
+    )
+
+
+@app.route("/.well-known/assetlinks.json")
+def digital_asset_links():
+    return send_from_directory(
+        os.path.join(app.root_path, ".well-known"),
+        "assetlinks.json",
+        mimetype="application/json",
+        max_age=3600,
+    )
+
+
+@app.route("/robots.txt")
+def robots_txt():
+    return send_from_directory(app.root_path, "robots.txt", mimetype="text/plain", max_age=3600)
+
+
+@app.route("/ads.txt")
+def ads_txt():
+    return send_from_directory(app.root_path, "ads.txt", mimetype="text/plain", max_age=3600)
 
 @app.route("/favicon.ico")
 def root_favicon():
@@ -708,10 +911,15 @@ def sitemap():
 
     pages = [
         urljoin(request.url_root, "/"),
+        urljoin(request.url_root, "/players"),
         urljoin(request.url_root, "/traits_selection"),
+        urljoin(request.url_root, "/player_compare"),
+        urljoin(request.url_root, "/player-reviews"),
         urljoin(request.url_root, "/coupons/"),
         urljoin(request.url_root, "/times"),
         urljoin(request.url_root, "/prime-exchange"),
+        urljoin(request.url_root, "/market-fee-calculator"),
+        urljoin(request.url_root, "/normal-mode-power-ranking"),
     ]
 
     for player in PLAYER_DATA:
@@ -772,17 +980,82 @@ def _get_match(match_id):
     data["id"] = match_id
     return data
 
+CLANWORLDCUP_MAX_GAME_COUNT = 5
+CLANWORLDCUP_MAX_GAME_SCORE = 99
+
+
+def _canonical_game_count(match_data):
+    """Return the configured game count, preserving legacy five-slot matches."""
+    if "gameCount" not in match_data:
+        return CLANWORLDCUP_MAX_GAME_COUNT
+    game_count = match_data.get("gameCount")
+    if type(game_count) is not int or not 1 <= game_count <= CLANWORLDCUP_MAX_GAME_COUNT:
+        return 0
+    return game_count
+
+
+def _is_canonical_game_slot(match_data, slot):
+    return (
+        type(slot) is int
+        and 1 <= slot <= _canonical_game_count(match_data)
+    )
+
+
+def _canonical_game_ref(match_ref, match_data, slot):
+    if not _is_canonical_game_slot(match_data, slot):
+        return None
+    game_ref = match_ref.collection("games").document(str(slot))
+    game_snap = game_ref.get()
+    if not game_snap.exists:
+        return None
+    game_data = game_snap.to_dict() or {}
+    if type(game_data.get("slot")) is not int or game_data["slot"] != slot:
+        return None
+    return game_ref
+
+
+def _parse_clanworldcup_game_score(value):
+    if value is None or isinstance(value, bool):
+        raise ValueError("점수는 0~99 사이의 정수여야 합니다.")
+    if isinstance(value, int):
+        score = value
+    elif isinstance(value, float) and math.isfinite(value) and value.is_integer():
+        score = int(value)
+    elif isinstance(value, str):
+        try:
+            score = int(value.strip())
+        except ValueError as exc:
+            raise ValueError("점수는 0~99 사이의 정수여야 합니다.") from exc
+    else:
+        raise ValueError("점수는 0~99 사이의 정수여야 합니다.")
+    if not 0 <= score <= CLANWORLDCUP_MAX_GAME_SCORE:
+        raise ValueError("점수는 0~99 사이의 정수여야 합니다.")
+    return score
+
+
 def _get_match_games(match_id):
     base = _fs_base()
     if not base:
         return []
-    games_ref = base.collection("matches").document(match_id).collection("games")
+    match_ref = base.collection("matches").document(match_id)
+    match_snap = match_ref.get()
+    if not match_snap.exists:
+        return []
+    match_data = match_snap.to_dict() or {}
+    games_ref = match_ref.collection("games")
     games = []
-    for g in games_ref.stream():
+    for slot in range(1, _canonical_game_count(match_data) + 1):
+        g = games_ref.document(str(slot)).get()
+        if not g.exists:
+            continue
         data = g.to_dict() or {}
+        if type(data.get("slot")) is not int or data["slot"] != slot:
+            continue
+        if g.id != str(slot):
+            continue
         data["id"] = g.id
+        data["slot"] = slot
         games.append(data)
-    games.sort(key=lambda x: x.get("slot", 0))
     return games
 
 def _normalize_clan_id(value):
@@ -845,15 +1118,20 @@ def _recalc_match_totals(match_id):
     away_wins = 0
     final_count = 0
     for g in games:
-        if g.get("status") == "FINAL":
-            final_count += 1
-            hs = g.get("homeScore")
-            as_ = g.get("awayScore")
-            if hs is not None and as_ is not None:
-                if hs > as_:
-                    home_wins += 1
-                elif as_ > hs:
-                    away_wins += 1
+        if g.get("status") != "FINAL":
+            continue
+        try:
+            hs = _parse_clanworldcup_game_score(g.get("homeScore"))
+            as_ = _parse_clanworldcup_game_score(g.get("awayScore"))
+        except ValueError:
+            continue
+        if hs == as_:
+            continue
+        final_count += 1
+        if hs > as_:
+            home_wins += 1
+        else:
+            away_wins += 1
     best_of = (match_data.get("bestOfMode") or "ALL5").upper()
     phase = (match_data.get("phase") or "").upper()
     if phase == "QF" and best_of != "FIRST3":
@@ -861,7 +1139,7 @@ def _recalc_match_totals(match_id):
         best_of = "FIRST3"
         match_ref.set({"bestOfMode": "FIRST3"}, merge=True)
     winner = None
-    status = match_data.get("status") or "PENDING"
+    status = "PENDING"
     if best_of == "FIRST3":
         if home_wins >= 3 or away_wins >= 3:
             winner = match_data.get("homeClanId") if home_wins > away_wins else match_data.get("awayClanId")
@@ -1311,16 +1589,18 @@ def _resolve_knockout_seed(seed_label, group_seed_map, winner_map):
 
 
 def _reset_match_games(match_ref):
+    match_snap = match_ref.get()
+    if not match_snap.exists:
+        return 0
+    match_data = match_snap.to_dict() or {}
     reset = 0
-    for snap in match_ref.collection("games").stream():
-        game = snap.to_dict() or {}
-        slot = game.get("slot")
-        if slot is None:
-            try:
-                slot = int(snap.id)
-            except Exception:
-                slot = snap.id
-        snap.reference.set({
+    games_ref = match_ref.collection("games")
+    for slot in range(1, _canonical_game_count(match_data) + 1):
+        game_ref = games_ref.document(str(slot))
+        snap = game_ref.get()
+        if not snap.exists:
+            continue
+        game_ref.set({
             "slot": slot,
             "homeScore": None,
             "awayScore": None,
@@ -1510,6 +1790,13 @@ def _seed_schedule(base):
     group_matches = _ensure_group_matches(base, groups)
     standings = _ensure_group_standings(base, groups)
     bracket = _ensure_bracket_matches(base)
+    matches_ref = base.collection("matches")
+    for match_snap in matches_ref.stream():
+        match_data = match_snap.to_dict() or {}
+        _ensure_canonical_game_documents(
+            matches_ref.document(match_snap.id),
+            match_data,
+        )
     return {"groups": groups, "group_matches": group_matches, "standings": standings, "bracket": bracket}
 
 
@@ -1535,6 +1822,32 @@ def _get_standings():
         data["groupId"] = doc.id
         standings.append(data)
     return standings
+
+
+def _ensure_canonical_game_documents(match_ref, match_data):
+    created = 0
+    games_ref = match_ref.collection("games")
+    for slot in range(1, _canonical_game_count(match_data) + 1):
+        game_ref = games_ref.document(str(slot))
+        game_snap = game_ref.get()
+        if not game_snap.exists:
+            game_ref.set({
+                "slot": slot,
+                "homeScore": None,
+                "awayScore": None,
+                "status": "NOT_PLAYED",
+            })
+            created += 1
+            continue
+        game_data = game_snap.to_dict() or {}
+        if type(game_data.get("slot")) is not int or game_data["slot"] != slot:
+            game_ref.set({
+                "slot": slot,
+                "homeScore": None,
+                "awayScore": None,
+                "status": "NOT_PLAYED",
+            }, merge=True)
+    return created
 
 
 def _is_group_stage_complete(base):
@@ -1567,14 +1880,148 @@ def _knockout_seed_labels(match_id):
     return f_seeds.get(match_id)
 
 
+@app.before_request
+def _moneyleague_request_body_limit():
+    if request.method != "POST":
+        return None
+    endpoint = request.endpoint or ""
+    limits = {
+        "find_id": 16 * 1024,
+        "forgot_password": 16 * 1024,
+        "reset_password": 16 * 1024,
+        "moneyleague_registration_new": MONEYLEAGUE_MAX_REQUEST_BYTES,
+        "moneyleague_registration_edit": MONEYLEAGUE_MAX_REQUEST_BYTES,
+        "moneyleague_registration_add_comment": MONEYLEAGUE_MAX_COMMENT_REQUEST_BYTES,
+        "new_post": BOARD_MAX_REQUEST_BYTES,
+        "edit_post": BOARD_MAX_REQUEST_BYTES,
+    }
+    limit = limits.get(endpoint)
+    if limit is not None and (
+        request.content_length is None or request.content_length > limit
+    ):
+        abort(413)
+    return None
+
+
 csrf = CSRFProtect(app)
+
+ANALYTICS_PAGE_CONTEXTS = {
+    "index": ("home", "discovery"),
+    "search": ("search_results", "discovery"),
+    "players_hub": ("player_directory", "discovery"),
+    "player_detail": ("player_detail", "player_research"),
+    "player_reviews": ("player_reviews", "community"),
+    "player_review_detail": ("review_detail", "community"),
+    "submit_player_firebase_review": ("review_form", "community"),
+    "edit_player_firebase_review": ("review_form", "community"),
+    "player_compare_page": ("player_compare", "decision_tools"),
+    "traits_selection": ("advanced_search", "decision_tools"),
+    "filtered_players": ("filtered_results", "decision_tools"),
+    "squad_maker": ("squad_maker", "decision_tools"),
+    "prime_exchange_page": ("prime_exchange", "utility"),
+    "market_fee_calculator": ("market_fee_calculator", "utility"),
+    "times": ("renewal_times", "utility"),
+    "coupons_page": ("coupons", "utility"),
+    "community": ("community_feed", "community"),
+    "board": ("community_feed", "community"),
+    "post_detail": ("community_post", "community"),
+    "create_post": ("community_post_form", "community"),
+    "login": ("login", "account"),
+    "register": ("register", "account"),
+    "profile": ("profile", "account"),
+    "notifications": ("notifications", "account"),
+    "clanworldcup_home": ("clanworldcup_home", "clanworldcup"),
+    "clanworldcup_groups": ("clanworldcup_groups", "clanworldcup"),
+    "clanworldcup_bracket": ("clanworldcup_bracket", "clanworldcup"),
+    "clanworldcup_bracket_full": ("clanworldcup_bracket", "clanworldcup"),
+    "clanworldcup_match_detail": ("clanworldcup_match", "clanworldcup"),
+}
+
+ANALYTICS_EXCLUDED_ENDPOINTS = {
+    "find_id",
+    "forgot_password",
+    "reset_password",
+    "admin_setup",
+    "admin_dashboard",
+    "admin_points",
+    "admin_coupon_status",
+    "player_review_summary_admin",
+}
+
+# Realtime GA4 can count JavaScript-capable crawlers as active users while
+# leaving first-user acquisition dimensions empty. Keep the list explicit so
+# real mobile devices whose model name merely contains "bot" are not excluded.
+ANALYTICS_CRAWLER_UA_RE = re.compile(
+    r"(?:"
+    r"googlebot|bingbot|duckduckbot|baiduspider|yandexbot|applebot|"
+    r"amzn-searchbot|amazonbot|semrushbot|ahrefsbot|mj12bot|dotbot|"
+    r"petalbot|bytespider|gptbot|oai-searchbot|chatgpt-user|ccbot|criteobot|"
+    r"yeti|mediapartners-google|adsbot-google|googleother|"
+    r"google-inspectiontool|storebot-google|google-read-aloud|"
+    r"claudebot|perplexitybot|anthropic-ai|cohere-ai|"
+    r"meta-externalagent|meta-externalfetcher|"
+    r"facebookexternalhit|kakaotalk-scrap|twitterbot|linkedinbot|"
+    r"discordbot|slackbot|crawler|spider"
+    r")",
+    re.IGNORECASE,
+)
+
+
+def _analytics_request_metadata(is_admin_user=False):
+    """Return a privacy-safe GA4 context, or disable analytics for internal traffic."""
+    endpoint = request.endpoint or "unknown"
+    hostname = (request.host or "").split(":", 1)[0].strip("[]").lower()
+    path = request.path or "/"
+    user_agent = request.headers.get("User-Agent", "")
+    is_known_crawler = bool(ANALYTICS_CRAWLER_UA_RE.search(user_agent))
+    is_local = (
+        hostname in {"localhost", "127.0.0.1", "::1", "testserver"}
+        or hostname.endswith(".local")
+    )
+    is_internal_path = (
+        path.startswith("/secret/")
+        or path.startswith("/admin/")
+        or path.startswith("/clanworldcup/api/admin/")
+    )
+    opted_out = request.cookies.get("fimo_analytics_opt_out") == "1"
+    disabled = (
+        app.config.get("FIMOBOOK_ANALYTICS_DISABLED", False)
+        or is_local
+        or is_known_crawler
+        or is_admin_user
+        or opted_out
+        or endpoint in ANALYTICS_EXCLUDED_ENDPOINTS
+        or is_internal_path
+    )
+
+    page_type, content_group = ANALYTICS_PAGE_CONTEXTS.get(
+        endpoint,
+        (endpoint.replace(".", "_") if endpoint else "unknown", "other"),
+    )
+    metadata = {
+        "page_type": page_type,
+        "content_group": content_group,
+        "login_state": "member" if current_user.is_authenticated else "guest",
+    }
+    content_id = (request.view_args or {}).get("cid")
+    if content_id is not None and endpoint in {
+        "player_detail",
+        "player_reviews",
+        "player_review_detail",
+        "submit_player_firebase_review",
+        "edit_player_firebase_review",
+    }:
+        metadata["content_type"] = "player"
+        metadata["content_id"] = str(content_id)
+
+    measurement_id = "" if disabled else app.config.get("GA_MEASUREMENT_ID", "")
+    return measurement_id, metadata
+
+
 @app.context_processor
 def inject_csrf_token():
     if request.path == "/sitemap.xml" or request.path.startswith("/sitemaps/"):
         return {}
-    analytics_excluded_endpoints = {
-        "player_review_summary_admin",
-    }
     try:
         is_admin_user = _is_admin_user()
     except Exception:
@@ -1589,16 +2036,21 @@ def inject_csrf_token():
             ).count()
         except Exception as e:
             print(f"Notification count read failed: {e}")
+    ga_measurement_id, analytics_context = _analytics_request_metadata(is_admin_user)
     return dict(
         csrf_token=generate_csrf(),
         price_unit=globals().get("PRICE_UNIT", "MP"),
+        price_enhance_levels=range(globals().get("MAX_ENHANCE_LEVEL", 15) + 1),
         is_admin_user=is_admin_user,
         unread_notification_count=unread_notification_count,
-        ga_measurement_id=(
-            ""
-            if request.endpoint in analytics_excluded_endpoints
-            else app.config.get("GA_MEASUREMENT_ID", "")
+        google_client_id=app.config.get("GOOGLE_CLIENT_ID", ""),
+        recaptcha_site_key=app.config.get("RECAPTCHA_SITE_KEY", ""),
+        recaptcha_enabled=bool(
+            app.config.get("RECAPTCHA_SITE_KEY")
+            and app.config.get("RECAPTCHA_SECRET_KEY")
         ),
+        ga_measurement_id=ga_measurement_id,
+        analytics_context=analytics_context,
     )
 
 
@@ -1617,18 +2069,50 @@ def nl2br_filter(s):
     return s.replace("\n", "<br>")
 
 
+@app.template_filter("kst_datetime")
+def kst_datetime_filter(value, date_format="%Y-%m-%d %H:%M"):
+    """Render database UTC timestamps in Korea Standard Time."""
+    if not value:
+        return "-"
+    if value.tzinfo is None:
+        value = value.replace(tzinfo=timezone.utc)
+    return value.astimezone(timezone(timedelta(hours=9))).strftime(date_format)
+
+
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(100), unique=True, nullable=False)
     username = db.Column(db.String(100), unique=True, nullable=False)
     password_hash = db.Column(db.String(128))
     is_admin = db.Column(db.Boolean, default=False, nullable=False)
+    email_verified = db.Column(db.Boolean, default=False, nullable=False)
+    email_verified_at = db.Column(db.DateTime, nullable=True)
+    verification_sent_at = db.Column(db.DateTime, nullable=True)
+    google_sub = db.Column(db.String(255), unique=True, nullable=True)
+    username_confirmed = db.Column(db.Boolean, default=True, nullable=False)
+    session_token = db.Column(db.String(64), nullable=True)
+
+    def get_id(self):
+        # Keep existing sessions valid until this account resets its password.
+        if self.session_token:
+            return f"{self.id}:{self.session_token}"
+        return str(self.id)
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
 
     def check_password(self, password):
-        return check_password_hash(self.password_hash, password)
+        return bool(
+            self.password_hash
+            and password
+            and check_password_hash(self.password_hash, password)
+        )
+
+
+class AccountRecoveryThrottle(db.Model):
+    key = db.Column(db.String(64), primary_key=True)
+    expires_at = db.Column(db.Integer, nullable=False, index=True)
+    attempts = db.Column(db.Integer, nullable=False)
 
 
 def _csv_config_values(key):
@@ -1640,11 +2124,13 @@ def _user_matches_configured_admin(user):
         return False
     admin_ids = _csv_config_values("FIMOBOOK_ADMIN_USER_IDS")
     admin_emails = _csv_config_values("FIMOBOOK_ADMIN_EMAILS")
-    admin_usernames = _csv_config_values("FIMOBOOK_ADMIN_USERNAMES")
+    configured_email = (getattr(user, "email", "") or "").strip().lower()
     return (
         str(getattr(user, "id", "")).lower() in admin_ids
-        or (getattr(user, "email", "") or "").strip().lower() in admin_emails
-        or (getattr(user, "username", "") or "").strip().lower() in admin_usernames
+        or (
+            bool(getattr(user, "email_verified", False))
+            and configured_email in admin_emails
+        )
     )
 
 
@@ -1665,16 +2151,65 @@ def _is_admin_user():
     )
 
 
+@app.post("/api/analytics/event")
+@csrf.exempt
+def collect_analytics_event():
+    """Absorb requests from old cached tabs without sending anything to GA4."""
+    return "", 204
+
+
 def _admin_setup_password():
-    return (
-        app.config.get("FIMOBOOK_ADMIN_SETUP_PASSWORD", "").strip()
-        or app.config.get("PLAYER_SUMMARY_ADMIN_PASSWORD", "").strip()
+    return app.config.get("FIMOBOOK_ADMIN_SETUP_PASSWORD", "").strip()
+
+
+def _admin_setup_identity_matches(user):
+    setup_email = app.config.get("FIMOBOOK_ADMIN_SETUP_EMAIL", "").strip().lower()
+    user_email = (getattr(user, "email", "") or "").strip().lower()
+    return bool(
+        setup_email
+        and getattr(user, "email_verified", False)
+        and user_email == setup_email
+    )
+
+
+def _admin_already_exists():
+    if User.query.filter_by(is_admin=True).first():
+        return True
+
+    configured_ids = set()
+    for value in _csv_config_values("FIMOBOOK_ADMIN_USER_IDS"):
+        try:
+            configured_ids.add(int(value))
+        except ValueError:
+            continue
+    if configured_ids and User.query.filter(User.id.in_(configured_ids)).first():
+        return True
+
+    admin_emails = _csv_config_values("FIMOBOOK_ADMIN_EMAILS")
+    return bool(
+        admin_emails
+        and User.query.filter(
+            User.email_verified.is_(True),
+            func.lower(User.email).in_(admin_emails),
+        ).first()
     )
 
 
 @login_manager.user_loader
 def load_user(user_id):
-    return _sync_admin_flag(db.session.get(User, int(user_id)))
+    try:
+        account_id, separator, session_token = str(user_id).partition(":")
+        user = db.session.get(User, int(account_id))
+    except (TypeError, ValueError):
+        return None
+    if not user:
+        return None
+    if user.session_token:
+        if not separator or not secrets.compare_digest(user.session_token, session_token):
+            return None
+    elif separator:
+        return None
+    return _sync_admin_flag(user)
 
 class Post(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -1682,11 +2217,56 @@ class Post(db.Model):
     content = db.Column(db.Text, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     likes = db.Column(db.Integer, default=0)
+    views = db.Column(db.Integer, default=0, nullable=False)
     image_filename = db.Column(db.String(200), nullable=True)  # 🔥 추가
     board_type = db.Column(db.String(20), default="free", nullable=False)
+    is_pinned = db.Column(db.Boolean, default=False, nullable=False)
+    poll_question = db.Column(db.String(200), nullable=True)
     comments = db.relationship('Comment', backref='post', lazy=True)
+    poll_options = db.relationship(
+        'PollOption',
+        backref='post',
+        lazy=True,
+        cascade='all, delete-orphan',
+        order_by='PollOption.position',
+    )
     author_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
     author = db.relationship('User', backref='posts')
+
+
+class PollOption(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    post_id = db.Column(db.Integer, db.ForeignKey('post.id'), nullable=False, index=True)
+    text = db.Column(db.String(80), nullable=False)
+    position = db.Column(db.Integer, default=0, nullable=False)
+    votes = db.relationship(
+        'PollVote',
+        backref='option',
+        lazy=True,
+        cascade='all, delete-orphan',
+    )
+
+
+class PollVote(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    post_id = db.Column(db.Integer, db.ForeignKey('post.id'), nullable=False, index=True)
+    option_id = db.Column(db.Integer, db.ForeignKey('poll_option.id'), nullable=False, index=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False, index=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    __table_args__ = (
+        db.UniqueConstraint('post_id', 'user_id', name='uq_poll_vote_post_user'),
+    )
+
+
+class PostLike(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    post_id = db.Column(db.Integer, db.ForeignKey('post.id'), nullable=False, index=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False, index=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    __table_args__ = (
+        db.UniqueConstraint('post_id', 'user_id', name='uq_post_like_post_user'),
+    )
+
 
 class Comment(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -1723,6 +2303,21 @@ class PlayerReviewComment(db.Model):
     )
 
 
+class PlayerReviewLike(db.Model):
+    """One user's reaction to a Firestore-backed player review."""
+    id = db.Column(db.Integer, primary_key=True)
+    player_cid = db.Column(db.Integer, nullable=False, index=True)
+    review_id = db.Column(db.String(120), nullable=False, index=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False, index=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    __table_args__ = (
+        db.UniqueConstraint(
+            'player_cid', 'review_id', 'user_id',
+            name='uq_player_review_like_review_user',
+        ),
+    )
+
+
 COMMENT_RATE_LIMIT_WINDOW = timedelta(minutes=1)
 COMMENT_RATE_LIMIT_COUNT = 5
 COMMENT_HOURLY_LIMIT_WINDOW = timedelta(hours=1)
@@ -1754,6 +2349,15 @@ def _comment_rate_limit_message(user_id):
     if _comment_count_since(user_id, now - COMMENT_HOURLY_LIMIT_WINDOW) >= COMMENT_HOURLY_LIMIT_COUNT:
         return "시간당 댓글 작성 한도를 초과했습니다. 잠시 후 다시 시도해주세요."
     return None
+
+
+class RenewalInterest(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False, index=True)
+    card_name = db.Column(db.String(160), nullable=False)
+    subscribed_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    notified_at = db.Column(db.DateTime, nullable=True)
+    __table_args__ = (db.UniqueConstraint('user_id', 'card_name'),)
 
 
 class Notification(db.Model):
@@ -1808,12 +2412,79 @@ class PlayerRating(db.Model):
 class PushToken(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     token = db.Column(db.String(512), unique=True, nullable=False)
+    client_ip_hash = db.Column(db.String(64), nullable=True, index=True)
+    fcm_verified_at = db.Column(db.DateTime, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    last_seen = db.Column(db.DateTime, default=datetime.utcnow)
+    last_seen = db.Column(db.DateTime, default=datetime.utcnow, index=True)
     is_enabled = db.Column(db.Boolean, default=True, nullable=False)
     coupons_enabled = db.Column(db.Boolean, default=True, nullable=False)
     mode = db.Column(db.String(20), default="digest", nullable=False)
     last_push_at = db.Column(db.DateTime, nullable=True)
+
+
+class RenewalQuietHours(db.Model):
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)
+    enabled = db.Column(db.Boolean, nullable=False, default=False)
+    start_minute = db.Column(db.Integer, nullable=False, default=0)
+    end_minute = db.Column(db.Integer, nullable=False, default=420)
+
+
+class RenewalPushDevice(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False, index=True)
+    endpoint = db.Column(db.String(2048), nullable=False, unique=True)
+    subscription_json = db.Column(db.Text, nullable=False)
+    enabled = db.Column(db.Boolean, nullable=False, default=True)
+    coupons_enabled = db.Column(db.Boolean, nullable=False, default=False)
+    coupons_subscribed_at = db.Column(db.DateTime, nullable=True)
+    last_test_at = db.Column(db.DateTime, nullable=True)
+    last_seen = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+
+
+class RenewalPushDelivery(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, nullable=False)
+    interest_id = db.Column(db.Integer, nullable=False, index=True)
+    device_id = db.Column(db.Integer, nullable=False, index=True)
+    occurrence = db.Column(db.DateTime, nullable=False, index=True)
+    status = db.Column(db.String(20), nullable=False, default='pending')
+    attempts = db.Column(db.Integer, nullable=False, default=0)
+    retry_at = db.Column(db.DateTime, nullable=True)
+    __table_args__ = (db.UniqueConstraint('interest_id', 'device_id', 'occurrence'),)
+
+
+class CouponPushState(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    initialized_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+
+
+class CouponPushRelease(db.Model):
+    code = db.Column(db.String(120), primary_key=True)
+    discovered_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+
+
+class CouponPushDelivery(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, nullable=False)
+    device_id = db.Column(db.Integer, nullable=False, index=True)
+    code = db.Column(db.String(120), nullable=False)
+    created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    status = db.Column(db.String(20), nullable=False, default='pending')
+    attempts = db.Column(db.Integer, nullable=False, default=0)
+    retry_at = db.Column(db.DateTime, nullable=True)
+    __table_args__ = (db.UniqueConstraint('device_id', 'code'),)
+
+
+class PushEnrollmentGate(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    generation = db.Column(db.Integer, nullable=False, default=0)
+
+
+class PushEnrollmentReservation(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    token_hash = db.Column(db.String(64), unique=True, nullable=False, index=True)
+    client_ip_hash = db.Column(db.String(64), nullable=False, index=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False, index=True)
 
 
 class CouponSeen(db.Model):
@@ -1893,9 +2564,31 @@ def _notification_time_display(created_at):
     return created_at.replace(tzinfo=timezone.utc).astimezone(KST).strftime("%Y.%m.%d")
 
 
+def _is_safe_local_redirect_target(value):
+    target = str(value or "").strip()
+    if not target.startswith("/") or target.startswith("//"):
+        return False
+    if any(ord(char) < 32 or ord(char) == 127 for char in target):
+        return False
+
+    parsed = urlparse(target)
+    if parsed.scheme or parsed.netloc:
+        return False
+
+    path = parsed.path
+    for _ in range(8):
+        if "\\" in path or path.startswith("//"):
+            return False
+        decoded_path = unquote(path)
+        if decoded_path == path:
+            return True
+        path = decoded_path
+    return False
+
+
 def _notification_target_url(value):
     value = str(value or "").strip()
-    if not value.startswith("/") or value.startswith("//"):
+    if not _is_safe_local_redirect_target(value):
         return url_for("notifications")
     return value[:500]
 
@@ -1946,10 +2639,18 @@ def _ensure_local_schema():
             post_columns = columns("post")
             if "board_type" not in post_columns:
                 conn.exec_driver_sql("ALTER TABLE post ADD COLUMN board_type VARCHAR(20) NOT NULL DEFAULT 'free'")
+            if "views" not in post_columns:
+                conn.exec_driver_sql("ALTER TABLE post ADD COLUMN views INTEGER NOT NULL DEFAULT 0")
+            if "is_pinned" not in post_columns:
+                conn.exec_driver_sql("ALTER TABLE post ADD COLUMN is_pinned BOOLEAN NOT NULL DEFAULT 0")
+            if "poll_question" not in post_columns:
+                conn.exec_driver_sql("ALTER TABLE post ADD COLUMN poll_question VARCHAR(200)")
 
             user_columns = columns("user")
             if "is_admin" not in user_columns:
                 conn.exec_driver_sql("ALTER TABLE user ADD COLUMN is_admin BOOLEAN NOT NULL DEFAULT 0")
+            if "session_token" not in user_columns:
+                conn.exec_driver_sql("ALTER TABLE user ADD COLUMN session_token VARCHAR(64)")
 
             comment_columns = columns("comment")
             if "parent_id" not in comment_columns:
@@ -1961,7 +2662,17 @@ def _ensure_local_schema():
             if "admin_reason" not in ledger_columns:
                 conn.exec_driver_sql("ALTER TABLE review_point_ledger ADD COLUMN admin_reason VARCHAR(200)")
 
+            native_push_columns = columns("renewal_push_device")
+            if "coupons_enabled" not in native_push_columns:
+                conn.exec_driver_sql("ALTER TABLE renewal_push_device ADD COLUMN coupons_enabled BOOLEAN NOT NULL DEFAULT 0")
+            if "coupons_subscribed_at" not in native_push_columns:
+                conn.exec_driver_sql("ALTER TABLE renewal_push_device ADD COLUMN coupons_subscribed_at DATETIME")
+
             push_columns = columns("push_token")
+            if "client_ip_hash" not in push_columns:
+                conn.exec_driver_sql("ALTER TABLE push_token ADD COLUMN client_ip_hash VARCHAR(64)")
+            if "fcm_verified_at" not in push_columns:
+                conn.exec_driver_sql("ALTER TABLE push_token ADD COLUMN fcm_verified_at DATETIME")
             if "coupons_enabled" not in push_columns:
                 conn.exec_driver_sql("ALTER TABLE push_token ADD COLUMN coupons_enabled BOOLEAN NOT NULL DEFAULT 1")
             if "mode" not in push_columns:
@@ -1971,6 +2682,16 @@ def _ensure_local_schema():
 
             conn.exec_driver_sql(
                 "CREATE INDEX IF NOT EXISTS ix_notification_user_unread ON notification (user_id, read_at)"
+            )
+            conn.exec_driver_sql(
+                "CREATE INDEX IF NOT EXISTS ix_push_token_client_ip_hash "
+                "ON push_token (client_ip_hash)"
+            )
+            conn.exec_driver_sql(
+                "CREATE INDEX IF NOT EXISTS ix_push_token_last_seen ON push_token (last_seen)"
+            )
+            conn.exec_driver_sql(
+                "INSERT OR IGNORE INTO push_enrollment_gate (id, generation) VALUES (1, 0)"
             )
     except Exception as e:
         print(f"Local schema ensure failed: {e}")
@@ -1983,6 +2704,258 @@ with app.app_context():
 def _normalize_board_type(value):
     value = str(value or "").strip().lower()
     return value if value in COMMUNITY_BOARDS else "free"
+
+
+def _poll_payload_from_request():
+    if request.form.get("poll_enabled") != "1":
+        return None, [], None
+
+    question = re.sub(r"\s+", " ", request.form.get("poll_question", "")).strip()
+    if not question:
+        return None, [], "투표 질문을 입력해주세요."
+    if len(question) > 200:
+        return None, [], "투표 질문은 200자 이하로 입력해주세요."
+
+    options = []
+    seen = set()
+    for raw_option in request.form.getlist("poll_options"):
+        option = re.sub(r"\s+", " ", raw_option or "").strip()
+        if not option:
+            continue
+        if len(option) > 80:
+            return None, [], "투표 항목은 각각 80자 이하로 입력해주세요."
+        normalized = option.casefold()
+        if normalized in seen:
+            continue
+        seen.add(normalized)
+        options.append(option)
+
+    if len(options) < 2:
+        return None, [], "투표 항목을 2개 이상 입력해주세요."
+    if len(options) > 6:
+        return None, [], "투표 항목은 최대 6개까지 등록할 수 있습니다."
+    return question, options, None
+
+
+def _save_post_poll(post, question, options):
+    PollVote.query.filter_by(post_id=post.id).delete(synchronize_session=False)
+    PollOption.query.filter_by(post_id=post.id).delete(synchronize_session=False)
+    post.poll_question = question
+    for position, text in enumerate(options):
+        db.session.add(PollOption(post_id=post.id, text=text, position=position))
+
+
+def _board_post_image_file_info(filename):
+    if (
+        not isinstance(filename, str)
+        or not filename
+        or "/" in filename
+        or "\\" in filename
+        or os.path.basename(filename) != filename
+    ):
+        return None
+    upload_root = os.path.realpath(app.config["UPLOAD_FOLDER"])
+    file_path = os.path.join(upload_root, filename)
+    if os.path.realpath(os.path.dirname(file_path)) != upload_root:
+        return None
+    try:
+        file_stat = os.lstat(file_path)
+    except (FileNotFoundError, OSError, ValueError):
+        return None
+    if not stat.S_ISREG(file_stat.st_mode):
+        return None
+    return file_path, file_stat.st_size
+
+
+@contextmanager
+def _board_image_storage_lock():
+    try:
+        os.makedirs(app.instance_path, exist_ok=True)
+        lock_file = open(
+            os.path.join(app.instance_path, "board-image-storage.lock"), "a+b"
+        )
+    except OSError as error:
+        app.logger.error("Could not open board image storage lock: %s", error)
+        abort(503)
+    locked = False
+    try:
+        try:
+            fcntl.flock(lock_file.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+            locked = True
+        except BlockingIOError:
+            abort(503)
+        except OSError as error:
+            app.logger.error("Could not lock board image storage: %s", error)
+            abort(503)
+        yield
+    finally:
+        if locked:
+            try:
+                fcntl.flock(lock_file.fileno(), fcntl.LOCK_UN)
+            except OSError as error:
+                app.logger.error("Could not unlock board image storage: %s", error)
+        lock_file.close()
+
+
+def _board_image_storage_usage(exclude_post_id=None):
+    usage = {"active_bytes": 0, "active_images": 0, "users": {}}
+    statement = select(Post.id, Post.author_id, Post.image_filename).where(
+        Post.image_filename.isnot(None)
+    )
+    if exclude_post_id is not None:
+        statement = statement.where(Post.id != exclude_post_id)
+    with db.engine.connect() as connection:
+        posts = connection.execute(statement).all()
+    for _post_id, author_id, image_filename in posts:
+        file_info = _board_post_image_file_info(image_filename)
+        if file_info is None:
+            continue
+        size = file_info[1]
+        usage["active_bytes"] += size
+        usage["active_images"] += 1
+        if author_id is not None:
+            user_usage = usage["users"].setdefault(
+                author_id, {"active_bytes": 0, "active_images": 0}
+            )
+            user_usage["active_bytes"] += size
+            user_usage["active_images"] += 1
+    return usage
+
+
+def _referenced_post_image_filenames():
+    statement = select(Post.image_filename).where(Post.image_filename.isnot(None))
+    with db.engine.connect() as connection:
+        return {row[0] for row in connection.execute(statement).all()}
+
+
+def _cleanup_orphaned_board_images():
+    referenced = _referenced_post_image_filenames()
+    try:
+        with os.scandir(app.config["UPLOAD_FOLDER"]) as entries:
+            for entry in entries:
+                if not BOARD_POST_IMAGE_NAME_RE.fullmatch(entry.name):
+                    continue
+                try:
+                    entry_stat = entry.stat(follow_symlinks=False)
+                except OSError as error:
+                    app.logger.error("Could not inspect board image: %s", error)
+                    abort(503)
+                if not stat.S_ISREG(entry_stat.st_mode) or entry.name in referenced:
+                    continue
+                try:
+                    os.remove(entry.path)
+                except OSError as error:
+                    app.logger.error("Could not remove orphaned board image: %s", error)
+                    abort(503)
+    except FileNotFoundError:
+        return
+    except OSError as error:
+        app.logger.error("Could not inspect board image storage: %s", error)
+        abort(503)
+
+
+def _validated_board_post_image(file_storage):
+    if not file_storage or not file_storage.filename:
+        return None
+    if not allowed_image(file_storage.filename):
+        abort(400)
+    extension = os.path.splitext(secure_filename(file_storage.filename))[1].lower().lstrip(".")
+    expected_format = BOARD_IMAGE_FORMATS.get(extension)
+    if not expected_format:
+        abort(400)
+    try:
+        file_storage.stream.seek(0)
+        image_bytes = file_storage.stream.read(BOARD_MAX_IMAGE_BYTES + 1)
+        file_storage.stream.seek(0)
+    except (OSError, ValueError):
+        abort(400)
+    if not image_bytes or len(image_bytes) > BOARD_MAX_IMAGE_BYTES:
+        abort(413)
+
+    try:
+        with warnings.catch_warnings():
+            warnings.simplefilter("error", Image.DecompressionBombWarning)
+            with Image.open(BytesIO(image_bytes)) as image:
+                if image.format != expected_format:
+                    abort(400)
+                width, height = image.size
+                frame_count = getattr(image, "n_frames", 1)
+                if (
+                    width <= 0
+                    or height <= 0
+                    or width * height * frame_count > BOARD_MAX_IMAGE_PIXELS
+                    or frame_count > BOARD_MAX_IMAGE_FRAMES
+                ):
+                    abort(400)
+                image.verify()
+            with Image.open(BytesIO(image_bytes)) as image:
+                for frame_index in range(getattr(image, "n_frames", 1)):
+                    image.seek(frame_index)
+                    image.load()
+    except (
+        OSError,
+        ValueError,
+        Image.DecompressionBombError,
+        Image.DecompressionBombWarning,
+    ):
+        abort(400)
+    return image_bytes, "." + extension
+
+
+def _save_uploaded_post_image(file, *, user_id, exclude_post_id=None):
+    validated_image = _validated_board_post_image(file)
+    if validated_image is None:
+        return None
+    image_bytes, extension = validated_image
+    _cleanup_orphaned_board_images()
+    usage = _board_image_storage_usage(exclude_post_id=exclude_post_id)
+    user_usage = usage["users"].get(
+        user_id, {"active_bytes": 0, "active_images": 0}
+    )
+    if (
+        usage["active_images"] + 1 > BOARD_MAX_ACTIVE_IMAGES
+        or usage["active_bytes"] + len(image_bytes) > BOARD_MAX_ACTIVE_IMAGE_BYTES
+        or user_usage["active_images"] + 1 > BOARD_MAX_ACTIVE_IMAGES_PER_USER
+        or user_usage["active_bytes"] + len(image_bytes)
+        > BOARD_MAX_ACTIVE_IMAGE_BYTES_PER_USER
+    ):
+        abort(413)
+
+    filename = f"board_{uuid.uuid4().hex}{extension}"
+    save_path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
+    try:
+        os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
+        with open(save_path, "xb") as image_file:
+            image_file.write(image_bytes)
+    except OSError:
+        try:
+            os.remove(save_path)
+        except OSError:
+            pass
+        raise
+    return filename
+
+
+def _post_image_is_referenced(filename):
+    statement = select(Post.id).where(Post.image_filename == filename).limit(1)
+    with db.engine.connect() as connection:
+        return connection.execute(statement).first() is not None
+
+
+def _remove_post_image_if_unreferenced(filename):
+    if not filename or _post_image_is_referenced(filename):
+        return True
+    file_info = _board_post_image_file_info(filename)
+    if file_info is None:
+        return True
+    try:
+        os.remove(file_info[0])
+    except FileNotFoundError:
+        return True
+    except OSError as error:
+        app.logger.error("Could not remove unreferenced board image: %s", error)
+        return False
+    return True
 
 
 def _month_key(dt=None):
@@ -2088,15 +3061,74 @@ def _delete_all_cached_player_reviews_for_user(user_id):
         _save_player_review_cache(cache)
 
 
+def _cached_player_review_refs_for_user(user_id):
+    if user_id is None:
+        return []
+    user_key = str(user_id)
+    refs = set()
+    cache = _load_player_review_cache()
+    for player_cid, player_reviews in cache.items():
+        if not isinstance(player_reviews, dict):
+            continue
+        for review_id, review in player_reviews.items():
+            if not isinstance(review, dict):
+                continue
+            if str(review.get("user_id")) != user_key and str(review_id) != user_key:
+                continue
+            document_ids = {
+                user_key,
+                str(review_id or "").strip(),
+                str(review.get("id") or "").strip(),
+            }
+            for document_id in document_ids:
+                if document_id:
+                    refs.add((str(player_cid), document_id))
+    return sorted(refs)
+
+
+def _delete_remote_player_reviews_for_user(user_id):
+    """Delete the user's Firestore review documents before removing the account."""
+    if user_id is None or not fs:
+        return True
+    refs = _cached_player_review_refs_for_user(user_id)
+    if not refs:
+        return True
+    try:
+        for offset in range(0, len(refs), 400):
+            batch = fs.batch()
+            for player_cid, review_id in refs[offset:offset + 400]:
+                batch.delete(
+                    _player_review_collection(player_cid).document(review_id)
+                )
+            batch.commit(retry=None, timeout=20)
+        return True
+    except Exception as error:
+        app.logger.exception(
+            "Firestore account review deletion failed for user %s: %s",
+            user_id,
+            error,
+        )
+        return False
+
+
 def _purge_local_user_content(user_id):
     """Delete local posts and comment threads created by an abusive account."""
     if user_id is None:
         return
 
     authored_posts = Post.query.filter_by(author_id=user_id).all()
+    image_filenames = []
     for post in authored_posts:
+        if post.image_filename:
+            image_filenames.append(post.image_filename)
         Comment.query.filter_by(post_id=post.id).delete(synchronize_session=False)
+        PollVote.query.filter_by(post_id=post.id).delete(synchronize_session=False)
+        PollOption.query.filter_by(post_id=post.id).delete(synchronize_session=False)
+        PostLike.query.filter_by(post_id=post.id).delete(synchronize_session=False)
         db.session.delete(post)
+
+    PollVote.query.filter_by(user_id=user_id).delete(synchronize_session=False)
+    PlayerReviewLike.query.filter_by(user_id=user_id).delete(synchronize_session=False)
 
     target_comment_ids = {
         row[0]
@@ -2125,17 +3157,26 @@ def _purge_local_user_content(user_id):
         for comment in roots:
             db.session.delete(comment)
 
+    return image_filenames
+
 
 def _delete_local_user_account(user, purge_content=False):
     user_id = getattr(user, "id", None)
     if user_id is None:
         return
     if purge_content:
-        _purge_local_user_content(user_id)
+        image_filenames = _purge_local_user_content(user_id)
     else:
+        image_filenames = []
         Post.query.filter_by(author_id=user_id).update({"author_id": None}, synchronize_session=False)
         Comment.query.filter_by(author_id=user_id).update({"author_id": None}, synchronize_session=False)
         PlayerReviewComment.query.filter_by(author_id=user_id).update({"author_id": None}, synchronize_session=False)
+        PlayerReviewLike.query.filter_by(user_id=user_id).delete(synchronize_session=False)
+    CouponPushDelivery.query.filter_by(user_id=user_id).delete(synchronize_session=False)
+    RenewalPushDelivery.query.filter_by(user_id=user_id).delete(synchronize_session=False)
+    RenewalPushDevice.query.filter_by(user_id=user_id).delete(synchronize_session=False)
+    RenewalInterest.query.filter_by(user_id=user_id).delete(synchronize_session=False)
+    RenewalQuietHours.query.filter_by(user_id=user_id).delete(synchronize_session=False)
     Notification.query.filter_by(user_id=user_id).delete(synchronize_session=False)
     if purge_content:
         Notification.query.filter_by(actor_id=user_id).delete(synchronize_session=False)
@@ -2149,6 +3190,8 @@ def _delete_local_user_account(user, purge_content=False):
             _PENDING_PLAYER_REVIEWS.pop(key, None)
     db.session.delete(user)
     db.session.commit()
+    for filename in image_filenames:
+        _remove_post_image_if_unreferenced(filename)
 
 
 def _community_sidebar_context():
@@ -2160,21 +3203,18 @@ def _community_sidebar_context():
 
 def _latest_notice_post():
     try:
-        return Post.query.filter_by(board_type="notice").order_by(Post.created_at.desc()).first()
+        return (
+            Post.query.filter_by(board_type="notice")
+            .order_by(Post.is_pinned.desc(), Post.created_at.desc())
+            .first()
+        )
     except Exception as e:
         print(f"Latest notice read failed: {e}")
         return None
 
 
-def _get_reviews_by_user(user_id, limit=100):
+def _get_reviews_by_user(user_id, limit=None):
     reviews = []
-    if fs:
-        try:
-            query = _fs_where(fs.collection_group("reviews"), "user_id", "==", user_id).limit(limit)
-            reviews.extend(_format_player_review_doc(doc) for doc in query.stream(retry=None, timeout=8))
-        except Exception as e:
-            print(f"Firestore user review read failed for {user_id}: {e}")
-
     cached = _load_player_review_cache()
     for player_reviews in cached.values():
         if isinstance(player_reviews, dict):
@@ -2182,7 +3222,61 @@ def _get_reviews_by_user(user_id, limit=100):
                 if isinstance(item, dict) and str(item.get("user_id")) == str(user_id):
                     reviews.append(_format_player_review_data(dict(item)))
 
+    # The local cache is updated together with every review write and contains the
+    # complete migrated history. Only fall back to the indexed remote query when a
+    # user's reviews are absent locally.
+    if not reviews and fs:
+        try:
+            query = _fs_where(
+                fs.collection_group("reviews"),
+                "user_id",
+                "==",
+                user_id,
+            )
+            if limit:
+                query = query.limit(limit)
+            reviews.extend(
+                _format_player_review_doc(doc)
+                for doc in query.stream(retry=None, timeout=8)
+            )
+        except Exception as e:
+            print(f"Firestore user review read failed for {user_id}: {e}")
+
     return _dedupe_player_reviews(reviews, limit=limit)
+
+
+def _profile_activity_summary(user, reviews):
+    user_id = user.id
+    post_count = Post.query.filter_by(author_id=user_id).count()
+    post_comment_count = Comment.query.filter_by(author_id=user_id).count()
+    review_comment_count = PlayerReviewComment.query.filter_by(
+        author_id=user_id
+    ).count()
+    likes_received = int(
+        db.session.query(func.coalesce(func.sum(Post.likes), 0))
+        .filter(Post.author_id == user_id)
+        .scalar()
+        or 0
+    )
+
+    monthly_rank = None
+    for index, row in enumerate(
+        _review_point_rankings(_month_key(), limit=None),
+        start=1,
+    ):
+        if row["user"].id == user_id:
+            monthly_rank = index
+            break
+
+    return {
+        "review_count": len(reviews),
+        "post_count": post_count,
+        "comment_count": post_comment_count + review_comment_count,
+        "post_comment_count": post_comment_count,
+        "review_comment_count": review_comment_count,
+        "likes_received": likes_received,
+        "monthly_rank": monthly_rank,
+    }
 
 
 def _is_moneyleague_registration_open():
@@ -2291,19 +3385,458 @@ def _is_blocked_registration_ip_prefix(ip_prefix):
         return False
     return ip_prefix in BLOCKED_REGISTRATION_IP_PREFIXES
 
-def _save_moneyleague_screenshot(file_storage):
+def _moneyleague_quota_ref():
+    if not fs:
+        raise RuntimeError("Firestore is not configured.")
+    return fs.collection(MONEYLEAGUE_QUOTA_COLLECTION).document("active")
+
+
+def _moneyleague_comment_quota_bytes(content):
+    if not isinstance(content, str):
+        raise RuntimeError("Money League comment data is invalid.")
+    return len(content.encode("utf-8")) + 512
+
+
+def _moneyleague_existing_quota_usage():
+    collection = _moneyleague_registration_collection()
+    if not collection:
+        raise RuntimeError("Money League registration storage is unavailable.")
+
+    registration_count = 0
+    comment_count = 0
+    comment_bytes = 0
+    for registration in collection.stream():
+        registration_count += 1
+        for comment in registration.reference.collection("comments").stream():
+            comment_count += 1
+            comment_data = comment.to_dict() or {}
+            comment_bytes += _moneyleague_comment_quota_bytes(
+                comment_data.get("content")
+            )
+
+    legacy_notification_writes = Notification.query.filter_by(
+        kind="moneyleague_comment"
+    ).count()
+
+    image_bytes = 0
+    upload_dir = os.path.join(
+        app.config["UPLOAD_FOLDER"], "moneyleague_registrations"
+    )
+    try:
+        with os.scandir(upload_dir) as entries:
+            for entry in entries:
+                try:
+                    stat_result = entry.stat(follow_symlinks=False)
+                except OSError as error:
+                    raise RuntimeError("Could not inspect Money League uploads.") from error
+                if stat.S_ISREG(stat_result.st_mode):
+                    image_bytes += stat_result.st_size
+    except FileNotFoundError:
+        pass
+
+    return {
+        "active_registrations": registration_count,
+        "active_image_bytes": image_bytes,
+        "active_comments": comment_count,
+        "active_comment_bytes": comment_bytes,
+        "total_comment_writes": max(comment_count, legacy_notification_writes),
+        "quota_day": datetime.utcnow().date().isoformat(),
+        "daily_write_count": 0,
+        "daily_clients": {},
+    }
+
+
+def _ensure_moneyleague_quota_initialized():
+    quota_ref = _moneyleague_quota_ref()
+    if quota_ref.get().exists:
+        return quota_ref
+
+    initial_usage = _moneyleague_existing_quota_usage()
+    transaction = fs.transaction()
+
+    @firestore.transactional
+    def initialize(transaction):
+        snapshot = quota_ref.get(transaction=transaction)
+        if not snapshot.exists:
+            transaction.set(quota_ref, initial_usage)
+
+    initialize(transaction)
+    return quota_ref
+
+
+def _moneyleague_quota_values(snapshot):
+    if not snapshot.exists:
+        raise RuntimeError("Money League storage quota is not initialized.")
+    data = snapshot.to_dict() or {}
+    integer_fields = (
+        "active_registrations",
+        "active_image_bytes",
+        "active_comments",
+        "active_comment_bytes",
+        "total_comment_writes",
+        "daily_write_count",
+    )
+    for field in integer_fields:
+        value = data.get(field)
+        if type(value) is not int or value < 0:
+            raise RuntimeError("Money League storage quota data is invalid.")
+    quota_day = data.get("quota_day")
+    if not isinstance(quota_day, str):
+        raise RuntimeError("Money League storage quota data is invalid.")
+    try:
+        parsed_quota_day = date.fromisoformat(quota_day)
+    except ValueError as error:
+        raise RuntimeError("Money League storage quota data is invalid.") from error
+    if parsed_quota_day.isoformat() != quota_day:
+        raise RuntimeError("Money League storage quota data is invalid.")
+    clients = data.get("daily_clients")
+    if not isinstance(clients, dict):
+        raise RuntimeError("Money League storage quota data is invalid.")
+    if quota_day == datetime.utcnow().date().isoformat():
+        if len(clients) > MONEYLEAGUE_MAX_DAILY_WRITES:
+            raise RuntimeError("Money League storage quota data is invalid.")
+        for client_key, client_usage in clients.items():
+            if not re.fullmatch(r"[0-9a-f]{64}", str(client_key)):
+                raise RuntimeError("Money League storage quota data is invalid.")
+            if not isinstance(client_usage, dict):
+                raise RuntimeError("Money League storage quota data is invalid.")
+            for field in ("writes", "bytes"):
+                value = client_usage.get(field)
+                if type(value) is not int or value < 0:
+                    raise RuntimeError("Money League storage quota data is invalid.")
+    return data
+
+
+def _moneyleague_quota_client_key():
+    # Nginx overwrites X-Real-IP after restoring the visitor address from a
+    # trusted Cloudflare peer; X-Forwarded-For may contain client-supplied hops.
+    raw_address = (request.headers.get("X-Real-IP") or request.remote_addr or "").strip()
+    try:
+        parsed_address = ipaddress.ip_address(raw_address)
+        if isinstance(parsed_address, ipaddress.IPv6Address) and parsed_address.ipv4_mapped:
+            parsed_address = parsed_address.ipv4_mapped
+        if isinstance(parsed_address, ipaddress.IPv6Address):
+            address = f"{ipaddress.ip_network((parsed_address, 64), strict=False).network_address.compressed}/64"
+        else:
+            address = parsed_address.compressed
+    except ValueError:
+        address = "unknown"
+    secret = str(app.secret_key or "").encode("utf-8")
+    return hmac.new(secret, address.encode("utf-8"), hashlib.sha256).hexdigest()
+
+
+def _moneyleague_quota_day_state(data):
+    today = datetime.utcnow().date().isoformat()
+    if data["quota_day"] > today:
+        raise RuntimeError("Money League storage quota date is invalid.")
+    if data["quota_day"] != today:
+        return today, 0, {}
+    return today, data["daily_write_count"], dict(data["daily_clients"])
+
+
+def _reserve_moneyleague_storage(
+    kind, amount, client_key, *, new_registration=False, daily_amount=None
+):
+    if kind not in {"registration", "comment", "edit"}:
+        raise ValueError("Invalid Money League quota kind.")
+    if type(amount) is not int or amount <= 0:
+        raise ValueError("Invalid Money League quota amount.")
+    if daily_amount is None:
+        daily_amount = amount
+    if type(daily_amount) is not int or daily_amount <= 0:
+        raise ValueError("Invalid Money League daily quota amount.")
+    if not re.fullmatch(r"[0-9a-f]{64}", str(client_key)):
+        raise ValueError("Invalid Money League client quota key.")
+
+    quota_ref = _ensure_moneyleague_quota_initialized()
+    transaction = fs.transaction()
+
+    @firestore.transactional
+    def reserve(transaction):
+        data = _moneyleague_quota_values(quota_ref.get(transaction=transaction))
+        quota_day, daily_count, daily_clients = _moneyleague_quota_day_state(data)
+        client_usage = daily_clients.get(client_key, {"writes": 0, "bytes": 0})
+        client_writes = client_usage["writes"]
+        client_bytes = client_usage["bytes"]
+
+        if daily_count + 1 > MONEYLEAGUE_MAX_DAILY_WRITES:
+            return "global_limit"
+        if (
+            client_writes + 1 > MONEYLEAGUE_MAX_DAILY_CLIENT_WRITES
+            or client_bytes + daily_amount > MONEYLEAGUE_MAX_DAILY_CLIENT_BYTES
+        ):
+            return "client_limit"
+
+        if kind == "registration":
+            next_count = data["active_registrations"] + (1 if new_registration else 0)
+            if (
+                next_count > MONEYLEAGUE_MAX_ACTIVE_REGISTRATIONS
+                or data["active_image_bytes"] + amount
+                > MONEYLEAGUE_MAX_ACTIVE_IMAGE_BYTES
+            ):
+                return "global_limit"
+            data["active_registrations"] = next_count
+            data["active_image_bytes"] += amount
+        elif kind == "comment":
+            if (
+                data["active_comments"] + 1 > MONEYLEAGUE_MAX_ACTIVE_COMMENTS
+                or data["active_comment_bytes"] + amount
+                > MONEYLEAGUE_MAX_ACTIVE_COMMENT_BYTES
+                or data["total_comment_writes"] + 1
+                > MONEYLEAGUE_MAX_TOTAL_COMMENT_WRITES
+            ):
+                return "global_limit"
+            data["active_comments"] += 1
+            data["active_comment_bytes"] += amount
+            data["total_comment_writes"] += 1
+
+        client_usage = {"writes": client_writes + 1, "bytes": client_bytes + daily_amount}
+        daily_clients[client_key] = client_usage
+        transaction.set(
+            quota_ref,
+            {
+                "active_registrations": data["active_registrations"],
+                "active_image_bytes": data["active_image_bytes"],
+                "active_comments": data["active_comments"],
+                "active_comment_bytes": data["active_comment_bytes"],
+                "total_comment_writes": data["total_comment_writes"],
+                "quota_day": quota_day,
+                "daily_write_count": daily_count + 1,
+                "daily_clients": daily_clients,
+            },
+            merge=True,
+        )
+        return "ok"
+
+    return reserve(transaction)
+
+
+def _adjust_moneyleague_storage(
+    kind, count_delta=0, bytes_delta=0, lifetime_delta=0
+):
+    if kind not in {"registration", "comment"}:
+        raise ValueError("Invalid Money League quota kind.")
+    if (
+        type(count_delta) is not int
+        or type(bytes_delta) is not int
+        or type(lifetime_delta) is not int
+    ):
+        raise ValueError("Invalid Money League quota adjustment.")
+    if kind == "registration" and lifetime_delta:
+        raise ValueError("Invalid Money League registration quota adjustment.")
+
+    quota_ref = _ensure_moneyleague_quota_initialized()
+    transaction = fs.transaction()
+
+    @firestore.transactional
+    def adjust(transaction):
+        data = _moneyleague_quota_values(quota_ref.get(transaction=transaction))
+        if kind == "registration":
+            count_field, bytes_field = "active_registrations", "active_image_bytes"
+        else:
+            count_field, bytes_field = "active_comments", "active_comment_bytes"
+        next_count = data[count_field] + count_delta
+        next_bytes = data[bytes_field] + bytes_delta
+        updates = {count_field: next_count, bytes_field: next_bytes}
+        if kind == "comment" and lifetime_delta:
+            next_lifetime = data["total_comment_writes"] + lifetime_delta
+            if next_lifetime < 0:
+                raise RuntimeError("Money League comment quota would become negative.")
+            updates["total_comment_writes"] = next_lifetime
+        if next_count < 0 or next_bytes < 0:
+            raise RuntimeError("Money League storage quota would become negative.")
+        transaction.set(quota_ref, updates, merge=True)
+
+    adjust(transaction)
+
+
+def _delete_moneyleague_registration_once(registration_ref):
+    quota_ref = _ensure_moneyleague_quota_initialized()
+    transaction = fs.transaction()
+
+    @firestore.transactional
+    def delete(transaction):
+        registration = registration_ref.get(transaction=transaction)
+        quota = _moneyleague_quota_values(quota_ref.get(transaction=transaction))
+        if not registration.exists:
+            return None
+        if quota["active_registrations"] == 0:
+            raise RuntimeError("Money League registration quota data is invalid.")
+        transaction.delete(registration_ref)
+        transaction.set(
+            quota_ref,
+            {"active_registrations": quota["active_registrations"] - 1},
+            merge=True,
+        )
+        return registration.to_dict() or {}
+
+    return delete(transaction)
+
+
+def _moneyleague_screenshot_file_path(relative_path):
+    prefix = "uploads/moneyleague_registrations/"
+    if not isinstance(relative_path, str) or not relative_path.startswith(prefix):
+        return None
+    filename = relative_path[len(prefix):]
+    if "/" in filename or "\\" in filename:
+        return None
+    if not MONEYLEAGUE_SCREENSHOT_NAME_RE.fullmatch(filename):
+        return None
+    return os.path.join(
+        app.config["UPLOAD_FOLDER"], "moneyleague_registrations", filename
+    )
+
+
+def _remove_moneyleague_screenshot(relative_path):
+    file_path = _moneyleague_screenshot_file_path(relative_path)
+    if not file_path:
+        return 0, False
+    try:
+        stat_result = os.lstat(file_path)
+    except FileNotFoundError:
+        return 0, True
+    except OSError:
+        return 0, False
+    try:
+        os.remove(file_path)
+    except OSError:
+        return 0, False
+    size = stat_result.st_size if stat.S_ISREG(stat_result.st_mode) else 0
+    return size, True
+
+
+def _validated_moneyleague_screenshot(file_storage):
     if not file_storage or not file_storage.filename:
         return None
     if not allowed_image(file_storage.filename):
         return None
-    original_name = secure_filename(file_storage.filename)
-    _, ext = os.path.splitext(original_name)
-    ext = (ext or "").lower() or ".png"
-    filename = f"mreg_{int(datetime.utcnow().timestamp())}_{uuid.uuid4().hex[:8]}{ext}"
-    save_dir = os.path.join(app.config['UPLOAD_FOLDER'], 'moneyleague_registrations')
+    safe_name = secure_filename(file_storage.filename)
+    extension = os.path.splitext(safe_name)[1].lower().lstrip(".")
+    expected_formats = {
+        "jpg": "JPEG",
+        "jpeg": "JPEG",
+        "png": "PNG",
+        "gif": "GIF",
+        "webp": "WEBP",
+    }
+    expected_format = expected_formats.get(extension)
+    if not expected_format:
+        return None
+
+    try:
+        file_storage.stream.seek(0)
+        image_bytes = file_storage.stream.read(app.config["MAX_SCREENSHOT_BYTES"] + 1)
+        file_storage.stream.seek(0)
+    except (OSError, ValueError):
+        return None
+    if not image_bytes or len(image_bytes) > app.config["MAX_SCREENSHOT_BYTES"]:
+        return None
+
+    try:
+        with warnings.catch_warnings():
+            warnings.simplefilter("error", Image.DecompressionBombWarning)
+            with Image.open(BytesIO(image_bytes)) as image:
+                if image.format != expected_format:
+                    return None
+                width, height = image.size
+                frame_count = getattr(image, "n_frames", 1)
+                if (
+                    width <= 0
+                    or height <= 0
+                    or width * height * frame_count > MONEYLEAGUE_MAX_IMAGE_PIXELS
+                    or frame_count > MONEYLEAGUE_MAX_IMAGE_FRAMES
+                ):
+                    return None
+                image.verify()
+            with Image.open(BytesIO(image_bytes)) as image:
+                for frame_index in range(getattr(image, "n_frames", 1)):
+                    image.seek(frame_index)
+                    image.load()
+    except (
+        OSError,
+        ValueError,
+        Image.DecompressionBombError,
+        Image.DecompressionBombWarning,
+    ):
+        return None
+    return image_bytes, "." + extension
+
+
+def _save_moneyleague_screenshot(file_storage, validated_image=None):
+    if validated_image is None:
+        validated_image = _validated_moneyleague_screenshot(file_storage)
+    if not validated_image:
+        return None
+    image_bytes, extension = validated_image
+    filename = f"mreg_{int(datetime.utcnow().timestamp())}_{uuid.uuid4().hex[:8]}{extension}"
+    save_dir = os.path.join(app.config["UPLOAD_FOLDER"], "moneyleague_registrations")
     os.makedirs(save_dir, exist_ok=True)
-    file_storage.save(os.path.join(save_dir, filename))
-    return os.path.join('uploads', 'moneyleague_registrations', filename)
+    save_path = os.path.join(save_dir, filename)
+    try:
+        with open(save_path, "xb") as image_file:
+            image_file.write(image_bytes)
+    except OSError:
+        try:
+            os.remove(save_path)
+        except OSError:
+            pass
+        raise
+    return os.path.join("uploads", "moneyleague_registrations", filename)
+
+
+def _release_reserved_moneyleague_upload(file_path, reserved_bytes, *, new_registration):
+    if file_path:
+        removed_bytes, removed = _remove_moneyleague_screenshot(file_path)
+        if not removed:
+            return False
+        if removed_bytes:
+            reserved_bytes = removed_bytes
+    try:
+        _adjust_moneyleague_storage(
+            "registration",
+            count_delta=-1 if new_registration else 0,
+            bytes_delta=-reserved_bytes,
+        )
+    except Exception as error:
+        app.logger.error("Money League upload quota release failed: %s", error)
+        return False
+    return True
+
+
+def _release_moneyleague_comment(content):
+    try:
+        _adjust_moneyleague_storage(
+            "comment",
+            count_delta=-1,
+            bytes_delta=-_moneyleague_comment_quota_bytes(content),
+        )
+    except Exception as error:
+        app.logger.error("Money League comment quota release failed: %s", error)
+
+def _delete_moneyleague_registration_comments(registration_ref):
+    comments = registration_ref.collection("comments")
+    batch = fs.batch()
+    pending_count = 0
+    pending_bytes = 0
+    for comment in comments.stream():
+        comment_data = comment.to_dict() or {}
+        batch.delete(comment.reference)
+        pending_count += 1
+        pending_bytes += _moneyleague_comment_quota_bytes(comment_data.get("content"))
+        if pending_count == 400:
+            batch.commit()
+            _adjust_moneyleague_storage(
+                "comment", count_delta=-pending_count, bytes_delta=-pending_bytes
+            )
+            batch = fs.batch()
+            pending_count = 0
+            pending_bytes = 0
+    if pending_count:
+        batch.commit()
+        _adjust_moneyleague_storage(
+            "comment", count_delta=-pending_count, bytes_delta=-pending_bytes
+        )
+
 
 def _get_moneyleague_comments(registration_id):
     comments = []
@@ -2398,23 +3931,78 @@ def moneyleague_registration_new():
                         return render_template("moneyleague_registration_create.html", form=form)
 
                     screenshot = form.clan_screenshot.data
-                    screenshot_path = _save_moneyleague_screenshot(screenshot)
-                    if not screenshot_path:
-                        form.clan_screenshot.errors.append("게임 내 클랜 페이지 스크린샷을 업로드해 주세요.")
+                    validated_image = _validated_moneyleague_screenshot(screenshot)
+                    if not validated_image:
+                        form.clan_screenshot.errors.append(
+                            "스크린샷은 10MB 이하의 정상적인 이미지 파일이어야 합니다."
+                        )
                         return render_template("moneyleague_registration_create.html", form=form)
 
-                    author_ip_prefix = requester_ip_prefix
-                    author_display = f"{author_name} ({author_ip_prefix})" if author_ip_prefix else author_name
-                    payload.update({
-                        "author_id": author_id,
-                        "author_name": author_name,
-                        "author_ip_prefix": author_ip_prefix,
-                        "author_display": author_display,
-                        "clan_screenshot_path": screenshot_path,
-                        "created_at": datetime.utcnow(),
-                    })
-                    collection.add(payload)
-                    return redirect(url_for("moneyleague_registration_board"))
+                    image_bytes, _ = validated_image
+                    registration_ref = collection.document()
+                    client_key = _moneyleague_quota_client_key()
+                    try:
+                        quota_result = _reserve_moneyleague_storage(
+                            "registration", len(image_bytes), client_key,
+                            new_registration=True,
+                            daily_amount=(
+                                len(image_bytes)
+                                + len(json.dumps(
+                                    payload, ensure_ascii=False, separators=(",", ":")
+                                ).encode("utf-8"))
+                                + 512
+                            ),
+                        )
+                    except Exception as error:
+                        app.logger.error("Money League registration quota failed: %s", error)
+                        form.clan_name.errors.append("접수 저장 상태를 확인할 수 없습니다. 잠시 후 다시 시도해 주세요.")
+                        return render_template("moneyleague_registration_create.html", form=form)
+                    if quota_result != "ok":
+                        message = (
+                            "오늘 제출 가능한 접수 글 수를 초과했습니다."
+                            if quota_result == "client_limit"
+                            else "현재 접수 용량이 가득 찼습니다. 잠시 후 다시 시도해 주세요."
+                        )
+                        form.clan_name.errors.append(message)
+                        return render_template("moneyleague_registration_create.html", form=form)
+
+                    screenshot_path = None
+                    write_started = False
+                    try:
+                        screenshot_path = _save_moneyleague_screenshot(
+                            screenshot, validated_image=validated_image
+                        )
+                        if not screenshot_path:
+                            raise OSError("Money League screenshot could not be saved.")
+
+                        author_ip_prefix = requester_ip_prefix
+                        author_display = f"{author_name} ({author_ip_prefix})" if author_ip_prefix else author_name
+                        payload.update({
+                            "author_id": author_id,
+                            "author_name": author_name,
+                            "author_ip_prefix": author_ip_prefix,
+                            "author_display": author_display,
+                            "clan_screenshot_path": screenshot_path,
+                            "created_at": datetime.utcnow(),
+                        })
+                        write_started = True
+                        registration_ref.set(payload)
+                        return redirect(url_for("moneyleague_registration_board"))
+                    except Exception:
+                        if not write_started:
+                            _release_reserved_moneyleague_upload(
+                                screenshot_path, len(image_bytes), new_registration=True
+                            )
+                        else:
+                            try:
+                                saved_document = registration_ref.get()
+                            except Exception:
+                                saved_document = None
+                            if saved_document is not None and not saved_document.exists:
+                                _release_reserved_moneyleague_upload(
+                                    screenshot_path, len(image_bytes), new_registration=True
+                                )
+                        raise
                 except Exception as e:
                     print(f"moneyleague_registration_new error: {e}")
                     form.clan_name.errors.append("등록 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.")
@@ -2463,10 +4051,120 @@ def moneyleague_registration_edit(registration_id):
         if not invalid:
             try:
                 screenshot = form.clan_screenshot.data
-                screenshot_path = _save_moneyleague_screenshot(screenshot)
-                if screenshot_path:
-                    payload["clan_screenshot_path"] = screenshot_path
-                doc.reference.set(payload, merge=True)
+                if screenshot and screenshot.filename:
+                    validated_image = _validated_moneyleague_screenshot(screenshot)
+                    if not validated_image:
+                        form.clan_screenshot.errors.append(
+                            "스크린샷은 10MB 이하의 정상적인 이미지 파일이어야 합니다."
+                        )
+                        return render_template(
+                            "moneyleague_registration_edit.html",
+                            form=form,
+                            registration_id=registration_id,
+                        )
+                    image_bytes, _ = validated_image
+                    client_key = _moneyleague_quota_client_key()
+                    payload_bytes = len(
+                        json.dumps(
+                            payload, ensure_ascii=False, separators=(",", ":")
+                        ).encode("utf-8")
+                    ) + 512
+                    quota_result = _reserve_moneyleague_storage(
+                        "registration", len(image_bytes), client_key,
+                        new_registration=False,
+                        daily_amount=len(image_bytes) + payload_bytes,
+                    )
+                    if quota_result != "ok":
+                        message = (
+                            "오늘 업로드 가능한 이미지 수를 초과했습니다."
+                            if quota_result == "client_limit"
+                            else "현재 이미지 저장 용량이 가득 찼습니다."
+                        )
+                        form.clan_screenshot.errors.append(message)
+                        return render_template(
+                            "moneyleague_registration_edit.html",
+                            form=form,
+                            registration_id=registration_id,
+                        )
+
+                    old_screenshot_path = post.get("clan_screenshot_path")
+                    screenshot_path = None
+                    write_started = False
+                    try:
+                        screenshot_path = _save_moneyleague_screenshot(
+                            screenshot, validated_image=validated_image
+                        )
+                        if not screenshot_path:
+                            raise OSError("Money League screenshot could not be saved.")
+                        payload["clan_screenshot_path"] = screenshot_path
+                        write_started = True
+                        transaction = fs.transaction()
+
+                        @firestore.transactional
+                        def replace_registration(transaction):
+                            current = doc.reference.get(transaction=transaction)
+                            if not current.exists:
+                                return False, None
+                            current_path = (current.to_dict() or {}).get(
+                                "clan_screenshot_path"
+                            )
+                            transaction.update(doc.reference, payload)
+                            return True, current_path
+
+                        replaced, old_screenshot_path = replace_registration(transaction)
+                        if not replaced:
+                            raise RuntimeError("Money League registration no longer exists.")
+                    except Exception:
+                        if not write_started:
+                            _release_reserved_moneyleague_upload(
+                                screenshot_path, len(image_bytes), new_registration=False
+                            )
+                        else:
+                            current_document = None
+                            try:
+                                current_document = doc.reference.get()
+                                current_path = (current_document.to_dict() or {}).get(
+                                    "clan_screenshot_path"
+                                )
+                            except Exception:
+                                current_path = None
+                            if (
+                                current_document is not None
+                                and current_path != screenshot_path
+                            ):
+                                _release_reserved_moneyleague_upload(
+                                    screenshot_path, len(image_bytes), new_registration=False
+                                )
+                        raise
+
+                    old_size, old_removed = _remove_moneyleague_screenshot(
+                        old_screenshot_path
+                    )
+                    if old_removed and old_size:
+                        _adjust_moneyleague_storage(
+                            "registration", bytes_delta=-old_size
+                        )
+                else:
+                    payload_bytes = len(
+                        json.dumps(
+                            payload, ensure_ascii=False, separators=(",", ":")
+                        ).encode("utf-8")
+                    ) + 512
+                    quota_result = _reserve_moneyleague_storage(
+                        "edit", payload_bytes, _moneyleague_quota_client_key()
+                    )
+                    if quota_result != "ok":
+                        form.clan_name.errors.append(
+                            "오늘 수정 가능한 글 저장 횟수를 초과했습니다."
+                            if quota_result == "client_limit"
+                            else "현재 글 저장 용량이 가득 찼습니다."
+                        )
+                        return render_template(
+                            "moneyleague_registration_edit.html",
+                            form=form,
+                            registration_id=registration_id,
+                        )
+                    doc.reference.update(payload)
                 return redirect(url_for("moneyleague_registration_detail", registration_id=registration_id))
             except Exception as e:
                 print(f"moneyleague_registration_edit error: {e}")
@@ -2488,7 +4186,32 @@ def moneyleague_registration_delete(registration_id):
     doc, post = _get_moneyleague_registration_or_404(registration_id)
     if str(post.get("author_id")) != str(current_user.id):
         abort(403)
-    doc.reference.delete()
+    try:
+        _ensure_moneyleague_quota_initialized()
+    except Exception as error:
+        app.logger.error("Money League registration quota initialization failed: %s", error)
+        abort(503)
+    try:
+        deleted_post = _delete_moneyleague_registration_once(doc.reference)
+    except Exception as error:
+        app.logger.error("Money League registration delete failed: %s", error)
+        abort(503)
+    if deleted_post is None:
+        abort(404)
+    screenshot_size, screenshot_removed = _remove_moneyleague_screenshot(
+        deleted_post.get("clan_screenshot_path")
+    )
+    if screenshot_removed and screenshot_size:
+        try:
+            _adjust_moneyleague_storage(
+                "registration", bytes_delta=-screenshot_size
+            )
+        except Exception as error:
+            app.logger.error("Money League registration quota release failed: %s", error)
+    try:
+        _delete_moneyleague_registration_comments(doc.reference)
+    except Exception as error:
+        app.logger.error("Money League comment cleanup failed: %s", error)
     return redirect(url_for("moneyleague_registration_board"))
 
 @app.route("/moneyleague/registrations/<registration_id>/comments", methods=["POST"])
@@ -2528,7 +4251,34 @@ def moneyleague_registration_add_comment(registration_id):
         "author_display": author_display,
         "created_at": datetime.utcnow(),
     }
-    collection.add(payload)
+    comment_size = _moneyleague_comment_quota_bytes(payload["content"])
+    comment_ref = collection.document()
+    try:
+        quota_result = _reserve_moneyleague_storage(
+            "comment", comment_size, _moneyleague_quota_client_key()
+        )
+    except Exception as error:
+        app.logger.error("Money League comment quota failed: %s", error)
+        abort(503)
+    if quota_result != "ok":
+        abort(429 if quota_result == "client_limit" else 503)
+
+    try:
+        comment_ref.set(payload)
+    except Exception:
+        try:
+            saved_comment = comment_ref.get()
+        except Exception:
+            saved_comment = None
+        if saved_comment is not None and not saved_comment.exists:
+            try:
+                _adjust_moneyleague_storage(
+                    "comment", count_delta=-1, bytes_delta=-comment_size,
+                    lifetime_delta=-1,
+                )
+            except Exception as error:
+                app.logger.error("Money League comment quota rollback failed: %s", error)
+        raise
     clan_name = re.sub(r"\s+", " ", str(post.get("clan_name") or "머니리그 접수 글")).strip()
     if len(clan_name) > 34:
         clan_name = clan_name[:34] + "…"
@@ -2565,8 +4315,14 @@ def moneyleague_registration_delete_comment(registration_id, comment_id):
     comment_data = comment_doc.to_dict() or {}
     if str(comment_data.get("author_id")) != str(current_user.id):
         abort(403)
+    try:
+        _ensure_moneyleague_quota_initialized()
+    except Exception as error:
+        app.logger.error("Money League comment quota initialization failed: %s", error)
+        abort(503)
 
     comment_ref.delete()
+    _release_moneyleague_comment(comment_data.get("content"))
     return redirect(url_for("moneyleague_registration_detail", registration_id=registration_id))
 
 @app.route("/board")
@@ -2574,12 +4330,27 @@ def board():
     return redirect(url_for("community", tab="free"))
 
 
+@app.route("/player-reviews")
 @app.route("/community")
 def community():
-    active_board = _normalize_board_type(request.args.get("tab", "free"))
+    active_board = (
+        "review"
+        if request.path == "/player-reviews"
+        else _normalize_board_type(request.args.get("tab", "free"))
+    )
     q = request.args.get("q", "").strip()
     if active_board == "review":
-        review_posts = _latest_home_review_activity(limit=60)
+        review_position = request.args.get("position", "").strip().upper()
+        if review_position not in PLAYER_REVIEW_POSITIONS:
+            review_position = ""
+
+        review_min_rating = request.args.get("min_rating", "").strip()
+        if review_min_rating not in {
+            "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"
+        }:
+            review_min_rating = ""
+
+        review_posts = _all_home_review_activity()
         if q:
             normalized_query = _normalize_filter_text(q)
             review_posts = [
@@ -2594,15 +4365,66 @@ def community():
                     str(review.get("kind_label") or ""),
                 ]))
             ]
+
+        if review_position:
+            review_posts = [
+                review for review in review_posts
+                if str(review.get("player_position") or "").strip().upper()
+                == review_position
+            ]
+
+        if review_min_rating:
+            minimum_rating = float(review_min_rating)
+            filtered_review_posts = []
+            for review in review_posts:
+                try:
+                    average_rating = float(review.get("average_rating"))
+                except (TypeError, ValueError):
+                    continue
+                if average_rating >= minimum_rating:
+                    filtered_review_posts.append(review)
+            review_posts = filtered_review_posts
+
+        review_per_page = 20
+        review_total = len(review_posts)
+        review_total_pages = max(
+            1,
+            math.ceil(review_total / review_per_page),
+        )
+        review_page = max(1, request.args.get("page", 1, type=int))
+        review_page = min(review_page, review_total_pages)
+        review_start = (review_page - 1) * review_per_page
+        review_posts = review_posts[
+            review_start:review_start + review_per_page
+        ]
+        page_start = max(1, review_page - 2)
+        page_end = min(review_total_pages, review_page + 2)
+        review_page_numbers = list(range(page_start, page_end + 1))
+        review_is_filtered = bool(
+            q or review_position or review_min_rating or review_page > 1
+        )
+
         return render_template(
             "board.html",
             posts=[],
             review_posts=review_posts,
+            review_total=review_total,
+            review_page=review_page,
+            review_total_pages=review_total_pages,
+            review_page_numbers=review_page_numbers,
             q=q,
+            review_position=review_position,
+            review_min_rating=review_min_rating,
+            review_positions=PLAYER_REVIEW_POSITIONS,
             boards=COMMUNITY_BOARDS,
             active_board=active_board,
             can_write_board=False,
             sidebar=_community_sidebar_context(),
+            canonical_url=_canonical("/player-reviews"),
+            robots_meta="noindex,follow" if review_is_filtered else "index,follow",
+            meta_description="FC모바일 선수리뷰를 포지션과 별점으로 검색하고, 실제 이용자들의 사용 후기와 평가를 확인하세요.",
+            og_title="FC모바일 선수리뷰, 사용 후기 | 피모북",
+            og_description="FC모바일 선수리뷰, 실제 사용 후기, 평점과 장단점을 확인하세요.",
         )
 
     post_query = Post.query.filter(Post.board_type == active_board)
@@ -2611,11 +4433,28 @@ def community():
             (Post.title.ilike(f"%{q}%")) |
             (Post.content.ilike(f"%{q}%"))
         )
-    posts = post_query.order_by(Post.created_at.desc()).all()
+    post_per_page = 20
+    post_total = post_query.count()
+    post_total_pages = max(1, math.ceil(post_total / post_per_page))
+    post_page = max(1, request.args.get("page", 1, type=int))
+    post_page = min(post_page, post_total_pages)
+    posts = (
+        post_query
+        .order_by(Post.is_pinned.desc(), Post.created_at.desc())
+        .offset((post_page - 1) * post_per_page)
+        .limit(post_per_page)
+        .all()
+    )
+    post_page_start = max(1, post_page - 2)
+    post_page_end = min(post_total_pages, post_page + 2)
     return render_template(
         "board.html",
         posts=posts,
         review_posts=[],
+        post_total=post_total,
+        post_page=post_page,
+        post_total_pages=post_total_pages,
+        post_page_numbers=list(range(post_page_start, post_page_end + 1)),
         q=q,
         boards=COMMUNITY_BOARDS,
         active_board=active_board,
@@ -2638,30 +4477,63 @@ def new_post():
         title = form.title.data
         content = form.content.data
         active_board = _normalize_board_type(request.form.get("board_type"))
+        if _is_admin_user() and request.form.get("make_notice") == "1":
+            active_board = "notice"
         if active_board == "notice" and not _is_admin_user():
             flash("공지사항은 관리자만 작성할 수 있습니다.", "danger")
             return redirect(url_for("community", tab="notice"))
 
-        image_filename = None
-        if form.image.data:
-            file = form.image.data
-            if file and allowed_image(file.filename):
-                filename = secure_filename(file.filename)
-                # 파일명 겹치지 않게 타임스탬프 붙이기
-                name, ext = os.path.splitext(filename)
-                filename = f"{name}_{int(datetime.utcnow().timestamp())}{ext}"
-                file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-                image_filename = filename
+        poll_question, poll_options, poll_error = _poll_payload_from_request()
+        if poll_error:
+            flash(poll_error, "danger")
+            return render_template(
+                "create_post.html",
+                form=form,
+                boards=COMMUNITY_BOARDS,
+                active_board=active_board,
+                poll_question=request.form.get("poll_question", ""),
+                poll_options=request.form.getlist("poll_options"),
+                poll_enabled=True,
+            )
 
-        new_post = Post(
-            title=title,
-            content=content,
-            author_id=current_user.id,
-            image_filename=image_filename,
-            board_type=active_board,
-        )
-        db.session.add(new_post)
-        db.session.commit()
+        image_filename = None
+        with (
+            _board_image_storage_lock()
+            if form.image.data
+            else nullcontext()
+        ):
+            if form.image.data:
+                db.session.rollback()
+            image_filename = _save_uploaded_post_image(
+                form.image.data, user_id=current_user.id
+            )
+            new_post = Post(
+                title=title,
+                content=content,
+                author_id=current_user.id,
+                image_filename=image_filename,
+                board_type=active_board,
+                is_pinned=(
+                    active_board == "notice"
+                    and _is_admin_user()
+                    and request.form.get("is_pinned") == "1"
+                ),
+                poll_question=poll_question,
+            )
+            db.session.add(new_post)
+            try:
+                db.session.flush()
+                for position, option_text in enumerate(poll_options):
+                    db.session.add(PollOption(
+                        post_id=new_post.id,
+                        text=option_text,
+                        position=position,
+                    ))
+                db.session.commit()
+            except Exception:
+                db.session.rollback()
+                _remove_post_image_if_unreferenced(image_filename)
+                raise
         flash("글이 작성되었습니다.", "success")
         return redirect(url_for("community", tab=active_board))
     return render_template("create_post.html", form=form, boards=COMMUNITY_BOARDS, active_board=active_board)
@@ -2670,22 +4542,137 @@ def new_post():
 @app.route("/board/<int:post_id>")
 def post_detail(post_id):
     post = Post.query.get_or_404(post_id)
+    viewed_post_id_list = [
+        int(value)
+        for value in session.get("viewed_post_ids", [])
+        if str(value).isdigit()
+    ]
+    viewed_post_ids = set(viewed_post_id_list)
+    if post.id not in viewed_post_ids:
+        post.views = int(post.views or 0) + 1
+        try:
+            db.session.commit()
+        except Exception as error:
+            db.session.rollback()
+            print(f"Post view count update failed for {post.id}: {error}")
+        session["viewed_post_ids"] = (viewed_post_id_list + [post.id])[-200:]
+
     top_comments = (
         Comment.query
         .filter_by(post_id=post.id, parent_id=None)
         .order_by(Comment.created_at.asc())
         .all()
     )
-    return render_template("post_detail.html", post=post, top_comments=top_comments, total_comments=Comment.query.filter_by(post_id=post.id).count())
+    has_liked = bool(
+        current_user.is_authenticated
+        and PostLike.query.filter_by(post_id=post.id, user_id=current_user.id).first()
+    )
+    poll_option_rows = []
+    poll_total_votes = 0
+    selected_poll_option_id = None
+    if post.poll_question:
+        vote_counts = dict(
+            db.session.query(PollVote.option_id, func.count(PollVote.id))
+            .filter(PollVote.post_id == post.id)
+            .group_by(PollVote.option_id)
+            .all()
+        )
+        poll_total_votes = sum(int(count or 0) for count in vote_counts.values())
+        if current_user.is_authenticated:
+            selected_vote = PollVote.query.filter_by(
+                post_id=post.id,
+                user_id=current_user.id,
+            ).first()
+            selected_poll_option_id = selected_vote.option_id if selected_vote else None
+        for option in post.poll_options:
+            count = int(vote_counts.get(option.id, 0))
+            poll_option_rows.append({
+                "id": option.id,
+                "text": option.text,
+                "votes": count,
+                "percent": round((count / poll_total_votes) * 100) if poll_total_votes else 0,
+            })
+    return render_template(
+        "post_detail.html",
+        post=post,
+        board=COMMUNITY_BOARDS.get(_normalize_board_type(post.board_type), COMMUNITY_BOARDS["free"]),
+        top_comments=top_comments,
+        total_comments=Comment.query.filter_by(post_id=post.id).count(),
+        has_liked=has_liked,
+        poll_options=poll_option_rows,
+        poll_total_votes=poll_total_votes,
+        selected_poll_option_id=selected_poll_option_id,
+    )
+
+
+@app.route("/board/<int:post_id>/vote", methods=["POST"])
+@login_required
+def vote_post_poll(post_id):
+    post = Post.query.get_or_404(post_id)
+    if not post.poll_question:
+        abort(404)
+    option_id = request.form.get("option_id", type=int)
+    option = PollOption.query.filter_by(id=option_id, post_id=post.id).first()
+    if not option:
+        flash("투표 항목을 선택해주세요.", "danger")
+        return redirect(url_for("post_detail", post_id=post.id, _anchor="post-poll"))
+
+    vote = PollVote.query.filter_by(post_id=post.id, user_id=current_user.id).first()
+    if vote:
+        vote.option_id = option.id
+    else:
+        db.session.add(PollVote(
+            post_id=post.id,
+            option_id=option.id,
+            user_id=current_user.id,
+        ))
+    try:
+        db.session.commit()
+    except IntegrityError:
+        db.session.rollback()
+        flash("투표 처리 중 충돌이 발생했습니다. 다시 시도해주세요.", "danger")
+        return redirect(url_for("post_detail", post_id=post.id, _anchor="post-poll"))
+    flash("투표가 반영되었습니다.", "success")
+    return redirect(url_for("post_detail", post_id=post.id, _anchor="post-poll"))
 
 
 @app.route("/board/<int:post_id>/like", methods=["POST"])
 @login_required
 def like_post(post_id):
     post = Post.query.get_or_404(post_id)
-    post.likes += 1
-    db.session.commit()
-    return jsonify({"likes": post.likes})
+    existing = PostLike.query.filter_by(
+        post_id=post.id,
+        user_id=current_user.id,
+    ).first()
+    if existing:
+        db.session.delete(existing)
+        post.likes = max(0, int(post.likes or 0) - 1)
+        liked = False
+    else:
+        db.session.add(PostLike(post_id=post.id, user_id=current_user.id))
+        post.likes = int(post.likes or 0) + 1
+        liked = True
+
+    try:
+        db.session.commit()
+    except IntegrityError:
+        db.session.rollback()
+        liked = bool(
+            PostLike.query.filter_by(
+                post_id=post.id,
+                user_id=current_user.id,
+            ).first()
+        )
+        post = db.session.get(Post, post.id)
+
+    payload = {"likes": int(post.likes or 0), "liked": liked}
+    if (
+        request.headers.get("X-Requested-With") == "XMLHttpRequest"
+        or request.accept_mimetypes.best == "application/json"
+    ):
+        return jsonify(payload)
+    flash("좋아요를 눌렀습니다." if liked else "좋아요를 취소했습니다.", "success")
+    return redirect(url_for("post_detail", post_id=post.id))
 
 @app.route("/board/<int:post_id>/edit", methods=["GET", "POST"])
 @login_required
@@ -2697,21 +4684,99 @@ def edit_post(post_id):
 
     form = PostForm(obj=post)
     if form.validate_on_submit():
-        post.title = form.title.data
-        post.content = form.content.data
         next_board = _normalize_board_type(request.form.get("board_type") or post.board_type)
+        if _is_admin_user() and request.form.get("make_notice") == "1":
+            next_board = "notice"
         if next_board == "review":
             flash("리뷰게시판에는 선수 리뷰만 표시할 수 있습니다.", "danger")
             return redirect(url_for("edit_post", post_id=post_id))
         if next_board == "notice" and not _is_admin_user():
             flash("공지사항은 관리자만 작성할 수 있습니다.", "danger")
             return redirect(url_for("post_detail", post_id=post_id))
-        post.board_type = next_board
-        db.session.commit()
+
+        poll_question, poll_options, poll_error = _poll_payload_from_request()
+        if poll_error:
+            flash(poll_error, "danger")
+            return render_template(
+                "edit_post.html",
+                form=form,
+                post=post,
+                boards=COMMUNITY_BOARDS,
+                active_board=next_board,
+                poll_question=request.form.get("poll_question", ""),
+                poll_options=request.form.getlist("poll_options"),
+                poll_enabled=True,
+                poll_has_votes=PollVote.query.filter_by(post_id=post.id).first() is not None,
+            )
+
+        image_change_requested = bool(form.image.data) or request.form.get("remove_image") == "1"
+        with (
+            _board_image_storage_lock()
+            if image_change_requested
+            else nullcontext()
+        ):
+            if image_change_requested:
+                db.session.rollback()
+                post = db.session.get(Post, post_id)
+                if post is None:
+                    abort(404)
+                if post.author_id != current_user.id and not _is_admin_user():
+                    abort(403)
+
+            current_option_texts = [option.text for option in post.poll_options]
+            poll_changed = (
+                (post.poll_question or None) != poll_question
+                or current_option_texts != poll_options
+            )
+            poll_has_votes = PollVote.query.filter_by(post_id=post.id).first() is not None
+            if poll_changed and poll_has_votes:
+                flash("이미 참여자가 있는 투표는 질문이나 항목을 변경·삭제할 수 없습니다.", "danger")
+                return redirect(url_for("edit_post", post_id=post.id))
+
+            post.title = form.title.data
+            post.content = form.content.data
+            post.board_type = next_board
+            post.is_pinned = bool(
+                next_board == "notice"
+                and _is_admin_user()
+                and request.form.get("is_pinned") == "1"
+            )
+            old_image_filename = post.image_filename
+            new_image_filename = None
+            if form.image.data:
+                new_image_filename = _save_uploaded_post_image(
+                    form.image.data,
+                    user_id=post.author_id or current_user.id,
+                    exclude_post_id=post.id,
+                )
+                if new_image_filename:
+                    post.image_filename = new_image_filename
+            elif request.form.get("remove_image") == "1":
+                post.image_filename = None
+            if poll_changed:
+                _save_post_poll(post, poll_question, poll_options)
+            try:
+                db.session.commit()
+            except Exception:
+                db.session.rollback()
+                _remove_post_image_if_unreferenced(new_image_filename)
+                raise
+            if old_image_filename and old_image_filename != post.image_filename:
+                _remove_post_image_if_unreferenced(old_image_filename)
         flash("게시글이 수정되었습니다.", "success")
         return redirect(url_for("post_detail", post_id=post_id))
 
-    return render_template("edit_post.html", form=form, post=post, boards=COMMUNITY_BOARDS, active_board=_normalize_board_type(post.board_type))
+    return render_template(
+        "edit_post.html",
+        form=form,
+        post=post,
+        boards=COMMUNITY_BOARDS,
+        active_board=_normalize_board_type(post.board_type),
+        poll_question=post.poll_question or "",
+        poll_options=[option.text for option in post.poll_options],
+        poll_enabled=bool(post.poll_question),
+        poll_has_votes=PollVote.query.filter_by(post_id=post.id).first() is not None,
+    )
 
 @app.route("/board/<int:post_id>/delete", methods=["POST"])
 @login_required
@@ -2721,11 +4786,23 @@ def delete_post(post_id):
         flash("삭제 권한이 없습니다.", "danger")
         return redirect(url_for("post_detail", post_id=post_id))
 
-    board_type = _normalize_board_type(post.board_type)
-    # 댓글 포함 삭제
-    Comment.query.filter_by(post_id=post.id).delete()
-    db.session.delete(post)
-    db.session.commit()
+    with _board_image_storage_lock():
+        db.session.rollback()
+        post = db.session.get(Post, post_id)
+        if post is None:
+            abort(404)
+        if post.author_id != current_user.id and not _is_admin_user():
+            abort(403)
+        board_type = _normalize_board_type(post.board_type)
+        image_filename = post.image_filename
+        # 댓글 포함 삭제
+        Comment.query.filter_by(post_id=post.id).delete()
+        PostLike.query.filter_by(post_id=post.id).delete()
+        PollVote.query.filter_by(post_id=post.id).delete()
+        PollOption.query.filter_by(post_id=post.id).delete()
+        db.session.delete(post)
+        db.session.commit()
+        _remove_post_image_if_unreferenced(image_filename)
     flash("게시글이 삭제되었습니다.", "info")
     return redirect(url_for("community", tab=board_type))
 
@@ -2741,7 +4818,7 @@ def delete_comment(comment_id):
     db.session.delete(comment)
     db.session.commit()
     flash("댓글이 삭제되었습니다.", "info")
-    return redirect(url_for("post_detail", post_id=post_id))
+    return redirect(url_for("post_detail", post_id=post_id, _anchor="comments"))
 
 @app.route("/search_post")
 def search_post():
@@ -2752,21 +4829,7 @@ def search_post():
     if not q:
         return redirect(url_for("community", tab=active_board))
 
-    posts = Post.query.filter(
-        Post.board_type == active_board,
-        (Post.title.ilike(f"%{q}%")) |
-        (Post.content.ilike(f"%{q}%"))
-    ).order_by(Post.created_at.desc()).all()
-
-    return render_template(
-        "board.html",
-        posts=posts,
-        q=q,
-        boards=COMMUNITY_BOARDS,
-        active_board=active_board,
-        can_write_board=(active_board != "notice" or _is_admin_user()),
-        sidebar=_community_sidebar_context(),
-    )
+    return redirect(url_for("community", tab=active_board, q=q))
 
 
 @app.route('/post/<int:post_id>/comment', methods=['POST'])
@@ -2788,11 +4851,18 @@ def add_comment(post_id):
 
     parent_id = request.form.get("parent_id", type=int)
     parent = None
+    notification_parent = None
     if parent_id:
         parent = Comment.query.filter_by(id=parent_id, post_id=post.id).first()
         if not parent:
             flash("답글을 달 댓글을 찾을 수 없습니다.", "danger")
             return redirect(url_for('post_detail', post_id=post_id))
+        notification_parent = parent
+        if parent.parent_id:
+            parent = parent.parent or Comment.query.filter_by(
+                id=parent.parent_id,
+                post_id=post.id,
+            ).first()
 
     comment = Comment(content=content, author=current_user, post_id=post_id, parent_id=parent.id if parent else None)
     db.session.add(comment)
@@ -2802,7 +4872,7 @@ def add_comment(post_id):
     target_url = url_for("post_detail", post_id=post.id, _anchor="comments")
     if parent:
         _create_notifications(
-            [parent.author_id, post.author_id],
+            [notification_parent.author_id if notification_parent else parent.author_id, post.author_id],
             "post_reply",
             f"{current_user.username}님이 ‘{post_title}’ 게시글의 댓글에 답글을 남겼습니다.",
             target_url,
@@ -2817,7 +4887,7 @@ def add_comment(post_id):
             actor_id=current_user.id,
         )
     db.session.commit()
-    return redirect(url_for('post_detail', post_id=post_id))
+    return redirect(url_for("post_detail", post_id=post_id, _anchor=f"comment-{comment.id}"))
 
 
 @app.route("/notifications")
@@ -2874,12 +4944,16 @@ def profile():
         if len(username) > 100:
             flash("이름은 100자 이내로 입력해주세요.", "danger")
             return redirect(url_for("profile"))
-        existing = User.query.filter(User.username == username, User.id != current_user.id).first()
+        existing = User.query.filter(
+            func.lower(User.username) == username.lower(),
+            User.id != current_user.id,
+        ).first()
         if existing:
             flash("이미 사용 중인 이름입니다.", "danger")
             return redirect(url_for("profile"))
 
         current_user.username = username
+        current_user.username_confirmed = True
         db.session.commit()
         flash("프로필 이름이 변경되었습니다.", "success")
         return redirect(url_for("profile"))
@@ -2889,6 +4963,7 @@ def profile():
         "profile.html",
         profile_user=current_user,
         reviews=reviews,
+        profile_stats=_profile_activity_summary(current_user, reviews),
         own_profile=True,
         monthly_points=_review_point_total(current_user.id, _month_key()),
         all_time_points=_review_point_total(current_user.id),
@@ -2903,9 +4978,82 @@ def public_profile(user_id):
         "profile.html",
         profile_user=profile_user,
         reviews=reviews,
+        profile_stats=_profile_activity_summary(profile_user, reviews),
         own_profile=current_user.is_authenticated and current_user.id == profile_user.id,
         monthly_points=_review_point_total(profile_user.id, _month_key()),
         all_time_points=_review_point_total(profile_user.id),
+    )
+
+
+@app.route("/account/delete", methods=["GET", "POST"])
+@login_required
+def delete_account():
+    if request.method == "GET":
+        return render_template(
+            "delete_account.html",
+            error=None,
+            robots_meta="noindex,nofollow",
+        )
+
+    confirm_email = _normalize_email(request.form.get("confirm_email"))
+    confirm_text = (request.form.get("confirm_text") or "").strip()
+    confirm_checkbox = request.form.get("confirm_delete") == "yes"
+    current_password = request.form.get("current_password") or ""
+
+    error = None
+    if confirm_email != _normalize_email(current_user.email):
+        error = "계정 이메일이 일치하지 않습니다."
+    elif confirm_text != "회원탈퇴":
+        error = "확인 문구에 ‘회원탈퇴’를 정확히 입력해주세요."
+    elif not confirm_checkbox:
+        error = "탈퇴 안내 확인에 체크해주세요."
+    elif current_user.password_hash and not current_user.check_password(
+        current_password
+    ):
+        error = "현재 비밀번호가 올바르지 않습니다."
+
+    if error:
+        return render_template(
+            "delete_account.html",
+            error=error,
+            robots_meta="noindex,nofollow",
+        ), 400
+
+    user = current_user._get_current_object()
+    user_id = user.id
+    if not _delete_remote_player_reviews_for_user(user_id):
+        return render_template(
+            "delete_account.html",
+            error=(
+                "선수 리뷰 삭제 중 문제가 발생했습니다. "
+                "계정은 삭제되지 않았으니 잠시 후 다시 시도해주세요."
+            ),
+            robots_meta="noindex,nofollow",
+        ), 503
+
+    try:
+        _delete_local_user_account(user, purge_content=False)
+    except Exception as error:
+        db.session.rollback()
+        app.logger.exception(
+            "Local account deletion failed for user %s: %s",
+            user_id,
+            error,
+        )
+        return render_template(
+            "delete_account.html",
+            error=(
+                "회원탈퇴 처리 중 문제가 발생했습니다. "
+                "계정은 삭제되지 않았으니 잠시 후 다시 시도해주세요."
+            ),
+            robots_meta="noindex,nofollow",
+        ), 500
+
+    logout_user()
+    session.clear()
+    return render_template(
+        "account_deleted.html",
+        robots_meta="noindex,nofollow",
     )
 
 
@@ -2951,9 +5099,25 @@ def admin_setup():
         return redirect(url_for("admin_points"))
 
     setup_password = _admin_setup_password()
+    setup_email = app.config.get("FIMOBOOK_ADMIN_SETUP_EMAIL", "").strip()
+    administrator_exists = _admin_already_exists()
     if request.method == "POST":
+        if administrator_exists:
+            app.logger.warning(
+                "Rejected additional administrator bootstrap attempt for user_id=%s",
+                current_user.id,
+            )
+            flash("이미 관리자가 설정되어 있습니다. 기존 관리자에게 문의해주세요.", "danger")
+            return redirect(url_for("admin_setup"))
         if not setup_password:
             flash("관리자 설정 비밀번호가 서버에 설정되어 있지 않습니다.", "danger")
+            return redirect(url_for("admin_setup"))
+        if not _admin_setup_identity_matches(current_user):
+            app.logger.warning(
+                "Rejected administrator bootstrap for unconfigured user_id=%s",
+                current_user.id,
+            )
+            flash("초기 관리자 설정 대상 계정이 아닙니다.", "danger")
             return redirect(url_for("admin_setup"))
         password = request.form.get("password", "").strip()
         if password != setup_password:
@@ -2962,10 +5126,32 @@ def admin_setup():
 
         current_user.is_admin = True
         db.session.commit()
+        app.logger.info(
+            "Initial administrator bootstrap completed for user_id=%s",
+            current_user.id,
+        )
         flash("관리자로 등록되었습니다.", "success")
         return redirect(url_for("admin_points"))
 
-    return render_template("admin_setup.html", setup_enabled=bool(setup_password))
+    return render_template(
+        "admin_setup.html",
+        setup_enabled=bool(setup_password and setup_email and not administrator_exists),
+    )
+
+
+@app.route("/admin")
+@login_required
+def admin_dashboard():
+    if not _is_admin_user():
+        abort(403)
+    summaries = _load_player_review_summaries()
+    recent = sorted([item for item in summaries.values() if isinstance(item, dict)],
+                    key=lambda item: str(item.get("updated_at_iso") or ""), reverse=True)
+    weekly_ids = _load_weekly_player_ids()
+    return render_template("admin_dashboard.html", total_user_count=User.query.count(),
+                           summary_count=len(recent), recent_summaries=recent[:6],
+                           weekly_players=[_get_local_player_by_weekly_id(pid) for pid in weekly_ids],
+                           robots_meta="noindex,nofollow")
 
 
 @app.route("/admin/points", methods=["GET", "POST"])
@@ -3002,7 +5188,9 @@ def admin_points():
             (User.email.ilike(f"%{q}%"))
         )
     total_user_count = User.query.count()
-    users = user_query.order_by(User.id.asc()).all()
+    page = max(1, request.args.get("page", 1, type=int))
+    pagination = user_query.order_by(User.id.asc()).paginate(page=page, per_page=30, error_out=False)
+    users = pagination.items
     user_ids = [user.id for user in users]
     post_counts = {}
     comment_counts = {}
@@ -3044,9 +5232,10 @@ def admin_points():
     return render_template(
         "admin_points.html",
         users=users,
+        pagination=pagination,
         q=q,
         recent_grants=recent_grants,
-        user_count=len(users),
+        user_count=pagination.total,
         total_user_count=total_user_count,
         user_activity_counts=user_activity_counts,
         delete_password_required=bool(
@@ -3061,35 +5250,695 @@ def admin_delete_user(user_id):
     if not _is_admin_user():
         abort(403)
 
-    target_user = db.session.get(User, user_id)
-    if not target_user:
-        flash("삭제할 회원을 찾을 수 없습니다.", "danger")
-        return redirect(url_for("admin_points"))
-    if target_user.id == current_user.id:
-        flash("현재 로그인한 관리자 계정은 직접 삭제할 수 없습니다.", "danger")
-        return redirect(url_for("admin_points", q=target_user.username))
-
-    delete_password = request.form.get("delete_password", "").strip()
-    confirm_checkbox = request.form.get("confirm_delete") == "yes"
     purge_content = request.form.get("purge_content") == "yes"
+    with (
+        _board_image_storage_lock()
+        if purge_content
+        else nullcontext()
+    ):
+        if purge_content:
+            db.session.rollback()
+        target_user = db.session.get(User, user_id)
+        if not target_user:
+            flash("삭제할 회원을 찾을 수 없습니다.", "danger")
+            return redirect(url_for("admin_points"))
+        if target_user.id == current_user.id:
+            flash("현재 로그인한 관리자 계정은 직접 삭제할 수 없습니다.", "danger")
+            return redirect(url_for("admin_points", q=target_user.username))
 
-    configured_delete_password = app.config.get(
-        "FIMOBOOK_ADMIN_USER_DELETE_PASSWORD", ""
+        delete_password = request.form.get("delete_password", "").strip()
+        confirm_checkbox = request.form.get("confirm_delete") == "yes"
+        configured_delete_password = app.config.get(
+            "FIMOBOOK_ADMIN_USER_DELETE_PASSWORD", ""
+        ).strip()
+        if configured_delete_password and delete_password != configured_delete_password:
+            flash("회원 삭제 비밀번호가 올바르지 않습니다.", "danger")
+            return redirect(url_for("admin_points", q=target_user.username))
+        if not confirm_checkbox:
+            flash("회원 삭제 2단 확인을 완료해주세요.", "danger")
+            return redirect(url_for("admin_points", q=target_user.username))
+
+        deleted_label = target_user.username or target_user.email or f"회원 {target_user.id}"
+        _delete_local_user_account(target_user, purge_content=purge_content)
+        if purge_content:
+            flash(f"{deleted_label} 회원과 작성한 게시글·댓글·답글을 모두 삭제했습니다.", "info")
+        else:
+            flash(f"{deleted_label} 회원을 삭제했습니다. 기존 게시글과 댓글은 익명 처리되었습니다.", "info")
+        return redirect(url_for("admin_points"))
+
+
+EMAIL_VERIFICATION_SALT = "fimobook-email-verification-v1"
+PASSWORD_RESET_SALT = "fimobook-password-reset-v1"
+
+
+def _account_recovery_page(template, **context):
+    return render_template(
+        template,
+        robots_meta="noindex,nofollow",
+        canonical_url=_canonical(
+            "/find-id" if request.endpoint == "find_id" else "/forgot-password"
+        ),
+        **context,
+    )
+
+
+def _allow_account_recovery(action, identity):
+    """Reserve shared SQLite quotas atomically across application workers."""
+    now = int(time.time())
+    client_digest = _push_client_ip_hash() or "unknown-client"
+    scopes = [
+        ("global", 1000, 3600),
+        ("client:" + client_digest, 10, 900),
+    ]
+    if action == "password":
+        scopes.append(("password:cooldown:" + identity, 1, 60))
+    scopes.append((action + ":identity:" + identity.casefold(), 5, 3600))
+    table = AccountRecoveryThrottle.__table__
+    try:
+        db.session.execute(table.delete().where(table.c.expires_at <= now))
+        for scope, limit, seconds in scopes:
+            key = hmac.new(
+                str(app.config["SECRET_KEY"]).encode("utf-8"),
+                ("account-recovery:" + scope).encode("utf-8"),
+                hashlib.sha256,
+            ).hexdigest()
+            statement = sqlite_insert(table).values(
+                key=key, expires_at=now + seconds, attempts=1,
+            )
+            statement = statement.on_conflict_do_update(
+                index_elements=[table.c.key],
+                set_={"attempts": table.c.attempts + 1},
+                where=table.c.attempts < limit,
+            )
+            if db.session.execute(statement).rowcount != 1:
+                # Retain prior quotas even when this narrower quota rejects a request.
+                db.session.commit()
+                flash('요청이 너무 많습니다. 잠시 후 다시 시도해주세요.', 'warning')
+                return False
+        db.session.commit()
+        return True
+    except Exception:
+        db.session.rollback()
+        app.logger.error("Account recovery quota storage is unavailable")
+        abort(503)
+
+
+def _password_reset_fingerprint(user):
+    state = json.dumps([
+        user.id, _normalize_email(user.email), user.password_hash,
+        user.session_token, user.google_sub,
+    ], ensure_ascii=True, separators=(",", ":"))
+    return hmac.new(
+        str(app.config["SECRET_KEY"]).encode("utf-8"),
+        ("password-reset:" + state).encode("utf-8"),
+        hashlib.sha256,
+    ).hexdigest()
+
+
+def _password_reset_user(token):
+    if not token or len(token) > 4096:
+        return None
+    try:
+        payload = _verification_serializer().loads(
+            token, salt=PASSWORD_RESET_SALT,
+            max_age=app.config["PASSWORD_RESET_MAX_AGE"],
+        )
+        if not isinstance(payload, dict) or type(payload.get("user_id")) is not int:
+            return None
+        user = db.session.get(User, payload["user_id"])
+        if (
+            user and user.password_hash and user.username_confirmed
+            and secrets.compare_digest(
+                _password_reset_fingerprint(user), str(payload.get("fingerprint") or ""),
+            )
+        ):
+            return user
+    except (BadSignature, TypeError, ValueError):
+        pass
+    return None
+
+
+def _send_account_recovery_email(user):
+    google_only = bool(user.google_sub and not user.password_hash)
+    reset_link = None
+    if not google_only:
+        token = _verification_serializer().dumps(
+            {"user_id": user.id, "fingerprint": _password_reset_fingerprint(user)},
+            salt=PASSWORD_RESET_SALT,
+        )
+        reset_link = _canonical(url_for("reset_password", token=token))
+    login_link = _canonical(url_for("login"))
+    expires_minutes = app.config["PASSWORD_RESET_MAX_AGE"] // 60
+    body = (
+        "이 계정은 Google로 가입했습니다. 로그인 화면에서 Google로 계속하기를 이용해주세요.\n\n"
+        + login_link
+        if google_only else
+        f"새 비밀번호를 설정하려면 아래 링크를 눌러주세요.\n\n{reset_link}\n\n"
+        f"이 링크는 {expires_minutes}분 동안 유효하며 한 번만 사용할 수 있습니다."
+    )
+    mail.send(Message(
+        subject="[피모북] 계정 로그인 안내" if google_only else "[피모북] 비밀번호 재설정",
+        sender=app.config.get("MAIL_DEFAULT_SENDER") or app.config["MAIL_USERNAME"],
+        recipients=[user.email],
+        body=body + "\n\n본인이 요청하지 않았다면 이 메일을 무시해주세요.",
+        html=render_template(
+            "emails/account_recovery.html", google_only=google_only,
+            reset_link=reset_link, login_link=login_link, expires_minutes=expires_minutes,
+        ),
+    ))
+
+
+@app.route('/find-id', methods=['GET', 'POST'])
+def find_id():
+    masked_email = None
+    if request.method == 'POST':
+        username = (request.form.get('username') or '').strip()
+        if not username or len(username) > 100:
+            flash('가입할 때 설정한 감독명을 입력해주세요.', 'danger')
+            return _account_recovery_page('find_id.html'), 400
+        if not _allow_account_recovery('id', username):
+            return _account_recovery_page('find_id.html'), 429
+        if not _require_recaptcha():
+            return _account_recovery_page('find_id.html'), 400
+        users = User.query.filter(
+            func.lower(User.username) == username.lower(),
+            User.username_confirmed.is_(True),
+        ).limit(2).all()
+        if len(users) == 1 and '@' in users[0].email:
+            local, domain = users[0].email.rsplit('@', 1)
+            # Never expose the full address, including addresses with a short local part.
+            masked_email = (local[:1] if len(local) > 1 else '') + '*****@' + domain
+        else:
+            flash('일치하는 계정을 찾지 못했습니다. 감독명을 다시 확인해주세요.', 'info')
+    return _account_recovery_page('find_id.html', masked_email=masked_email)
+
+
+@app.route('/forgot-password', methods=['GET', 'POST'])
+def forgot_password():
+    if request.method == 'POST':
+        email = _normalize_email(request.form.get('email'))
+        if len(email) > 100 or not re.fullmatch(r'[^@\s<>]+@[^@\s<>]+', email):
+            flash('가입한 이메일 주소를 올바르게 입력해주세요.', 'danger')
+            return _account_recovery_page('forgot_password.html'), 400
+        if not _allow_account_recovery('password', email):
+            return _account_recovery_page('forgot_password.html'), 429
+        if not _require_recaptcha():
+            return _account_recovery_page('forgot_password.html'), 400
+        if not app.config.get('MAIL_USERNAME') or not app.config.get('MAIL_PASSWORD'):
+            flash('현재 메일을 보낼 수 없습니다. 잠시 후 다시 이용해주세요.', 'warning')
+            return _account_recovery_page('forgot_password.html'), 503
+        user = User.query.filter(func.lower(User.email) == email).first()
+        if user and user.username_confirmed and (user.password_hash or user.google_sub):
+            try:
+                _send_account_recovery_email(user)
+            except Exception:
+                # Do not put recipient addresses or reset URLs in application logs.
+                app.logger.error("Account recovery email delivery failed")
+        flash(
+            '가입된 이메일이라면 계정 복구 안내를 보냈습니다. '
+            '메일함과 스팸함을 확인해주세요. 재전송은 1분 후 가능합니다.',
+            'info',
+        )
+        return redirect(url_for('forgot_password', sent='1'))
+    return _account_recovery_page('forgot_password.html', sent=request.args.get('sent') == '1')
+
+
+@app.route('/reset-password/<token>', methods=['GET', 'POST'])
+def reset_password(token):
+    user = _password_reset_user(token)
+    if not user:
+        return _account_recovery_page('reset_password.html', valid_token=False), 400
+    if request.method == 'POST':
+        password = request.form.get('password') or ''
+        confirmation = request.form.get('password_confirm') or ''
+        if not 8 <= len(password) <= 128:
+            flash('새 비밀번호는 8자 이상 128자 이하로 입력해주세요.', 'danger')
+            return _account_recovery_page('reset_password.html', valid_token=True, token=token), 400
+        if password != confirmation:
+            flash('비밀번호 확인이 일치하지 않습니다.', 'danger')
+            return _account_recovery_page('reset_password.html', valid_token=True, token=token), 400
+        new_hash = generate_password_hash(password)
+        try:
+            # Compare-and-swap makes concurrent use of the same link single-use.
+            result = db.session.execute(update(User).where(
+                User.id == user.id,
+                User.email == user.email,
+                User.password_hash == user.password_hash,
+                User.session_token == user.session_token,
+                User.google_sub == user.google_sub,
+                User.username_confirmed.is_(True),
+            ).values(
+                password_hash=new_hash,
+                session_token=secrets.token_hex(32),
+                email_verified=True,
+                email_verified_at=user.email_verified_at or datetime.utcnow(),
+            ).execution_options(synchronize_session=False))
+            if result.rowcount != 1:
+                db.session.rollback()
+                return _account_recovery_page('reset_password.html', valid_token=False), 400
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+            app.logger.error("Password reset could not be saved")
+            flash('비밀번호를 저장하지 못했습니다. 잠시 후 다시 시도해주세요.', 'danger')
+            return _account_recovery_page('reset_password.html', valid_token=True, token=token), 503
+        if current_user.is_authenticated and current_user.id == user.id:
+            logout_user()
+        flash('비밀번호를 변경했습니다. 새 비밀번호로 다시 로그인해주세요.', 'success')
+        return redirect(url_for('login'))
+    return _account_recovery_page('reset_password.html', valid_token=True, token=token)
+
+
+def _normalize_email(value):
+    return (value or "").strip().lower()
+
+
+def _safe_auth_next_url(value):
+    next_url = (value or "").strip()
+    return next_url if _is_safe_local_redirect_target(next_url) else ""
+
+
+def _verification_serializer():
+    return URLSafeTimedSerializer(app.config["SECRET_KEY"])
+
+
+def _create_verification_token(user):
+    return _verification_serializer().dumps(
+        {
+            "user_id": user.id,
+            "email_digest": hashlib.sha256(
+                _normalize_email(user.email).encode("utf-8")
+            ).hexdigest(),
+        },
+        salt=EMAIL_VERIFICATION_SALT,
+    )
+
+
+def _verification_link(user):
+    path = url_for(
+        "verify_email",
+        token=_create_verification_token(user),
+    )
+    return f"{app.config['PUBLIC_BASE_URL']}{path}"
+
+
+def _send_verification_email(user):
+    if not app.config.get("MAIL_USERNAME") or not app.config.get("MAIL_PASSWORD"):
+        raise RuntimeError("메일 발송 계정이 설정되지 않았습니다.")
+    verification_link = _verification_link(user)
+    message = Message(
+        subject="[피모북] 이메일 주소를 인증해주세요",
+        sender=(
+            app.config.get("MAIL_DEFAULT_SENDER")
+            or app.config["MAIL_USERNAME"]
+        ),
+        recipients=[user.email],
+        body=(
+            f"{user.username}님, 피모북 가입을 완료하려면 아래 링크를 눌러주세요.\n\n"
+            f"{verification_link}\n\n"
+            "이 링크는 24시간 동안 유효합니다. 본인이 요청하지 않았다면 이 메일을 무시해주세요."
+        ),
+        html=render_template(
+            "emails/verify_email.html",
+            user=user,
+            verification_link=verification_link,
+            expires_hours=max(
+                1,
+                app.config["EMAIL_VERIFICATION_MAX_AGE"] // 3600,
+            ),
+        ),
+    )
+    mail.send(message)
+
+
+def _google_email_is_verified(payload):
+    value = payload.get("email_verified")
+    return value is True or str(value).lower() == "true"
+
+
+def _link_verified_google_account(user, google_sub):
+    """Discard credentials created before this account proved email ownership."""
+    if not user.email_verified:
+        user.password_hash = None
+    user.google_sub = google_sub
+    user.email_verified = True
+    user.email_verified_at = user.email_verified_at or datetime.utcnow()
+    user.username_confirmed = True
+
+
+def _recaptcha_enabled():
+    return bool(
+        app.config.get("RECAPTCHA_SITE_KEY")
+        and app.config.get("RECAPTCHA_SECRET_KEY")
+    )
+
+
+def _verify_recaptcha_response():
+    if not _recaptcha_enabled():
+        return True
+
+    token = (
+        request.form.get("g-recaptcha-response")
+        or request.form.get("google-recaptcha-response")
+        or ""
     ).strip()
-    if configured_delete_password and delete_password != configured_delete_password:
-        flash("회원 삭제 비밀번호가 올바르지 않습니다.", "danger")
-        return redirect(url_for("admin_points", q=target_user.username))
-    if not confirm_checkbox:
-        flash("회원 삭제 2단 확인을 완료해주세요.", "danger")
-        return redirect(url_for("admin_points", q=target_user.username))
+    if not token:
+        return False
 
-    deleted_label = target_user.username or target_user.email or f"회원 {target_user.id}"
-    _delete_local_user_account(target_user, purge_content=purge_content)
-    if purge_content:
-        flash(f"{deleted_label} 회원과 작성한 게시글·댓글·답글을 모두 삭제했습니다.", "info")
-    else:
-        flash(f"{deleted_label} 회원을 삭제했습니다. 기존 게시글과 댓글은 익명 처리되었습니다.", "info")
-    return redirect(url_for("admin_points"))
+    try:
+        verification = requests.post(
+            "https://www.google.com/recaptcha/api/siteverify",
+            data={
+                "secret": app.config["RECAPTCHA_SECRET_KEY"],
+                "response": token,
+            },
+            timeout=(3, 7),
+        )
+        verification.raise_for_status()
+        result = verification.json()
+    except (requests.RequestException, ValueError) as error:
+        app.logger.warning("reCAPTCHA verification request failed: %s", error)
+        return False
+
+    if not result.get("success"):
+        app.logger.info(
+            "reCAPTCHA rejected request: %s",
+            result.get("error-codes") or [],
+        )
+        return False
+
+    allowed_hostnames = {
+        hostname.strip().lower()
+        for hostname in app.config.get(
+            "RECAPTCHA_ALLOWED_HOSTNAMES",
+            "",
+        ).split(",")
+        if hostname.strip()
+    }
+    verified_hostname = (result.get("hostname") or "").strip().lower()
+    if allowed_hostnames and verified_hostname not in allowed_hostnames:
+        app.logger.warning(
+            "reCAPTCHA hostname rejected: %s",
+            verified_hostname or "<missing>",
+        )
+        return False
+    return True
+
+
+def _require_recaptcha():
+    if _verify_recaptcha_response():
+        return True
+    flash('로봇이 아님을 확인한 후 다시 시도해주세요.', 'warning')
+    return False
+
+
+GOOGLE_SIGNUP_SESSION_TTL = 10 * 60
+
+
+def _set_pending_google_signup(payload, next_url="", existing_user=None):
+    session["pending_google_signup"] = {
+        "google_sub": (payload.get("sub") or "").strip(),
+        "email": _normalize_email(payload.get("email")),
+        "google_name": (payload.get("name") or "").strip()[:100],
+        "next_url": _safe_auth_next_url(next_url),
+        "existing_user_id": existing_user.id if existing_user else None,
+        "issued_at": int(time.time()),
+    }
+
+
+def _pending_google_signup():
+    pending = session.get("pending_google_signup")
+    if not isinstance(pending, dict):
+        return None
+    try:
+        age = int(time.time()) - int(pending.get("issued_at", 0))
+    except (TypeError, ValueError):
+        age = GOOGLE_SIGNUP_SESSION_TTL + 1
+    if (
+        age < 0
+        or age > GOOGLE_SIGNUP_SESSION_TTL
+        or not pending.get("google_sub")
+        or not _normalize_email(pending.get("email"))
+    ):
+        session.pop("pending_google_signup", None)
+        return None
+    return pending
+
+
+@app.route('/verify-email/<token>')
+def verify_email(token):
+    if current_user.is_authenticated and current_user.email_verified:
+        return redirect(url_for('index'))
+
+    try:
+        payload = _verification_serializer().loads(
+            token,
+            salt=EMAIL_VERIFICATION_SALT,
+            max_age=app.config["EMAIL_VERIFICATION_MAX_AGE"],
+        )
+    except SignatureExpired:
+        flash('인증 링크가 만료되었습니다. 인증 메일을 다시 요청해주세요.', 'warning')
+        return redirect(url_for('resend_verification'))
+    except (BadSignature, TypeError, ValueError):
+        flash('유효하지 않은 인증 링크입니다.', 'danger')
+        return redirect(url_for('login'))
+
+    user = db.session.get(User, payload.get("user_id"))
+    expected_digest = (
+        hashlib.sha256(_normalize_email(user.email).encode("utf-8")).hexdigest()
+        if user
+        else ""
+    )
+    if (
+        not user
+        or not secrets.compare_digest(
+            expected_digest,
+            str(payload.get("email_digest") or ""),
+        )
+    ):
+        flash('유효하지 않은 인증 링크입니다.', 'danger')
+        return redirect(url_for('login'))
+
+    if not user.email_verified:
+        user.email_verified = True
+        user.email_verified_at = datetime.utcnow()
+        db.session.commit()
+    flash('이메일 인증이 완료되었습니다. 이제 로그인할 수 있습니다.', 'success')
+    return redirect(url_for('login'))
+
+
+@app.route('/resend-verification', methods=['GET', 'POST'])
+def resend_verification():
+    if current_user.is_authenticated:
+        return redirect(url_for('index'))
+    if request.method == 'POST':
+        email = _normalize_email(request.form.get('email'))
+        user = User.query.filter(func.lower(User.email) == email).first() if email else None
+        now = datetime.utcnow()
+        cooldown = app.config["EMAIL_VERIFICATION_RESEND_SECONDS"]
+        can_send = bool(
+            user
+            and not user.email_verified
+            and (
+                user.verification_sent_at is None
+                or (now - user.verification_sent_at).total_seconds() >= cooldown
+            )
+        )
+        if can_send:
+            try:
+                _send_verification_email(user)
+                user.verification_sent_at = now
+                db.session.commit()
+            except Exception as error:
+                db.session.rollback()
+                app.logger.exception("Verification email resend failed: %s", error)
+        flash(
+            '가입된 미인증 계정이라면 인증 메일을 보냈습니다. '
+            '메일함과 스팸함을 확인해주세요.',
+            'info',
+        )
+        return redirect(url_for('resend_verification'))
+    return render_template('resend_verification.html')
+
+
+@app.route('/auth/google', methods=['POST'])
+def google_login():
+    next_url = _safe_auth_next_url(request.form.get("next"))
+    client_id = app.config.get("GOOGLE_CLIENT_ID", "")
+    credential = (request.form.get("credential") or "").strip()
+    if not client_id or not credential:
+        flash('Google 로그인이 아직 설정되지 않았습니다.', 'warning')
+        return redirect(url_for('login', next=next_url) if next_url else url_for('login'))
+    try:
+        payload = google_id_token.verify_oauth2_token(
+            credential,
+            google_auth_requests.Request(),
+            client_id,
+        )
+    except (ValueError, GoogleAuthError) as error:
+        app.logger.warning("Google ID token verification failed: %s", error)
+        flash('Google 로그인 정보를 확인하지 못했습니다. 다시 시도해주세요.', 'danger')
+        return redirect(url_for('login', next=next_url) if next_url else url_for('login'))
+
+    if payload.get("iss") not in {"accounts.google.com", "https://accounts.google.com"}:
+        flash('Google 로그인 발급자를 확인하지 못했습니다.', 'danger')
+        return redirect(url_for('login', next=next_url) if next_url else url_for('login'))
+
+    google_sub = (payload.get("sub") or "").strip()
+    email = _normalize_email(payload.get("email"))
+    if not google_sub or not email or not _google_email_is_verified(payload):
+        flash('인증된 Google 이메일 계정이 필요합니다.', 'danger')
+        return redirect(url_for('login', next=next_url) if next_url else url_for('login'))
+
+    user = User.query.filter_by(google_sub=google_sub).first()
+    if user and not user.username_confirmed:
+        _set_pending_google_signup(
+            payload,
+            next_url=next_url,
+            existing_user=user,
+        )
+        return redirect(url_for('complete_google_signup'))
+
+    if user:
+        login_user(
+            user,
+            remember=True,
+            duration=app.config["REMEMBER_COOKIE_DURATION"],
+        )
+        flash(f'{user.username}님, Google 계정으로 로그인했습니다.', 'success')
+        return redirect(next_url or url_for('index'))
+
+    user = User.query.filter(func.lower(User.email) == email).first()
+    if user:
+        if user.google_sub and user.google_sub != google_sub:
+            flash('이 이메일은 다른 Google 계정에 연결되어 있습니다.', 'danger')
+            return redirect(url_for('login'))
+        _link_verified_google_account(user, google_sub)
+        try:
+            db.session.commit()
+        except IntegrityError:
+            db.session.rollback()
+            flash('Google 계정을 연결하지 못했습니다. 다시 시도해주세요.', 'danger')
+            return redirect(url_for('login'))
+        login_user(
+            user,
+            remember=True,
+            duration=app.config["REMEMBER_COOKIE_DURATION"],
+        )
+        flash(f'{user.username}님, Google 계정으로 로그인했습니다.', 'success')
+        return redirect(next_url or url_for('index'))
+
+    _set_pending_google_signup(payload, next_url=next_url)
+    return redirect(url_for('complete_google_signup'))
+
+
+@app.route('/auth/google/complete', methods=['GET', 'POST'])
+def complete_google_signup():
+    if current_user.is_authenticated:
+        return redirect(url_for('index'))
+
+    pending = _pending_google_signup()
+    if not pending:
+        flash('Google 가입 정보가 만료되었습니다. 다시 로그인해주세요.', 'warning')
+        return redirect(url_for('login'))
+
+    if request.method == 'POST':
+        username = (request.form.get('username') or "").strip()
+        if not username or len(username) > 100:
+            flash('감독명은 1자 이상 100자 이하로 입력해주세요.', 'danger')
+            return render_template(
+                'complete_google_signup.html',
+                pending=pending,
+            )
+
+        existing_user_id = pending.get("existing_user_id")
+        user = (
+            db.session.get(User, int(existing_user_id))
+            if existing_user_id
+            else User.query.filter_by(
+                google_sub=pending["google_sub"],
+            ).first()
+        )
+        if user and user.username_confirmed:
+            next_url = _safe_auth_next_url(pending.get("next_url"))
+            session.pop("pending_google_signup", None)
+            login_user(
+                user,
+                remember=True,
+                duration=app.config["REMEMBER_COOKIE_DURATION"],
+            )
+            return redirect(next_url or url_for('index'))
+        username_query = User.query.filter(
+            func.lower(User.username) == username.lower()
+        )
+        if user:
+            username_query = username_query.filter(User.id != user.id)
+        if username_query.first():
+            flash('이미 사용 중인 감독명입니다.', 'danger')
+            return render_template(
+                'complete_google_signup.html',
+                pending=pending,
+            )
+
+        email = _normalize_email(pending["email"])
+        if user:
+            if (
+                user.google_sub != pending["google_sub"]
+                or _normalize_email(user.email) != email
+            ):
+                session.pop("pending_google_signup", None)
+                flash('Google 가입 정보를 확인하지 못했습니다.', 'danger')
+                return redirect(url_for('login'))
+            user.username = username
+            _link_verified_google_account(user, pending["google_sub"])
+        else:
+            email_user = User.query.filter(func.lower(User.email) == email).first()
+            if email_user:
+                if (
+                    email_user.google_sub
+                    and email_user.google_sub != pending["google_sub"]
+                ):
+                    session.pop("pending_google_signup", None)
+                    flash('이 이메일은 다른 계정에 연결되어 있습니다.', 'danger')
+                    return redirect(url_for('login'))
+                user = email_user
+                _link_verified_google_account(user, pending["google_sub"])
+            else:
+                user = User(
+                    email=email,
+                    username=username,
+                    password_hash=None,
+                    email_verified=True,
+                    email_verified_at=datetime.utcnow(),
+                    google_sub=pending["google_sub"],
+                    username_confirmed=True,
+                )
+                db.session.add(user)
+
+        try:
+            db.session.commit()
+        except IntegrityError:
+            db.session.rollback()
+            flash('이미 사용 중인 감독명입니다. 다른 이름을 선택해주세요.', 'danger')
+            return render_template(
+                'complete_google_signup.html',
+                pending=pending,
+            )
+
+        next_url = _safe_auth_next_url(pending.get("next_url"))
+        session.pop("pending_google_signup", None)
+        login_user(
+            user,
+            remember=True,
+            duration=app.config["REMEMBER_COOKIE_DURATION"],
+        )
+        flash(f'{user.username} 감독님, 가입이 완료되었습니다!', 'success')
+        return redirect(next_url or url_for('index'))
+
+    return render_template(
+        'complete_google_signup.html',
+        pending=pending,
+    )
 
 
 @app.route('/register', methods=['GET', 'POST'])
@@ -3097,27 +5946,65 @@ def register():
     if current_user.is_authenticated:
         return redirect(url_for('index'))
     if request.method == 'POST':
-        email = request.form['email']
-        username = request.form['username']
-        password = request.form['password']
+        if not _require_recaptcha():
+            return render_template('register.html')
+        email = _normalize_email(request.form.get('email'))
+        username = (request.form.get('username') or "").strip()
+        password = request.form.get('password') or ""
 
-        user_by_email = User.query.filter_by(email=email).first()
+        if not email or "@" not in email or len(email) > 100:
+            flash('올바른 이메일 주소를 입력해주세요.', 'danger')
+            return render_template('register.html')
+        if not username or len(username) > 100:
+            flash('감독명은 1자 이상 100자 이하로 입력해주세요.', 'danger')
+            return render_template('register.html')
+        if len(password) < 8:
+            flash('비밀번호는 8자 이상으로 설정해주세요.', 'danger')
+            return render_template('register.html')
+
+        user_by_email = User.query.filter(func.lower(User.email) == email).first()
         if user_by_email:
             flash('이미 가입된 이메일 주소입니다.', 'danger')
-            return redirect(url_for('register'))
+            return render_template('register.html')
 
-        user_by_name = User.query.filter_by(username=username).first()
+        user_by_name = User.query.filter(
+            func.lower(User.username) == username.lower()
+        ).first()
         if user_by_name:
             flash('이미 사용 중인 감독명입니다.', 'danger')
-            return redirect(url_for('register'))
+            return render_template('register.html')
 
-        new_user = User(email=email, username=username)
+        new_user = User(
+            email=email,
+            username=username,
+            email_verified=False,
+        )
         new_user.set_password(password)
 
         db.session.add(new_user)
-        db.session.commit()
+        try:
+            db.session.commit()
+        except IntegrityError:
+            db.session.rollback()
+            flash('이미 사용 중인 이메일 또는 감독명입니다.', 'danger')
+            return render_template('register.html')
 
-        flash('회원가입이 완료되었습니다. 이제 로그인할 수 있습니다.', 'success')
+        try:
+            _send_verification_email(new_user)
+            new_user.verification_sent_at = datetime.utcnow()
+            db.session.commit()
+            flash(
+                '회원가입이 완료되었습니다. 이메일로 보낸 인증 링크를 확인해주세요.',
+                'success',
+            )
+        except Exception as error:
+            db.session.rollback()
+            app.logger.exception("Verification email send failed: %s", error)
+            flash(
+                '회원가입은 완료됐지만 인증 메일을 보내지 못했습니다. '
+                '잠시 후 인증 메일 재전송을 이용해주세요.',
+                'warning',
+            )
         return redirect(url_for('login'))
     return render_template('register.html')
 
@@ -3126,21 +6013,32 @@ def register():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    next_url = request.args.get("next") or request.form.get("next") or ""
-    if next_url:
-        parsed_next = urlparse(next_url)
-        if parsed_next.netloc or not next_url.startswith("/"):
-            next_url = ""
+    next_url = _safe_auth_next_url(
+        request.args.get("next") or request.form.get("next")
+    )
 
     if current_user.is_authenticated:
         return redirect(next_url or url_for('index'))
     if request.method == 'POST':
-        email = request.form['email']
-        password = request.form['password']
-        user = User.query.filter_by(email=email).first()
+        if not _require_recaptcha():
+            return render_template('login.html', next_url=next_url)
+        email = _normalize_email(request.form.get('email'))
+        password = request.form.get('password') or ""
+        user = User.query.filter(func.lower(User.email) == email).first()
 
         if user and user.check_password(password):
-            login_user(user)
+            if not user.email_verified:
+                flash(
+                    '이메일 인증이 필요합니다. 받은 메일의 인증 링크를 눌러주세요.',
+                    'warning',
+                )
+                return redirect(url_for('resend_verification'))
+            remember = request.form.get("remember") == "on"
+            login_user(
+                user,
+                remember=remember,
+                duration=app.config["REMEMBER_COOKIE_DURATION"],
+            )
             flash(f'{current_user.username}님, 환영합니다!', 'success')
             return redirect(next_url or url_for('index'))
         else:
@@ -3151,6 +6049,11 @@ def login():
 @app.route('/logout')
 @login_required
 def logout():
+    device_id = session.pop('renewal_push_device_id', None)
+    if device_id:
+        RenewalPushDevice.query.filter_by(id=device_id, user_id=current_user.id).update(
+            {'enabled': False, 'coupons_enabled': False}, synchronize_session=False)
+        db.session.commit()
     logout_user()
     flash('로그아웃되었습니다.', 'info')
     return redirect(url_for('index'))
@@ -3178,7 +6081,21 @@ PLAYER_CLASS_MAP_FILE = os.path.join(
 PLAYER_CLASS_NAMES_BY_CID = {}
 DETAIL_SEARCH_DEFAULT_MIN_OVR = 132
 DETAIL_SEARCH_DEFAULT_MAX_OVR = 160
+PLAYER_POSITION_GROUPS = (
+    {"key": "attack", "label": "공격", "positions": ("ST", "CF", "LW", "LF", "RF", "RW")},
+    {"key": "midfield", "label": "미드", "positions": ("CAM", "CM", "CDM", "LM", "RM")},
+    {"key": "defense", "label": "수비", "positions": ("LWB", "LB", "CB", "RB", "RWB", "SW", "GK")},
+)
 LOCAL_ASSET_EXTENSIONS = ("webp", "png", "jpg", "jpeg")
+LOCAL_PLAYER_ASSET_KINDS = frozenset({"card", "faceon"})
+LOCAL_CARD_FALLBACK_URL = "/static/images/card-background-placeholder.svg"
+LOCAL_FACEON_FALLBACK_URL = "/static/apple-touch-icon.png"
+# Increment after refreshing local originals so immutable browser thumbnails
+# are regenerated from the new files instead of reusing an older face-on.
+PLAYER_THUMBNAIL_VERSION = "v2"
+PLAYER_THUMBNAIL_WIDTHS = (96, 128, 160, 256)
+PLAYER_THUMBNAIL_CACHE_DIR = os.path.join(app.instance_path, "player_thumbnails")
+_PLAYER_THUMBNAIL_LOCK = threading.Lock()
 PLAYSTYLE_META_FILE = os.path.join(app.root_path, "static", "playstyles", "meta.json")
 PLAYSTYLE_CDN_BASE = "https://fco.vod.nexoncdn.co.kr/jade_assets/playstyle/playstyle_128"
 _PLAYSTYLE_META_BY_ID = None
@@ -3249,7 +6166,7 @@ def _load_player_class_names():
 PLAYER_CLASS_NAMES_BY_CID = _load_player_class_names()
 
 
-def _find_local_asset_url(folder, cid):
+def _find_local_asset_path(folder, cid):
     if cid is None:
         return None
     static_folder = os.path.join(app.root_path, "static", folder)
@@ -3258,8 +6175,41 @@ def _find_local_asset_url(folder, cid):
         file_name = f"{cid_str}.{ext}"
         file_path = os.path.join(static_folder, file_name)
         if os.path.exists(file_path):
-            return f"/static/{folder}/{file_name}"
+            return file_path
     return None
+
+
+def _find_local_asset_url(folder, cid):
+    file_path = _find_local_asset_path(folder, cid)
+    if not file_path:
+        return None
+    url = f"/static/{folder}/{os.path.basename(file_path)}"
+    if folder == "faceon":
+        return f"{url}?v={PLAYER_THUMBNAIL_VERSION}"
+    return url
+
+
+def _normalize_thumbnail_width(width):
+    try:
+        requested = int(width)
+    except (TypeError, ValueError):
+        requested = 160
+    return min(PLAYER_THUMBNAIL_WIDTHS, key=lambda candidate: abs(candidate - requested))
+
+
+def _player_thumbnail_url(kind, cid, width=160):
+    if kind not in {"card", "faceon"} or cid in (None, ""):
+        return ""
+    if kind not in LOCAL_PLAYER_ASSET_KINDS:
+        return ""
+    try:
+        numeric_cid = int(cid)
+    except (TypeError, ValueError):
+        return ""
+    if not _find_local_asset_path(kind, cid):
+        return ""
+    normalized_width = _normalize_thumbnail_width(width)
+    return f"/media/player/{PLAYER_THUMBNAIL_VERSION}/{kind}/{numeric_cid}-{normalized_width}.webp"
 
 
 def _apply_local_assets(player):
@@ -3268,13 +6218,100 @@ def _apply_local_assets(player):
     cid = player.get("cid")
     if not cid:
         return player
+    if not player.get("cardArt"):
+        player["cardArt"] = card_art_metadata(app.root_path, player)
     local_card = _find_local_asset_url("card", cid)
     local_face = _find_local_asset_url("faceon", cid)
     if local_card:
         player["bimage"] = local_card
+        player["bimageThumb"] = _player_thumbnail_url("card", cid, 256)
+        player["bimageThumbSmall"] = _player_thumbnail_url("card", cid, 128)
+    else:
+        player["bimage"] = LOCAL_CARD_FALLBACK_URL
+        player["bimageThumb"] = LOCAL_CARD_FALLBACK_URL
+        player["bimageThumbSmall"] = LOCAL_CARD_FALLBACK_URL
     if local_face:
         player["pimage"] = local_face
+        player["pimageThumb"] = _player_thumbnail_url("faceon", cid, 256)
+        player["pimageThumbSmall"] = _player_thumbnail_url("faceon", cid, 128)
+    else:
+        player["pimage"] = LOCAL_FACEON_FALLBACK_URL
+        player["pimageThumb"] = LOCAL_FACEON_FALLBACK_URL
+        player["pimageThumbSmall"] = LOCAL_FACEON_FALLBACK_URL
     return player
+
+
+def _player_card_meta(player_or_cid):
+    if isinstance(player_or_cid, dict) and player_or_cid.get("cardArt"):
+        return player_or_cid["cardArt"]
+    raw_cid = player_or_cid.get("cid") if isinstance(player_or_cid, dict) else player_or_cid
+    try:
+        cid = int(raw_cid)
+    except (TypeError, ValueError):
+        return {}
+    canonical = next((p for p in PLAYER_DATA if p.get("cid") == cid), None)
+    return card_art_metadata(app.root_path, canonical) if canonical else {}
+
+
+app.jinja_env.globals.update(player_thumbnail_url=_player_thumbnail_url, player_card_meta=_player_card_meta)
+
+
+@app.route("/api/player_card_art")
+def api_player_card_art():
+    cids = [int(value) for value in request.args.get("cids", "").split(",") if value.isdigit()][:40]
+    requested = set(cids)
+    cards = {str(player["cid"]): card_art_metadata(app.root_path, player)
+             for player in PLAYER_DATA if player.get("cid") in requested}
+    response = jsonify({"cards": cards})
+    response.headers["Cache-Control"] = "public, max-age=300"
+    return response
+
+
+@app.route("/media/player/<version>/<kind>/<int:cid>-<int:width>.webp")
+def player_thumbnail(version, kind, cid, width):
+    if version != PLAYER_THUMBNAIL_VERSION or kind not in LOCAL_PLAYER_ASSET_KINDS:
+        abort(404)
+    normalized_width = _normalize_thumbnail_width(width)
+    if normalized_width != width:
+        abort(404)
+
+    source_path = _find_local_asset_path(kind, cid)
+    if not source_path:
+        abort(404)
+
+    target_dir = os.path.join(PLAYER_THUMBNAIL_CACHE_DIR, version, kind)
+    target_path = os.path.join(target_dir, f"{cid}-{normalized_width}.webp")
+    if not os.path.exists(target_path):
+        with _PLAYER_THUMBNAIL_LOCK:
+            if not os.path.exists(target_path):
+                os.makedirs(target_dir, exist_ok=True)
+                temporary_path = f"{target_path}.{os.getpid()}.{threading.get_ident()}.tmp"
+                try:
+                    with Image.open(source_path) as source_image:
+                        image = source_image.convert("RGBA")
+                        image.thumbnail(
+                            (normalized_width, normalized_width),
+                            Image.Resampling.LANCZOS,
+                        )
+                        image.save(
+                            temporary_path,
+                            format="WEBP",
+                            quality=78,
+                            method=4,
+                        )
+                    os.replace(temporary_path, target_path)
+                finally:
+                    if os.path.exists(temporary_path):
+                        os.remove(temporary_path)
+
+    response = send_file(
+        target_path,
+        mimetype="image/webp",
+        conditional=True,
+        max_age=31536000,
+    )
+    response.headers["Cache-Control"] = "public, max-age=31536000, immutable"
+    return response
 
 def load_player_data_for_traits():
     global PLAYER_DATA
@@ -3297,7 +6334,7 @@ def load_player_data_for_traits():
             json.dump([], f, ensure_ascii=False, indent=2)
 
 _FCPLAYER_CARD_CACHE = {}
-_FCPLAYER_CARD_CACHE_TTL = 60 * 60
+_FCPLAYER_CARD_CACHE_TTL = 6 * 60 * 60
 
 
 def _normalize_player_record(player):
@@ -3344,8 +6381,20 @@ def _normalize_name_for_match(value):
     return re.sub(r"\s+", "", (value or "")).lower()
 
 
+_LOCAL_PLAYER_INDEX_SOURCE = None
+_LOCAL_PLAYER_INDEX = {}
+
+
 def _get_local_player_by_cid(cid):
-    player = next((p for p in PLAYER_DATA if p.get("cid") == cid), None)
+    global _LOCAL_PLAYER_INDEX_SOURCE, _LOCAL_PLAYER_INDEX
+    if _LOCAL_PLAYER_INDEX_SOURCE is not PLAYER_DATA:
+        # Preserve the first-match behavior of the former linear lookup.
+        index = {}
+        for record in PLAYER_DATA:
+            index.setdefault(record.get("cid"), record)
+        _LOCAL_PLAYER_INDEX = index
+        _LOCAL_PLAYER_INDEX_SOURCE = PLAYER_DATA
+    player = _LOCAL_PLAYER_INDEX.get(cid)
     if not player:
         return None
     normalized = _normalize_player_record(player.copy())
@@ -3576,8 +6625,9 @@ def _search_local_players_by_name(name_query):
     return sorted(matches, key=lambda p: (-(p.get("ovr") or 0), p.get("className") or "", p.get("cid") or 0))
 
 
-# 앱 시작 시 데이터 로드 (특성 검색용)
-load_player_data_for_traits()
+# Notification jobs use models and renewal/coupon files, not the player catalog.
+if os.getenv("FIMOBOOK_SKIP_PLAYER_DATA") != "1":
+    load_player_data_for_traits()
 
 
 POSITION_COMPATIBILITY = {
@@ -3603,11 +6653,10 @@ POSITION_COMPATIBILITY = {
 
 FIELD_COMPARE_STAT_GROUPS = {
     "기본": {
-        "ovr": "OVR",
+        "footPair": "주발/약발",
+        "skillMovesDisplay": "개인기",
         "height": "키(cm)",
         "weight": "몸무게(kg)",
-        "footPair": "주발/약발",
-        "skillMovesLevel": "개인기",
     },
     "속도": {
         "ACC": "가속",
@@ -3653,10 +6702,10 @@ FIELD_COMPARE_STAT_GROUPS = {
 
 GK_COMPARE_STAT_GROUPS = {
     "기본": {
-        "ovr": "OVR",
+        "footPair": "주발/약발",
+        "skillMovesDisplay": "개인기",
         "height": "키(cm)",
         "weight": "몸무게(kg)",
-        "footPair": "주발/약발",
     },
     "골키퍼": {
         "GKD": "다이빙",
@@ -3818,6 +6867,7 @@ WORK_RATE_OPTIONS = [
     {"value": "0-0", "label": "보/보", "att": 0, "def": 0},
     {"value": "0-2", "label": "보/높", "att": 0, "def": 2},
     {"value": "0-1", "label": "보/낮", "att": 0, "def": 1},
+    {"value": "1-2", "label": "낮/높", "att": 1, "def": 2},
     {"value": "1-0", "label": "낮/보", "att": 1, "def": 0},
     {"value": "1-1", "label": "낮/낮", "att": 1, "def": 1},
 ]
@@ -3863,6 +6913,23 @@ STAT_LABEL_TO_CODE = {
 }
 
 SKILL_BOOST_STATS = {
+    # Legacy/special boosts still used by sub-130 OVR cards. These names are
+    # present in the official card data but were missing from the display map,
+    # so selecting a boost level rendered no stat changes for those cards.
+    "MVP 공격수": ["가속", "결정력", "슈팅력", "위치 선정", "드리블"],
+    "MVP 미드필더": ["중거리 슛", "짧은 패스", "긴패스", "시야", "반응도"],
+    "MVP 수비수": ["질주 속도", "마크", "태클", "가로채기", "힘"],
+    "MVP 골키퍼": ["다이빙", "핸들링", "킥", "반사 신경", "GK 위치 선정"],
+    "FW 레코드 브레이커": ["가속", "결정력", "슈팅력", "위치 선정", "드리블"],
+    "MF 레코드 브레이커": ["중거리 슛", "짧은 패스", "긴패스", "시야", "반응도"],
+    "DF 레코드 브레이커": ["질주 속도", "마크", "태클", "가로채기", "힘"],
+    "GK 레코드 브레이커": ["다이빙", "핸들링", "킥", "반사 신경", "GK 위치 선정"],
+    "도미네이션": ["가속", "결정력", "슈팅력", "위치 선정", "드리블"],
+    "이해도": ["긴패스", "시야", "반응도", "가로채기", "볼 컨트롤"],
+    "밸런스": ["질주 속도", "크로스", "드리블", "볼 컨트롤", "밸런스", "태클"],
+    "로켓": ["질주 속도", "중거리 슛", "크로스", "드리블", "볼 컨트롤"],
+    "중거리 슛": ["슈팅력", "중거리 슛", "긴패스", "시야", "볼 컨트롤"],
+    "세트 피스": ["슈팅력", "중거리 슛", "긴패스", "크로스", "프리킥"],
     "막스맨": ["가속", "결정력", "중거리 슛", "위치 선정", "드리블"],
     "파워풀": ["가속", "결정력", "위치선정", "헤딩", "힘"],
     "스나이퍼": ["가속", "결정력", "중거리 슛", "위치 선정", "드리블"],
@@ -4078,6 +7145,29 @@ RAISED_STAT_OPTIONS = sorted(
     ],
     key=lambda item: item["label"],
 )
+
+MAX_LEVEL_STAT_OPTIONS = [
+    {"code": code, "label": label}
+    for code, label in STAT_CODE_LABELS.items()
+    if code in set(STAT_LABEL_TO_CODE.values())
+]
+MAX_LEVEL_STAT_CODES = {item["code"] for item in MAX_LEVEL_STAT_OPTIONS}
+
+
+def _player_matches_max_level_stats(player, codes, gap):
+    if not codes:
+        return True
+    cap = _max_level_stat_value(player.get("ovr"))
+    if cap is None:
+        return False
+    for code in codes:
+        value = player.get(code)
+        if isinstance(value, bool) or not isinstance(value, (int, float)):
+            return False
+        if not math.isfinite(value) or value < cap - gap:
+            return False
+    return True
+
 
 PLAYER_REVIEW_TIERS = [
     "레전더리 2",
@@ -4365,6 +7455,25 @@ def _extract_primary_player_position(player):
     return ""
 
 
+def _player_matches_position_filter(player, positions, include_sub_position=False):
+    selected_positions = {
+        str(position or "").upper().strip()
+        for position in positions
+        if str(position or "").strip()
+    }
+    if not selected_positions:
+        return True
+
+    primary_position = _extract_primary_player_position(player)
+    if primary_position in selected_positions:
+        return True
+    if not include_sub_position:
+        return False
+
+    secondary_positions = set(_extract_potential_positions(player))
+    return not secondary_positions.isdisjoint(selected_positions)
+
+
 def _player_work_rate_key(player):
     try:
         att_rate = int(player.get("attWorkRate"))
@@ -4504,6 +7613,153 @@ def _extract_player_playstyles(player):
             }
         )
     return playstyles
+
+
+def _build_player_playstyle_slots(player, playstyles=None):
+    """Return filled and empty playstyle slots in their display order."""
+    if playstyles is None:
+        playstyles = _extract_player_playstyles(player)
+    raw_slot_levels = player.get("playStyleSlotMaxLevels")
+    slot_levels = raw_slot_levels if isinstance(raw_slot_levels, list) else []
+    slot_count = max(len(slot_levels), len(playstyles))
+
+    slots = []
+    for index in range(slot_count):
+        max_level = slot_levels[index] if index < len(slot_levels) else None
+        if index < len(playstyles):
+            slot = dict(playstyles[index])
+            slot.update(
+                {
+                    "isEmpty": False,
+                    "slotNumber": index + 1,
+                    "maxLevel": max_level,
+                }
+            )
+        else:
+            slot = {
+                "isEmpty": True,
+                "slotNumber": index + 1,
+                "maxLevel": max_level,
+            }
+        slots.append(slot)
+    return slots
+
+
+def _build_review_playstyle_choice_slots(player):
+    """Return empty player slots with the playstyles that can fill each slot."""
+    equipped = _extract_player_playstyles(player)
+    equipped_codes = {
+        str(item.get("code") or "").strip()
+        for item in equipped
+        if str(item.get("code") or "").strip()
+    }
+    empty_slots = [
+        slot
+        for slot in _build_player_playstyle_slots(player, equipped)
+        if slot.get("isEmpty")
+    ]
+    if not empty_slots:
+        return []
+
+    is_gk = str(player.get("position") or "").upper().strip() == "GK"
+    meta_by_id = _load_playstyle_meta()
+    choice_slots = []
+    for slot in empty_slots:
+        try:
+            max_level = int(slot.get("maxLevel"))
+        except (TypeError, ValueError):
+            max_level = None
+
+        options = []
+        for code, meta in meta_by_id.items():
+            category = str(meta.get("category") or "").upper().strip()
+            if (is_gk and category != "GK") or (not is_gk and category == "GK"):
+                continue
+            try:
+                level = int(meta.get("level"))
+            except (TypeError, ValueError):
+                level = None
+            if max_level is not None and level is not None and level > max_level:
+                continue
+            if code in equipped_codes:
+                continue
+
+            icon_name = meta.get("icon") or code
+            options.append(
+                {
+                    "code": code,
+                    "name": str(meta.get("korname") or _fallback_playstyle_name(code)).strip(),
+                    "description": str(meta.get("description") or "").strip(),
+                    "category": category,
+                    "level": level,
+                    "imageUrl": _playstyle_image_url(icon_name),
+                    "sortOrder": meta.get("sortOrder"),
+                }
+            )
+        options.sort(
+            key=lambda item: (
+                int(item.get("sortOrder") or 999),
+                str(item.get("name") or ""),
+                int(item.get("level") or 0),
+            )
+        )
+        choice_slot = dict(slot)
+        choice_slot["options"] = options
+        choice_slots.append(choice_slot)
+    return choice_slots
+
+
+def _normalize_review_playstyle_config(items):
+    normalized = []
+    meta_by_id = _load_playstyle_meta()
+    for index, item in enumerate(items if isinstance(items, list) else []):
+        if not isinstance(item, dict):
+            continue
+        code = str(item.get("code") or "").strip()
+        if not code:
+            continue
+        meta = meta_by_id.get(code, {})
+        try:
+            slot_number = max(1, int(item.get("slotNumber") or index + 1))
+        except (TypeError, ValueError):
+            slot_number = index + 1
+        icon_name = meta.get("icon") or item.get("icon") or code
+        normalized.append(
+            {
+                "code": code,
+                "name": str(item.get("name") or meta.get("korname") or _fallback_playstyle_name(code)).strip(),
+                "description": str(item.get("description") or meta.get("description") or "").strip(),
+                "category": str(item.get("category") or meta.get("category") or "").strip(),
+                "level": item.get("level") if item.get("level") is not None else meta.get("level"),
+                "imageUrl": _playstyle_image_url(icon_name),
+                "slotNumber": slot_number,
+            }
+        )
+    return normalized
+
+
+def _review_playstyle_config_from_form(player, form):
+    selected = []
+    selected_codes = set()
+    for slot in player.get("reviewPlaystyleChoiceSlots") or _build_review_playstyle_choice_slots(player):
+        slot_number = int(slot.get("slotNumber") or 0)
+        code = str(form.get(f"playstyle_slot_{slot_number}") or "").strip()
+        if not code:
+            continue
+        option = next((item for item in slot.get("options") or [] if item.get("code") == code), None)
+        if option is None:
+            raise ValueError("선택할 수 없는 플레이스타일입니다.")
+        if code in selected_codes:
+            raise ValueError("같은 플레이스타일을 여러 슬롯에 선택할 수 없습니다.")
+        selected_codes.add(code)
+        selected.append(
+            {
+                key: option.get(key)
+                for key in ("code", "name", "description", "category", "level", "imageUrl")
+            }
+            | {"slotNumber": slot_number}
+        )
+    return selected
 
 
 def _extract_player_playstyle_filter_values(player):
@@ -4695,6 +7951,91 @@ def _extract_player_skill_or_boost_names(player):
     return names
 
 
+def _extract_player_skill_boost_filter_values(player):
+    skill_names = set()
+    boost_names = set()
+
+    def add_name(target, value):
+        name = str(value or "").strip()
+        if name:
+            target.add(name)
+
+    add_name(boost_names, player.get("skillBoostName"))
+
+    for field in ("skills", "skillInfo"):
+        items = player.get(field) or []
+        if not isinstance(items, list):
+            continue
+        for item in items:
+            if isinstance(item, dict):
+                skill_id = str(item.get("id") or "").strip()
+                kind = str(item.get("kind") or item.get("type") or "").upper()
+                if skill_id.startswith("262") or kind in {"BASE", "ULTIMATE"}:
+                    target = skill_names
+                elif skill_id.startswith("261") or kind == "BOOST" or field == "skillInfo":
+                    target = boost_names
+                else:
+                    target = skill_names
+                name = item.get("name") or (_get_skill_name(skill_id) if skill_id else "")
+                add_name(target, name)
+            elif field == "skills":
+                add_name(skill_names, item)
+
+    if (
+        not boost_names
+        and player.get("skillStyleId")
+        and _player_skill_system(player) == "boost"
+    ):
+        add_name(boost_names, _get_skill_name(player.get("skillStyleId")))
+
+    return skill_names, boost_names
+
+
+_SKILL_OR_BOOST_FILTER_OPTIONS_CACHE = {"signature": None, "options": None}
+_SKILL_OR_BOOST_FILTER_OPTIONS_LOCK = threading.RLock()
+
+
+def _get_skill_or_boost_filter_options():
+    signature = (id(PLAYER_DATA), len(PLAYER_DATA))
+    with _SKILL_OR_BOOST_FILTER_OPTIONS_LOCK:
+        if _SKILL_OR_BOOST_FILTER_OPTIONS_CACHE["signature"] == signature:
+            return _SKILL_OR_BOOST_FILTER_OPTIONS_CACHE["options"]
+
+        skill_names = set(NEW_SKILL_STATS)
+        boost_names = set(SKILL_BOOST_STATS)
+        for skill_id, name in SKILL_ID_NAME_MAP.items():
+            if str(skill_id).startswith("262"):
+                skill_names.add(name)
+            elif str(skill_id).startswith("261"):
+                boost_names.add(name)
+
+        for player in PLAYER_DATA:
+            player_skills, player_boosts = _extract_player_skill_boost_filter_values(player)
+            skill_names.update(player_skills)
+            boost_names.update(player_boosts)
+
+        options = []
+        for name in sorted(skill_names | boost_names, key=str.casefold):
+            has_skill = name in skill_names
+            has_boost = name in boost_names
+            if has_skill:
+                options.append({
+                    "name": name,
+                    "label": f"{name} · 스킬" if has_boost else name,
+                    "kind": "skill",
+                })
+            if has_boost:
+                options.append({
+                    "name": name,
+                    "label": f"{name} · 스킬부스트" if has_skill else name,
+                    "kind": "boost",
+                })
+
+        _SKILL_OR_BOOST_FILTER_OPTIONS_CACHE["signature"] = signature
+        _SKILL_OR_BOOST_FILTER_OPTIONS_CACHE["options"] = options
+        return options
+
+
 def _clean_filter_values(values, uppercase=False):
     cleaned = []
     for raw in values:
@@ -4713,8 +8054,302 @@ def _get_filter_values(name, uppercase=False):
     return _clean_filter_values(request.args.getlist(name), uppercase=uppercase)
 
 
+def _filter_arg_values(args, name, uppercase=False):
+    return _clean_filter_values(args.getlist(name), uppercase=uppercase)
+
+
+def _filter_int_arg(args, name, default=None, minimum=None):
+    raw_value = str(args.get(name, "") or "").strip().replace(",", "")
+    if not raw_value:
+        return default
+    try:
+        value = int(raw_value)
+    except (TypeError, ValueError):
+        return default
+    if minimum is not None:
+        value = max(minimum, value)
+    return value
+
+
+def _price_enhance_arg(args):
+    level = _filter_int_arg(args, "price_enhance", default=0, minimum=0)
+    return level if level is not None and level <= MAX_ENHANCE_LEVEL else 0
+
+
+def _extract_price_at_enhance(player, level=0):
+    """Return only the requested evolution stage's price; never another stage."""
+    if not isinstance(player, dict):
+        return None
+    key = f"n8Price{level}"
+    value = player.get(key)
+    if level == 0 and key not in player:
+        value = player.get("n8Price")
+    return int(value) if _has_price_value(value) else None
+
+
+def _build_advanced_player_filter(args):
+    player_classes = _filter_arg_values(args, "player_class")
+    skill_or_boosts = _filter_arg_values(args, "skill_or_boost")
+    for value in _filter_arg_values(args, "skill_boost"):
+        if value not in skill_or_boosts:
+            skill_or_boosts.append(value)
+    positions = _filter_arg_values(args, "position", uppercase=True)
+    skill_moves = _filter_arg_values(args, "skill_move")
+    skill_levels = {
+        int(value)
+        for value in _filter_arg_values(args, "skill_level")
+        if str(value).isdigit()
+    }
+    raised_stats = _filter_arg_values(args, "raised_stat", uppercase=True)
+    valid_stat_codes = {item["code"] for item in RAISED_STAT_OPTIONS}
+    selected_raised_stats = [code for code in raised_stats if code in valid_stat_codes][:5]
+    work_rates = [
+        value
+        for value in _filter_arg_values(args, "work_rate")
+        if value in WORK_RATE_OPTION_MAP
+    ]
+    weak_foot_min = _filter_int_arg(args, "weak_foot_min", default=0, minimum=0) or 0
+    if weak_foot_min not in {0, 1, 2, 3, 4, 5}:
+        weak_foot_min = 0
+
+    traits = _filter_arg_values(args, "trait")
+    playstyles = _filter_arg_values(args, "playstyle")
+    min_ovr = _filter_int_arg(args, "min_ovr", minimum=0)
+    max_ovr = _filter_int_arg(args, "max_ovr", minimum=0)
+    min_height = _filter_int_arg(args, "min_height", minimum=0)
+    max_height = _filter_int_arg(args, "max_height", minimum=0)
+    min_price = _filter_int_arg(args, "min_price", minimum=0)
+    max_price = _filter_int_arg(args, "max_price", minimum=0)
+    if min_ovr is not None and max_ovr is not None and min_ovr > max_ovr:
+        min_ovr, max_ovr = max_ovr, min_ovr
+    if min_height is not None and max_height is not None and min_height > max_height:
+        min_height, max_height = max_height, min_height
+    if min_price is not None and max_price is not None and min_price > max_price:
+        min_price, max_price = max_price, min_price
+    return {
+        "player_classes": player_classes,
+        "normalized_player_classes": {
+            _normalize_filter_text(value) for value in player_classes
+        },
+        "skill_or_boosts": skill_or_boosts,
+        "normalized_skill_or_boosts": {
+            _normalize_filter_text(value) for value in skill_or_boosts
+        },
+        "positions": positions,
+        "position_set": set(positions),
+        "include_sub_position": str(args.get("include_sub_position", "")).strip().lower()
+        in {"1", "true", "yes", "on"},
+        "skill_moves": skill_moves,
+        "normalized_skill_moves": {
+            _normalize_filter_text(value) for value in skill_moves
+        },
+        "skill_levels": skill_levels,
+        "raised_stats": selected_raised_stats,
+        "raised_stat_set": set(selected_raised_stats),
+        "raw_raised_stat_count": len(raised_stats),
+        "work_rates": work_rates,
+        "traits": traits,
+        "normalized_traits": {_normalize_filter_text(value) for value in traits},
+        "playstyles": playstyles,
+        "normalized_playstyles": {_normalize_filter_text(value) for value in playstyles},
+        "min_ovr": min_ovr,
+        "max_ovr": max_ovr,
+        "min_height": min_height,
+        "max_height": max_height,
+        "min_price": min_price,
+        "max_price": max_price,
+        "price_enhance": _price_enhance_arg(args),
+        "weak_foot_min": weak_foot_min,
+    }
+
+
+def _player_matches_advanced_filter(player, filter_spec):
+    player_ovr = int(player.get("ovr") or 0)
+    min_ovr = filter_spec.get("min_ovr")
+    max_ovr = filter_spec.get("max_ovr")
+    if min_ovr is not None and player_ovr < min_ovr:
+        return False
+    if max_ovr is not None and player_ovr > max_ovr:
+        return False
+
+    min_height = filter_spec.get("min_height")
+    max_height = filter_spec.get("max_height")
+    if min_height is not None or max_height is not None:
+        player_height = _filter_int_arg({"height": player.get("height")}, "height")
+        if min_height is not None and (player_height is None or player_height < min_height):
+            return False
+        if max_height is not None and (player_height is None or player_height > max_height):
+            return False
+
+    min_price = filter_spec.get("min_price")
+    max_price = filter_spec.get("max_price")
+    if min_price is not None or max_price is not None:
+        player_price = _extract_price_at_enhance(player, filter_spec.get("price_enhance", 0))
+        if min_price is not None and (player_price is None or int(player_price) < min_price):
+            return False
+        if max_price is not None and (player_price is None or int(player_price) > max_price):
+            return False
+
+    normalized_classes = filter_spec.get("normalized_player_classes", set())
+    if normalized_classes and _normalize_filter_text(player.get("className")) not in normalized_classes:
+        return False
+
+    normalized_skill_or_boosts = filter_spec.get("normalized_skill_or_boosts", set())
+    if normalized_skill_or_boosts:
+        player_skill_or_boosts = {
+            _normalize_filter_text(value)
+            for value in _extract_player_skill_or_boost_names(player)
+        }
+        if player_skill_or_boosts.isdisjoint(normalized_skill_or_boosts):
+            return False
+
+    raised_stats = filter_spec.get("raised_stat_set", set())
+    if raised_stats and not raised_stats.issubset(_extract_player_raised_stat_codes(player)):
+        return False
+
+    positions = filter_spec.get("position_set", set())
+    if not _player_matches_position_filter(
+        player,
+        positions,
+        include_sub_position=filter_spec.get("include_sub_position", False),
+    ):
+        return False
+
+    normalized_skill_moves = filter_spec.get("normalized_skill_moves", set())
+    if normalized_skill_moves and _normalize_filter_text(player.get("skillMovesName")) not in normalized_skill_moves:
+        return False
+
+    if filter_spec.get("skill_levels") and player.get("skillMovesLevel") not in filter_spec["skill_levels"]:
+        return False
+    if filter_spec.get("work_rates") and _player_work_rate_key(player) not in filter_spec["work_rates"]:
+        return False
+
+    normalized_traits = filter_spec.get("normalized_traits", set())
+    if normalized_traits:
+        player_traits = {_normalize_filter_text(value) for value in _extract_player_traits(player)}
+        if player_traits.isdisjoint(normalized_traits):
+            return False
+
+    normalized_playstyles = filter_spec.get("normalized_playstyles", set())
+    if normalized_playstyles:
+        player_playstyles = _extract_player_playstyle_filter_values(player)
+        if player_playstyles.isdisjoint(normalized_playstyles):
+            return False
+
+    if filter_spec.get("weak_foot_min") and _get_weak_foot_value(player) < filter_spec["weak_foot_min"]:
+        return False
+    return True
+
+
 def _normalize_filter_text(value):
     return re.sub(r"\s+", "", str(value or "").strip()).lower()
+
+
+_ADVANCED_FILTER_OPTIONS_CACHE = {}
+_ADVANCED_FILTER_OPTIONS_LOCK = threading.RLock()
+
+
+def _get_advanced_filter_options():
+    signature = (id(PLAYER_DATA), len(PLAYER_DATA))
+    with _ADVANCED_FILTER_OPTIONS_LOCK:
+        if _ADVANCED_FILTER_OPTIONS_CACHE.get("signature") == signature:
+            return _ADVANCED_FILTER_OPTIONS_CACHE["options"]
+
+        heights = []
+        for player in PLAYER_DATA:
+            try:
+                height = int(player.get("height"))
+            except (TypeError, ValueError):
+                continue
+            if height > 0:
+                heights.append(height)
+
+        available_positions = {
+            position
+            for player in PLAYER_DATA
+            for position in [_extract_primary_player_position(player)]
+            if position
+        }
+        grouped_positions = []
+        grouped_position_values = set()
+        for group in PLAYER_POSITION_GROUPS:
+            group_positions = [
+                position for position in group["positions"] if position in available_positions
+            ]
+            if not group_positions:
+                continue
+            grouped_positions.append(
+                {
+                    "key": group["key"],
+                    "label": group["label"],
+                    "positions": group_positions,
+                }
+            )
+            grouped_position_values.update(group_positions)
+
+        remaining_positions = sorted(available_positions - grouped_position_values)
+        if remaining_positions:
+            grouped_positions.append(
+                {"key": "other", "label": "기타", "positions": remaining_positions}
+            )
+
+        options = {
+            "player_classes": sorted(
+                {
+                    str(player.get("className")).strip()
+                    for player in PLAYER_DATA
+                    if str(player.get("className") or "").strip()
+                }
+            ),
+            "skill_or_boost_names": sorted(
+                {
+                    name
+                    for player in PLAYER_DATA
+                    for name in _extract_player_skill_or_boost_names(player)
+                }
+                | set(SKILL_BOOST_STATS.keys())
+                | set(NEW_SKILL_STATS.keys())
+                | set(SKILL_ID_NAME_MAP.values())
+            ),
+            "skill_moves": sorted(
+                {
+                    str(player.get("skillMovesName")).strip()
+                    for player in PLAYER_DATA
+                    if str(player.get("skillMovesName") or "").strip()
+                }
+            ),
+            "skill_levels": sorted(
+                {
+                    int(player.get("skillMovesLevel"))
+                    for player in PLAYER_DATA
+                    if str(player.get("skillMovesLevel") or "").strip()
+                    or player.get("skillMovesLevel") == 0
+                }
+            ),
+            "traits": sorted(
+                {
+                    trait
+                    for player in PLAYER_DATA
+                    for trait in _extract_player_traits(player)
+                    if trait
+                }
+            ),
+            "playstyles": sorted(
+                {
+                    playstyle["name"]
+                    for player in PLAYER_DATA
+                    for playstyle in _extract_player_playstyles(player)
+                    if playstyle.get("name")
+                }
+            ),
+            "positions": sorted(available_positions),
+            "position_groups": grouped_positions,
+            "min_player_height": min(heights) if heights else 140,
+            "max_player_height": max(heights) if heights else 220,
+        }
+        _ADVANCED_FILTER_OPTIONS_CACHE.clear()
+        _ADVANCED_FILTER_OPTIONS_CACHE.update({"signature": signature, "options": options})
+        return options
 
 
 def _extract_player_raised_stat_codes(player):
@@ -4768,6 +8403,23 @@ PLAYER_REVIEW_CACHE_PATH = os.path.join(app.instance_path, "player_reviews_cache
 PLAYER_REVIEW_SUMMARY_PATH = os.path.join(app.instance_path, "player_review_summaries.json")
 _LATEST_PLAYER_REVIEWS_REMOTE_CACHE = {"fetched_at": 0.0, "reviews": []}
 LATEST_PLAYER_REVIEWS_REMOTE_TTL = 90
+_PLAYER_REVIEWS_FIRESTORE_CACHE = {}
+_PLAYER_REVIEWS_FIRESTORE_CACHE_LOCK = threading.Lock()
+PLAYER_REVIEWS_FIRESTORE_CACHE_TTL = 120
+
+
+def _invalidate_player_reviews_firestore_cache(*cids):
+    target_cids = {str(cid) for cid in cids if cid not in (None, "")}
+    with _PLAYER_REVIEWS_FIRESTORE_CACHE_LOCK:
+        if target_cids:
+            for cache_key in list(_PLAYER_REVIEWS_FIRESTORE_CACHE):
+                cached_cids = set(cache_key[0])
+                if target_cids.intersection(cached_cids):
+                    _PLAYER_REVIEWS_FIRESTORE_CACHE.pop(cache_key, None)
+        else:
+            _PLAYER_REVIEWS_FIRESTORE_CACHE.clear()
+    _LATEST_PLAYER_REVIEWS_REMOTE_CACHE["fetched_at"] = 0.0
+    _LATEST_PLAYER_REVIEWS_REMOTE_CACHE["reviews"] = []
 
 
 def _load_player_review_summaries():
@@ -4838,7 +8490,7 @@ def _parse_player_review_summary_json(raw_text):
 
 
 def _is_player_summary_admin():
-    return bool(session.get("player_summary_admin"))
+    return _is_admin_user() or bool(session.get("player_summary_admin"))
 
 
 def _verify_player_summary_admin_password(password):
@@ -4877,6 +8529,48 @@ def _find_admin_summary_players(query, limit=40):
     return matches
 
 
+def _resolve_admin_summary_player(reference):
+    text = str(reference or "").strip()
+    if not text:
+        return None
+
+    cid_match = re.search(r"(?:^|/player/)(\d+)(?:$|[/?#])", text)
+    if not cid_match and text.isdigit():
+        cid_match = re.match(r"(\d+)", text)
+    if not cid_match:
+        return None
+    return _get_local_player_by_cid(int(cid_match.group(1)))
+
+
+def _store_player_review_summary(player, summary_text="", strengths="", weaknesses=""):
+    cid = int(player["cid"])
+    summaries = _load_player_review_summaries()
+    player_key = str(cid)
+    summary_text = str(summary_text or "").strip()[:800]
+    strengths = str(strengths or "").strip()[:2000]
+    weaknesses = str(weaknesses or "").strip()[:2000]
+
+    if not any([summary_text, strengths, weaknesses]):
+        summaries.pop(player_key, None)
+        _save_player_review_summaries(summaries)
+        return None
+
+    now_iso = datetime.utcnow().isoformat(timespec="seconds")
+    stored = {
+        "player_cid": cid,
+        "player_name": player.get("playerKor"),
+        "player_class": player.get("className"),
+        "summary": summary_text,
+        "strengths": strengths,
+        "weaknesses": weaknesses,
+        "updated_at_iso": now_iso,
+        "updated_by": current_user.username if current_user.is_authenticated else "admin",
+    }
+    summaries[player_key] = stored
+    _save_player_review_summaries(summaries)
+    return stored
+
+
 def _load_player_review_cache():
     try:
         with open(PLAYER_REVIEW_CACHE_PATH, "r", encoding="utf-8") as f:
@@ -4912,6 +8606,7 @@ def _cache_player_review(cid, review_doc):
     cached_doc["created_at_display"] = _format_kst_datetime(fallback_iso=cached_doc.get("created_at_iso"))
     cache[player_key][str(user_id)] = cached_doc
     _save_player_review_cache(cache)
+    _invalidate_player_reviews_firestore_cache(cid)
 
 
 def _delete_cached_player_review(cids, user_id):
@@ -4926,6 +8621,7 @@ def _delete_cached_player_review(cids, user_id):
             changed = True
     if changed:
         _save_player_review_cache(cache)
+        _invalidate_player_reviews_firestore_cache(*cids)
 
 
 def _get_cached_player_reviews(*cids):
@@ -4992,6 +8688,7 @@ def _delete_current_user_player_review(cid, player=None):
     _delete_cached_player_review(review_cids, current_user.id)
     for review_cid in review_cids:
         _PENDING_PLAYER_REVIEWS.pop((str(review_cid), str(current_user.id)), None)
+    _invalidate_player_reviews_firestore_cache(*review_cids)
     return deleted
 
 
@@ -5045,6 +8742,7 @@ def _format_player_review_data(data):
     ratings = data.get("ratings") if isinstance(data.get("ratings"), dict) else {}
     data["ratings"] = ratings
     data["rating_notes"] = data.get("rating_notes") if isinstance(data.get("rating_notes"), dict) else {}
+    data["playstyle_config"] = _normalize_review_playstyle_config(data.get("playstyle_config"))
     rating_values = []
     for value in ratings.values():
         try:
@@ -5060,7 +8758,7 @@ def _format_player_review_data(data):
     return _hydrate_player_review_metadata(data)
 
 
-def _all_cached_player_reviews():
+def _all_cached_player_reviews(limit=None):
     reviews = []
     cache = _load_player_review_cache()
     for player_cid, player_reviews in cache.items():
@@ -5075,11 +8773,13 @@ def _all_cached_player_reviews():
                 continue
             review = dict(item)
             review.setdefault("player_cid", player_cid)
-            reviews.append(_format_player_review_data(review))
+            reviews.append(review)
     for pending in _PENDING_PLAYER_REVIEWS.values():
         if isinstance(pending, dict):
-            reviews.append(_format_player_review_data(dict(pending)))
-    return reviews
+            reviews.append(dict(pending))
+    if limit is not None:
+        reviews = _dedupe_player_reviews(reviews, limit=limit)
+    return [_format_player_review_data(review) for review in reviews]
 
 
 def _latest_remote_player_reviews(limit=30):
@@ -5116,7 +8816,7 @@ def _latest_remote_player_reviews(limit=30):
 
 def _attach_review_comment_counts(reviews):
     try:
-        rows = (
+        comment_rows = (
             db.session.query(
                 PlayerReviewComment.player_cid,
                 PlayerReviewComment.review_id,
@@ -5125,12 +8825,45 @@ def _attach_review_comment_counts(reviews):
             .group_by(PlayerReviewComment.player_cid, PlayerReviewComment.review_id)
             .all()
         )
-        counts = {(str(cid), str(review_id)): int(count or 0) for cid, review_id, count in rows}
+        comment_counts = {
+            (str(cid), str(review_id)): int(count or 0)
+            for cid, review_id, count in comment_rows
+        }
     except Exception as e:
         print(f"Player review comment count read failed: {e}")
-        counts = {}
+        comment_counts = {}
+    try:
+        like_rows = (
+            db.session.query(
+                PlayerReviewLike.player_cid,
+                PlayerReviewLike.review_id,
+                func.count(PlayerReviewLike.id),
+            )
+            .group_by(PlayerReviewLike.player_cid, PlayerReviewLike.review_id)
+            .all()
+        )
+        like_counts = {
+            (str(cid), str(review_id)): int(count or 0)
+            for cid, review_id, count in like_rows
+        }
+        liked_keys = set()
+        if has_request_context() and current_user.is_authenticated:
+            liked_keys = {
+                (str(cid), str(review_id))
+                for cid, review_id in db.session.query(
+                    PlayerReviewLike.player_cid,
+                    PlayerReviewLike.review_id,
+                ).filter_by(user_id=current_user.id).all()
+            }
+    except Exception as e:
+        print(f"Player review like count read failed: {e}")
+        like_counts = {}
+        liked_keys = set()
     for review in reviews:
-        review["comment_count"] = counts.get((str(review.get("player_cid")), str(review.get("id"))), 0)
+        key = (str(review.get("player_cid")), str(review.get("id")))
+        review["comment_count"] = comment_counts.get(key, 0)
+        review["like_count"] = like_counts.get(key, 0)
+        review["has_liked"] = key in liked_keys
     return reviews
 
 
@@ -5142,6 +8875,15 @@ def _get_latest_player_reviews(limit=50, include_remote=True):
     reviews = [_hydrate_player_review_metadata(review) for review in reviews]
     reviews = _dedupe_player_reviews(reviews, limit=max(limit, 100))
     return _attach_review_comment_counts(reviews[:limit])
+
+
+def _get_all_player_reviews(include_remote=True, limit=None):
+    reviews = _all_cached_player_reviews(limit=limit)
+    if include_remote and not reviews:
+        reviews.extend(_latest_remote_player_reviews(100))
+    reviews = [_hydrate_player_review_metadata(review) for review in reviews]
+    reviews = _dedupe_player_reviews(reviews, limit=None)
+    return _attach_review_comment_counts(reviews)
 
 
 def _get_player_review_by_id(cid, review_id):
@@ -5173,16 +8915,22 @@ def _get_player_review_by_id(cid, review_id):
     return None
 
 
-def _latest_home_review_activity(limit=3):
+def _all_home_review_activity(limit=None):
     items = []
-    for review in _get_latest_player_reviews(limit=max(6, limit), include_remote=True):
+    for review in _get_all_player_reviews(include_remote=True, limit=limit):
         item = dict(review)
         item["kind"] = "review"
         item["kind_label"] = "선수 리뷰"
         item["sort_at"] = str(item.get("created_at_iso") or "")
         items.append(item)
 
-    for summary_key, summary in _load_player_review_summaries().items():
+    summary_items = list(_load_player_review_summaries().items())
+    if limit is not None:
+        summary_items = [(key, value) for key, value in summary_items
+                         if isinstance(value, dict) and str(value.get("player_cid") or key).isdigit()]
+        summary_items.sort(key=lambda pair: str(pair[1].get("updated_at_iso") or pair[1].get("created_at_iso") or ""), reverse=True)
+        summary_items = summary_items[:limit]
+    for summary_key, summary in summary_items:
         if not isinstance(summary, dict):
             continue
         try:
@@ -5218,6 +8966,12 @@ def _latest_home_review_activity(limit=3):
         })
 
     items.sort(key=lambda item: str(item.get("sort_at") or ""), reverse=True)
+    return items
+
+
+def _latest_home_review_activity(limit=3):
+    limit = max(1, int(limit or 3))
+    items = _all_home_review_activity(limit=limit)
     selected = items[:limit]
     available_kinds = {item.get("kind") for item in items}
     selected_kinds = {item.get("kind") for item in selected}
@@ -5299,7 +9053,7 @@ def _dedupe_player_reviews(reviews, limit=50):
         seen.add(key)
         unique.append(review)
     unique.sort(key=lambda item: str(item.get("created_at_iso") or item.get("created_at_display") or ""), reverse=True)
-    return unique[:limit]
+    return unique[:limit] if limit else unique
 
 
 def _review_cid_candidates(*values):
@@ -5320,6 +9074,16 @@ def _get_player_reviews_from_firestore(cid, limit=50, extra_cids=None):
     review_cids = _review_cid_candidates(cid, *(extra_cids or []))
     if not fs or not review_cids:
         return []
+    cache_key = (
+        tuple(str(review_cid) for review_cid in review_cids),
+        int(limit or 50),
+    )
+    now = time.time()
+    with _PLAYER_REVIEWS_FIRESTORE_CACHE_LOCK:
+        cached = _PLAYER_REVIEWS_FIRESTORE_CACHE.get(cache_key)
+    if cached and now - float(cached.get("fetched_at") or 0) < PLAYER_REVIEWS_FIRESTORE_CACHE_TTL:
+        return [dict(review) for review in cached.get("reviews") or []]
+
     reviews = []
 
     for review_cid in review_cids:
@@ -5372,6 +9136,11 @@ def _get_player_reviews_from_firestore(cid, limit=50, extra_cids=None):
                 print(f"Firestore player review fallback read failed for {cid}: {e}")
 
     reviews = _dedupe_player_reviews(reviews, limit=limit)
+    with _PLAYER_REVIEWS_FIRESTORE_CACHE_LOCK:
+        _PLAYER_REVIEWS_FIRESTORE_CACHE[cache_key] = {
+            "fetched_at": now,
+            "reviews": [dict(review) for review in reviews],
+        }
     print(f"Firestore player review read for {cid}: {len(reviews)} reviews from cids {review_cids}")
     return reviews
 
@@ -5441,18 +9210,21 @@ def _validate_player_review_quality(review_text, rating_notes, skill_move_rating
 
 def _safe_local_next_url(default_url):
     next_url = request.form.get("next") or request.args.get("next") or ""
-    if next_url:
-        parsed_next = urlparse(next_url)
-        if not parsed_next.netloc and next_url.startswith("/"):
-            return next_url
-    return default_url
+    return next_url if _is_safe_local_redirect_target(next_url) else default_url
 
 
 def _render_player_review_form(player, move_labels, review=None, form_action=None, form_mode="create"):
+    review = review or {}
+    review_playstyle_selected = {
+        str(item.get("slotNumber")): str(item.get("code") or "")
+        for item in review.get("playstyle_config") or []
+        if isinstance(item, dict) and item.get("slotNumber")
+    }
     return render_template(
         "player_review_form.html",
         player=player,
-        review=review or {},
+        review=review,
+        review_playstyle_selected=review_playstyle_selected,
         form_action=form_action or url_for("submit_player_firebase_review_post", cid=player.get("review_cid") or player.get("cid")),
         form_mode=form_mode,
         review_skill_move_labels=move_labels,
@@ -5559,6 +9331,12 @@ def _save_player_review_from_request(cid, player, move_labels, existing_review=N
                     flash("얼티밋 스킬은 연결된 베이스 스킬을 2단계 찍어야 선택할 수 있습니다.", "danger")
                     return redirect(url_for(error_endpoint, cid=cid))
 
+    try:
+        playstyle_config = _review_playstyle_config_from_form(player, request.form)
+    except ValueError as e:
+        flash(str(e), "danger")
+        return redirect(url_for(error_endpoint, cid=cid))
+
     quality_error = _validate_player_review_quality(review_text, rating_notes, skill_move_ratings)
     if quality_error:
         flash(quality_error, "danger")
@@ -5582,6 +9360,7 @@ def _save_player_review_from_request(cid, player, move_labels, existing_review=N
         "rating_notes": rating_notes,
         "skill_move_ratings": skill_move_ratings,
         "skill_config": skill_config,
+        "playstyle_config": playstyle_config,
         "review_text": review_text[:3000],
         "created_at_iso": (existing_review or {}).get("created_at_iso") or now_iso,
         "updated_at_iso": now_iso,
@@ -5755,6 +9534,7 @@ def _build_review_player_context(cid):
     player["review_cid"] = cid
     player["skillDisplay"] = skill_display
     player["reviewSkillDisplay"] = _prepare_review_skill_display(player)
+    player["reviewPlaystyleChoiceSlots"] = _build_review_playstyle_choice_slots(player)
     player["initialEnhance"] = int(player.get("enhance") or 0)
     return player
 
@@ -5994,6 +9774,8 @@ def _current_season_team_pair(pair):
     if not current_league:
         return pair
     return {"league": current_league, "team": pair.get("team", "")}
+
+
 def _player_identity_key(player):
     pid = player.get("pid")
     if pid not in (None, ""):
@@ -6121,7 +9903,8 @@ def _build_external_career_lookup():
 
 def _extend_career_index_with_external_data(career_index):
     by_id, by_name = _build_external_career_lookup()
-    if not by_id and not by_name:
+    club_career_players = _load_fco_club_career_data().get("players", {})
+    if not by_id and not by_name and not club_career_players:
         return career_index
 
     for player in PLAYER_DATA:
@@ -6129,6 +9912,12 @@ def _extend_career_index_with_external_data(career_index):
         pid = player.get("pid")
         if pid is not None:
             teams.extend(by_id.get(str(pid), []))
+            for row in club_career_players.get(str(pid), []):
+                if not isinstance(row, dict):
+                    continue
+                club = str(row.get("club") or "").strip()
+                if club:
+                    teams.append(club)
 
         teams.extend(by_name.get(_normalize_name_for_match(player.get("playerKor")), []))
         if not teams:
@@ -6181,6 +9970,83 @@ def _build_league_team_map(pairs, include_current_top_flight=False):
         league: sorted(teams)
         for league, teams in sorted(league_teams.items(), key=lambda item: item[0])
     }
+
+
+_TEAM_FILTER_CONTEXT_CACHE = {}
+_TEAM_FILTER_CONTEXT_LOCK = threading.RLock()
+
+
+def _get_team_filter_context(include_external=False):
+    signature = (id(PLAYER_DATA), len(PLAYER_DATA))
+    with _TEAM_FILTER_CONTEXT_LOCK:
+        if _TEAM_FILTER_CONTEXT_CACHE.get("signature") != signature:
+            career_index = _build_player_career_index()
+            current_team_index = _build_player_current_team_index()
+            _TEAM_FILTER_CONTEXT_CACHE.clear()
+            _TEAM_FILTER_CONTEXT_CACHE.update({
+                "signature": signature,
+                "career_index": career_index,
+                "current_team_index": current_team_index,
+                "current_league_teams": _build_league_team_map(
+                    current_team_index.values(), include_current_top_flight=True
+                ),
+                "all_league_teams": _build_league_team_map(
+                    (pair for pairs in career_index.values() for pair in pairs),
+                    include_current_top_flight=True,
+                ),
+                "extended_career_index": None,
+                "match_cache": {},
+            })
+
+        if include_external and _TEAM_FILTER_CONTEXT_CACHE["extended_career_index"] is None:
+            career_copy = {
+                key: [dict(pair) for pair in pairs]
+                for key, pairs in _TEAM_FILTER_CONTEXT_CACHE["career_index"].items()
+            }
+            _TEAM_FILTER_CONTEXT_CACHE["extended_career_index"] = (
+                _extend_career_index_with_external_data(career_copy)
+            )
+
+        return _TEAM_FILTER_CONTEXT_CACHE
+
+
+def _get_team_filter_identity_keys(
+    team_filter_context,
+    selected_league="",
+    selected_team="",
+    all_career=False,
+):
+    if not selected_league and not selected_team:
+        return None
+    cache_key = (
+        bool(all_career),
+        _normalize_filter_text(selected_league),
+        _normalize_team_for_match(selected_team),
+    )
+    with _TEAM_FILTER_CONTEXT_LOCK:
+        cached = team_filter_context["match_cache"].get(cache_key)
+        if cached is not None:
+            return cached
+
+        if all_career:
+            career_index = team_filter_context["extended_career_index"] or {}
+            matches = frozenset(
+                identity_key
+                for identity_key, pairs in career_index.items()
+                if any(
+                    _team_pair_matches(pair, selected_league, selected_team)
+                    for pair in pairs
+                )
+            )
+        else:
+            matches = frozenset(
+                identity_key
+                for identity_key, pair in team_filter_context["current_team_index"].items()
+                if _team_pair_matches(pair, selected_league, selected_team)
+            )
+
+        team_filter_context["match_cache"][cache_key] = matches
+        return matches
 
 
 def _team_pair_matches(pair, selected_league="", selected_team=""):
@@ -6255,16 +10121,33 @@ def _get_weak_foot_value(player):
     return min(valid_values) if valid_values else 0
 
 
+def _get_skill_move_display_label(player):
+    raw_level = player.get("skillMovesLevel")
+    if raw_level is None or str(raw_level).strip() == "":
+        raw_level = player.get("skillMoves")
+    star_label = ""
+    if raw_level is not None and str(raw_level).strip() != "":
+        try:
+            star_label = f"{int(raw_level) + 1}성"
+        except (TypeError, ValueError):
+            star_label = ""
+    move_name = str(player.get("skillMovesName") or "").strip()
+    return " ".join(part for part in (star_label, move_name) if part) or "-"
+
+
 def _build_compare_player(player):
     normalized = _apply_local_assets(_normalize_player_record(player.copy()))
     skill_display = _extract_player_skill_items(normalized)
     normalized["mainFootLabel"] = _get_main_foot_label(normalized)
+    normalized["skillMovesDisplay"] = _get_skill_move_display_label(normalized)
     normalized["skillLabels"] = _extract_player_skills(normalized)
     normalized["skillDisplay"] = _prepare_review_skill_display(
         {**normalized, "skillDisplay": skill_display}
     )
     normalized["playstyles"] = _extract_player_playstyles(normalized)
     normalized["potentialPositions"] = _extract_potential_positions(normalized)
+    normalized["price"] = _extract_price(normalized)
+    normalized["priceByEnhance"] = _build_price_by_enhance(normalized)
     return normalized
 
 
@@ -6448,6 +10331,7 @@ def _is_position_compatible(slot_position, player_positions):
 
 def _score_squad_player(player, name_query="", slot_position="", class_query=""):
     player_name = _normalize_name_for_match(player.get("playerKor"))
+    player_english_name = _normalize_name_for_match(player.get("playerEng"))
     class_name = _normalize_name_for_match(player.get("className"))
     query = _normalize_name_for_match(name_query)
     class_filter = _normalize_name_for_match(class_query)
@@ -6459,12 +10343,19 @@ def _score_squad_player(player, name_query="", slot_position="", class_query="")
 
     score = 0
     if query:
-        if player_name == query:
+        cid_matches = query == str(player.get("cid") or "").strip().lower()
+        if cid_matches:
+            score += 340
+        elif player_name == query or player_english_name == query:
             score += 300
-        elif player_name.startswith(query):
+        elif player_name.startswith(query) or player_english_name.startswith(query):
             score += 220
-        elif query in player_name:
+        elif query in player_name or query in player_english_name:
             score += 140
+        elif query in _normalize_name_for_match(
+            f"{player.get('className') or ''} {player.get('playerKor') or ''} {player.get('playerEng') or ''}"
+        ):
+            score += 100
         elif query in class_name:
             score += 70
         else:
@@ -6484,8 +10375,30 @@ def _score_squad_player(player, name_query="", slot_position="", class_query="")
     score += int(player.get("ovr") or 0)
     return score
 
+
+def _squad_player_sort_key(item, sort_by, price_enhance=0):
+    score, player = item
+    ovr = int(player.get("ovr") or 0)
+    price = int(_extract_price_at_enhance(player, price_enhance) or 0)
+    name = str(player.get("playerKor") or "")
+    cid = int(player.get("cid") or 0)
+    if sort_by == "ovr_desc":
+        return (-ovr, -score, -price, name, cid)
+    if sort_by == "ovr_asc":
+        return (ovr, -score, -price, name, cid)
+    if sort_by == "price_desc":
+        return (0 if price > 0 else 1, -price, -score, -ovr, name, cid)
+    if sort_by == "price_asc":
+        return (0 if price > 0 else 1, price, -score, -ovr, name, cid)
+    if sort_by == "name":
+        return (name, -score, -ovr, -price, cid)
+    return (-score, -ovr, -price, name, cid)
+
 def _has_price_value(value):
-    return value is not None and str(value).strip() != ""
+    try:
+        return int(value) > 0
+    except (TypeError, ValueError):
+        return False
 
 def _extract_price(player):
     if not player:
@@ -6504,7 +10417,7 @@ def _build_price_by_enhance(player):
     if not isinstance(player, dict):
         return {}
     price_by_enhance = {}
-    base_price = _extract_price(player)
+    base_price = _extract_price_at_enhance(player)
     if base_price is not None:
         price_by_enhance[0] = base_price
     for level in range(0, MAX_ENHANCE_LEVEL + 1):
@@ -6520,6 +10433,18 @@ def _build_price_rows(player):
         if price is not None
     ]
 
+
+def _player_price_history(cid, limit=128):
+    try:
+        return load_player_price_history(
+            app.config["PLAYER_PRICE_HISTORY_DB"],
+            cid,
+            limit=limit,
+        )
+    except Exception as error:
+        print(f"Player price history read failed for {cid}: {error}")
+        return []
+
 def _price_fields_from_player(player):
     if not isinstance(player, dict):
         return {}
@@ -6531,50 +10456,159 @@ def _price_fields_from_player(player):
     return fields
 
 PRICE_FIELD_CACHE_TTL = 300
+PRICE_FIELD_FAILURE_CACHE_TTL = 30
+PRICE_LOOKUP_NAME_BATCH_SIZE = 5
+PRICE_LOOKUP_MAX_WORKERS = 4
+PRICE_LOOKUP_WAIT_SECONDS = 15
 _PRICE_FIELDS_BY_NAME_CACHE = {}
+# Names currently being fetched upstream. Concurrent requests for the same name
+# wait for that fetch instead of silently falling back to the local JSON price.
+_PRICE_FIELDS_INFLIGHT = {}
+_PRICE_FIELDS_INFLIGHT_LOCK = threading.Lock()
+# Shared pool bounds total upstream concurrency across all request threads.
+_PRICE_LOOKUP_EXECUTOR = ThreadPoolExecutor(
+    max_workers=PRICE_LOOKUP_MAX_WORKERS,
+    thread_name_prefix="price-lookup",
+)
 
 def _same_cid(left, right):
     return str(left or "").strip() == str(right or "").strip()
+
+def _get_cached_price_fields_by_name(name, now=None):
+    cache_key = _normalize_filter_text(name)
+    if not cache_key:
+        return None
+    cached = _PRICE_FIELDS_BY_NAME_CACHE.get(cache_key)
+    if not cached:
+        return None
+    ttl = PRICE_FIELD_CACHE_TTL if cached.get("ok") else PRICE_FIELD_FAILURE_CACHE_TTL
+    if (now or time.time()) - cached.get("fetched_at", 0) >= ttl:
+        return None
+    return cached.get("data") or {}
+
+
+def _fetch_price_fields_batch(batch_names):
+    """Fetch one upstream batch, store it in the name cache and return {key: {cid: fields}}."""
+    result = {}
+    batch_keys = {_normalize_filter_text(name) for name in batch_names}
+    price_fields_by_name = {key: {} for key in batch_keys}
+    request_succeeded = False
+    try:
+        first_page_data = fetch_player_search_list(
+            player_names_list=batch_names,
+            page_no=1,
+            max_retries=1,
+            get_timeout=5,
+            post_timeout=8,
+        )
+        if first_page_data.get("ResultCode") != 1:
+            raise RuntimeError(first_page_data.get("ResultMsg") or "가격 조회 결과 오류")
+
+        request_succeeded = True
+        result_data = first_page_data.get("ResultData", {})
+        total_count = int(result_data.get("totalCount") or 0)
+        page_size = int(result_data.get("pageSize") or 10)
+        total_pages = math.ceil(total_count / page_size) if page_size > 0 else 1
+        page_payloads = [first_page_data]
+        for page_no in range(2, total_pages + 1):
+            page_data = fetch_player_search_list(
+                player_names_list=batch_names,
+                page_no=page_no,
+                max_retries=1,
+                get_timeout=5,
+                post_timeout=8,
+            )
+            if page_data.get("ResultCode") == 1:
+                page_payloads.append(page_data)
+
+        for page_data in page_payloads:
+            for player in page_data.get("ResultData", {}).get("PlayerList", []):
+                player_name_key = _normalize_filter_text(player.get("playerKor"))
+                cid = str(player.get("cid") or "").strip()
+                if player_name_key in price_fields_by_name and cid:
+                    price_fields_by_name[player_name_key][cid] = _price_fields_from_player(player)
+    except Exception as e:
+        print(f"Price batch fetch error for {', '.join(batch_names)}: {e}")
+
+    fetched_at = time.time()
+    for name in batch_names:
+        cache_key = _normalize_filter_text(name)
+        data = price_fields_by_name.get(cache_key, {}) if request_succeeded else {}
+        _PRICE_FIELDS_BY_NAME_CACHE[cache_key] = {
+            "fetched_at": fetched_at,
+            "data": data,
+            "ok": request_succeeded,
+        }
+        result[cache_key] = data
+    return result
+
+
+def _price_fields_cache_is_live(name):
+    cache_key = _normalize_filter_text(name)
+    cached = _PRICE_FIELDS_BY_NAME_CACHE.get(cache_key)
+    return bool(cached and cached.get("ok") and _get_cached_price_fields_by_name(name) is not None)
+
+
+def _fetch_player_price_fields_by_names_from_api(names):
+    now = time.time()
+    result = {}
+    owned_names = []
+    owned_events = {}
+    waits = []
+
+    for name in names or []:
+        clean_name = str(name or "").strip()
+        cache_key = _normalize_filter_text(clean_name)
+        if not cache_key or cache_key in result or cache_key in owned_events:
+            continue
+        cached = _get_cached_price_fields_by_name(clean_name, now=now)
+        if cached is not None:
+            result[cache_key] = cached
+            continue
+        with _PRICE_FIELDS_INFLIGHT_LOCK:
+            event = _PRICE_FIELDS_INFLIGHT.get(cache_key)
+            if event is None:
+                event = threading.Event()
+                _PRICE_FIELDS_INFLIGHT[cache_key] = event
+                owned_events[cache_key] = event
+                owned_names.append(clean_name)
+            else:
+                waits.append((clean_name, cache_key, event))
+
+    try:
+        batches = [
+            owned_names[start:start + PRICE_LOOKUP_NAME_BATCH_SIZE]
+            for start in range(0, len(owned_names), PRICE_LOOKUP_NAME_BATCH_SIZE)
+        ]
+        futures = [_PRICE_LOOKUP_EXECUTOR.submit(_fetch_price_fields_batch, batch) for batch in batches]
+        for future in futures:
+            try:
+                result.update(future.result())
+            except Exception as e:
+                print(f"Price batch worker error: {e}")
+    finally:
+        with _PRICE_FIELDS_INFLIGHT_LOCK:
+            for cache_key, event in owned_events.items():
+                if _PRICE_FIELDS_INFLIGHT.get(cache_key) is event:
+                    del _PRICE_FIELDS_INFLIGHT[cache_key]
+                event.set()
+
+    deadline = time.time() + PRICE_LOOKUP_WAIT_SECONDS
+    for clean_name, cache_key, event in waits:
+        event.wait(max(0, deadline - time.time()))
+        result[cache_key] = _get_cached_price_fields_by_name(clean_name) or {}
+
+    for name in owned_names:
+        result.setdefault(_normalize_filter_text(name), {})
+    return result
+
 
 def _fetch_player_price_fields_by_name_from_api(name):
     if not name:
         return {}
     cache_key = _normalize_filter_text(name)
-    now = time.time()
-    cached = _PRICE_FIELDS_BY_NAME_CACHE.get(cache_key)
-    if cached and now - cached.get("fetched_at", 0) < PRICE_FIELD_CACHE_TTL:
-        return cached.get("data") or {}
-    try:
-        first_page_data = fetch_player_search_list(player_names_list=[name], page_no=1)
-        if first_page_data.get("ResultCode") != 1:
-            return {}
-        rd = first_page_data.get("ResultData", {})
-        total_count = rd.get("totalCount", 0)
-        page_size = rd.get("pageSize", 10)
-        total_pages = math.ceil(total_count / page_size) if page_size > 0 else 1
-
-        price_fields_by_cid = {}
-        page_players = rd.get("PlayerList", [])
-        for player in page_players:
-            cid = str(player.get("cid") or "").strip()
-            if cid:
-                price_fields_by_cid[cid] = _price_fields_from_player(player)
-
-        for page_no in range(2, total_pages + 1):
-            page_data = fetch_player_search_list(player_names_list=[name], page_no=page_no)
-            if page_data.get("ResultCode") != 1:
-                continue
-            page_players = page_data.get("ResultData", {}).get("PlayerList", [])
-            for player in page_players:
-                cid = str(player.get("cid") or "").strip()
-                if cid:
-                    price_fields_by_cid[cid] = _price_fields_from_player(player)
-        _PRICE_FIELDS_BY_NAME_CACHE[cache_key] = {"fetched_at": time.time(), "data": price_fields_by_cid}
-        return price_fields_by_cid
-    except Exception as e:
-        print(f"Price fetch error for {name}: {e}")
-    _PRICE_FIELDS_BY_NAME_CACHE[cache_key] = {"fetched_at": time.time(), "data": {}}
-    return {}
+    price_fields_by_name = _fetch_player_price_fields_by_names_from_api([name])
+    return price_fields_by_name.get(cache_key) or {}
 
 def _fetch_player_price_fields_from_api(cid, name):
     if not name:
@@ -6603,19 +10637,38 @@ def populate_live_prices(players):
         if name:
             players_by_name.setdefault(name, []).append(player)
 
+    price_fields_by_name = _fetch_player_price_fields_by_names_from_api(players_by_name.keys())
+    checked_at = int(time.time())
     for name, name_players in players_by_name.items():
-        price_fields_by_cid = _fetch_player_price_fields_by_name_from_api(name)
+        price_fields_by_cid = price_fields_by_name.get(_normalize_filter_text(name), {})
         for player in name_players:
+            local_price = _extract_price(player)
             cid = str(player.get("cid") or "").strip()
             api_price_fields = price_fields_by_cid.get(cid)
             if api_price_fields:
                 player.update(api_price_fields)
-            player["price"] = _extract_price(player)
+            has_live_base_price = bool(api_price_fields) and (
+                _has_price_value(api_price_fields.get("n8Price0"))
+                or _has_price_value(api_price_fields.get("n8Price"))
+            )
+            if has_live_base_price:
+                player["price_source"] = "live"
+                player["price"] = _extract_price(player)
+            else:
+                player["price_source"] = "local"
+                player["price"] = local_price
+            # True when the upstream lookup failed or was still in progress, so
+            # the client can retry instead of keeping the stale local price.
+            player["price_pending"] = not _price_fields_cache_is_live(name)
+            player["price_checked_at"] = checked_at
     return players
 
 def get_live_price(cid, name=None):
     price_fields = _fetch_player_price_fields_from_api(cid, name)
-    if price_fields:
+    if price_fields and (
+        _has_price_value(price_fields.get("n8Price0"))
+        or _has_price_value(price_fields.get("n8Price"))
+    ):
         return _extract_price(price_fields)
     local_player = _get_local_player_by_cid(cid)
     return _extract_price(local_player)
@@ -6683,8 +10736,76 @@ def _get_weekly_players():
         seen_cids.add(cid)
         player["price"] = _extract_price(player)
         weekly_players.append(player)
-    populate_live_prices(weekly_players)
     return weekly_players
+
+
+def _market_player_is_visible(player, price):
+    class_name = _normalize_class_display_name(player.get("className"))
+    if not class_name:
+        class_name = PLAYER_CLASS_NAMES_BY_CID.get(str(player.get("cid") or ""), "")
+    class_key = re.sub(r"\s+", "", class_name).upper()
+    minimum_ovr = 137 if class_key in {"25TOTS", "25TOTY", "26TOTS", "26TOTY"} else 135
+    return price >= 30_000_000 and (_positive_int(player.get("ovr")) or 0) >= minimum_ovr
+
+
+def _get_market_trends():
+    unfiltered = _is_admin_user() and request.args.get("market_all") == "1"
+    result = {"risers": [], "fallers": [], "period": "", "unfiltered": unfiltered}
+    try:
+        database_path = app.config["PLAYER_PRICE_HISTORY_DB"]
+        changes = shared_derived_cache(
+            app.instance_path, "market-trends", [database_path, str(database_path) + "-wal"],
+            lambda: load_market_price_changes(database_path),
+            lambda: {"dates": [], "players": []},
+        )
+        local_players = {int(player["cid"]): player for player in PLAYER_DATA if player.get("cid")}
+        available = [item for item in changes["players"] if item["cid"] in local_players
+                     and (unfiltered or _market_player_is_visible(local_players[item["cid"]], item["price"]))]
+        for key, direction in (("risers", 1), ("fallers", -1)):
+            ranked = sorted((item for item in available if item["change"] * direction > 0),
+                            key=lambda item: (-item["change"] * direction, item["cid"]))[:20]
+            for item in ranked:
+                player = _apply_local_assets(_normalize_player_record(local_players[item["cid"]].copy()))
+                player.update(price=item["price"], change=item["change"])
+                value = item["price"]
+                unit, divisor = ("억", 100_000_000) if value >= 100_000_000 else (("만", 10_000) if value >= 10_000 else ("", 1))
+                player["market_price"] = (f"{value / divisor:,.1f}".rstrip("0").rstrip(".") if divisor > 1 else f"{value:,}") + unit
+                result[key].append(player)
+        if changes["dates"]:
+            labels = []
+            for value in changes["dates"]:
+                moment = datetime.fromisoformat(value)
+                labels.append(moment.astimezone(timezone(timedelta(hours=9))).strftime("%m.%d %H:%M")
+                              if moment.tzinfo else moment.strftime("%m.%d"))
+            result["period"] = " → ".join(labels)
+    except Exception as error:
+        app.logger.warning("Market trends read failed: %s", error)
+    return result
+
+
+def _get_evolution_material_trends(selected_ovr=136):
+    database_path = app.config["PLAYER_PRICE_HISTORY_DB"]
+    players = PLAYER_DATA
+    payload = shared_derived_cache(
+        app.instance_path, "evolution-material-trends",
+        [database_path, str(database_path) + "-wal", PLAYER_DATA_FILE],
+        lambda: build_evolution_material_trends(players, database_path),
+        lambda: build_evolution_material_trends(players, ""),
+    )
+    # Only embed the selected target's history; other histories load on demand.
+    return {**payload, "targets": [{**target, "history": target["history"] if target["ovr"] == selected_ovr else []}
+                                   for target in payload["targets"]]}
+
+
+@app.route("/api/evolution-material-trends")
+def evolution_material_trends_api():
+    selected = request.args.get("ovr", 136, type=int)
+    payload = _get_evolution_material_trends(selected)
+    target = next((item for item in payload["targets"] if item["ovr"] == selected), None)
+    if target is None:
+        return jsonify({"error": "지원하지 않는 대상 OVR입니다."}), 400
+    return jsonify({"target": target, "updated_at": payload["updated_at"],
+                    "source": payload["source"], "error": payload["error"]})
 
 
 def _load_prime_exchange_config():
@@ -7002,6 +11123,64 @@ def _get_prime_exchange_efficiency():
 RTDB_BASE = "https://game-coupon-default-rtdb.firebaseio.com"
 CODES_PATH = "fifaMobile/codes"
 _coupon_cache = {"fetched_at": 0.0, "raw": None}
+COUPON_STATUS_OVERRIDES_FILE = os.getenv(
+    "FIMOBOOK_COUPON_STATUS_OVERRIDES_FILE",
+    os.path.join(app.instance_path, "coupon_status_overrides.json"),
+)
+_COUPON_STATUS_OVERRIDE_VALUES = {"available", "unavailable"}
+_coupon_status_override_lock = threading.Lock()
+
+
+def _coupon_status_key(code):
+    return str(code or "").strip().upper()
+
+
+def _load_coupon_status_overrides():
+    try:
+        with open(COUPON_STATUS_OVERRIDES_FILE, "r", encoding="utf-8") as override_file:
+            payload = json.load(override_file)
+    except FileNotFoundError:
+        return {}
+    except Exception as error:
+        print(f"Coupon status override read failed: {error}")
+        return {}
+
+    if not isinstance(payload, dict):
+        return {}
+    return {
+        _coupon_status_key(code): status
+        for code, status in payload.items()
+        if _coupon_status_key(code) and status in _COUPON_STATUS_OVERRIDE_VALUES
+    }
+
+
+def _set_coupon_status_override(code, status):
+    code_key = _coupon_status_key(code)
+    normalized_status = str(status or "").strip().lower()
+    if not code_key:
+        raise ValueError("쿠폰 코드가 필요합니다.")
+    if normalized_status not in {"auto", *_COUPON_STATUS_OVERRIDE_VALUES}:
+        raise ValueError("올바르지 않은 쿠폰 상태입니다.")
+
+    with _coupon_status_override_lock:
+        overrides = _load_coupon_status_overrides()
+        if normalized_status == "auto":
+            overrides.pop(code_key, None)
+        else:
+            overrides[code_key] = normalized_status
+
+        target_dir = os.path.dirname(COUPON_STATUS_OVERRIDES_FILE)
+        os.makedirs(target_dir, exist_ok=True)
+        temporary_path = f"{COUPON_STATUS_OVERRIDES_FILE}.{os.getpid()}.tmp"
+        try:
+            with open(temporary_path, "w", encoding="utf-8") as override_file:
+                json.dump(overrides, override_file, ensure_ascii=False, indent=2, sort_keys=True)
+            os.replace(temporary_path, COUPON_STATUS_OVERRIDES_FILE)
+        finally:
+            if os.path.exists(temporary_path):
+                os.remove(temporary_path)
+
+    return normalized_status
 
 
 def _normalize_rtdb_payload(payload):
@@ -7133,6 +11312,7 @@ def _dedupe_by_code(coupons):
 
 def _prepare_coupons(raw_coupons, dedupe=True):
     today = date.today()
+    status_overrides = _load_coupon_status_overrides()
     enriched = []
 
     for entry in raw_coupons:
@@ -7140,7 +11320,14 @@ def _prepare_coupons(raw_coupons, dedupe=True):
         exp_date = _parse_expires(coupon.get("expires"))
         coupon["_parsed_expires"] = exp_date
         coupon["_parsed_added"] = _parse_added(coupon.get("added"))
-        coupon["boolExpires"] = bool(exp_date and exp_date < today)
+        source_expired = bool(exp_date and exp_date < today)
+        manual_status = status_overrides.get(_coupon_status_key(coupon.get("code")), "auto")
+        coupon["manualStatus"] = manual_status
+        coupon["statusOverridden"] = manual_status != "auto"
+        coupon["boolExpires"] = (
+            manual_status == "unavailable"
+            or (manual_status == "auto" and source_expired)
+        )
         enriched.append(coupon)
 
     processed = _dedupe_by_code(enriched) if dedupe else enriched
@@ -7207,7 +11394,14 @@ def allowed_image(filename):
 # 넥슨 API를 통한 실시간 선수 검색 함수 (이름 검색, 자동완성, 상세 정보용)
 from typing import List, Dict
 
-def fetch_player_search_list(player_names_list: List[str] = None, page_no: int = 1, filters: Dict = None) -> Dict:
+def fetch_player_search_list(
+    player_names_list: List[str] = None,
+    page_no: int = 1,
+    filters: Dict = None,
+    max_retries: int = 3,
+    get_timeout: int = 15,
+    post_timeout: int = 30,
+) -> Dict:
     session = requests.Session()
     session.headers.update({
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
@@ -7218,10 +11412,10 @@ def fetch_player_search_list(player_names_list: List[str] = None, page_no: int =
     })
 
     csrf_token = None
-    for _ in range(3): # 최대 3번 재시도
+    for _ in range(max(1, max_retries)):
         try:
             url_get = "https://fcmobile.nexon.com/datacenterweb/squadmaker"
-            res_get = session.get(url_get, timeout=15)
+            res_get = session.get(url_get, timeout=get_timeout)
             res_get.raise_for_status() # HTTP 오류 발생 시 예외 발생
 
             soup = BeautifulSoup(res_get.text, "html.parser")
@@ -7258,7 +11452,7 @@ def fetch_player_search_list(player_names_list: List[str] = None, page_no: int =
         default_body.update(filters)
 
     url_post = "https://fcmobile.nexon.com/datacenterweb/SquadMakerAjaxInfo"
-    res_post = session.post(url_post, data=default_body, timeout=30)
+    res_post = session.post(url_post, data=default_body, timeout=post_timeout)
     res_post.raise_for_status() # HTTP 오류 발생 시 예외 발생
 
     return res_post.json()
@@ -7269,10 +11463,63 @@ def fetch_player_search_list(player_names_list: List[str] = None, page_no: int =
 def index():
     return render_template(
         "search.html",
+        **_get_advanced_filter_options(),
         robots_meta="index,follow",
+        canonical_url=_canonical("/"),
+        og_title="피모북 | FC모바일 선수검색·갱신시간·팀경력·쿠폰",
+        og_description="FC모바일 선수 이름, 시즌, 포지션, OVR을 검색하고 능력치와 시세를 확인하세요.",
         weekly_players=_get_weekly_players(),
+        market_trends=_get_market_trends(),
+        evolution_material_trends=_get_evolution_material_trends(),
         latest_notice=_latest_notice_post(),
         latest_review_activity=_latest_home_review_activity(3),
+    )
+
+
+@app.route("/v2")
+def v2_index():
+    """Isolated v2 player discovery experience backed by legacy data APIs."""
+    return render_template(
+        "v2/index.html",
+        robots_meta="noindex,nofollow",
+        **_get_advanced_filter_options(),
+    )
+
+
+@app.route("/v2/player/<int:cid>")
+def v2_player_detail(cid):
+    """Focused v2 player view without changing the feature-complete legacy page."""
+    source_player = _get_local_player_by_cid(cid)
+    if not source_player:
+        return render_template(
+            "v2/player.html",
+            player=None,
+            stat_groups={},
+            other_classes=[],
+            robots_meta="noindex,nofollow",
+        ), 404
+
+    player = _build_compare_player(source_player)
+    stat_groups = _get_compare_stat_groups(player)
+    other_classes = []
+    player_name = str(player.get("playerKor") or "").strip()
+    if player_name:
+        for candidate in PLAYER_DATA:
+            if str(candidate.get("playerKor") or "").strip() != player_name:
+                continue
+            if candidate.get("cid") == cid:
+                continue
+            other_classes.append(_build_compare_player(candidate))
+        other_classes.sort(
+            key=lambda item: (-(item.get("ovr") or 0), item.get("className") or "")
+        )
+
+    return render_template(
+        "v2/player.html",
+        player=player,
+        stat_groups=stat_groups,
+        other_classes=other_classes[:8],
+        robots_meta="noindex,nofollow",
     )
 
 
@@ -7286,16 +11533,140 @@ def prime_exchange_page():
     )
 
 
+@app.route("/market-fee-calculator")
+def market_fee_calculator():
+    return render_template(
+        "market_fee_calculator.html",
+        robots_meta="index,follow",
+    )
+
+
+def _load_normal_mode_power_ranking():
+    data_path = os.path.join(
+        app.root_path,
+        "static",
+        "data",
+        "normal-mode-power-ranking.json",
+    )
+    fallback = {
+        "version": 1,
+        "meta": {
+            "updated_at": "",
+            "scope": "",
+            "source_name": "",
+            "source_url": "",
+            "notice": "랭킹 데이터를 준비하고 있습니다.",
+        },
+        "players": [],
+    }
+    try:
+        with open(data_path, "r", encoding="utf-8") as data_file:
+            ranking_data = json.load(data_file)
+    except (OSError, json.JSONDecodeError, TypeError):
+        return fallback
+
+    if not isinstance(ranking_data, dict):
+        return fallback
+    if not isinstance(ranking_data.get("meta"), dict):
+        ranking_data["meta"] = fallback["meta"]
+    if not isinstance(ranking_data.get("players"), list):
+        ranking_data["players"] = []
+
+    player_artwork_by_cid = {
+        int(player.get("cid")): player
+        for player in PLAYER_DATA
+        if isinstance(player, dict) and str(player.get("cid") or "").isdigit()
+    }
+    for edition in [ranking_data, *ranking_data.get("editions", [])]:
+        for ranked_player in edition.get("players", []):
+            if not isinstance(ranked_player, dict):
+                continue
+            cid = str(ranked_player.get("cid") or "")
+            artwork = player_artwork_by_cid.get(int(cid)) if cid.isdigit() else None
+            if artwork:
+                ranked_player["price"] = (
+                    _extract_price_at_enhance(artwork, 0)
+                    if not ranked_player.get("verified_base_ovr")
+                    or artwork.get("ovr") == ranked_player["verified_base_ovr"]
+                    else None
+                )
+    for ranked_player in ranking_data["players"]:
+        if not isinstance(ranked_player, dict):
+            continue
+        try:
+            cid = int(ranked_player.get("cid"))
+        except (TypeError, ValueError):
+            continue
+        artwork = player_artwork_by_cid.get(cid)
+        if not artwork:
+            continue
+        ranked_player["card_image"] = (
+            _player_thumbnail_url("card", cid, 128)
+            or str(artwork.get("bimage") or "")
+        )
+        ranked_player["face_image"] = (
+            _player_thumbnail_url("faceon", cid, 128)
+            or str(artwork.get("pimage") or "")
+        )
+    return ranking_data
+
+
+@app.route("/normal-mode-power-ranking")
+def normal_mode_power_ranking():
+    return render_template(
+        "normal_mode_power_ranking.html",
+        ranking_data=_load_normal_mode_power_ranking(),
+        robots_meta="index,follow",
+        canonical_url=_canonical("/normal-mode-power-ranking"),
+        og_title="FC모바일 일반모드 파워랭킹 | 피모북",
+        og_description="FC모바일 일반모드 상위 랭커의 선수 사용 현황을 포지션별 랭킹과 시각화로 확인하세요.",
+    )
+
+
+@app.route("/normal-mode-ranking/season-5")
+def normal_mode_season_ranking():
+    data_path = os.path.join(app.root_path, "static", "data", "normal-mode-season-5-ranking.json")
+    try:
+        with open(data_path, encoding="utf-8") as data_file:
+            ranking_data = json.load(data_file)
+    except (OSError, json.JSONDecodeError):
+        app.logger.exception("시즌 5 일반모드 랭킹 데이터를 불러오지 못했습니다.")
+        abort(503)
+    return render_template(
+        "normal_mode_season_ranking.html",
+        ranking_data=ranking_data,
+        robots_meta="index,follow",
+        canonical_url=_canonical("/normal-mode-ranking/season-5"),
+        og_title="FC모바일 시즌 5 일반모드 랭킹 | 피모북",
+        og_description="일반모드 상위 250명의 순위, 스타와 팀 OVR을 확인하고 닉네임으로 내 순위를 검색하세요.",
+    )
+
+
 # 메인 이름 검색 페이지 (API 사용)
 @app.route("/search", methods=["GET", "POST"])
 @csrf.exempt
 def search():
     names_input = request.args.get("names", "").strip()
-    if not names_input:
+    filter_spec = _build_advanced_player_filter(request.args)
+    has_main_filters = any(
+        (
+            filter_spec["player_classes"],
+            filter_spec["positions"],
+            filter_spec["min_ovr"] is not None,
+            filter_spec["max_ovr"] is not None,
+            filter_spec["min_price"] is not None,
+            filter_spec["max_price"] is not None,
+            filter_spec["price_enhance"] > 0,
+        )
+    )
+    if not names_input and not has_main_filters:
         return render_template(
             "search.html",
+            **_get_advanced_filter_options(),
             robots_meta="noindex,follow",
             weekly_players=_get_weekly_players(),
+            market_trends=_get_market_trends(),
+            evolution_material_trends=_get_evolution_material_trends(),
             latest_notice=_latest_notice_post(),
             latest_review_activity=_latest_home_review_activity(3),
         )
@@ -7304,25 +11675,45 @@ def search():
     player_names_queries = [n.strip() for n in names_input.split(",") if n.strip()]
 
     all_players = []
-    for name_query in player_names_queries:
-        current_query_players = _search_local_players_by_name(name_query)
+    seen_player_cids = set()
+    search_groups = player_names_queries or [""]
+    for name_query in search_groups:
+        current_query_players = (
+            _search_local_players_by_name(name_query)
+            if name_query
+            else [
+                _apply_local_assets(_normalize_player_record(player.copy()))
+                for player in PLAYER_DATA
+            ]
+        )
         for p in current_query_players:
-            if not any(existing_p.get('cid') == p.get('cid') for existing_p in all_players):
-                all_players.append(p)
+            if not _player_matches_advanced_filter(p, filter_spec):
+                continue
+            player_cid = p.get("cid")
+            if player_cid in seen_player_cids:
+                continue
+            seen_player_cids.add(player_cid)
+            all_players.append(p)
 
     if not all_players:
+        empty_result_label = f"'{names_input}'" if names_input else "선택한 필터 조건"
         return render_template(
             "results.html",
-            error=f"'{names_input}'에 해당하는 선수를 찾을 수 없습니다.",
+            error=f"{empty_result_label}에 해당하는 선수를 찾을 수 없습니다.",
             players=[],
             names=names_input,
             sort=sort,
+            filters=filter_spec,
             robots_meta="noindex,follow",
         )
 
-    populate_live_prices(all_players)
     for player in all_players:
+        player["price"] = _extract_price_at_enhance(player, filter_spec["price_enhance"])
         player["playstyles"] = _extract_player_playstyles(player)
+        player["playstyleSlots"] = _build_player_playstyle_slots(
+            player,
+            player["playstyles"],
+        )
 
     if sort == "price_desc":
         all_players.sort(key=lambda p: (p.get("price") is None, -(p.get("price") or 0), p.get("playerKor", "")))
@@ -7337,6 +11728,7 @@ def search():
         players=all_players,
         names=names_input,
         sort=sort,
+        filters=filter_spec,
         robots_meta="noindex,follow",
     )
 
@@ -7361,9 +11753,9 @@ def players_hub():
     page_players = players_sorted[start:end]
 
     if page == 1:
-        canonical_url = request.base_url
+        canonical_url = _canonical("/players")
     else:
-        canonical_url = f"{request.base_url}?page={page}"
+        canonical_url = f"{_canonical('/players')}?page={page}"
 
     return render_template(
         "players.html",
@@ -7374,12 +11766,108 @@ def players_hub():
         total=total,
         canonical_url=canonical_url,
         robots_meta="index,follow",
+        meta_description="FC모바일 전체 선수 목록에서 선수 이름, 클래스, 포지션과 OVR 정보를 확인하고 상세 능력치를 살펴보세요.",
+        og_title="FC모바일 전체 선수 목록과 정보 | 피모북",
+        og_description="FC모바일 선수 이름, 클래스, 포지션, OVR과 상세 정보를 확인하세요.",
     )
+
+
+@app.route("/pack-opener")
+def pack_opener_page():
+    return render_template(
+        "pack_opener.html",
+        canonical_url=_canonical("/pack-opener"),
+        meta_description="FC모바일 공식 상점 확률표로 즐기는 무료 팩 오프너. 시즌별 연출과 선수 카드 뽑기를 체험하세요.",
+        og_title="FC모바일 팩 오프너 | 피모북",
+    )
+
+
+@app.route("/api/pack-opener/catalog")
+def pack_opener_catalog_api():
+    return jsonify(get_pack_catalog(app.root_path, PLAYER_DATA).catalog())
+
+
+@app.route("/api/pack-opener/odds")
+def pack_opener_odds_api():
+    pack_id = request.args.get("pack", "")
+    raw_path = request.args.get("path", "")
+    try:
+        path = tuple(int(part) for part in raw_path.split(".") if part)
+        if len(path) > 7:
+            raise ValueError("Invalid probability path")
+        table = get_pack_catalog(app.root_path, PLAYER_DATA).odds(
+            pack_id, path, request.args.get("page", 1, type=int) or 1,
+        )
+    except (KeyError, IndexError, ValueError):
+        return jsonify({"error": "확률표를 찾을 수 없습니다."}), 404
+    return jsonify(table)
+
+
+@app.route("/api/pack-opener/draw", methods=["POST"])
+def pack_opener_draw_api():
+    payload = request.get_json(silent=True)
+    pack_id = payload.get("pack") if isinstance(payload, dict) else None
+    if not isinstance(pack_id, str):
+        return jsonify({"error": "팩을 선택해주세요."}), 400
+    quantity = payload.get("quantity", 1)
+    if type(quantity) is not int or not 1 <= quantity <= 100:
+        return jsonify({"error": "열 팩 수량은 1~100개로 입력해주세요."}), 400
+    try:
+        catalog = get_pack_catalog(app.root_path, PLAYER_DATA)
+        result = catalog.draw(pack_id, ENHANCE_LEVEL_TOTALS)
+        for _ in range(quantity - 1):
+            result["rewards"].extend(catalog.draw(pack_id, ENHANCE_LEVEL_TOTALS)["rewards"])
+        price = catalog.shop_prices["prices"].get(pack_id)
+        product = catalog.shop_prices.get("products", {}).get(pack_id, {})
+        result.update(quantity=quantity, priceFV=price,
+                      spentFV=price * quantity if isinstance(price, int) else None,
+                      categoryId=catalog.packs[pack_id].get('categoryId', 'STORE'),
+                      currency=product.get('currency', 'FV'),
+                      spent=product.get('price', price) * quantity
+                      if isinstance(product.get('price', price), int) else None)
+    except KeyError:
+        return jsonify({"error": "팩을 찾을 수 없습니다."}), 404
+    response = jsonify(result)
+    response.headers["Cache-Control"] = "no-store"
+    return response
 
 
 @app.route("/squad_maker")
 def squad_maker():
-    return render_template("squad_maker.html", skill_id_name_map=SKILL_ID_NAME_MAP)
+    team_filter_context = _get_team_filter_context()
+    playstyle_catalog = [
+        {
+            "code": code,
+            "name": str(meta.get("korname") or _fallback_playstyle_name(code)).strip(),
+            "description": str(meta.get("description") or "").strip(),
+            "category": str(meta.get("category") or "").upper().strip(),
+            "level": meta.get("level"),
+            "group": meta.get("groupIdStr") or code,
+            "imageUrl": _playstyle_image_url(meta.get("icon") or code),
+        }
+        for code, meta in sorted(
+            _load_playstyle_meta().items(),
+            key=lambda item: (int(item[1].get("sortOrder") or 999), item[0]),
+        )
+    ]
+    return render_template(
+        "squad_maker.html",
+        **_get_advanced_filter_options(),
+        skill_id_name_map=SKILL_ID_NAME_MAP,
+        work_rate_options=WORK_RATE_OPTIONS,
+        raised_stat_options=RAISED_STAT_OPTIONS,
+        current_league_teams=team_filter_context["current_league_teams"],
+        all_league_teams=team_filter_context["all_league_teams"],
+        squad_config={
+            "enhanceTotals": ENHANCE_LEVEL_TOTALS,
+            "maxTraining": MAX_TRAINING_LEVEL,
+            "playstyles": playstyle_catalog,
+            "trainingByPosition": {
+                position: _training_bonuses_by_level(position)
+                for position in ("GK", "ST", "CF", "LF", "RF", "LW", "RW", "LM", "RM", "CM", "CAM", "CDM", "CB", "LB", "RB", "LWB", "RWB")
+            },
+        },
+    )
 
 
 @app.route("/player_compare")
@@ -7394,6 +11882,9 @@ def player_compare_page():
         skill_boost_values=SKILL_BOOST_LEVEL_VALUES,
         skill_boost_stats=SKILL_BOOST_STAT_CODES,
         robots_meta="index,follow",
+        canonical_url=_canonical("/player_compare"),
+        og_title="FC모바일 선수 비교 - 능력치·진화·스킬 | 피모북",
+        og_description="FC모바일 선수 두 명의 OVR과 세부 능력치를 진화 단계와 스킬부스트까지 적용해 비교하세요.",
     )
 
 # 선수 상세 정보 페이지 (API 사용)
@@ -7407,8 +11898,8 @@ def player_detail(cid):
             "detail.html",
             error=f"ID {cid}에 해당하는 선수의 상세 정보를 찾을 수 없습니다.",
             player=None,
-            robots_meta="index,follow",
-        )
+            robots_meta="noindex,follow",
+        ), 404
 
     selected_player = apply_live_price_fields(selected_player)
     selected_player = _merge_fcplayer_skill_data(selected_player)
@@ -7417,10 +11908,101 @@ def player_detail(cid):
     selected_player["skillDisplay"] = _extract_player_skill_items(selected_player)
     selected_player["skillDisplay"] = _prepare_review_skill_display(selected_player)
     selected_player["playstyles"] = _extract_player_playstyles(selected_player)
+    selected_player["playstyleSlots"] = _build_player_playstyle_slots(
+        selected_player,
+        selected_player["playstyles"],
+    )
     selected_player["potentialPositions"] = _extract_potential_positions(selected_player)
     selected_player["initialEnhance"] = int(selected_player.get("enhance") or 0)
     selected_player["priceByEnhance"] = _build_price_by_enhance(selected_player)
     selected_player["priceRows"] = _build_price_rows(selected_player)
+
+    player_name = (selected_player.get("playerKor") or "선수").strip()
+    class_name = (selected_player.get("className") or "").strip()
+    position = (selected_player.get("position") or "").strip()
+    team = (selected_player.get("team") or "").strip()
+    nation = (selected_player.get("nation") or "").strip()
+    overall = selected_player.get("ovr")
+    seo_title = (
+        f"FC모바일 {player_name} {class_name} {overall} 능력치• 시세 | 피모북"
+        if class_name and overall is not None
+        else f"FC모바일 {player_name} 능력치·시세 | 피모북"
+    )
+    player_summary_parts = [
+        f"FC모바일 {class_name} {player_name}".replace("  ", " "),
+        f"OVR {overall}" if overall is not None else "",
+        position,
+    ]
+    player_summary = " · ".join(part for part in player_summary_parts if part)
+    seo_description = (
+        f"{player_summary} 선수의 능력치, 특성, 스킬부스트, 진화별 시세와 사용자 리뷰를 피모북에서 확인하세요."
+    )
+    canonical_url = _canonical(f"/player/{detail_cid}")
+    local_player_image = (
+        _player_thumbnail_url("faceon", selected_player.get("cid"), 256)
+        or _player_thumbnail_url("card", selected_player.get("cid"), 256)
+        or selected_player.get("pimage")
+        or selected_player.get("bimage")
+    )
+    seo_image_url = _absolute_public_url(local_player_image)
+    person_schema = {
+        "@type": "Person",
+        "name": player_name,
+        "alternateName": f"FC모바일 {player_name}",
+        "description": player_summary,
+        "url": canonical_url,
+    }
+    if seo_image_url:
+        person_schema["image"] = seo_image_url
+    if nation:
+        person_schema["nationality"] = {"@type": "Country", "name": nation}
+    if team:
+        person_schema["affiliation"] = {"@type": "SportsTeam", "name": team}
+    if selected_player.get("height"):
+        person_schema["height"] = {
+            "@type": "QuantitativeValue",
+            "value": selected_player["height"],
+            "unitCode": "CMT",
+        }
+    if selected_player.get("weight"):
+        person_schema["weight"] = {
+            "@type": "QuantitativeValue",
+            "value": selected_player["weight"],
+            "unitCode": "KGM",
+        }
+    player_structured_data = {
+        "@context": "https://schema.org",
+        "@type": "WebPage",
+        "name": seo_title,
+        "description": seo_description,
+        "url": canonical_url,
+        "inLanguage": "ko-KR",
+        "about": person_schema,
+    }
+    breadcrumb_structured_data = {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+            {
+                "@type": "ListItem",
+                "position": 1,
+                "name": "홈",
+                "item": _canonical("/"),
+            },
+            {
+                "@type": "ListItem",
+                "position": 2,
+                "name": "FC모바일 선수 목록",
+                "item": _canonical("/players"),
+            },
+            {
+                "@type": "ListItem",
+                "position": 3,
+                "name": f"{class_name} {player_name}".strip(),
+                "item": canonical_url,
+            },
+        ],
+    }
 
     other_classes = []
     base_name = (selected_player.get("playerKor") or "").strip()
@@ -7476,8 +12058,19 @@ def player_detail(cid):
         review_positions=PLAYER_REVIEW_POSITIONS,
         can_write_review=current_user.is_authenticated,
         player_cid=detail_cid,
+        price_history=_player_price_history(detail_cid, limit=128),
         tier_summary=_player_tier_summary(detail_cid),
         robots_meta="index,follow",
+        canonical_url=canonical_url,
+        meta_description=seo_description,
+        og_title=seo_title,
+        og_description=seo_description,
+        og_image_url=seo_image_url,
+        og_image_alt=f"FC모바일 {class_name} {player_name} 선수 카드".replace("  ", " "),
+        seo_title=seo_title,
+        player_summary=player_summary,
+        player_structured_data=player_structured_data,
+        breadcrumb_structured_data=breadcrumb_structured_data,
         other_classes=other_classes,
         enhance_totals=ENHANCE_LEVEL_TOTALS,
         skill_boost_values=SKILL_BOOST_LEVEL_VALUES,
@@ -7622,6 +12215,7 @@ def player_review_detail(cid, review_id):
     review = _get_player_review_by_id(cid, review_id)
     if not review:
         abort(404)
+    _attach_review_comment_counts([review])
 
     player = _get_local_player_by_cid(cid)
     if not player:
@@ -7660,6 +12254,54 @@ def player_review_detail(cid, review_id):
         og_title=f"{review.get('title')} | 피모북 선수 리뷰",
         og_description=review.get("excerpt") or f"{review.get('player_name')} 선수 사용 리뷰",
     )
+
+
+@app.route("/community/reviews/<int:cid>/<string:review_id>/like", methods=["POST"])
+@login_required
+def like_player_review(cid, review_id):
+    review = _get_player_review_by_id(cid, review_id)
+    if not review:
+        abort(404)
+
+    canonical_review_id = str(review.get("id") or review_id)
+    existing = PlayerReviewLike.query.filter_by(
+        player_cid=cid,
+        review_id=canonical_review_id,
+        user_id=current_user.id,
+    ).first()
+    if existing:
+        db.session.delete(existing)
+        liked = False
+    else:
+        db.session.add(PlayerReviewLike(
+            player_cid=cid,
+            review_id=canonical_review_id,
+            user_id=current_user.id,
+        ))
+        liked = True
+
+    try:
+        db.session.commit()
+    except IntegrityError:
+        db.session.rollback()
+        liked = bool(PlayerReviewLike.query.filter_by(
+            player_cid=cid,
+            review_id=canonical_review_id,
+            user_id=current_user.id,
+        ).first())
+
+    like_count = PlayerReviewLike.query.filter_by(
+        player_cid=cid,
+        review_id=canonical_review_id,
+    ).count()
+    payload = {"likes": like_count, "liked": liked}
+    if (
+        request.headers.get("X-Requested-With") == "XMLHttpRequest"
+        or request.accept_mimetypes.best == "application/json"
+    ):
+        return jsonify(payload)
+    flash("리뷰에 좋아요를 눌렀습니다." if liked else "리뷰 좋아요를 취소했습니다.", "success")
+    return redirect(url_for("player_review_detail", cid=cid, review_id=canonical_review_id))
 
 
 @app.route("/community/reviews/<int:cid>/<string:review_id>/comments", methods=["POST"])
@@ -7772,6 +12414,36 @@ def player_review_summary_admin():
             robots_meta="noindex,nofollow",
         )
 
+    if request.method == "POST" and request.form.get("action") == "quick_save":
+        player_reference = request.form.get("player_reference", "").strip()
+        player = _resolve_admin_summary_player(player_reference)
+        if not player:
+            flash("선수 상세주소 또는 CID를 확인해주세요.", "danger")
+            return redirect(url_for("player_review_summary_admin"))
+
+        try:
+            raw_json = request.form.get("review_summary_json", "").strip()
+            parsed_summary = (_parse_player_review_summary_json(raw_json) if raw_json else {
+                key: request.form.get(key, "").strip() for key in ("summary", "strengths", "weaknesses")
+            })
+        except (json.JSONDecodeError, ValueError) as exc:
+            flash(f"요약 리뷰 JSON 형식을 확인해주세요: {exc}", "danger")
+            return redirect(url_for("player_review_summary_admin", cid=player.get("cid")))
+
+        if not parsed_summary or not any(parsed_summary.values()):
+            flash("저장할 결론, 장점, 단점 또는 요약 JSON을 입력해주세요.", "danger")
+            return redirect(url_for("player_review_summary_admin", cid=player.get("cid")))
+
+        _store_player_review_summary(player, summary_text=parsed_summary["summary"],
+                                     strengths=parsed_summary["strengths"], weaknesses=parsed_summary["weaknesses"])
+        flash(f"{player.get('playerKor') or '선수'} 요약 리뷰를 바로 저장했습니다.", "success")
+        return redirect(url_for(
+            "player_review_summary_admin",
+            q=player.get("playerKor") or "",
+            cid=player.get("cid"),
+            draft_saved=1,
+        ))
+
     if request.method == "POST" and request.form.get("action") == "save_weekly_players":
         weekly_ids = []
         for slot in range(1, 4):
@@ -7824,27 +12496,12 @@ def player_review_summary_admin():
             strengths = parsed_summary["strengths"]
             weaknesses = parsed_summary["weaknesses"]
 
-        summary_text = summary_text[:800]
-        strengths = strengths[:2000]
-        weaknesses = weaknesses[:2000]
         if not any([summary_text, strengths, weaknesses]):
-            summaries.pop(player_key, None)
-            _save_player_review_summaries(summaries)
+            _store_player_review_summary(player)
             flash("입력된 내용이 없어 기존 요약을 삭제했습니다.", "info")
             return redirect(url_for("player_review_summary_admin", q=player.get("playerKor") or "", cid=cid))
 
-        now_iso = datetime.utcnow().isoformat(timespec="seconds")
-        summaries[player_key] = {
-            "player_cid": cid,
-            "player_name": player.get("playerKor"),
-            "player_class": player.get("className"),
-            "summary": summary_text,
-            "strengths": strengths,
-            "weaknesses": weaknesses,
-            "updated_at_iso": now_iso,
-            "updated_by": current_user.username if current_user.is_authenticated else "admin",
-        }
-        _save_player_review_summaries(summaries)
+        _store_player_review_summary(player, summary_text, strengths, weaknesses)
         flash("선수 리뷰 요약을 저장했습니다.", "success")
         return redirect(url_for("player_review_summary_admin", q=player.get("playerKor") or "", cid=cid))
 
@@ -8011,6 +12668,7 @@ def delete_player_firebase_review(cid):
     review_id = str(existing_review.get("id") or existing_review.get("user_id") or current_user.id)
     _delete_current_user_player_review(cid, player)
     PlayerReviewComment.query.filter_by(player_cid=cid, review_id=review_id).delete(synchronize_session=False)
+    PlayerReviewLike.query.filter_by(player_cid=cid, review_id=review_id).delete(synchronize_session=False)
     db.session.commit()
     flash("선수 리뷰가 삭제되었습니다.", "success")
     return redirect(_safe_local_next_url(url_for("player_detail", cid=cid, _anchor="player-reviews")))
@@ -8080,65 +12738,103 @@ def api_squad_players():
     q = request.args.get("q", "").strip()
     slot = request.args.get("slot", "").strip().upper()
     class_name = request.args.get("class", "").strip()
+    advanced_filter = _build_advanced_player_filter(request.args)
+    selected_league = request.args.get("league", "").strip()
+    selected_team = request.args.get("team", "").strip()
+    all_career = str(request.args.get("all_career", "")).strip().lower() in {
+        "1", "true", "yes", "on"
+    }
+    sort_by = str(request.args.get("sort", "recommend") or "recommend").strip().lower()
+    if sort_by not in {"recommend", "ovr_desc", "ovr_asc", "price_desc", "price_asc", "name"}:
+        sort_by = "recommend"
     limit = request.args.get("limit", default=24, type=int)
     limit = max(1, min(limit, 60))
 
+    team_filter_context = _get_team_filter_context(include_external=all_career)
+    matching_identity_keys = _get_team_filter_identity_keys(
+        team_filter_context,
+        selected_league,
+        selected_team,
+        all_career,
+    )
+
     ranked = []
     for player in PLAYER_DATA:
+        if (
+            matching_identity_keys is not None
+            and _player_identity_key(player) not in matching_identity_keys
+        ):
+            continue
+        if not _player_matches_advanced_filter(player, advanced_filter):
+            continue
         score = _score_squad_player(player, name_query=q, slot_position=slot, class_query=class_name)
         if score is None:
             continue
+        ranked.append((score, player))
 
-        normalized = _apply_local_assets(_normalize_player_record(player.copy()))
-        ranked.append(
-            {
-                "score": score,
-                "player": {
-                    "cid": normalized.get("cid"),
-                    "playerKor": normalized.get("playerKor"),
-                    "playerEng": normalized.get("playerEng"),
-                    "className": normalized.get("className"),
-                    "ovr": normalized.get("ovr"),
-                    "position": normalized.get("position"),
-                    "positions": _extract_player_positions(normalized),
-                    "potentialPosition": normalized.get("potentialPosition"),
-                    "potentialPositions": _extract_potential_positions(normalized),
-                    "jerseyNumber": normalized.get("jerseyNumber"),
-                    "team": normalized.get("team"),
-                    "league": normalized.get("league"),
-                    "nation": normalized.get("nation") or normalized.get("nationality"),
-                    "pimage": normalized.get("pimage"),
-                    "bimage": normalized.get("bimage"),
-                    "price": _extract_price(normalized),
-                    "skillBoostName": normalized.get("skillBoostName"),
-                    "skillInfo": normalized.get("skillInfo"),
-                    "skills": _extract_player_skills(normalized),
-                    "skillDisplay": _extract_player_skill_items(normalized),
-                    "skillStyleId": normalized.get("skillStyleId"),
-                    "staticPlayStyles": normalized.get("staticPlayStyles") or [],
-                    "playStyleSlotMaxLevels": normalized.get("playStyleSlotMaxLevels"),
-                    "playstyles": _extract_player_playstyles(normalized),
-                    "skillMovesName": normalized.get("skillMovesName"),
-                    "skillMovesLevel": normalized.get("skillMovesLevel"),
-                    "mainFoot": normalized.get("mainFoot"),
-                    "footL": normalized.get("footL"),
-                    "footR": normalized.get("footR"),
-                    "height": normalized.get("height"),
-                    "weight": normalized.get("weight"),
-                    "traits": normalized.get("traits", []),
-                },
-            }
-        )
-
-    ranked.sort(
-        key=lambda item: (
-            -item["score"],
-            -(item["player"].get("ovr") or 0),
-            -(item["player"].get("price") or 0),
-            item["player"].get("playerKor") or "",
-        )
+    selected = heapq.nsmallest(
+        limit,
+        ranked,
+        key=lambda item: _squad_player_sort_key(item, sort_by, advanced_filter["price_enhance"]),
     )
-    return jsonify([item["player"] for item in ranked[:limit]])
+
+    results = []
+    for _, player in selected:
+        normalized = _apply_local_assets(_normalize_player_record(player.copy()))
+        search_skill_display = _prepare_review_skill_display(
+            {**normalized, "skillDisplay": _extract_player_skill_items(normalized)}
+        )
+        ultimate_skill_labels = [
+            str(item.get("name") or "").strip()
+            for item in search_skill_display.get("items", [])
+            if str(item.get("_review_kind") or item.get("kind") or "").upper() == "ULTIMATE"
+            and str(item.get("name") or "").strip()
+        ][:4]
+        results.append({
+            "cid": normalized.get("cid"),
+            "cardArt": normalized.get("cardArt"),
+            "playerKor": normalized.get("playerKor"),
+            "playerEng": normalized.get("playerEng"),
+            "className": normalized.get("className"),
+            "ovr": normalized.get("ovr"),
+            "position": normalized.get("position"),
+            "positions": _extract_player_positions(normalized),
+            "potentialPosition": normalized.get("potentialPosition"),
+            "potentialPositions": _extract_potential_positions(normalized),
+            "jerseyNumber": normalized.get("jerseyNumber"),
+            "team": normalized.get("team"),
+            "league": normalized.get("league"),
+            "nation": normalized.get("nation") or normalized.get("nationality"),
+            "pimage": normalized.get("pimage"),
+            "bimage": normalized.get("bimage"),
+            "pimageThumb": normalized.get("pimageThumb") or normalized.get("pimage"),
+            "bimageThumb": normalized.get("bimageThumb") or normalized.get("bimage"),
+            "pimageThumbSmall": normalized.get("pimageThumbSmall") or normalized.get("pimage"),
+            "bimageThumbSmall": normalized.get("bimageThumbSmall") or normalized.get("bimage"),
+            "price": _extract_price_at_enhance(normalized),
+            "priceByEnhance": _build_price_by_enhance(normalized),
+            "skillBoostName": normalized.get("skillBoostName"),
+            "skillInfo": normalized.get("skillInfo"),
+            "skills": _extract_player_skills(normalized),
+            "skillDisplay": _extract_player_skill_items(normalized),
+            "ultimateSkillLabels": ultimate_skill_labels,
+            "skillStyleId": normalized.get("skillStyleId"),
+            "staticPlayStyles": normalized.get("staticPlayStyles") or [],
+            "playStyleSlotMaxLevels": normalized.get("playStyleSlotMaxLevels"),
+            "playstyles": _extract_player_playstyles(normalized),
+            "skillMovesName": normalized.get("skillMovesName"),
+            "skillMovesLevel": normalized.get("skillMovesLevel"),
+            "mainFoot": normalized.get("mainFoot"),
+            "footL": normalized.get("footL"),
+            "footR": normalized.get("footR"),
+            "height": normalized.get("height"),
+            "weight": normalized.get("weight"),
+            "traits": normalized.get("traits", []),
+        })
+
+    response = jsonify(results)
+    response.headers["Cache-Control"] = "public, max-age=30, s-maxage=120"
+    return response
 
 
 @app.route("/api/player_compare")
@@ -8163,16 +12859,21 @@ def api_player_compare():
 # 선수 세부검색 페이지 (로컬 데이터 사용)
 @app.route("/traits_selection")
 def traits_selection():
-    skill_or_boost_names = sorted(
+    player_classes = sorted(
         {
-            name
+            str(player.get("className") or "").strip()
             for player in PLAYER_DATA
-            for name in _extract_player_skill_or_boost_names(player)
-        }
-        | set(SKILL_BOOST_STATS.keys())
-        | set(NEW_SKILL_STATS.keys())
-        | set(SKILL_ID_NAME_MAP.values())
+            if str(player.get("className") or "").strip()
+        },
+        key=lambda value: value.casefold(),
     )
+    player_heights = []
+    for player in PLAYER_DATA:
+        try:
+            player_heights.append(int(player.get("height")))
+        except (TypeError, ValueError):
+            continue
+    skill_or_boost_options = _get_skill_or_boost_filter_options()
     skill_moves = sorted(
         {
             str(player.get("skillMovesName")).strip()
@@ -8223,19 +12924,28 @@ def traits_selection():
 
     return render_template(
         "traits_selection.html",
-        skill_or_boost_names=skill_or_boost_names,
+        player_classes=player_classes,
+        skill_or_boost_options=skill_or_boost_options,
         skill_moves=skill_moves,
         skill_levels=skill_levels,
         traits=traits,
         playstyles=playstyles,
         positions=positions,
+        position_groups=_get_advanced_filter_options()["position_groups"],
         work_rate_options=WORK_RATE_OPTIONS,
         raised_stat_options=RAISED_STAT_OPTIONS,
+        max_level_stat_options=MAX_LEVEL_STAT_OPTIONS,
         current_league_teams=current_league_teams,
         all_league_teams=all_league_teams,
         default_min_ovr=DETAIL_SEARCH_DEFAULT_MIN_OVR,
         default_max_ovr=DETAIL_SEARCH_DEFAULT_MAX_OVR,
-        robots_meta="noindex,follow",
+        min_player_height=min(player_heights) if player_heights else 150,
+        max_player_height=max(player_heights) if player_heights else 210,
+        canonical_url=_canonical("/traits_selection"),
+        robots_meta="index,follow",
+        meta_description="FC모바일 선수를 이름, OVR, 가격, 포지션, 클래스, 키, 약발, 특성, 스킬, 플레이스타일, 활동량과 팀 경력으로 세부검색하세요.",
+        og_title="FC모바일 선수 세부검색 - 스탯과 특성, 스킬 필터 | 피모북",
+        og_description="FC모바일 선수를 능력치, 클래스, 특성, 스킬, 플레이스타일과 팀 경력 조건으로 세부검색하세요.",
     )
 
 
@@ -8243,11 +12953,35 @@ def traits_selection():
 @app.route("/filtered_players", methods=["GET"])
 def filtered_players():
     name_query = request.args.get("name", "").strip()
-    skill_or_boosts = _get_filter_values("skill_or_boost")
-    legacy_skill_boosts = _get_filter_values("skill_boost")
-    for value in legacy_skill_boosts:
-        if value not in skill_or_boosts:
-            skill_or_boosts.append(value)
+    skill_or_boost_options = _get_skill_or_boost_filter_options()
+    normalized_skill_option_names = {
+        _normalize_filter_text(option["name"])
+        for option in skill_or_boost_options
+        if option["kind"] == "skill"
+    }
+    normalized_boost_option_names = {
+        _normalize_filter_text(option["name"])
+        for option in skill_or_boost_options
+        if option["kind"] == "boost"
+    }
+    selected_skill_names = []
+    selected_boost_names = []
+    for value in _get_filter_values("skill_or_boost"):
+        normalized = _normalize_filter_text(value)
+        target = (
+            selected_boost_names
+            if normalized in normalized_boost_option_names
+            and normalized not in normalized_skill_option_names
+            else selected_skill_names
+        )
+        if value not in target:
+            target.append(value)
+    for value in _get_filter_values("skill_boost"):
+        if value not in selected_boost_names:
+            selected_boost_names.append(value)
+    skill_or_boosts = selected_skill_names + [
+        value for value in selected_boost_names if value not in selected_skill_names
+    ]
     positions = _get_filter_values("position", uppercase=True)
     include_sub_position = str(request.args.get("include_sub_position", "")).strip().lower() in {"1", "true", "yes", "on"}
     skill_moves = _get_filter_values("skill_move")
@@ -8260,7 +12994,18 @@ def filtered_players():
     ]
     traits = _get_filter_values("trait")
     playstyles = _get_filter_values("playstyle")
+    empty_playstyle_slot = str(request.args.get("empty_playstyle_slot", "")).strip().lower() in {"1", "true", "yes", "on"}
+    max_stats = _clean_filter_values(request.args.getlist("max_stat"), uppercase=True)
+    selected_max_stats = [code for code in max_stats if code in MAX_LEVEL_STAT_CODES]
+    max_stat_gap_raw = request.args.get("max_stat_gap", "0").strip()
+    max_stat_gap = int(max_stat_gap_raw) if max_stat_gap_raw.isdigit() and len(max_stat_gap_raw) <= 2 else -1
+    player_classes = _get_filter_values("player_class")
     height_group = request.args.get("height_group", "").strip()
+    min_height_str = request.args.get("min_height", "").strip()
+    max_height_str = request.args.get("max_height", "").strip()
+    price_enhance = _price_enhance_arg(request.args)
+    min_price_str = request.args.get("min_price", "").strip().replace(",", "")
+    max_price_str = request.args.get("max_price", "").strip().replace(",", "")
     weak_foot_min_str = request.args.get("weak_foot_min", "").strip()
     selected_league = request.args.get("league", "").strip()
     selected_team = request.args.get("team", "").strip()
@@ -8271,11 +13016,22 @@ def filtered_players():
 
     min_ovr = int(min_ovr_str) if min_ovr_str.isdigit() else DETAIL_SEARCH_DEFAULT_MIN_OVR
     max_ovr = int(max_ovr_str) if max_ovr_str.isdigit() else DETAIL_SEARCH_DEFAULT_MAX_OVR
+    min_height = int(min_height_str) if min_height_str.isdigit() else None
+    max_height = int(max_height_str) if max_height_str.isdigit() else None
+    min_price = int(min_price_str) if min_price_str.isdigit() else None
+    max_price = int(max_price_str) if max_price_str.isdigit() else None
     weak_foot_min = int(weak_foot_min_str) if weak_foot_min_str in {"1", "2", "3", "4", "5"} else 0
     normalized_skill_or_boosts = {_normalize_filter_text(value) for value in skill_or_boosts}
+    normalized_selected_skills = {
+        _normalize_filter_text(value) for value in selected_skill_names
+    }
+    normalized_selected_boosts = {
+        _normalize_filter_text(value) for value in selected_boost_names
+    }
     normalized_skill_moves = {_normalize_filter_text(value) for value in skill_moves}
     normalized_traits = {_normalize_filter_text(value) for value in traits}
     normalized_playstyles = {_normalize_filter_text(value) for value in playstyles}
+    normalized_player_classes = {_normalize_filter_text(value) for value in player_classes}
     selected_skill_levels = {int(value) for value in skill_levels if str(value).isdigit()}
     valid_stat_codes = {item["code"] for item in RAISED_STAT_OPTIONS}
     selected_raised_stat_codes = [code for code in raised_stats if code in valid_stat_codes][:5]
@@ -8294,7 +13050,17 @@ def filtered_players():
         "work_rate_labels": _work_rate_labels(selected_work_rates),
         "traits": traits,
         "playstyles": playstyles,
+        "empty_playstyle_slot": empty_playstyle_slot,
+        "max_stats": selected_max_stats,
+        "max_stat_labels": [STAT_CODE_LABELS[code] for code in selected_max_stats],
+        "max_stat_gap": max_stat_gap,
+        "player_classes": player_classes,
         "height_group": height_group,
+        "min_height": min_height,
+        "max_height": max_height,
+        "min_price": min_price,
+        "max_price": max_price,
+        "price_enhance": price_enhance,
         "weak_foot_min": weak_foot_min,
         "league": selected_league,
         "team": selected_team,
@@ -8303,10 +13069,62 @@ def filtered_players():
         "max_ovr": max_ovr,
     }
 
+    if max_stats and (len(selected_max_stats) != len(max_stats) or not 0 <= max_stat_gap <= 30):
+        return render_template(
+            "filtered_players_results.html", error="만렙 기준 스탯과 허용 차이(0~30)를 확인해 주세요.",
+            players=[], filters=filters, sort=sort, robots_meta="noindex,follow",
+        )
+
+    if min_ovr > max_ovr:
+        return render_template(
+            "filtered_players_results.html", error="최소 OVR은 최대 OVR보다 클 수 없습니다.",
+            players=[], filters=filters, sort=sort, robots_meta="noindex,follow",
+        )
+
+    if min_height is not None and max_height is not None and min_height > max_height:
+        return render_template(
+            "filtered_players_results.html",
+            error="최소 키는 최대 키보다 클 수 없습니다.",
+            players=[],
+            filters=filters,
+            sort=sort,
+            robots_meta="noindex,follow",
+        )
+
+    if min_price is not None and max_price is not None and min_price > max_price:
+        return render_template(
+            "filtered_players_results.html",
+            error="최소 가격은 최대 가격보다 클 수 없습니다.",
+            players=[],
+            filters=filters,
+            sort=sort,
+            robots_meta="noindex,follow",
+        )
+
     if len(raised_stats) > 5:
         return render_template(
             "filtered_players_results.html",
             error="상승 스탯은 최대 5개까지만 선택할 수 있습니다.",
+            players=[],
+            filters=filters,
+            sort=sort,
+            robots_meta="noindex,follow",
+        )
+
+    if len(selected_skill_names) > 2:
+        return render_template(
+            "filtered_players_results.html",
+            error="스킬은 최대 2개까지 선택할 수 있습니다.",
+            players=[],
+            filters=filters,
+            sort=sort,
+            robots_meta="noindex,follow",
+        )
+
+    if len(selected_boost_names) > 1:
+        return render_template(
+            "filtered_players_results.html",
+            error="스킬부스트는 한 번에 하나만 선택할 수 있습니다.",
             players=[],
             filters=filters,
             sort=sort,
@@ -8340,20 +13158,28 @@ def filtered_players():
         if not (min_ovr <= player_ovr <= max_ovr):
             continue
 
+        if not _player_matches_max_level_stats(player, selected_max_stats, max_stat_gap):
+            continue
+
         player_name = _normalize_name_for_match(player.get("playerKor"))
         if normalized_name_query and normalized_name_query not in player_name:
             continue
 
-        player_skill_or_boosts = {
-            _normalize_filter_text(value)
-            for value in _extract_player_skill_or_boost_names(player)
+        player_skill_names, player_boost_names = _extract_player_skill_boost_filter_values(player)
+        normalized_player_skills = {
+            _normalize_filter_text(value) for value in player_skill_names
         }
-        if normalized_skill_or_boosts and player_skill_or_boosts.isdisjoint(normalized_skill_or_boosts):
+        normalized_player_boosts = {
+            _normalize_filter_text(value) for value in player_boost_names
+        }
+        if normalized_selected_skills and not normalized_selected_skills.issubset(normalized_player_skills):
+            continue
+        if normalized_selected_boosts and normalized_selected_boosts.isdisjoint(normalized_player_boosts):
             continue
 
         if selected_raised_stat_codes:
             player_raised_stats = _extract_player_raised_stat_codes(player)
-            if player_raised_stats.isdisjoint(selected_raised_stat_codes):
+            if not set(selected_raised_stat_codes).issubset(player_raised_stats):
                 continue
 
         player_height = player.get("height")
@@ -8365,20 +13191,30 @@ def filtered_players():
             continue
         if height_group == "short" and (player_height is None or player_height >= 185):
             continue
+        if min_height is not None and (player_height is None or player_height < min_height):
+            continue
+        if max_height is not None and (player_height is None or player_height > max_height):
+            continue
+
+        player_price = _extract_price_at_enhance(player, price_enhance)
+        if min_price is not None and (player_price is None or int(player_price) < min_price):
+            continue
+        if max_price is not None and (player_price is None or int(player_price) > max_price):
+            continue
+
+        player_class = _normalize_filter_text(player.get("className"))
+        if normalized_player_classes and player_class not in normalized_player_classes:
+            continue
 
         if weak_foot_min and _get_weak_foot_value(player) < weak_foot_min:
             continue
 
-        player_position = _extract_primary_player_position(player)
-        if positions:
-            matches_position = player_position in positions
-            if include_sub_position and not matches_position:
-                secondary_positions = set(_extract_player_positions(player))
-                if player_position:
-                    secondary_positions.discard(player_position)
-                matches_position = not secondary_positions.isdisjoint(positions)
-            if not matches_position:
-                continue
+        if not _player_matches_position_filter(
+            player,
+            positions,
+            include_sub_position=include_sub_position,
+        ):
+            continue
 
         player_skill_move = _normalize_filter_text(player.get("skillMovesName"))
         if normalized_skill_moves and player_skill_move not in normalized_skill_moves:
@@ -8390,6 +13226,9 @@ def filtered_players():
 
         player_playstyles = _extract_player_playstyle_filter_values(player)
         if normalized_playstyles and player_playstyles.isdisjoint(normalized_playstyles):
+            continue
+
+        if empty_playstyle_slot and not any(slot["isEmpty"] for slot in _build_player_playstyle_slots(player)):
             continue
 
         player_skill_level = player.get("skillMovesLevel")
@@ -8410,9 +13249,17 @@ def filtered_players():
             continue
 
         normalized = _apply_local_assets(_normalize_player_record(player.copy()))
-        normalized["price"] = _extract_price(normalized)
+        normalized["price"] = _extract_price_at_enhance(normalized, price_enhance)
         normalized["skillLabels"] = _extract_player_skills(normalized)
         normalized["playstyles"] = _extract_player_playstyles(normalized)
+        normalized["playstyleSlots"] = _build_player_playstyle_slots(
+            normalized,
+            normalized["playstyles"],
+        )
+        normalized["matchedMaxStats"] = [
+            {"label": STAT_CODE_LABELS[code], "value": player[code]}
+            for code in selected_max_stats
+        ]
         normalized["potentialPositions"] = _extract_potential_positions(normalized)
         filtered_list.append(normalized)
 
@@ -8464,16 +13311,335 @@ def filtered_players():
 
 @app.route("/api/player_price/<int:cid>", methods=["GET"])
 def api_player_price(cid):
-    price = get_live_price(cid)
-    return jsonify({"cid": cid, "price": price})
+    player = _get_local_player_by_cid(cid)
+    if not player:
+        return jsonify({"error": "player not found"}), 404
+    populate_live_prices([player])
+    response = jsonify({
+        "cid": cid,
+        "price": player.get("price"),
+        "source": player.get("price_source", "local"),
+        "checked_at": player.get("price_checked_at"),
+    })
+    response.headers["Cache-Control"] = "no-store"
+    return response
+
+
+@app.route("/api/player_prices", methods=["GET"])
+def api_player_prices():
+    requested_cids = []
+    seen_cids = set()
+    for raw_cid in request.args.get("cids", "").split(","):
+        raw_cid = raw_cid.strip()
+        if not raw_cid.isdigit():
+            continue
+        cid = int(raw_cid)
+        if cid in seen_cids:
+            continue
+        seen_cids.add(cid)
+        requested_cids.append(cid)
+        if len(requested_cids) >= 40:
+            break
+
+    if not requested_cids:
+        return jsonify({"error": "cids is required"}), 400
+
+    players = []
+    for cid in requested_cids:
+        player = _get_local_player_by_cid(cid)
+        if player:
+            player["price"] = _extract_price(player)
+            players.append(player)
+
+    populate_live_prices(players)
+    prices = {
+        str(player.get("cid")): {
+            "price": player.get("price"),
+            "priceByEnhance": {
+                str(level): int(price)
+                for level, price in _build_price_by_enhance(player).items()
+            },
+            "source": player.get("price_source", "local"),
+            "pending": bool(player.get("price_pending")),
+            "checked_at": player.get("price_checked_at"),
+        }
+        for player in players
+        if player.get("cid") is not None
+    }
+    # The squad maker persists whole player objects in localStorage. Return
+    # canonical artwork alongside (but separate from) the stable price payload
+    # so a saved squad can replace legacy /static/faceon URLs during refresh.
+    artwork = {
+        str(player.get("cid")): {
+            "pimage": player.get("pimage"),
+            "pimageThumb": player.get("pimageThumb") or player.get("pimage"),
+            "pimageThumbSmall": player.get("pimageThumbSmall") or player.get("pimage"),
+            "bimage": player.get("bimage"),
+            "bimageThumb": player.get("bimageThumb") or player.get("bimage"),
+            "bimageThumbSmall": player.get("bimageThumbSmall") or player.get("bimage"),
+            "cardArt": player.get("cardArt"),
+        }
+        for player in players
+        if player.get("cid") is not None
+    }
+    response = jsonify({"prices": prices, "artwork": artwork})
+    response.headers["Cache-Control"] = "no-store"
+    return response
+
+
+def _load_renewal_cards():
+    cards_path = os.path.join(app.static_folder, "times", "cardData.json")
+    try:
+        with open(cards_path, "r", encoding="utf-8") as card_file:
+            renewal_cards = json.load(card_file)
+        if not isinstance(renewal_cards, list):
+            renewal_cards = []
+    except (OSError, ValueError, TypeError) as error:
+        print(f"Renewal time data read failed: {error}")
+        renewal_cards = []
+
+    cutoff = next((i for i, card in enumerate(renewal_cards) if card.get("separateCode") == "founders2"), 0)
+    return renewal_cards[cutoff:]
 
 
 @app.route("/times")
 def times():
     return render_template(
         "times.html",
+        renewal_cards=_load_renewal_cards(),
         canonical_url=_canonical("/times"),
+        robots_meta="index,follow",
+        meta_description="FC모바일 클래스별 갱신시간과 다음 갱신까지 남은 시간을 확인하세요. 클래스명, 시즌명과 통용 별칭으로 빠르게 검색할 수 있습니다.",
+        og_title="FC모바일 갱신시간 - 클래스별 다음 갱신 시간 | 피모북",
+        og_description="FC모바일 클래스별 갱신시간과 다음 갱신까지 남은 시간을 클래스명과 시즌명으로 검색해 확인하세요.",
     )
+
+
+@app.route("/api/renewal-interests", methods=["GET", "POST"])
+@login_required
+def renewal_interests():
+    cards = {card["name"]: card for card in _load_renewal_cards() if card.get("available")}
+    if request.method == "POST":
+        data = request.get_json(silent=True) or {}
+        if not isinstance(data, dict):
+            return jsonify(error="잘못된 요청입니다."), 400
+        name = data.get("name")
+        if not isinstance(name, str) or not isinstance(data.get("enabled"), bool) or (data["enabled"] and name not in cards):
+            return jsonify(error="관심 클래스와 알림 설정을 확인해주세요."), 400
+        row = RenewalInterest.query.filter_by(user_id=current_user.id, card_name=name).first()
+        if data["enabled"] and row is None:
+            if RenewalInterest.query.filter_by(user_id=current_user.id).count() >= 30:
+                return jsonify(error="관심 클래스는 최대 30개까지 저장할 수 있습니다."), 400
+            db.session.add(RenewalInterest(user_id=current_user.id, card_name=name))
+        elif not data["enabled"] and row is not None:
+            db.session.delete(row)
+        try:
+            db.session.commit()
+        except IntegrityError:
+            db.session.rollback()  # another tab already saved the same interest
+    names = [row.card_name for row in RenewalInterest.query.filter_by(user_id=current_user.id).all()]
+    response = jsonify(names=names, server_time=datetime.now(timezone.utc).isoformat())
+    response.headers["Cache-Control"] = "no-store"
+    return response
+
+
+@app.route("/api/renewal-quiet-hours", methods=["GET", "POST"])
+@login_required
+def renewal_quiet_hours():
+    preference = db.session.get(RenewalQuietHours, current_user.id)
+    if request.method == "POST":
+        data = request.get_json(silent=True)
+        if not isinstance(data, dict) or not isinstance(data.get('enabled'), bool):
+            return jsonify(error="방해금지 설정을 확인해주세요."), 400
+        values = []
+        for key in ('start', 'end'):
+            value = data.get(key)
+            if not isinstance(value, str) or not re.fullmatch(r'(?:[01]\d|2[0-3]):[0-5]\d', value):
+                return jsonify(error="시작과 종료 시간을 확인해주세요."), 400
+            hour, minute = map(int, value.split(':'))
+            values.append(hour * 60 + minute)
+        if values[0] == values[1]:
+            return jsonify(error="시작과 종료 시간을 다르게 설정해주세요."), 400
+        if preference is None:
+            preference = RenewalQuietHours(user_id=current_user.id)
+            db.session.add(preference)
+        preference.enabled = data['enabled']
+        preference.start_minute, preference.end_minute = values
+        db.session.commit()
+    start, end = (preference.start_minute, preference.end_minute) if preference else (0, 420)
+    response = jsonify(enabled=bool(preference and preference.enabled),
+                       start=f'{start // 60:02d}:{start % 60:02d}',
+                       end=f'{end // 60:02d}:{end % 60:02d}')
+    response.headers['Cache-Control'] = 'no-store'
+    return response
+
+
+@app.get("/api/renewal-csrf")
+@login_required
+def renewal_csrf_token():
+    response = jsonify(csrf_token=generate_csrf())
+    response.headers["Cache-Control"] = "no-store, private"
+    return response
+
+
+@app.post("/api/renewal-alerts/check")
+@login_required
+def check_renewal_alerts():
+    cards = {card["name"]: card for card in _load_renewal_cards() if card.get("available")}
+    now = datetime.now(timezone.utc)
+    quiet = db.session.get(RenewalQuietHours, current_user.id)
+    alerts = []
+    for row in RenewalInterest.query.filter_by(user_id=current_user.id).all():
+        card = cards.get(row.card_name)
+        if not card:
+            continue
+        target = renewal_reminder(card, now)
+        if target is None or renewal_is_quiet(quiet, now) or renewal_is_quiet(quiet, target):
+            continue
+        occurrence = target.replace(tzinfo=None)
+        if occurrence < row.subscribed_at or (row.notified_at and occurrence <= row.notified_at):
+            continue
+        # Compare-and-set keeps multiple tabs from generating the same notification.
+        changed = RenewalInterest.query.filter(
+            RenewalInterest.id == row.id,
+            RenewalInterest.notified_at == row.notified_at,
+        ).update({RenewalInterest.notified_at: occurrence}, synchronize_session=False)
+        if changed:
+            stamp = target.astimezone(timezone(timedelta(hours=9))).strftime("%H:%M")
+            message = f"{row.card_name} 1분 후 갱신\n{stamp} 한국시간"
+            db.session.add(Notification(user_id=current_user.id, kind="renewal", message=message,
+                                        target_url=url_for("times")))
+            alerts.append({"message": message, "name": row.card_name,
+                           "title": f"{row.card_name} 1분 후 갱신",
+                           "tag": f"renewal-{row.id}-{int(target.timestamp())}", "recent": True})
+    db.session.commit()
+    response = jsonify(alerts=alerts)
+    response.headers["Cache-Control"] = "no-store"
+    return response
+
+
+def _renewal_vapid_path():
+    return os.getenv("FIMOBOOK_RENEWAL_VAPID_PATH") or os.path.join(app.instance_path, "renewal_push_vapid.pem")
+
+
+@app.route("/renewal-push-sw.js")
+def renewal_push_worker():
+    response = send_from_directory(app.static_folder, "js/renewal-push-sw.js", mimetype="application/javascript")
+    response.headers["Cache-Control"] = "no-store, max-age=0"
+    response.headers["Service-Worker-Allowed"] = "/renewal-push/"
+    return response
+
+
+@app.route("/api/renewal-push", methods=["GET", "POST"])
+@login_required
+def renewal_push_settings():
+    try:
+        vapid = renewal_public_key(_renewal_vapid_path())
+    except (OSError, ValueError):
+        vapid = ""
+    if request.method == "GET":
+        endpoint = request.headers.get("X-Fimo-Push-Endpoint", "")
+        device = RenewalPushDevice.query.filter_by(endpoint=endpoint, user_id=current_user.id).first() if endpoint else None
+        response = jsonify(vapid=vapid, ready=bool(vapid), enabled=bool(device and device.enabled),
+                           coupons_enabled=bool(device and device.coupons_enabled))
+        response.headers["Cache-Control"] = "no-store"
+        return response
+    data = request.get_json(silent=True) or {}
+    if not isinstance(data, dict):
+        return jsonify(error="잘못된 요청입니다."), 400
+    topic = data.get("topic", "renewal")
+    if topic not in {"renewal", "coupon"}:
+        return jsonify(error="잘못된 알림 종류입니다."), 400
+    setting = "coupons_enabled" if topic == "coupon" else "enabled"
+    endpoint = data.get("endpoint")
+    action = data.get("action")
+    if action == "enable":
+        if not vapid:
+            return jsonify(error="푸시 연결을 준비하고 있습니다."), 503
+        try:
+            subscription = validate_subscription(data.get("subscription"))
+        except ValueError as error:
+            return jsonify(error=str(error)), 400
+        endpoint = subscription['endpoint']
+    if not isinstance(endpoint, str) or not endpoint or len(endpoint) > 2048:
+        return jsonify(error="기기를 연결해주세요."), 400
+    device = RenewalPushDevice.query.filter_by(endpoint=endpoint).first()
+    if action == "enable":
+        previous_device_id = session.get('renewal_push_device_id')
+        if previous_device_id:
+            previous = db.session.get(RenewalPushDevice, previous_device_id)
+            if previous and previous.user_id == current_user.id and previous.endpoint != endpoint:
+                previous.enabled = False
+                previous.coupons_enabled = False
+        if not device or device.user_id != current_user.id or not (device.enabled or device.coupons_enabled):
+            count = RenewalPushDevice.query.filter(RenewalPushDevice.user_id == current_user.id,
+                db.or_(RenewalPushDevice.enabled.is_(True), RenewalPushDevice.coupons_enabled.is_(True))).count()
+            if count >= 6:
+                return jsonify(error="연결된 기기가 6개입니다."), 400
+        if device is None:
+            device = RenewalPushDevice(endpoint=endpoint, user_id=current_user.id, enabled=False, coupons_enabled=False)
+            db.session.add(device)
+        if device.user_id != current_user.id:
+            device.enabled = False
+            device.coupons_enabled = False
+            device.coupons_subscribed_at = None
+        if topic == "coupon" and not device.coupons_enabled:
+            device.coupons_subscribed_at = datetime.utcnow()
+        device.user_id = current_user.id
+        device.subscription_json = json.dumps(subscription)
+        setattr(device, setting, True)
+        device.last_seen = datetime.utcnow()
+        try:
+            db.session.commit()
+        except IntegrityError:
+            db.session.rollback()
+            return jsonify(error="다시 연결해주세요."), 409
+        session['renewal_push_device_id'] = device.id
+    elif action in {"disable", "test", "heartbeat"}:
+        if not device or device.user_id != current_user.id:
+            abort(404)
+        if action == "disable":
+            setattr(device, setting, False)
+            if not device.enabled and not device.coupons_enabled:
+                session.pop('renewal_push_device_id', None)
+        elif action == "heartbeat":
+            session['renewal_push_device_id'] = device.id
+            device.last_seen = datetime.utcnow()
+        else:
+            if not getattr(device, setting):
+                return jsonify(error="푸시를 먼저 켜주세요."), 400
+            now = datetime.utcnow()
+            if device.last_test_at and (now - device.last_test_at).total_seconds() < 60:
+                return jsonify(error="잠시 후 다시 테스트해주세요."), 429
+            claimed = RenewalPushDevice.query.filter(
+                RenewalPushDevice.id == device.id, RenewalPushDevice.last_test_at == device.last_test_at,
+            ).update({RenewalPushDevice.last_test_at: now}, synchronize_session=False)
+            db.session.commit()
+            if not claimed:
+                return jsonify(error="잠시 후 다시 테스트해주세요."), 429
+            try:
+                send_renewal_push(json.loads(device.subscription_json), {
+                    "kind": "coupon_test" if topic == "coupon" else "renewal_test",
+                    "title": "쿠폰 알림 테스트" if topic == "coupon" else "갱신 알림 테스트",
+                    "body": "이 기기에 새 쿠폰 알림이 도착합니다." if topic == "coupon" else "관심 클래스가 갱신되기 1분 전에 알려드립니다.",
+                    "url": "/coupons/" if topic == "coupon" else "/times", "tag": topic + "-test-" + secrets.token_urlsafe(9),
+                }, _renewal_vapid_path())
+            except Exception as error:
+                status = getattr(getattr(error, "response", None), "status_code", None)
+                if status in (404, 410):
+                    device.enabled = False
+                    device.coupons_enabled = False
+                    db.session.commit()
+                    if session.get('renewal_push_device_id') == device.id:
+                        session.pop('renewal_push_device_id', None)
+                    return jsonify(error="기기 연결이 만료됐습니다. 알림 켜기를 눌러 다시 연결해주세요.",
+                                   subscription_expired=True), 410
+                app.logger.warning("Renewal push test failed (status=%s)", status)
+                return jsonify(error="전송하지 못했습니다. 연결을 확인하고 잠시 후 다시 테스트해주세요."), 503
+        db.session.commit()
+    else:
+        return jsonify(error="잘못된 요청입니다."), 400
+    return jsonify(enabled=device.enabled, coupons_enabled=device.coupons_enabled, ok=True)
 
 
 @app.route("/clanworldcup")
@@ -8637,15 +13803,28 @@ def clanworldcup_update_game(match_id, slot):
     if not is_admin and (not member_clan or member_clan not in allowed_clans):
         return jsonify({"ok": False, "error": "다른 팀의 경기 결과는 수정할 수 없습니다."}), 403
 
+    base = _fs_base()
+    match_ref = base.collection("matches").document(match_id)
+    if not _is_canonical_game_slot(match_data, slot):
+        return jsonify({"ok": False, "error": "유효하지 않은 경기 슬롯입니다."}), 400
+    game_ref = _canonical_game_ref(match_ref, match_data, slot)
+    if not game_ref:
+        return jsonify({"ok": False, "error": "경기 슬롯을 찾을 수 없습니다."}), 404
+
     status = (payload.get("status") or "FINAL").upper()
     home_score = payload.get("homeScore")
     away_score = payload.get("awayScore")
 
     try:
-        home_score = int(home_score) if home_score is not None else None
-        away_score = int(away_score) if away_score is not None else None
-    except ValueError:
-        return jsonify({"ok": False, "error": "점수는 숫자여야 합니다."}), 400
+        if status == "FINAL":
+            home_score = _parse_clanworldcup_game_score(home_score) if home_score is not None else None
+            away_score = _parse_clanworldcup_game_score(away_score) if away_score is not None else None
+        else:
+            home_score = int(home_score) if home_score is not None else None
+            away_score = int(away_score) if away_score is not None else None
+    except (TypeError, ValueError, OverflowError):
+        message = "점수는 0~99 사이의 정수여야 합니다." if status == "FINAL" else "점수는 숫자여야 합니다."
+        return jsonify({"ok": False, "error": message}), 400
 
     if status == "FINAL":
         if home_score is None or away_score is None:
@@ -8658,9 +13837,6 @@ def clanworldcup_update_game(match_id, slot):
     else:
         return jsonify({"ok": False, "error": "허용되지 않는 상태입니다."}), 400
 
-    base = _fs_base()
-    match_ref = base.collection("matches").document(match_id)
-    game_ref = match_ref.collection("games").document(str(slot))
     game_ref.set({
         "slot": slot,
         "homeScore": home_score,
@@ -8707,6 +13883,14 @@ def clanworldcup_upload_result(match_id, slot):
     if not is_admin and (not member_clan or member_clan not in allowed_clans):
         return jsonify({"ok": False, "error": "다른 팀의 경기 결과는 수정할 수 없습니다."}), 403
 
+    base = _fs_base()
+    match_ref = base.collection("matches").document(match_id)
+    if not _is_canonical_game_slot(match_data, slot):
+        return jsonify({"ok": False, "error": "유효하지 않은 경기 슬롯입니다."}), 400
+    game_ref = _canonical_game_ref(match_ref, match_data, slot)
+    if not game_ref:
+        return jsonify({"ok": False, "error": "경기 슬롯을 찾을 수 없습니다."}), 404
+
     if "file" not in request.files:
         return jsonify({"ok": False, "error": "파일을 업로드하세요."}), 400
     file = request.files["file"]
@@ -8735,9 +13919,6 @@ def clanworldcup_upload_result(match_id, slot):
     rel_path = os.path.join('uploads', 'clanworldcup', unique_name)
     screenshot_url = url_for('static', filename=rel_path, _external=False)
 
-    base = _fs_base()
-    match_ref = base.collection("matches").document(match_id)
-    game_ref = match_ref.collection("games").document(str(slot))
     game_ref.set({
         "slot": slot,
         "screenshotUrl": screenshot_url,
@@ -8781,7 +13962,11 @@ def clanworldcup_delete_screenshot(match_id, slot):
 
     base = _fs_base()
     match_ref = base.collection("matches").document(match_id)
-    game_ref = match_ref.collection("games").document(str(slot))
+    if not _is_canonical_game_slot(match_data, slot):
+        return jsonify({"ok": False, "error": "유효하지 않은 경기 슬롯입니다."}), 400
+    game_ref = _canonical_game_ref(match_ref, match_data, slot)
+    if not game_ref:
+        return jsonify({"ok": False, "error": "경기 슬롯을 찾을 수 없습니다."}), 404
     snap = game_ref.get()
     screenshot_url = ""
     if snap.exists:
@@ -8818,6 +14003,17 @@ def clanworldcup_delete_screenshot(match_id, slot):
 def clanworldcup_recalc_standings():
     if not fs:
         return jsonify({"ok": False, "error": "Firestore 연결이 없습니다."}), 503
+
+    payload = request.get_json(silent=True)
+    if not isinstance(payload, dict):
+        payload = {}
+    code = payload.get("code")
+    if not isinstance(code, str) or not code.strip():
+        return jsonify({"ok": False, "error": "멤버코드를 입력하세요."}), 400
+    member = _verify_member_code(code.strip())
+    if not member or not member.get("admin"):
+        return jsonify({"ok": False, "error": "관리자 권한이 없습니다."}), 403
+
     result = _recalc_standings()
     if result.get("error"):
         return jsonify({"ok": False, "error": result["error"]}), 400
@@ -8889,14 +14085,42 @@ def _bool_from_query(value, default=True):
 @app.route("/coupons/")
 def coupons_page():
     dedupe = _bool_from_query(request.args.get("dedupe"), default=True)
-    coupons = get_coupons(dedupe=dedupe)[:5]
+    coupons = get_coupons(dedupe=dedupe)
+    if not _is_admin_user():
+        coupons = coupons[:5]
     return render_template(
         "coupons.html",
         coupons=coupons,
         canonical_url=_canonical("/coupons/"),
+        robots_meta="index,follow",
+        og_title="FC모바일 쿠폰 코드와 보상, 등록 방법 | 피모북",
+        og_description="현재 사용할 수 있는 FC모바일 쿠폰 코드와 보상, 만료 상태를 확인하고 공식 쿠폰센터에 등록하세요.",
         firebase_config=app.config.get("FIREBASE_WEB_CONFIG") or {},
         firebase_vapid_key=app.config.get("FIREBASE_WEB_VAPID_KEY", ""),
     )
+
+
+@app.route("/admin/coupons/status", methods=["POST"])
+@login_required
+def admin_coupon_status():
+    if not _is_admin_user():
+        abort(403)
+
+    code = request.form.get("code", "").strip()
+    status = request.form.get("status", "auto").strip().lower()
+    try:
+        _set_coupon_status_override(code, status)
+    except ValueError as error:
+        flash(str(error), "danger")
+        return redirect(url_for("coupons_page"))
+
+    labels = {
+        "auto": "Firebase 원본 상태",
+        "available": "사용 가능",
+        "unavailable": "사용 불가",
+    }
+    flash(f"{code} 쿠폰 상태를 ‘{labels[status]}’로 변경했습니다.", "success")
+    return redirect(url_for("coupons_page"))
 
 
 @app.route("/coupons/api")
@@ -8921,22 +14145,306 @@ def firebase_messaging_sw():
 @app.route("/api/push/register", methods=["POST"])
 @csrf.exempt
 def push_register():
-    payload = request.get_json(silent=True) or {}
-    token = (payload.get("token") or "").strip()
-    if not token:
+    if (
+        request.content_length is not None
+        and request.content_length > app.config["PUSH_REGISTER_MAX_BODY_BYTES"]
+    ):
+        return jsonify({"ok": False, "error": "request too large"}), 413
+
+    payload = request.get_json(silent=True)
+    if not isinstance(payload, dict):
+        return jsonify({"ok": False, "error": "invalid JSON payload"}), 400
+
+    raw_token = payload.get("token")
+    if not isinstance(raw_token, str):
         return jsonify({"ok": False, "error": "token required"}), 400
 
-    now = datetime.utcnow()
-    existing = PushToken.query.filter_by(token=token).first()
-    if existing:
-        existing.last_seen = now
-        existing.is_enabled = True
-        db.session.commit()
-        return jsonify({"ok": True, "token": token, "created": False})
+    token = raw_token.strip()
+    if not token:
+        return jsonify({"ok": False, "error": "token required"}), 400
+    if len(token) > PUSH_TOKEN_MAX_LENGTH or any(ord(char) < 32 or ord(char) == 127 for char in token):
+        return jsonify({"ok": False, "error": "invalid token"}), 400
 
-    db.session.add(PushToken(token=token, last_seen=now))
-    db.session.commit()
-    return jsonify({"ok": True, "token": token, "created": True})
+    client_ip_hash = _push_client_ip_hash()
+    token_hash = _push_registration_token_hash(token)
+    if not client_ip_hash or not token_hash:
+        return jsonify({"ok": False, "error": "client identity unavailable"}), 503
+
+    now = datetime.utcnow()
+    stale_before = now - timedelta(days=PUSH_TOKEN_STALE_DAYS)
+    reservation_cutoff = now - timedelta(minutes=PUSH_ENROLLMENT_RESERVATION_TTL_MINUTES)
+    reservation_id = None
+    legacy_row_id = None
+
+    try:
+        if not _lock_push_enrollment_gate():
+            db.session.rollback()
+            return jsonify({"ok": False, "error": "push enrollment unavailable"}), 503
+
+        _prune_push_registration_rows(stale_before, reservation_cutoff)
+        existing = PushToken.query.filter_by(token=token).first()
+        if existing and existing.fcm_verified_at:
+            existing.last_seen = now
+            existing.is_enabled = True
+            if not existing.client_ip_hash:
+                existing.client_ip_hash = client_ip_hash
+            db.session.commit()
+            return jsonify({"ok": True, "token": token, "created": False})
+
+        if existing:
+            # Older rows predate FCM proof. Release the database lock before the
+            # external validation call, then mark the row only after it succeeds.
+            legacy_row_id = existing.id
+            db.session.commit()
+        else:
+            pending = PushEnrollmentReservation.query.filter_by(token_hash=token_hash).first()
+            if pending:
+                db.session.rollback()
+                return jsonify({"ok": False, "error": "registration in progress"}), 409
+
+            fresh_rows = PushToken.query.filter(PushToken.last_seen >= stale_before)
+            client_rows = fresh_rows.filter_by(client_ip_hash=client_ip_hash).count()
+            total_rows = fresh_rows.count()
+            fresh_reservations = PushEnrollmentReservation.query.filter(
+                PushEnrollmentReservation.created_at >= reservation_cutoff
+            )
+            client_reservations = fresh_reservations.filter_by(
+                client_ip_hash=client_ip_hash
+            ).count()
+            total_reservations = fresh_reservations.count()
+            if (
+                client_rows + client_reservations >= app.config["PUSH_MAX_TOKENS_PER_CLIENT"]
+                or total_rows + total_reservations >= app.config["PUSH_MAX_TOKEN_ROWS"]
+            ):
+                db.session.rollback()
+                return jsonify({"ok": False, "error": "push registration limit reached"}), 429
+
+            reservation = PushEnrollmentReservation(
+                token_hash=token_hash,
+                client_ip_hash=client_ip_hash,
+                created_at=now,
+            )
+            db.session.add(reservation)
+            db.session.commit()
+            reservation_id = reservation.id
+    except IntegrityError:
+        db.session.rollback()
+        app.logger.warning("Push-token registration hit a persistence conflict")
+        return jsonify({"ok": False, "error": "push registration conflict"}), 409
+    except Exception:
+        db.session.rollback()
+        app.logger.warning("Push-token enrollment reservation failed")
+        return jsonify({"ok": False, "error": "push enrollment unavailable"}), 503
+
+    try:
+        token_is_valid = _verify_push_token_with_fcm(token)
+    except Exception:
+        if reservation_id is not None:
+            _release_push_enrollment_reservation(reservation_id)
+        app.logger.warning("Firebase push-token verification is unavailable")
+        return jsonify({"ok": False, "error": "push verification unavailable"}), 503
+
+    if not token_is_valid:
+        if reservation_id is not None:
+            _release_push_enrollment_reservation(reservation_id)
+        else:
+            _disable_unverified_push_token(legacy_row_id)
+        return jsonify({"ok": False, "error": "invalid Firebase token"}), 400
+
+    verified_at = datetime.utcnow()
+    try:
+        if not _lock_push_enrollment_gate():
+            db.session.rollback()
+            if reservation_id is not None:
+                _release_push_enrollment_reservation(reservation_id)
+            return jsonify({"ok": False, "error": "push enrollment unavailable"}), 503
+
+        existing = PushToken.query.filter_by(token=token).first()
+        reservation = (
+            db.session.get(PushEnrollmentReservation, reservation_id)
+            if reservation_id is not None
+            else None
+        )
+        if reservation_id is not None and reservation is None:
+            db.session.rollback()
+            return jsonify({"ok": False, "error": "push enrollment expired"}), 503
+
+        if existing:
+            existing.last_seen = verified_at
+            existing.is_enabled = True
+            existing.fcm_verified_at = verified_at
+            if not existing.client_ip_hash:
+                existing.client_ip_hash = client_ip_hash
+            created = False
+        else:
+            db.session.add(
+                PushToken(
+                    token=token,
+                    last_seen=verified_at,
+                    client_ip_hash=client_ip_hash,
+                    fcm_verified_at=verified_at,
+                )
+            )
+            created = True
+        if reservation is not None:
+            db.session.delete(reservation)
+        db.session.commit()
+    except IntegrityError:
+        db.session.rollback()
+        if reservation_id is not None:
+            _release_push_enrollment_reservation(reservation_id)
+        app.logger.warning("Push-token registration hit a persistence conflict")
+        return jsonify({"ok": False, "error": "push registration conflict"}), 409
+    except Exception:
+        db.session.rollback()
+        if reservation_id is not None:
+            _release_push_enrollment_reservation(reservation_id)
+        app.logger.warning("Push-token registration could not be committed")
+        return jsonify({"ok": False, "error": "push enrollment unavailable"}), 503
+
+    return jsonify({"ok": True, "token": token, "created": created})
+
+
+def _lock_push_enrollment_gate():
+    gate_update = db.session.execute(
+        update(PushEnrollmentGate)
+        .where(PushEnrollmentGate.id == 1)
+        .values(generation=PushEnrollmentGate.generation + 1)
+    )
+    return gate_update.rowcount == 1
+
+
+def _prune_push_registration_rows(stale_before, reservation_cutoff):
+    stale_ids = [
+        row.id
+        for row in PushToken.query.filter(
+            or_(PushToken.last_seen.is_(None), PushToken.last_seen < stale_before)
+        )
+        .order_by(PushToken.id.asc())
+        .limit(PUSH_STALE_PRUNE_BATCH_SIZE)
+        .with_entities(PushToken.id)
+        .all()
+    ]
+    if stale_ids:
+        PushToken.query.filter(PushToken.id.in_(stale_ids)).delete(
+            synchronize_session=False
+        )
+
+    expired_ids = [
+        row.id
+        for row in PushEnrollmentReservation.query.filter(
+            PushEnrollmentReservation.created_at < reservation_cutoff
+        )
+        .order_by(PushEnrollmentReservation.id.asc())
+        .limit(PUSH_STALE_PRUNE_BATCH_SIZE)
+        .with_entities(PushEnrollmentReservation.id)
+        .all()
+    ]
+    if expired_ids:
+        PushEnrollmentReservation.query.filter(
+            PushEnrollmentReservation.id.in_(expired_ids)
+        ).delete(synchronize_session=False)
+
+
+def _push_registration_token_hash(token):
+    secret = str(app.config.get("SECRET_KEY") or "").encode("utf-8")
+    if not secret:
+        return None
+    return hmac.new(
+        secret,
+        ("push-token:" + token).encode("utf-8"),
+        hashlib.sha256,
+    ).hexdigest()
+
+
+def _release_push_enrollment_reservation(reservation_id):
+    try:
+        if not _lock_push_enrollment_gate():
+            db.session.rollback()
+            return False
+        reservation = db.session.get(PushEnrollmentReservation, reservation_id)
+        if reservation is not None:
+            db.session.delete(reservation)
+        db.session.commit()
+        return True
+    except Exception:
+        db.session.rollback()
+        app.logger.warning("Push-token enrollment reservation cleanup failed")
+        return False
+
+
+def _disable_unverified_push_token(token_id):
+    try:
+        if not _lock_push_enrollment_gate():
+            db.session.rollback()
+            return False
+        row = db.session.get(PushToken, token_id)
+        if row is not None and row.fcm_verified_at is None:
+            row.is_enabled = False
+            row.last_seen = datetime.utcnow()
+        db.session.commit()
+        return True
+    except Exception:
+        db.session.rollback()
+        return False
+
+
+def _push_client_ip_hash():
+    peer = request.remote_addr
+    trust_proxy_header = peer is None
+    if peer:
+        try:
+            trust_proxy_header = ipaddress.ip_address(peer).is_loopback
+        except ValueError:
+            trust_proxy_header = False
+
+    raw_ip = request.headers.get("X-Real-IP") if trust_proxy_header else None
+    raw_ip = raw_ip or peer or ""
+    try:
+        canonical_ip = ipaddress.ip_address(raw_ip.strip()).compressed
+    except ValueError:
+        return None
+
+    secret = str(app.config.get("SECRET_KEY") or "").encode("utf-8")
+    if not secret:
+        return None
+    digest = hmac.new(
+        secret,
+        ("push-enrollment:" + canonical_ip).encode("utf-8"),
+        hashlib.sha256,
+    ).hexdigest()
+    return digest
+
+
+def _get_push_fcm_admin_app():
+    try:
+        return firebase_admin.get_app("fcm")
+    except ValueError:
+        try:
+            return firebase_admin.get_app()
+        except ValueError:
+            if not os.path.isfile(FIREBASE_KEY_PATH):
+                raise RuntimeError("Firebase Admin credentials are unavailable")
+            return firebase_admin.initialize_app(
+                credentials.Certificate(FIREBASE_KEY_PATH),
+                name="fcm",
+            )
+
+
+def _verify_push_token_with_fcm(token):
+    try:
+        messaging.send(
+            messaging.Message(token=token),
+            dry_run=True,
+            app=_get_push_fcm_admin_app(),
+        )
+    except (
+        messaging.SenderIdMismatchError,
+        messaging.UnregisteredError,
+        exceptions.InvalidArgumentError,
+    ):
+        return False
+    return True
 
 
 @app.route("/api/push/unregister", methods=["POST"])

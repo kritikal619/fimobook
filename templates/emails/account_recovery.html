@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="ko">
+<body style="margin:0;padding:0;background:#f1f5f9;font-family:Arial,'Apple SD Gothic Neo',sans-serif;color:#1f2937;">
+  <div style="max-width:560px;margin:0 auto;padding:32px 16px;">
+    <div style="background:#fff;border:1px solid #dbe3ec;border-radius:16px;padding:32px 28px;">
+      <div style="font-size:22px;font-weight:700;color:#059669;margin-bottom:20px;">피모북</div>
+      <h1 style="font-size:24px;line-height:1.4;margin:0 0 14px;">{{ 'Google로 로그인해주세요' if google_only else '새 비밀번호를 설정해주세요' }}</h1>
+      <p style="font-size:15px;line-height:1.7;margin:0 0 24px;color:#475569;">
+        {% if google_only %}
+        이 이메일로 가입한 계정은 Google 로그인을 사용합니다. 아래 버튼을 눌러 로그인 화면에서 Google 버튼을 선택해주세요.
+        {% else %}
+        비밀번호 재설정을 요청하셨습니다. 아래 버튼을 누른 뒤 새 비밀번호를 설정해주세요.
+        {% endif %}
+      </p>
+      <p style="margin:0 0 24px;">
+        <a href="{{ login_link if google_only else reset_link }}" style="display:inline-block;background:#10b981;color:#fff;text-decoration:none;font-weight:700;padding:13px 22px;border-radius:10px;">{{ '로그인 화면으로 이동' if google_only else '새 비밀번호 설정' }}</a>
+      </p>
+      <p style="font-size:13px;line-height:1.7;margin:0;color:#64748b;">
+        {% if not google_only %}이 링크는 {{ expires_minutes }}분 동안 유효하며 한 번만 사용할 수 있습니다. 비밀번호를 변경하면 기존 로그인도 해제됩니다.<br>{% endif %}
+        본인이 요청하지 않았다면 이 메일을 무시해주세요. 계정은 변경되지 않습니다.
+      </p>
+    </div>
+  </div>
+</body>
+</html>

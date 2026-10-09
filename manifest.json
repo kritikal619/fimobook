@@ -1,22 +1,41 @@
 {
+  "id": "/",
   "name": "피모북",
   "short_name": "피모북",
+  "description": "FC모바일 선수 검색, 비교, 스쿼드 구성과 갱신시간을 한곳에서 확인하세요.",
+  "lang": "ko-KR",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#132531",
+  "orientation": "any",
+  "categories": ["sports", "utilities"],
+  "prefer_related_applications": false,
   "icons": [
     {
-      "src": "/static/icons/android-launchericon-192-192.png?v=20260705",
+      "src": "/static/icons/pwa-icon-192.png?v=20260914-2",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/static/icons/android-launchericon-512-512.png?v=20260705",
+      "src": "/static/icons/pwa-icon-512.png?v=20260914-2",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
+    },
+    {
+      "src": "/static/icons/pwa-maskable-192.png?v=20260914-2",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/static/icons/pwa-maskable-512.png?v=20260914-2",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ]
 }

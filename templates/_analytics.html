@@ -1,0 +1,61 @@
+{% if ga_measurement_id %}
+{# The current fcbook stream has its own single-destination Google tag.
+   Load and configure the tag ID; explicit events stay scoped to the GA4
+   destination ID exposed as fimoAnalytics.measurementId. #}
+{% set ga_tag_id = {'G-J8ZL7VF352': 'GT-WKPJTP28'}.get(ga_measurement_id, ga_measurement_id) %}
+{# Keep historical GA4 report rows stable when SEO/browser titles change. #}
+{% set ga_report_title = {
+  'traits_selection': 'FC모바일 선수 세부검색 - 특성·스킬·경력 필터 | 피모북',
+  'player_compare_page': 'FC모바일 선수 비교 - 능력치·진화·스킬 | 피모북'
+}.get(request.endpoint) %}
+<!-- Google Analytics: 피모북 공통 GA4 태그 -->
+<script async src="https://www.googletagmanager.com/gtag/js?id={{ ga_tag_id|e }}"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){ dataLayer.push(arguments); }
+  function analyticsPageLocation() {
+    const attributionParams = new Set([
+      'utm_id', 'utm_source', 'utm_medium', 'utm_campaign', 'utm_term',
+      'utm_content', 'utm_source_platform', 'utm_creative_format',
+      'utm_marketing_tactic', 'gclid', 'dclid', 'gbraid', 'wbraid', 'srsltid'
+    ]);
+    try {
+      const pageUrl = new URL(window.location.href);
+      pageUrl.hash = '';
+      Array.from(pageUrl.searchParams.keys()).forEach(paramName => {
+        if (!attributionParams.has(paramName.toLowerCase())) {
+          pageUrl.searchParams.delete(paramName);
+        }
+      });
+      return pageUrl.toString();
+    } catch (_error) {
+      return window.location.origin + window.location.pathname;
+    }
+  }
+  window.fimoAnalytics = {
+    enabled: true,
+    measurementId: {{ ga_measurement_id|tojson }},
+    context: {{ (analytics_context or {})|tojson }},
+    pageTitle: {{ ga_report_title|tojson }} || document.title,
+    pageLocation: analyticsPageLocation()
+  };
+  gtag('js', new Date());
+  gtag('set', 'page_title', window.fimoAnalytics.pageTitle);
+  gtag('set', 'user_properties', {
+    login_state: window.fimoAnalytics.context.login_state
+  });
+  {# Configure the same single-destination Google tag that was loaded above.
+     This emits one page_view and establishes session_start in one ordered path. #}
+  gtag('config', {{ ga_tag_id|tojson }}, {
+    page_title: window.fimoAnalytics.pageTitle,
+    page_location: window.fimoAnalytics.pageLocation,
+    page_type: window.fimoAnalytics.context.page_type,
+    content_group: window.fimoAnalytics.context.content_group,
+    login_state: window.fimoAnalytics.context.login_state,
+    measurement_version: '2026-09-06-2',
+    content_type: window.fimoAnalytics.context.content_type,
+    content_id: window.fimoAnalytics.context.content_id
+  });
+</script>
+<script src="{{ url_for('static', filename='js/site-metrics.js', v='20260906-2') }}"></script>
+{% endif %}

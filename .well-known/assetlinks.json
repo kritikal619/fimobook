@@ -1,0 +1,13 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "info.fcbook.app",
+      "sha256_cert_fingerprints": [
+        "42:4D:31:E2:EE:78:B0:79:53:C9:6B:65:18:80:64:27:0C:CD:B5:72:1B:D9:48:2D:7F:98:6E:B4:74:88:29:13",
+        "7B:B3:AF:3D:9D:B7:B6:47:9D:56:AA:D7:41:FD:DE:21:33:DC:8C:E4:37:5E:59:40:39:CA:3B:73:04:49:C5:D6"
+      ]
+    }
+  }
+]

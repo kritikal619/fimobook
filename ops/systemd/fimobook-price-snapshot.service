@@ -1,0 +1,20 @@
+[Unit]
+Description=Fimobook twice-daily FC Mobile player price snapshot
+After=network-online.target
+Wants=network-online.target
+StartLimitIntervalSec=3h
+StartLimitBurst=3
+
+[Service]
+Type=oneshot
+User=ubuntu
+Group=ubuntu
+WorkingDirectory=/home/ubuntu/fimobook
+Environment=PYTHONUNBUFFERED=1
+ExecStart=/home/ubuntu/fimobook/venv/bin/python /home/ubuntu/fimobook/jobs/player_price_snapshot_job.py
+Restart=on-failure
+RestartSec=30min
+
+# A full crawl may take several minutes. Prevent a hung upstream request from
+# occupying the job forever while leaving enough room for normal collection.
+TimeoutStartSec=45min

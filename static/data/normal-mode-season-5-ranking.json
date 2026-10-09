@@ -1,0 +1,1757 @@
+{
+  "season": 5,
+  "collected_at": "2026-10-08 07:47~07:50",
+  "source": "FC 모바일 일반모드 상위 250위",
+  "rows": [
+    {
+      "rank": 1,
+      "nickname": "회백숙",
+      "stars": 218,
+      "ovr": 188,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 2,
+      "nickname": "독수리님",
+      "stars": 214,
+      "ovr": 171,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 3,
+      "nickname": "백싸리",
+      "stars": 199,
+      "ovr": 185,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 4,
+      "nickname": "호수",
+      "stars": 193,
+      "ovr": 175,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 5,
+      "nickname": "MAGA휘까또",
+      "stars": 192,
+      "ovr": 184,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 6,
+      "nickname": "취미는쿵쿵따",
+      "stars": 188,
+      "ovr": 175,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 7,
+      "nickname": "올라스",
+      "stars": 187,
+      "ovr": 177,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 8,
+      "nickname": "범자",
+      "stars": 185,
+      "ovr": 183,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 9,
+      "nickname": "POCARI",
+      "stars": 185,
+      "ovr": 181,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 10,
+      "nickname": "호우",
+      "stars": 184,
+      "ovr": 180,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 11,
+      "nickname": "Sergioramoss2",
+      "stars": 184,
+      "ovr": 175,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 12,
+      "nickname": "카이저워커",
+      "stars": 181,
+      "ovr": 194,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 13,
+      "nickname": "다닝뇨",
+      "stars": 179,
+      "ovr": 175,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 14,
+      "nickname": "DDONDDON55",
+      "stars": 173,
+      "ovr": 170,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 15,
+      "nickname": "휘리",
+      "stars": 173,
+      "ovr": 172,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 16,
+      "nickname": "봉구와구름이",
+      "stars": 173,
+      "ovr": 185,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 17,
+      "nickname": "김유정",
+      "stars": 172,
+      "ovr": 174,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 18,
+      "nickname": "KITH",
+      "stars": 172,
+      "ovr": 193,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 19,
+      "nickname": "JuHyun5",
+      "stars": 166,
+      "ovr": 178,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 20,
+      "nickname": "아사론",
+      "stars": 163,
+      "ovr": 181,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 21,
+      "nickname": "청둥오리",
+      "stars": 162,
+      "ovr": 173,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 22,
+      "nickname": "우서장",
+      "stars": 162,
+      "ovr": 177,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 23,
+      "nickname": "FERGIE",
+      "stars": 162,
+      "ovr": 168,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 24,
+      "nickname": "히나",
+      "stars": 160,
+      "ovr": 171,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 25,
+      "nickname": "지누",
+      "stars": 157,
+      "ovr": 176,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 26,
+      "nickname": "DionySos",
+      "stars": 157,
+      "ovr": 174,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 27,
+      "nickname": "흐엥",
+      "stars": 157,
+      "ovr": 180,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 28,
+      "nickname": "경래형",
+      "stars": 157,
+      "ovr": 174,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 29,
+      "nickname": "EternalToure",
+      "stars": 156,
+      "ovr": 182,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 30,
+      "nickname": "콜린스눈나",
+      "stars": 155,
+      "ovr": 188,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 31,
+      "nickname": "PUMPKIN",
+      "stars": 155,
+      "ovr": 173,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 32,
+      "nickname": "HSHHJ",
+      "stars": 154,
+      "ovr": 167,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 33,
+      "nickname": "영미터",
+      "stars": 154,
+      "ovr": 194,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 34,
+      "nickname": "GK진화장인영미터",
+      "stars": 154,
+      "ovr": 173,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 35,
+      "nickname": "영어강사",
+      "stars": 153,
+      "ovr": 178,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 36,
+      "nickname": "지금은리오넬메시",
+      "stars": 152,
+      "ovr": 182,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 37,
+      "nickname": "휴잭맨",
+      "stars": 152,
+      "ovr": 177,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 38,
+      "nickname": "에이치석",
+      "stars": 150,
+      "ovr": 173,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 39,
+      "nickname": "maengufc",
+      "stars": 149,
+      "ovr": 178,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 40,
+      "nickname": "RMA레알마드리드",
+      "stars": 148,
+      "ovr": 188,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 41,
+      "nickname": "휴민트",
+      "stars": 148,
+      "ovr": 186,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 42,
+      "nickname": "Dybala",
+      "stars": 147,
+      "ovr": 176,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 43,
+      "nickname": "발목돌려차기",
+      "stars": 147,
+      "ovr": 175,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 44,
+      "nickname": "C킹R7",
+      "stars": 146,
+      "ovr": 177,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 45,
+      "nickname": "SiwooJun",
+      "stars": 146,
+      "ovr": 181,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 46,
+      "nickname": "이원상",
+      "stars": 146,
+      "ovr": 177,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 47,
+      "nickname": "빡블리",
+      "stars": 145,
+      "ovr": 178,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 48,
+      "nickname": "GodDribble",
+      "stars": 145,
+      "ovr": 167,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 49,
+      "nickname": "시어러",
+      "stars": 145,
+      "ovr": 181,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 50,
+      "nickname": "새벽퐁",
+      "stars": 144,
+      "ovr": 184,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 51,
+      "nickname": "백승철",
+      "stars": 144,
+      "ovr": 176,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 52,
+      "nickname": "KeyPlay",
+      "stars": 144,
+      "ovr": 172,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 53,
+      "nickname": "돔황챠",
+      "stars": 142,
+      "ovr": 186,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 54,
+      "nickname": "xibiSimons",
+      "stars": 142,
+      "ovr": 153,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 55,
+      "nickname": "찌르레기",
+      "stars": 142,
+      "ovr": 176,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 56,
+      "nickname": "콩스터",
+      "stars": 142,
+      "ovr": 180,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 57,
+      "nickname": "프티",
+      "stars": 142,
+      "ovr": 190,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 58,
+      "nickname": "YoonAFC",
+      "stars": 142,
+      "ovr": 163,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 59,
+      "nickname": "야접지마",
+      "stars": 142,
+      "ovr": 171,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 60,
+      "nickname": "구름",
+      "stars": 141,
+      "ovr": 176,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 61,
+      "nickname": "그xx",
+      "stars": 141,
+      "ovr": 170,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 62,
+      "nickname": "로날두홍",
+      "stars": 141,
+      "ovr": 172,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 63,
+      "nickname": "둔둔님",
+      "stars": 141,
+      "ovr": 188,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 64,
+      "nickname": "쭈꾸미떡볶음",
+      "stars": 140,
+      "ovr": 184,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 65,
+      "nickname": "동백",
+      "stars": 140,
+      "ovr": 179,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 66,
+      "nickname": "Gyokeres",
+      "stars": 140,
+      "ovr": 171,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 67,
+      "nickname": "NeymarJunior",
+      "stars": 139,
+      "ovr": 179,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 68,
+      "nickname": "LwCR7",
+      "stars": 139,
+      "ovr": 171,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 69,
+      "nickname": "범냉몬",
+      "stars": 139,
+      "ovr": 167,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 70,
+      "nickname": "Ilove디룩",
+      "stars": 139,
+      "ovr": 173,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 71,
+      "nickname": "앙리God",
+      "stars": 139,
+      "ovr": 174,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 72,
+      "nickname": "270221",
+      "stars": 139,
+      "ovr": 186,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 73,
+      "nickname": "Dolce",
+      "stars": 139,
+      "ovr": 165,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 74,
+      "nickname": "Maldini",
+      "stars": 138,
+      "ovr": 178,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 75,
+      "nickname": "Malcha",
+      "stars": 138,
+      "ovr": 167,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 76,
+      "nickname": "경래형부캐",
+      "stars": 138,
+      "ovr": 176,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 77,
+      "nickname": "리센느다",
+      "stars": 138,
+      "ovr": 166,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 78,
+      "nickname": "suntm",
+      "stars": 138,
+      "ovr": 174,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 79,
+      "nickname": "DARBY",
+      "stars": 138,
+      "ovr": 173,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 80,
+      "nickname": "Zombi",
+      "stars": 138,
+      "ovr": 184,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 81,
+      "nickname": "쭈꾸미떵볶음",
+      "stars": 138,
+      "ovr": 175,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 82,
+      "nickname": "단품",
+      "stars": 138,
+      "ovr": 180,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 83,
+      "nickname": "SANA5067",
+      "stars": 138,
+      "ovr": 182,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 84,
+      "nickname": "페드리스타",
+      "stars": 138,
+      "ovr": 177,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 85,
+      "nickname": "KaneHarry",
+      "stars": 138,
+      "ovr": 173,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 86,
+      "nickname": "슈가빽형",
+      "stars": 138,
+      "ovr": 175,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 87,
+      "nickname": "yeezy",
+      "stars": 138,
+      "ovr": 178,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 88,
+      "nickname": "매이드인코리아",
+      "stars": 138,
+      "ovr": 173,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 89,
+      "nickname": "화랑",
+      "stars": 137,
+      "ovr": 177,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 90,
+      "nickname": "베라",
+      "stars": 137,
+      "ovr": 180,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 91,
+      "nickname": "NH농협",
+      "stars": 137,
+      "ovr": 177,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 92,
+      "nickname": "MOYA",
+      "stars": 137,
+      "ovr": 178,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 93,
+      "nickname": "미키",
+      "stars": 137,
+      "ovr": 177,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 94,
+      "nickname": "Woo15",
+      "stars": 137,
+      "ovr": 178,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 95,
+      "nickname": "DnFC",
+      "stars": 137,
+      "ovr": 173,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 96,
+      "nickname": "바버",
+      "stars": 137,
+      "ovr": 171,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 97,
+      "nickname": "예재파파",
+      "stars": 137,
+      "ovr": 184,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 98,
+      "nickname": "지숑팍",
+      "stars": 137,
+      "ovr": 175,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 99,
+      "nickname": "쨔왕",
+      "stars": 137,
+      "ovr": 181,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 100,
+      "nickname": "Crusaders",
+      "stars": 137,
+      "ovr": 181,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 101,
+      "nickname": "막크충",
+      "stars": 137,
+      "ovr": 176,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 102,
+      "nickname": "에이전트",
+      "stars": 136,
+      "ovr": 169,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 103,
+      "nickname": "HELINOX",
+      "stars": 136,
+      "ovr": 178,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 104,
+      "nickname": "LARDINI",
+      "stars": 136,
+      "ovr": 182,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 105,
+      "nickname": "유이렌",
+      "stars": 135,
+      "ovr": 179,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 106,
+      "nickname": "핀아",
+      "stars": 135,
+      "ovr": 176,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 107,
+      "nickname": "호감",
+      "stars": 135,
+      "ovr": 173,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 108,
+      "nickname": "마스티유",
+      "stars": 135,
+      "ovr": 172,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 109,
+      "nickname": "보정패빽체감고쳐",
+      "stars": 135,
+      "ovr": 178,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 110,
+      "nickname": "폴댄싱바",
+      "stars": 134,
+      "ovr": 173,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 111,
+      "nickname": "큰새",
+      "stars": 134,
+      "ovr": 186,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 112,
+      "nickname": "레알단일",
+      "stars": 134,
+      "ovr": 182,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 113,
+      "nickname": "어따차",
+      "stars": 134,
+      "ovr": 171,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 114,
+      "nickname": "Scholes",
+      "stars": 133,
+      "ovr": 175,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 115,
+      "nickname": "니드투필",
+      "stars": 132,
+      "ovr": 177,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 116,
+      "nickname": "오버랩",
+      "stars": 132,
+      "ovr": 175,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 117,
+      "nickname": "골보이가나서다",
+      "stars": 132,
+      "ovr": 177,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 118,
+      "nickname": "중앙미드필드",
+      "stars": 132,
+      "ovr": 172,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 119,
+      "nickname": "인비디아",
+      "stars": 131,
+      "ovr": 181,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 120,
+      "nickname": "디애슬래틱",
+      "stars": 131,
+      "ovr": 178,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 121,
+      "nickname": "무회전헤딩",
+      "stars": 131,
+      "ovr": 180,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 122,
+      "nickname": "주키니",
+      "stars": 130,
+      "ovr": 173,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 123,
+      "nickname": "Casillas",
+      "stars": 130,
+      "ovr": 176,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 124,
+      "nickname": "희31",
+      "stars": 130,
+      "ovr": 184,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 125,
+      "nickname": "수뚜비뚜밥",
+      "stars": 130,
+      "ovr": 160,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 126,
+      "nickname": "똘똘이트럼프",
+      "stars": 130,
+      "ovr": 171,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 127,
+      "nickname": "비안코네리",
+      "stars": 130,
+      "ovr": 176,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 128,
+      "nickname": "NOS7",
+      "stars": 130,
+      "ovr": 170,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 129,
+      "nickname": "나루",
+      "stars": 130,
+      "ovr": 175,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 130,
+      "nickname": "크크하이",
+      "stars": 130,
+      "ovr": 177,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 131,
+      "nickname": "IRONRIGGER9",
+      "stars": 129,
+      "ovr": 181,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 132,
+      "nickname": "homin민호",
+      "stars": 129,
+      "ovr": 168,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 133,
+      "nickname": "미사카아커만",
+      "stars": 129,
+      "ovr": 170,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 134,
+      "nickname": "IIKAIROSII",
+      "stars": 128,
+      "ovr": 177,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 135,
+      "nickname": "혼란스러운호올란",
+      "stars": 128,
+      "ovr": 178,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 136,
+      "nickname": "방탄소영단",
+      "stars": 128,
+      "ovr": 183,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 137,
+      "nickname": "껨온",
+      "stars": 128,
+      "ovr": 176,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 138,
+      "nickname": "FCJuncelona",
+      "stars": 128,
+      "ovr": 181,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 139,
+      "nickname": "호검",
+      "stars": 127,
+      "ovr": 166,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 140,
+      "nickname": "용산구홀란드",
+      "stars": 127,
+      "ovr": 172,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 141,
+      "nickname": "pys0207",
+      "stars": 127,
+      "ovr": 176,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 142,
+      "nickname": "귤남편",
+      "stars": 127,
+      "ovr": 180,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 143,
+      "nickname": "헬린이도영",
+      "stars": 127,
+      "ovr": 180,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 144,
+      "nickname": "FIRENZE",
+      "stars": 127,
+      "ovr": 175,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 145,
+      "nickname": "RMA05",
+      "stars": 127,
+      "ovr": 174,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 146,
+      "nickname": "Olise",
+      "stars": 127,
+      "ovr": 164,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 147,
+      "nickname": "딱까",
+      "stars": 127,
+      "ovr": 173,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 148,
+      "nickname": "포스트말론",
+      "stars": 127,
+      "ovr": 175,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 149,
+      "nickname": "쪼개23",
+      "stars": 127,
+      "ovr": 173,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 150,
+      "nickname": "BAY9",
+      "stars": 127,
+      "ovr": 174,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 151,
+      "nickname": "Oneofkind",
+      "stars": 126,
+      "ovr": 171,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 152,
+      "nickname": "보정당한이재용",
+      "stars": 126,
+      "ovr": 172,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 153,
+      "nickname": "디웨이브퀀텀",
+      "stars": 126,
+      "ovr": 171,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 154,
+      "nickname": "EMOTICON이모티콘",
+      "stars": 126,
+      "ovr": 169,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 155,
+      "nickname": "Rain티",
+      "stars": 126,
+      "ovr": 177,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 156,
+      "nickname": "육퇴",
+      "stars": 126,
+      "ovr": 180,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 157,
+      "nickname": "허각",
+      "stars": 126,
+      "ovr": 173,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 158,
+      "nickname": "맨유캡틴루니",
+      "stars": 126,
+      "ovr": 178,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 159,
+      "nickname": "미히",
+      "stars": 126,
+      "ovr": 176,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 160,
+      "nickname": "건스날",
+      "stars": 126,
+      "ovr": 179,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 161,
+      "nickname": "Cantona",
+      "stars": 126,
+      "ovr": 173,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 162,
+      "nickname": "일월탄",
+      "stars": 126,
+      "ovr": 170,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 163,
+      "nickname": "까치",
+      "stars": 125,
+      "ovr": 172,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 164,
+      "nickname": "뉴하잉",
+      "stars": 125,
+      "ovr": 177,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 165,
+      "nickname": "고척돔우천취소",
+      "stars": 125,
+      "ovr": 172,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 166,
+      "nickname": "레알이겨드리지",
+      "stars": 125,
+      "ovr": 165,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 167,
+      "nickname": "JUNHAvv",
+      "stars": 125,
+      "ovr": 166,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 168,
+      "nickname": "드록바No9",
+      "stars": 125,
+      "ovr": 174,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 169,
+      "nickname": "로저페더러",
+      "stars": 124,
+      "ovr": 161,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 170,
+      "nickname": "NaHyun1011",
+      "stars": 124,
+      "ovr": 166,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 171,
+      "nickname": "드래그라인",
+      "stars": 124,
+      "ovr": 93,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 172,
+      "nickname": "레드홀란",
+      "stars": 124,
+      "ovr": 171,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 173,
+      "nickname": "홀릿",
+      "stars": 124,
+      "ovr": 178,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 174,
+      "nickname": "수아리님",
+      "stars": 124,
+      "ovr": 173,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 175,
+      "nickname": "싸늘",
+      "stars": 124,
+      "ovr": 176,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 176,
+      "nickname": "레알봐드리지",
+      "stars": 124,
+      "ovr": 178,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 177,
+      "nickname": "EIEN",
+      "stars": 124,
+      "ovr": 177,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 178,
+      "nickname": "우투리",
+      "stars": 124,
+      "ovr": 176,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 179,
+      "nickname": "박선수",
+      "stars": 124,
+      "ovr": 166,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 180,
+      "nickname": "XVI",
+      "stars": 124,
+      "ovr": 175,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 181,
+      "nickname": "풀세보면라면끓임",
+      "stars": 124,
+      "ovr": 171,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 182,
+      "nickname": "콩땅곰",
+      "stars": 123,
+      "ovr": 175,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 183,
+      "nickname": "SIUSIUSHOOT",
+      "stars": 123,
+      "ovr": 186,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 184,
+      "nickname": "야접어",
+      "stars": 123,
+      "ovr": 174,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 185,
+      "nickname": "JUVMVP",
+      "stars": 123,
+      "ovr": 174,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 186,
+      "nickname": "별내도가니",
+      "stars": 123,
+      "ovr": 170,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 187,
+      "nickname": "Trip",
+      "stars": 123,
+      "ovr": 181,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 188,
+      "nickname": "후아니토",
+      "stars": 123,
+      "ovr": 157,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 189,
+      "nickname": "LOCUS",
+      "stars": 123,
+      "ovr": 166,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 190,
+      "nickname": "구름바람비",
+      "stars": 123,
+      "ovr": 177,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 191,
+      "nickname": "VNTheBestEsports",
+      "stars": 123,
+      "ovr": 168,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 192,
+      "nickname": "파고",
+      "stars": 123,
+      "ovr": 178,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 193,
+      "nickname": "아년기",
+      "stars": 123,
+      "ovr": 181,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 194,
+      "nickname": "럭키세븐코리아",
+      "stars": 123,
+      "ovr": 173,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 195,
+      "nickname": "새벽향",
+      "stars": 123,
+      "ovr": 168,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 196,
+      "nickname": "하나",
+      "stars": 123,
+      "ovr": 177,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 197,
+      "nickname": "환상적인루시드",
+      "stars": 123,
+      "ovr": 173,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 198,
+      "nickname": "MARADONA_10",
+      "stars": 123,
+      "ovr": 168,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 199,
+      "nickname": "철민볼",
+      "stars": 123,
+      "ovr": 163,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 200,
+      "nickname": "얀대디",
+      "stars": 123,
+      "ovr": 179,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 201,
+      "nickname": "토탈싸커",
+      "stars": 123,
+      "ovr": 161,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 202,
+      "nickname": "xyster",
+      "stars": 123,
+      "ovr": 183,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 203,
+      "nickname": "강백약",
+      "stars": 123,
+      "ovr": 183,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 204,
+      "nickname": "JuDok2",
+      "stars": 123,
+      "ovr": 180,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 205,
+      "nickname": "아토끼",
+      "stars": 123,
+      "ovr": 179,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 206,
+      "nickname": "초보들은빠져",
+      "stars": 123,
+      "ovr": 169,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 207,
+      "nickname": "INTERNATIONAL",
+      "stars": 123,
+      "ovr": 175,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 208,
+      "nickname": "ㅇ베리ㅇ",
+      "stars": 123,
+      "ovr": 171,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 209,
+      "nickname": "luckyvicky",
+      "stars": 123,
+      "ovr": 173,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 210,
+      "nickname": "하양이집사",
+      "stars": 123,
+      "ovr": 168,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 211,
+      "nickname": "ZinedineZizue",
+      "stars": 123,
+      "ovr": 169,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 212,
+      "nickname": "XmanN09",
+      "stars": 123,
+      "ovr": 171,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 213,
+      "nickname": "Teamchemistry",
+      "stars": 123,
+      "ovr": 171,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 214,
+      "nickname": "드록바11",
+      "stars": 123,
+      "ovr": 176,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 215,
+      "nickname": "꼬냑한잔",
+      "stars": 123,
+      "ovr": 170,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 216,
+      "nickname": "감스트",
+      "stars": 122,
+      "ovr": 179,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 217,
+      "nickname": "흥민파더",
+      "stars": 122,
+      "ovr": 171,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 218,
+      "nickname": "가을",
+      "stars": 122,
+      "ovr": 167,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 219,
+      "nickname": "BucketList",
+      "stars": 122,
+      "ovr": 174,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 220,
+      "nickname": "MANCITY",
+      "stars": 122,
+      "ovr": 184,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 221,
+      "nickname": "커즈",
+      "stars": 122,
+      "ovr": 170,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 222,
+      "nickname": "베슬리스네이더르",
+      "stars": 122,
+      "ovr": 178,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 223,
+      "nickname": "Joscar",
+      "stars": 122,
+      "ovr": 178,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 224,
+      "nickname": "blue",
+      "stars": 122,
+      "ovr": 175,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 225,
+      "nickname": "바래진",
+      "stars": 122,
+      "ovr": 172,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 226,
+      "nickname": "프랑스",
+      "stars": 122,
+      "ovr": 169,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 227,
+      "nickname": "강력한어깨",
+      "stars": 122,
+      "ovr": 177,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 228,
+      "nickname": "초파",
+      "stars": 122,
+      "ovr": 173,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 229,
+      "nickname": "빌드업장인정신",
+      "stars": 122,
+      "ovr": 179,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 230,
+      "nickname": "영마카세",
+      "stars": 122,
+      "ovr": 176,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 231,
+      "nickname": "Blackbay",
+      "stars": 122,
+      "ovr": 190,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 232,
+      "nickname": "홍팡팡",
+      "stars": 122,
+      "ovr": 184,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 233,
+      "nickname": "JsL2",
+      "stars": 122,
+      "ovr": 171,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 234,
+      "nickname": "칼슘",
+      "stars": 122,
+      "ovr": 178,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 235,
+      "nickname": "케넛츠",
+      "stars": 122,
+      "ovr": 176,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 236,
+      "nickname": "MINDLE",
+      "stars": 122,
+      "ovr": 173,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 237,
+      "nickname": "탐탁지",
+      "stars": 122,
+      "ovr": 168,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 238,
+      "nickname": "까미미",
+      "stars": 122,
+      "ovr": 173,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 239,
+      "nickname": "MILKSHAKES",
+      "stars": 122,
+      "ovr": 173,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 240,
+      "nickname": "아스카키라라",
+      "stars": 122,
+      "ovr": 178,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 241,
+      "nickname": "거품",
+      "stars": 122,
+      "ovr": 172,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 242,
+      "nickname": "뜸부기",
+      "stars": 122,
+      "ovr": 177,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 243,
+      "nickname": "와아와아와아",
+      "stars": 122,
+      "ovr": 169,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 244,
+      "nickname": "deps",
+      "stars": 122,
+      "ovr": 181,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 245,
+      "nickname": "골든슈파",
+      "stars": 122,
+      "ovr": 174,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 246,
+      "nickname": "GoalSniper",
+      "stars": 122,
+      "ovr": 168,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 247,
+      "nickname": "min1234",
+      "stars": 122,
+      "ovr": 182,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 248,
+      "nickname": "킹받남",
+      "stars": 122,
+      "ovr": 177,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 249,
+      "nickname": "토피넛라떼",
+      "stars": 122,
+      "ovr": 179,
+      "tier": "FC 챔피언"
+    },
+    {
+      "rank": 250,
+      "nickname": "jeoxl12",
+      "stars": 122,
+      "ovr": 171,
+      "tier": "FC 챔피언"
+    }
+  ]
+}

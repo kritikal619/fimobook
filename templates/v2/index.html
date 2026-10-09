@@ -1,0 +1,136 @@
+{% extends "v2/base.html" %}
+{% set active_page = "search" %}
+
+{% block title %}선수 찾기 | 피모북 새 화면{% endblock %}
+
+{% block main %}
+<div class="page-heading">
+  <div>
+    <h1>선수 찾기</h1>
+    <p>이름과 조건을 함께 사용하면 원하는 선수를 빠르게 좁힐 수 있어요.</p>
+  </div>
+  <a class="advanced-link" href="{{ url_for('traits_selection') }}">
+    전체 조건으로 찾기
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+  </a>
+</div>
+
+<section
+  class="player-finder"
+  data-player-finder
+  data-search-api="{{ url_for('api_squad_players') }}"
+  data-autocomplete-api="{{ url_for('autocomplete') }}"
+  data-detail-template="{{ url_for('v2_player_detail', cid=999999999) }}"
+>
+  <form class="finder-form" data-finder-form method="get" action="{{ url_for('v2_index') }}">
+    <div class="search-box">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg>
+      <label class="sr-only" for="v2-player-query">선수 이름</label>
+      <input id="v2-player-query" name="q" type="search" placeholder="손흥민, 호날두" autocomplete="off" enterkeyhint="search" aria-autocomplete="list" aria-controls="v2-suggestions">
+      <button class="clear-search" type="button" data-clear-search aria-label="검색어 지우기" hidden>×</button>
+      <button class="search-submit" type="submit">검색</button>
+      <div id="v2-suggestions" class="suggestion-list" role="listbox" hidden></div>
+    </div>
+
+    <button class="mobile-filter-button" type="button" data-open-filter aria-expanded="false">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M7 12h10M10 17h4"/></svg>
+      조건 선택 <span data-filter-count hidden>0</span>
+    </button>
+
+    <div class="finder-layout">
+      <aside class="filter-panel" data-filter-panel aria-label="검색 조건">
+        <div class="filter-panel-header">
+          <strong>조건 선택</strong>
+          <button type="button" data-close-filter aria-label="조건 닫기">×</button>
+        </div>
+
+        <fieldset class="filter-group">
+          <legend>포지션</legend>
+          <div class="position-options">
+            {% for position in ['ST', 'LW', 'RW', 'CAM', 'CM', 'CDM', 'LB', 'CB', 'RB', 'GK'] %}
+              <label><input type="checkbox" name="position" value="{{ position }}"><span>{{ position }}</span></label>
+            {% endfor %}
+          </div>
+        </fieldset>
+
+        <div class="filter-group">
+          <label for="v2-class">클래스</label>
+          <select id="v2-class" name="player_class">
+            <option value="">전체 클래스</option>
+            {% for player_class in player_classes %}
+              <option value="{{ player_class }}">{{ player_class }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <fieldset class="filter-group">
+          <legend>OVR</legend>
+          <div class="range-inputs">
+            <label><span class="sr-only">최소 OVR</span><input name="min_ovr" type="number" min="0" max="200" inputmode="numeric" placeholder="최소"></label>
+            <span aria-hidden="true">–</span>
+            <label><span class="sr-only">최대 OVR</span><input name="max_ovr" type="number" min="0" max="200" inputmode="numeric" placeholder="최대"></label>
+          </div>
+        </fieldset>
+
+        <div class="filter-actions">
+          <button class="reset-button" type="reset" data-reset-filter>초기화</button>
+          <button class="apply-button" type="submit">선수 보기</button>
+        </div>
+
+        <div class="legacy-tools">
+          <span>더 세밀한 조건이 필요하다면</span>
+          <a href="{{ url_for('traits_selection') }}">특성·스킬·경력 검색</a>
+        </div>
+      </aside>
+
+      <div class="filter-backdrop" data-filter-backdrop hidden></div>
+
+      <div class="results-column">
+        <div class="active-filters" data-active-filters aria-label="적용한 조건"></div>
+
+        <div class="result-toolbar">
+          <p class="result-count" aria-live="polite">선수 <strong data-result-count>—</strong>명 표시</p>
+          <label class="sort-control">
+            <span class="sr-only">정렬 방식</span>
+            <select name="sort" data-sort-select>
+              <option value="recommend">추천순</option>
+              <option value="ovr_desc">OVR 높은순</option>
+              <option value="price_desc">가격 높은순</option>
+              <option value="price_asc">가격 낮은순</option>
+              <option value="name">이름순</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="loading-line" data-loading-line hidden><span></span>선수 정보를 불러오는 중이에요.</div>
+        <div class="result-message" data-result-message hidden></div>
+        <div class="player-results" data-player-results></div>
+        <button class="load-more" type="button" data-load-more hidden>더 보기</button>
+      </div>
+    </div>
+  </form>
+</section>
+
+<section class="service-links" aria-labelledby="service-links-title">
+  <div class="section-title-row">
+    <h2 id="service-links-title">피모북 도구</h2>
+    <span>기존 데이터와 계산 기능은 그대로 사용할 수 있어요.</span>
+  </div>
+  <div class="service-link-list">
+    <a href="{{ url_for('player_compare_page') }}"><strong>선수 비교</strong><span>두 선수의 능력치 비교</span><i>→</i></a>
+    <a href="{{ url_for('squad_maker') }}"><strong>스쿼드 메이커</strong><span>포메이션과 선수 배치</span><i>→</i></a>
+    <a href="{{ url_for('times') }}"><strong>갱신시간</strong><span>클래스별 갱신시간 확인</span><i>→</i></a>
+    <a href="{{ url_for('coupons_page') }}"><strong>쿠폰</strong><span>사용 가능한 쿠폰 확인</span><i>→</i></a>
+    <a href="{{ url_for('market_fee_calculator') }}"><strong>수수료 계산기</strong><span>판매 정산 금액 계산</span><i>→</i></a>
+    <a href="{{ url_for('prime_exchange_page') }}"><strong>프라임 교환</strong><span>교환 효율 비교</span><i>→</i></a>
+  </div>
+</section>
+
+<noscript>
+  <div class="noscript-message">자바스크립트를 켜면 이 화면에서 바로 선수를 찾을 수 있습니다. <a href="{{ url_for('index') }}">기존 선수 검색 사용하기</a></div>
+</noscript>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/v2-player-finder.js', v='20261003-card-art1') }}" defer></script>
+{% endblock %}

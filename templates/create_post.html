@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+{% block body_class %}post-editor-page{% endblock %}
+{% block title %}새 글 작성 | 피모북{% endblock %}
+
+{% block extra_head %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/post-editor.css', v='20260823-1') }}">
+{% endblock %}
+
+{% block content %}
+<div class="post-editor-shell">
+  <header class="post-editor-header">
+    <a class="post-editor-back" href="{{ url_for('community', tab=active_board) }}"><i class="bi bi-arrow-left" aria-hidden="true"></i>게시판으로</a>
+    <h1 class="post-editor-title">새 글 작성</h1>
+    <p class="post-editor-desc">게시판을 선택하고 내용을 작성해주세요.</p>
+  </header>
+
+  <section class="post-editor-card">
+    <form method="POST" enctype="multipart/form-data" class="post-editor-form" data-ga-event="community_post_submit">
+      {{ form.hidden_tag() }}
+      <input type="hidden" name="board_type" value="{{ active_board }}">
+
+      <div class="post-editor-row">
+        <div class="post-editor-field">
+          <div class="post-editor-label-row">
+            <label class="post-editor-label" for="board_type_display">게시판</label>
+          </div>
+          <select id="board_type_display" class="form-control" onchange="this.form.board_type.value=this.value">
+            {% for key, board in boards.items() %}
+              {% if key != "review" and (key != "notice" or is_admin_user) %}
+                <option value="{{ key }}" {% if key == active_board %}selected{% endif %}>{{ board.label }}</option>
+              {% endif %}
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="post-editor-field">
+          <div class="post-editor-label-row">
+            {{ form.title.label(class_="post-editor-label") }}
+            <span class="post-editor-count"><span data-title-count>0</span>/100</span>
+          </div>
+          {{ form.title(class_="form-control", required=True, maxlength=100, placeholder="제목을 입력하세요", data_title_input="") }}
+          {% for error in form.title.errors %}<small class="post-editor-error">{{ error }}</small>{% endfor %}
+        </div>
+      </div>
+
+      {% if is_admin_user %}
+        <div class="post-editor-options">
+          <div class="post-editor-label-row"><strong class="post-editor-label">공지 설정</strong></div>
+          <label class="post-editor-check">
+            <input type="checkbox" name="make_notice" value="1" {% if active_board == 'notice' %}checked{% endif %}>
+            공지사항으로 등록
+          </label>
+          <label class="post-editor-check">
+            <input type="checkbox" name="is_pinned" value="1" {% if request.form.get('is_pinned') == '1' %}checked{% endif %}>
+            목록 상단에 고정
+          </label>
+        </div>
+      {% endif %}
+
+      <div class="post-editor-field">
+        <div class="post-editor-label-row">
+          {{ form.content.label(class_="post-editor-label") }}
+          <span class="post-editor-count"><span data-content-count>0</span>자</span>
+        </div>
+        {{ form.content(class_="form-control", rows="14", required=True, placeholder="내용을 입력하세요", data_content_input="") }}
+        {% for error in form.content.errors %}<small class="post-editor-error">{{ error }}</small>{% endfor %}
+      </div>
+
+      <div class="post-editor-options" data-poll-box>
+        <label class="post-editor-check">
+          <input type="checkbox" name="poll_enabled" value="1" data-poll-toggle {% if poll_enabled %}checked{% endif %}>
+          투표 추가
+        </label>
+        <div class="poll-editor{% if poll_enabled %} is-open{% endif %}" data-poll-editor>
+          <div class="post-editor-label-row">
+            <label class="post-editor-label" for="poll_question">투표 질문</label>
+          </div>
+          <input id="poll_question" name="poll_question" class="form-control" maxlength="200" value="{{ poll_question|default('') }}" placeholder="투표 질문을 입력하세요">
+          <div class="poll-option-list" data-poll-options>
+            {% set option_values = poll_options if poll_options else ['', ''] %}
+            {% for option in option_values %}
+              <div class="poll-option-row">
+                <input name="poll_options" class="form-control" maxlength="80" value="{{ option }}" placeholder="항목 {{ loop.index }}">
+                <button type="button" class="poll-remove" data-remove-poll-option aria-label="투표 항목 삭제">×</button>
+              </div>
+            {% endfor %}
+          </div>
+          <button type="button" class="poll-add" data-add-poll-option>항목 추가</button>
+          <small class="post-editor-help">투표 항목은 2개부터 6개까지 등록할 수 있습니다.</small>
+        </div>
+      </div>
+
+      <div class="post-editor-field">
+        <div class="post-editor-label-row">{{ form.image.label(class_="post-editor-label") }}</div>
+        {{ form.image(class_="form-control", accept="image/jpeg,image/png,image/gif,image/webp") }}
+        <small class="post-editor-help">JPG, PNG, GIF, WEBP 파일을 첨부할 수 있습니다.</small>
+        {% for error in form.image.errors %}<small class="post-editor-error">{{ error }}</small>{% endfor %}
+      </div>
+
+      <div class="post-editor-actions">
+        <a class="post-editor-cancel" href="{{ url_for('community', tab=active_board) }}">취소</a>
+        <button type="submit" class="post-editor-submit">등록하기</button>
+      </div>
+    </form>
+  </section>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  (() => {
+    const titleInput = document.querySelector('[data-title-input]');
+    const contentInput = document.querySelector('[data-content-input]');
+    const titleCount = document.querySelector('[data-title-count]');
+    const contentCount = document.querySelector('[data-content-count]');
+    const updateCounts = () => {
+      if (titleInput && titleCount) titleCount.textContent = String(titleInput.value.length);
+      if (contentInput && contentCount) contentCount.textContent = contentInput.value.length.toLocaleString('ko-KR');
+    };
+    titleInput?.addEventListener('input', updateCounts);
+    contentInput?.addEventListener('input', updateCounts);
+    updateCounts();
+
+    const box = document.querySelector('[data-poll-box]');
+    if (!box) return;
+    const toggle = box.querySelector('[data-poll-toggle]');
+    const editor = box.querySelector('[data-poll-editor]');
+    const list = box.querySelector('[data-poll-options]');
+    const sync = () => editor?.classList.toggle('is-open', Boolean(toggle?.checked));
+    toggle?.addEventListener('change', sync);
+    box.querySelector('[data-add-poll-option]')?.addEventListener('click', () => {
+      if (!list || list.children.length >= 6) return;
+      const row = document.createElement('div');
+      row.className = 'poll-option-row';
+      row.innerHTML = `<input name="poll_options" class="form-control" maxlength="80" placeholder="항목 ${list.children.length + 1}"><button type="button" class="poll-remove" data-remove-poll-option aria-label="투표 항목 삭제">×</button>`;
+      list.appendChild(row);
+      row.querySelector('input')?.focus();
+    });
+    list?.addEventListener('click', (event) => {
+      const button = event.target.closest('[data-remove-poll-option]');
+      if (!button || list.children.length <= 2) return;
+      button.closest('.poll-option-row')?.remove();
+    });
+    sync();
+  })();
+</script>
+{% endblock %}

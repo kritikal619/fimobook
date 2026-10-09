@@ -1,0 +1,4 @@
+<nav class="normal-ranking-tabs" aria-label="일반모드 랭킹 종류">
+  <a href="{{ url_for('normal_mode_power_ranking') }}" {% if request.endpoint == 'normal_mode_power_ranking' %}aria-current="page"{% endif %}>파워랭킹</a>
+  <a href="{{ url_for('normal_mode_season_ranking') }}" {% if request.endpoint == 'normal_mode_season_ranking' %}aria-current="page"{% endif %}>시즌 5 일반모드 랭킹</a>
+</nav>

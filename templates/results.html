@@ -51,374 +51,7 @@
 }
 </script>
 
-<style>
-  :root{
-    --card:#ffffff;
-    --surface:#f6f8fb;
-    --text:#1f2937;
-    --muted:#64748b;
-    --line:#dbe3ec;
-    --line2:#e2e8f0;
-    --brand:#10b981;
-    --brand-dark:#059669;
-    --navy:#374151;
-    --shadow:0 14px 30px rgba(15,23,42,0.05);
-  }
-  .main-content {
-    max-width: 1180px;
-    background: transparent;
-    box-shadow: none;
-    border: none;
-    padding: 0;
-    overflow: visible;
-  }
-  .results-wrap {
-    width: 100%;
-    max-width: 1180px;
-    margin: 0 auto;
-    padding: 8px 0 32px;
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
-    gap: 12px;
-    box-sizing: border-box;
-  }
-  .results-topbar {
-    width: 100%;
-    display: flex;
-    justify-content: flex-end;
-    align-items: center;
-    margin-bottom: 8px;
-  }
-  .back-btn {
-    margin: 0;
-    padding: 10px 14px;
-    border-radius: 12px;
-    background: #f8fafc;
-    color: var(--navy);
-    border: 1px solid var(--line);
-    font-weight: 800;
-    font-size: 14px;
-    text-decoration: none;
-    box-shadow: 0 6px 16px rgba(15,23,42,0.04);
-  }
-  .back-btn:hover {
-    background: #f1f5f9;
-    text-decoration: none;
-    transform: translateY(-1px);
-  }
-  .error {
-    color: #b42318;
-    background: #fef3f2;
-    border: 1px solid #f0b5ac;
-    border-radius: 14px;
-    padding: 17px;
-    text-align: center;
-    font-weight: 700;
-    font-size: 16px;
-    width: 100%;
-    box-sizing: border-box;
-  }
-  .page-title {
-    width: 100%;
-    text-align: left;
-    color: var(--text);
-    margin: 0;
-  }
-  .filter-row {
-    width: 100%;
-    display: flex;
-    justify-content: flex-end;
-  }
-  .sort-form {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background: var(--card);
-    border: 1px solid var(--line);
-    border-radius: 12px;
-    padding: 6px 10px;
-    box-shadow: 0 6px 16px rgba(15,23,42,0.04);
-  }
-  .sort-form label {
-    color: var(--muted);
-    font-weight: 700;
-    font-size: 13px;
-  }
-  .sort-form select {
-    border: 1px solid var(--line2);
-    background: #fff;
-    border-radius: 8px;
-    padding: 6px 8px;
-    font-size: 13px;
-    font-weight: 700;
-    color: var(--text);
-  }
-  .results-grid {
-    width: 100%;
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 16px;
-    margin-bottom: 20px;
-  }
-  .player-card {
-    display: flex;
-    gap: 14px;
-    align-items: center;
-    padding: 12px 14px;
-    background: var(--card);
-    border-radius: 16px;
-    border: 1px solid var(--line2);
-    box-shadow: var(--shadow);
-    text-decoration: none;
-    color: var(--text);
-    transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
-    opacity: 0;
-    transform: translateY(10px);
-    animation: cardIn 0.45s ease forwards;
-    animation-delay: calc(var(--i) * 35ms);
-  }
-  .player-card:hover {
-    transform: translateY(-2px);
-    border-color: var(--line);
-    box-shadow: 0 16px 28px rgba(15,23,42,0.08);
-  }
-  @keyframes cardIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-  .card-image {
-    width: 84px;
-    height: 108px;
-    border-radius: 12px;
-    overflow: hidden;
-    background: var(--surface);
-    flex-shrink: 0;
-    position: relative;
-    background-size: cover;
-    background-position: center;
-  }
-  .card-image img {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-    display: block;
-    filter: drop-shadow(0 4px 6px rgba(0,0,0,0.2));
-    z-index: 1;
-  }
-  .card-meta {
-    position: absolute;
-    inset: 0;
-    padding: 0;
-    color: #ffffff;
-    text-shadow: 0 1px 2px rgba(0,0,0,0.45);
-    pointer-events: none;
-    z-index: 2;
-  }
-  .meta-top {
-    position: absolute;
-    top: 14%;
-    left: 14%;
-    display: inline-flex;
-    flex-direction: column;
-    gap: 3px;
-    align-items: flex-start;
-    font-weight: 800;
-    letter-spacing: -0.3px;
-    width: max-content;
-  }
-  .meta-ovr {
-    font-size: 14px;
-    line-height: 1;
-    font-family: 'FCOVR', 'Poppins', 'Apple SD Gothic Neo', sans-serif;
-    margin: 0;
-    text-align: left;
-    align-self: flex-start;
-  }
-  .meta-pos {
-    font-size: 9px;
-    line-height: 1;
-    opacity: 0.95;
-    font-family: 'FCOVR', 'Poppins', 'Apple SD Gothic Neo', sans-serif;
-    width: 100%;
-    text-align: center;
-    margin: 0;
-    transform: translateX(-2px);
-    align-self: center;
-  }
-  .meta-name {
-    position: absolute;
-    left: 10%;
-    width: 80%;
-    top: 65%;
-    font-size: 8px;
-    font-weight: 800;
-    text-align: center;
-    white-space: nowrap;
-    line-height: 1;
-    overflow: hidden;
-    text-overflow: clip;
-    word-break: keep-all;
-  }
-  .card-body {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    min-width: 0;
-    flex: 1;
-  }
-  .card-title-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-  }
-  .player-name {
-    font-size: 16px;
-    font-weight: 700;
-    letter-spacing: -0.3px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  .class-tag {
-    padding: 4px 10px;
-    border-radius: 999px;
-    background: #ecfdf5;
-    color: var(--brand-dark);
-    font-size: 12px;
-    font-weight: 800;
-    letter-spacing: -0.2px;
-    white-space: nowrap;
-  }
-  .card-sub {
-    font-size: 13px;
-    color: var(--muted);
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    align-items: center;
-  }
-  .meta-label {
-    color: #94a3b8;
-    font-weight: 700;
-  }
-  .boost-row {
-    gap: 10px;
-    color: var(--navy);
-    font-weight: 600;
-  }
-  .boost-pill {
-    padding: 3px 8px;
-    border: 1px solid var(--line);
-    border-radius: 8px;
-    color: var(--navy);
-    background: #f8fafc;
-    font-size: 12px;
-  }
-  .skill-moves-name {
-    color: var(--navy);
-    font-weight: 700;
-    font-size: 13px;
-  }
-  .skill-stars {
-    font-size: 13px;
-    letter-spacing: 1px;
-    color: #f2c94c;
-    font-weight: 800;
-    text-shadow: 0 1px 1px rgba(0,0,0,0.15);
-  }
-  .skill-stars .off {
-    color: #d6dbe2;
-    text-shadow: none;
-  }
-  .price-row {
-    gap: 8px;
-    color: var(--text);
-    font-weight: 700;
-  }
-  .price-icon {
-    width: 22px;
-    height: 22px;
-    object-fit: contain;
-    flex-shrink: 0;
-  }
-  .playstyle-row {
-    gap: 5px;
-  }
-  .playstyle-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    max-width: 100%;
-    padding: 2px 7px 2px 4px;
-    border-radius: 999px;
-    background: #f1f5f9;
-    color: #334155;
-    font-size: 11px;
-    font-weight: 800;
-  }
-  .playstyle-pill img {
-    width: 18px;
-    height: 18px;
-    object-fit: contain;
-    flex: 0 0 auto;
-  }
-  .back {
-    display: block;
-    width: fit-content;
-    margin: 10px auto 0;
-    padding: 13px 34px;
-    background: linear-gradient(90deg, var(--brand-dark) 0%, var(--brand) 100%);
-    color: #fff;
-    text-decoration: none;
-    border: none;
-    border-radius: 11px;
-    font-size: 16px;
-    font-weight: 600;
-    cursor: pointer;
-    box-shadow: 0 10px 20px rgba(16,185,129,0.18);
-    letter-spacing: 0.2px;
-    transition: background 0.23s, box-shadow 0.12s, transform 0.12s;
-  }
-  .back:hover {
-    background: linear-gradient(90deg, #0c5f41 0%, var(--brand-dark) 100%);
-    transform: translateY(-2px);
-    box-shadow: 0 12px 24px rgba(16,185,129,0.22);
-  }
-  @media (max-width: 1400px) {
-    .results-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-  }
-  @media (max-width: 1024px) {
-    .results-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  }
-  @media (max-width: 640px) {
-    .results-wrap { padding: 0 4px 18px; }
-    .results-grid { grid-template-columns: 1fr; gap: 10px; }
-    .player-card { padding: 10px; gap: 10px; width: 100%; box-sizing: border-box; }
-    .card-image { width: 72px; height: 96px; }
-    .player-name { font-size: 14px; }
-    .class-tag { font-size: 10px; padding: 3px 8px; }
-    .card-sub { font-size: 11px; gap: 4px; }
-    .page-title { font-size: 24px; }
-  }
-  @media (max-width: 380px) {
-    .player-card { padding: 9px; }
-    .card-image { width: 68px; height: 92px; }
-    .player-name { font-size: 13px; }
-  }
-  @media (max-width: 560px) {
-    .error { font-size: 15px; padding: 12px; margin-bottom: 12px; }
-    .back { padding: 10px 25px; font-size: 14px; border-radius: 9px; }
-  }
-  @media (max-width: 560px) {
-    .sort-form { padding: 5px 8px; gap: 6px; }
-    .sort-form label { font-size: 12px; }
-    .sort-form select { font-size: 12px; padding: 5px 6px; }
-  }
-</style>
+{% include "_search_results_styles.html" %}
 {% endblock %}
 
 {% block content %}
@@ -432,8 +65,26 @@
     <a href="/" class="back">← 다시 검색하기</a>
   {% else %}
     <div class="filter-row">
-      <form method="get" class="sort-form">
+      <form method="get" class="sort-form" data-ga-event="search_results_sort" data-ga-param-source-surface="name_search">
         <input type="hidden" name="names" value="{{ names }}">
+        {% for value in filters.player_classes %}
+          <input type="hidden" name="player_class" value="{{ value }}">
+        {% endfor %}
+        {% for value in filters.positions %}
+          <input type="hidden" name="position" value="{{ value }}">
+        {% endfor %}
+        {% if filters.min_ovr is not none %}
+          <input type="hidden" name="min_ovr" value="{{ filters.min_ovr }}">
+        {% endif %}
+        {% if filters.max_ovr is not none %}
+          <input type="hidden" name="max_ovr" value="{{ filters.max_ovr }}">
+        {% endif %}
+        <input type="hidden" name="min_price" value="{{ filters.min_price if filters.min_price is not none else '' }}">
+        <input type="hidden" name="max_price" value="{{ filters.max_price if filters.max_price is not none else '' }}">
+        <label for="result-price-enhance">가격 기준</label>
+        <select id="result-price-enhance" name="price_enhance" onchange="this.form.submit()">
+          {% for level in price_enhance_levels %}<option value="{{ level }}" {% if level == filters.price_enhance %}selected{% endif %}>{{ level }}진 가격</option>{% endfor %}
+        </select>
         <label for="sort">정렬</label>
         <select id="sort" name="sort" onchange="this.form.submit()">
           <option value="ovr" {% if sort == 'ovr' %}selected{% endif %}>OVR 순</option>
@@ -442,12 +93,19 @@
         </select>
       </form>
     </div>
-    <div class="results-grid">
+    <div class="results-grid" data-live-price-sort="{{ sort }}">
         {% for player in players %}
           {% set nation = player.nation or player.nationName or player.team %}
-        <a href="{{ url_for('player_detail', cid=player.cid) }}" class="player-card" style="--i: {{ loop.index0 }};">
-          <div class="card-image" style="background-image: url('{{ player.bimage if player.bimage else url_for('static', filename='favicon.ico') }}');">
-            <img src="{{ player.pimage if player.pimage else url_for('static', filename='favicon.ico') }}" alt="{{ player.playerKor }}">
+        <a href="{{ url_for('player_detail', cid=player.cid) }}" class="player-card" data-live-price-card data-live-price-value="{{ player.price or '' }}" data-ga-event="player_select" data-ga-param-source-surface="name_search" data-ga-param-content-id="{{ player.cid }}" data-ga-param-result-position="{{ loop.index }}" style="--i: {{ loop.index0 }};">
+          <div class="card-image" data-fimo-player-card='{{ player_card_meta(player)|tojson }}' style="background-image: url('{{ player_thumbnail_url('card', player.cid, 160) or player.bimage or url_for('static', filename='favicon.ico') }}');">
+            <img
+              src="{{ player_thumbnail_url('faceon', player.cid, 160) or player.pimage or url_for('static', filename='favicon.ico') }}"
+              data-fallback-src="{{ player.pimage or url_for('static', filename='favicon.ico') }}"
+              alt="{{ player.playerKor }}"
+              loading="eager"
+              decoding="async"
+              onerror="const fallback=this.dataset.fallbackSrc;this.onerror=null;if(fallback&&this.src!==fallback){this.src=fallback;}"
+            >
             <div class="card-meta">
               <div class="meta-top">
                 <div class="meta-ovr">{{ player.ovr or '-' }}</div>
@@ -467,10 +125,6 @@
                 <span class="meta-label">부포지션</span>
                 <span>{{ player.potentialPosition }}</span>
               {% endif %}
-              {% if player.jerseyNumber is defined and player.jerseyNumber is not none %}
-                <span class="meta-label">등번호</span>
-                <span>{{ player.jerseyNumber }}</span>
-              {% endif %}
               <span class="meta-label">국적</span>
               <span>{{ nation or '-' }}</span>
             </div>
@@ -486,19 +140,34 @@
                 </span>
               {% endif %}
             </div>
-            {% if player.playstyles %}
+            {% if player.playstyleSlots or player.playstyles %}
               <div class="card-sub playstyle-row" aria-label="플레이스타일">
-                {% for playstyle in player.playstyles[:3] %}
+                {% if player.playstyleSlots|length == 2 %}
+                  {% for slot in player.playstyleSlots %}
+                    {% set slot_name = '빈 플레이스타일 슬롯' if slot.isEmpty else slot.name %}
+                    <span class="playstyle-pill is-icon-only" title="{{ slot_name }}">
+                      <img src="{{ url_for('static', filename='playstyles/PLAYSTYLE_EMPTY_SLOT.png') if slot.isEmpty else slot.imageUrl }}" alt="{{ slot_name }}" loading="lazy">
+                    </span>
+                  {% endfor %}
+                {% elif player.playstyleSlots|length == 1 and player.playstyleSlots[0].isEmpty %}
                   <span class="playstyle-pill">
-                    <img src="{{ playstyle.imageUrl }}" alt="" loading="lazy">
-                    <span>{{ playstyle.name }}</span>
+                    <img src="{{ url_for('static', filename='playstyles/PLAYSTYLE_EMPTY_SLOT.png') }}" alt="빈 슬롯" loading="lazy">
+                    <span>빈 슬롯</span>
                   </span>
-                {% endfor %}
+                {% else %}
+                  {% for playstyle in player.playstyles[:3] %}
+                    <span class="playstyle-pill">
+                      <img src="{{ playstyle.imageUrl }}" alt="" loading="lazy">
+                      <span>{{ playstyle.name }}</span>
+                    </span>
+                  {% endfor %}
+                {% endif %}
               </div>
             {% endif %}
             <div class="card-sub price-row">
+              <span>{{ filters.price_enhance }}진</span>
               <img class="price-icon" src="{{ url_for('static', filename='images/ea-token.png') }}" alt="재화">
-              <span>{{ "{:,}".format(player.price|int) if player.price is not none else '-' }}</span>
+              <span data-live-price-cid="{{ player.cid }}" data-live-price-enhance="{{ filters.price_enhance }}" data-live-price-value="{{ player.price or '' }}" aria-live="polite">{{ "{:,}".format(player.price|int) if player.price is not none else '-' }}</span>
             </div>
           </div>
         </a>
@@ -506,4 +175,13 @@
     </div>
   {% endif %}
 </div>
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    window.fimoAnalytics?.track?.("search_results_view", {
+      search_term: {{ names|tojson }},
+      result_count: {{ players|length }},
+      has_results: {{ (players|length > 0)|tojson }},
+    }, { onceKey: "search_results_view" });
+  });
+</script>
 {% endblock %}

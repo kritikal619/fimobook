@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+{% block body_class %}auth-page{% endblock %}
+{% block title %}로그인 | 피모북{% endblock %}
+{% block extra_head %}
+  {% if google_client_id %}
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+  {% endif %}
+  {% if recaptcha_enabled %}
+    <script src="https://www.google.com/recaptcha/api.js?hl=ko" async defer></script>
+  {% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <h1 class="page-title">로그인</h1>
+
+
+    {% include "_recaptcha_widget.html" %}
+
+    {% with google_button_text="signin_with", google_next_url=next_url %}
+      {% include "_google_signin.html" %}
+    {% endwith %}
+
+    <form method="POST" action="{{ url_for('login', next=next_url) if next_url else url_for('login') }}" class="auth-form" onsubmit="return window.fimobookRequireRecaptcha();" data-ga-event="login_submit">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <input type="hidden" name="g-recaptcha-response" data-recaptcha-token>
+        {% if next_url %}
+          <input type="hidden" name="next" value="{{ next_url }}">
+        {% endif %}
+
+        <div class="form-group">
+            <label for="email">이메일 주소</label>
+            <input type="email" class="form-control" id="email" name="email" autocomplete="username" required>
+        </div>
+        <div class="form-group">
+            <label for="password">비밀번호</label>
+            <input type="password" class="form-control" id="password" name="password" autocomplete="current-password" required>
+        </div>
+
+        <label class="remember-login">
+            <input type="checkbox" name="remember">
+            <span>30일간 로그인 상태 유지</span>
+        </label>
+
+        <button type="submit" class="btn-primary btn-block">로그인</button>
+    </form>
+
+    <nav class="auth-recovery-links" aria-label="계정 찾기">
+        <a href="{{ url_for('find_id') }}">아이디 찾기</a>
+        <span aria-hidden="true">·</span>
+        <a href="{{ url_for('forgot_password') }}">비밀번호 재설정</a>
+    </nav>
+
+    <div class="auth-switch">
+        계정이 없으신가요? <a href="{{ url_for('register') }}">회원가입</a>
+    </div>
+    <div class="auth-switch auth-switch-secondary">
+        인증 메일을 못 받으셨나요? <a href="{{ url_for('resend_verification') }}">다시 받기</a>
+    </div>
+</div>
+
+<style>
+    .auth-container {
+        width: 100%;
+        max-width: 440px;
+        margin: auto;
+        background: #ffffff;
+        border: 1px solid #dbe3ec;
+        border-radius: 18px;
+        box-shadow: 0 14px 30px rgba(15,23,42,0.05);
+        padding: 28px 24px;
+        box-sizing: border-box;
+    }
+    .auth-form .form-group {
+        margin-bottom: 20px;
+    }
+    .auth-form label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: #495057;
+    }
+    .btn-block {
+        width: 100%;
+        margin-top: 10px;
+    }
+    .remember-login {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        min-height: 28px;
+        color: #475569;
+        font-size: 14px;
+        font-weight: 650;
+        cursor: pointer;
+    }
+    .remember-login input {
+        width: 17px;
+        height: 17px;
+        margin: 0;
+        accent-color: #10b981;
+    }
+    .auth-switch {
+        text-align: center;
+        margin-top: 20px;
+        font-size: 14px;
+        color: #64748b;
+    }
+    .auth-switch-secondary { margin-top: 10px; }
+    .auth-recovery-links {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-top: 14px;
+        color: #94a3b8;
+        font-size: 14px;
+    }
+    .auth-recovery-links a { padding: 10px 0; }
+</style>
+{% endblock %}

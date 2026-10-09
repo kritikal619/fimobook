@@ -1,0 +1,356 @@
+.price-history-section {
+  width: 100%;
+  margin: 8px 0 18px;
+  padding: 18px;
+  border: 1px solid #dce5ee;
+  border-radius: 16px;
+  background: #fff;
+  box-sizing: border-box;
+}
+
+.price-history-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.price-history-heading h2 {
+  margin: 0;
+  color: #172033;
+  font-size: 20px;
+  text-align: left;
+  letter-spacing: -.5px;
+}
+
+.price-history-heading p {
+  margin: 4px 0 0;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.price-history-controls {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.price-history-ranges {
+  display: inline-grid;
+  grid-template-columns: repeat(3, 1fr);
+  padding: 3px;
+  border: 1px solid #dbe3ec;
+  border-radius: 11px;
+  background: #f1f5f9;
+}
+
+.price-history-range {
+  min-width: 66px;
+  min-height: 36px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #64748b;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.price-history-range.is-active {
+  background: #fff;
+  color: #0f766e;
+  box-shadow: 0 1px 4px rgba(15, 23, 42, .12);
+}
+
+.price-history-enhance {
+  display: grid;
+  gap: 5px;
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.price-history-enhance select {
+  min-width: 112px;
+  min-height: 42px;
+  padding: 0 32px 0 11px;
+  border: 1px solid #d8e2ec;
+  border-radius: 10px;
+  background: #f8fafc;
+  color: #172033;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.price-history-chart-wrap {
+  position: relative;
+  min-height: 290px;
+  overflow: hidden;
+  border: 1px solid #25293a;
+  border-radius: 14px;
+  background: #14121e;
+  touch-action: pan-y;
+}
+
+.price-history-chart {
+  width: 100%;
+  height: auto;
+  min-height: 290px;
+  display: block;
+  outline: none;
+}
+
+.price-history-chart[hidden],
+.price-history-empty[hidden],
+.price-history-tooltip[hidden] {
+  display: none;
+}
+
+.price-history-chart:focus-visible {
+  box-shadow: inset 0 0 0 2px #5eead4;
+}
+
+.price-history-grid-line {
+  stroke: #302e3d;
+  stroke-width: 1;
+}
+
+.price-history-axis-label {
+  fill: #8e8b99;
+  font-family: 'IBM Plex Sans KR', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.price-history-value-label {
+  fill: #a7a3ae;
+  font-family: 'IBM Plex Sans KR', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.price-history-line {
+  fill: none;
+  stroke: #5eead4;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.price-history-marker-line {
+  stroke: rgba(255, 255, 255, .28);
+  stroke-width: 1;
+  stroke-dasharray: 4 4;
+}
+
+.price-history-marker {
+  fill: #14121e;
+  stroke: #5eead4;
+  stroke-width: 3;
+  vector-effect: non-scaling-stroke;
+}
+
+.price-history-tooltip {
+  position: absolute;
+  z-index: 3;
+  min-width: 128px;
+  padding: 9px 11px;
+  border: 1px solid rgba(94, 234, 212, .38);
+  border-radius: 10px;
+  background: rgba(15, 23, 42, .96);
+  color: #fff;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, .28);
+  pointer-events: none;
+  transform: translate(-50%, calc(-100% - 12px));
+}
+
+.price-history-tooltip.is-flipped {
+  transform: translate(-50%, 12px);
+}
+
+.price-history-tooltip-date {
+  display: block;
+  color: #94a3b8;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.price-history-tooltip-price {
+  display: block;
+  margin-top: 2px;
+  color: #5eead4;
+  font-size: 14px;
+  font-weight: 950;
+  white-space: nowrap;
+}
+
+.price-history-empty {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: grid;
+  place-content: center;
+  gap: 5px;
+  padding: 24px;
+  color: #94a3b8;
+  text-align: center;
+}
+
+.price-history-empty strong {
+  color: #e2e8f0;
+  font-size: 15px;
+}
+
+.price-history-empty span {
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.price-history-status {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 12px;
+  align-items: center;
+  min-height: 42px;
+  margin-top: 10px;
+  padding: 0 2px;
+}
+
+.price-history-selected {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+}
+
+.price-history-selected span {
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.price-history-selected strong {
+  overflow: hidden;
+  color: #172033;
+  font-size: 15px;
+  font-weight: 950;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.price-history-change {
+  padding: 5px 8px;
+  border-radius: 8px;
+  background: #f1f5f9;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.price-history-change.is-up {
+  background: #ecfdf5;
+  color: #047857;
+}
+
+.price-history-change.is-down {
+  background: #fff1f2;
+  color: #be123c;
+}
+
+html[data-theme="dark"] .price-history-section {
+  border-color: #263244;
+  background: #111827;
+}
+
+html[data-theme="dark"] .price-history-ranges {
+  border-color: #334155;
+  background: #0f172a;
+}
+
+html[data-theme="dark"] .price-history-range {
+  color: #94a3b8;
+}
+
+html[data-theme="dark"] .price-history-range.is-active {
+  background: #243044;
+  color: #5eead4;
+  box-shadow: none;
+}
+
+html[data-theme="dark"] .price-history-selected strong {
+  color: #f8fafc;
+}
+
+html[data-theme="dark"] .price-history-change {
+  background: #1e293b;
+}
+
+@media (max-width: 550px) {
+  .price-history-section {
+    padding: 14px 12px;
+    border-radius: 14px;
+  }
+
+  .price-history-heading {
+    margin-bottom: 12px;
+  }
+
+  .price-history-heading h2 {
+    font-size: 18px;
+  }
+
+  .price-history-controls {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 9px;
+  }
+
+  .price-history-ranges {
+    width: 100%;
+  }
+
+  .price-history-range {
+    min-width: 0;
+    padding: 0 8px;
+  }
+
+  .price-history-enhance {
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+  }
+
+  .price-history-enhance select {
+    width: 100%;
+  }
+
+  .price-history-chart-wrap,
+  .price-history-chart {
+    min-height: 250px;
+  }
+
+  .price-history-axis-label {
+    font-size: 22px;
+  }
+
+  .price-history-value-label {
+    font-size: 24px;
+  }
+
+  .price-history-status {
+    grid-template-columns: 1fr;
+    gap: 5px;
+  }
+
+  .price-history-change {
+    justify-self: start;
+  }
+}

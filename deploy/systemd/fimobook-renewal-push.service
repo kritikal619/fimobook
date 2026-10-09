@@ -1,0 +1,15 @@
+[Unit]
+Description=Fimobook renewal push delivery
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=ubuntu
+WorkingDirectory=/home/ubuntu/fimobook
+EnvironmentFile=/home/ubuntu/.env
+EnvironmentFile=/home/ubuntu/.recaptcha.env
+EnvironmentFile=/home/ubuntu/fimobook-mail.env
+ExecStart=/home/ubuntu/fimobook/venv/bin/python /home/ubuntu/fimobook/jobs/renewal_push_job.py
+TimeoutStartSec=90
+UMask=0077

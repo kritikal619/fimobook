@@ -1,0 +1,751 @@
+{% extends "base.html" %}
+
+{% block body_class %}market-fee-page{% endblock %}
+{% block title %}이적시장 수수료 계산기 | 피모북{% endblock %}
+
+{% block extra_head %}
+<meta name="description" content="FC모바일 이적시장 판매 금액과 수수료 페이백률을 입력해 최종 수령액, 페이백 금액과 실질 수수료를 계산합니다.">
+<link rel="canonical" href="https://fcbook.info/market-fee-calculator">
+<style>
+  body.market-fee-page .main-content {
+    width: 100%;
+    max-width: 860px;
+    padding: 8px 28px 28px !important;
+    box-sizing: border-box;
+  }
+  .fee-page {
+    width: 100%;
+    max-width: 1040px;
+    margin: 0 auto;
+    padding: 0 0 18px;
+    box-sizing: border-box;
+  }
+  .fee-heading {
+    margin-bottom: 12px;
+    text-align: left;
+  }
+  .fee-title {
+    margin: 0;
+    color: #17202a;
+    font-size: 28px;
+    font-weight: 900;
+    letter-spacing: -.8px;
+  }
+  .fee-description {
+    margin: 5px 0 0;
+    color: #64748b;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+  .fee-layout {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    align-items: stretch;
+  }
+  .fee-card {
+    min-width: 0;
+    padding: 16px;
+    border: 1px solid #e1e8ef;
+    border-radius: 11px;
+    background: #fff;
+    box-sizing: border-box;
+  }
+  .fee-card-title {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    margin: 0 0 16px;
+    color: #17202a;
+    font-size: 14px;
+    font-weight: 900;
+  }
+  .fee-field + .fee-field { margin-top: 19px; }
+  .fee-label-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 8px;
+  }
+  .fee-label {
+    color: #334155;
+    font-size: 12px;
+    font-weight: 800;
+  }
+  .fee-fixed-badge {
+    color: #64748b;
+    font-size: 11px;
+    font-weight: 800;
+  }
+  .fee-input-wrap { position: relative; }
+  .fee-input {
+    width: 100%;
+    height: 44px;
+    padding: 0 46px 0 14px;
+    border: 1.5px solid #d7e1ea;
+    border-radius: 11px;
+    outline: none;
+    background: #fff;
+    color: #0f172a;
+    font: inherit;
+    font-size: 16px;
+    font-weight: 800;
+    box-sizing: border-box;
+  }
+  .fee-input:focus {
+    border-color: #10b981;
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, .12);
+  }
+  .fee-input-suffix {
+    position: absolute;
+    top: 50%;
+    right: 14px;
+    color: #64748b;
+    font-size: 12px;
+    font-weight: 800;
+    transform: translateY(-50%);
+    pointer-events: none;
+  }
+  .fee-price-reading {
+    min-height: 20px;
+    margin: 7px 1px 0;
+    color: #059669;
+    font-size: 11px;
+    font-weight: 800;
+  }
+  .fee-quick-buttons {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+    margin-top: 9px;
+  }
+  .fee-quick-button {
+    min-width: 0;
+    height: 36px;
+    padding: 0 5px;
+    border: 1px solid #d7e1ea;
+    border-radius: 8px;
+    background: #fff;
+    color: #526174;
+    font: inherit;
+    font-size: 11px;
+    font-weight: 800;
+    cursor: pointer;
+  }
+  .fee-quick-button:hover {
+    border-color: #86efac;
+    background: #ecfdf5;
+    color: #047857;
+  }
+  .fee-formula {
+    margin-top: 18px;
+    padding: 10px 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 9px;
+    background: #f8fafc;
+    color: #64748b;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1.6;
+  }
+  .fee-formula strong { color: #334155; }
+  .fee-result-card {
+    display: flex;
+    flex-direction: column;
+    background: #fff;
+    color: #17202a;
+    box-shadow: none;
+  }
+  .fee-result-card .fee-card-title { color: #17202a; }
+  .fee-result-main {
+    margin-bottom: 8px;
+    padding: 14px;
+    border-radius: 10px;
+    background: #eef7f3;
+  }
+  .fee-result-label {
+    display: block;
+    margin-bottom: 6px;
+    color: #64748b;
+    font-size: 11px;
+    font-weight: 850;
+  }
+  .fee-result-value {
+    display: block;
+    color: #17202a;
+    font-size: clamp(24px, 4vw, 28px);
+    font-weight: 900;
+    letter-spacing: -.8px;
+    line-height: 1.2;
+    overflow-wrap: anywhere;
+  }
+  .fee-result-number {
+    display: block;
+    margin-top: 7px;
+    color: #64748b;
+    font-size: 11px;
+    font-weight: 700;
+    overflow-wrap: anywhere;
+  }
+  .fee-breakdown {
+    display: grid;
+    gap: 0;
+    margin-top: 0;
+  }
+  .fee-breakdown-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 11px 0;
+    color: #64748b;
+    font-size: 11px;
+    font-weight: 700;
+  }
+  .fee-breakdown-row + .fee-breakdown-row { border-top: 1px solid #e5ebe8; }
+  .fee-breakdown-row strong {
+    color: #17202a;
+    font-size: 13px;
+    font-weight: 900;
+    text-align: right;
+  }
+  .fee-breakdown-row.is-payback strong { color: #059669; }
+  .fee-effective {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: auto;
+    padding: 12px 13px;
+    border: 1px solid #a7f3d0;
+    border-radius: 9px;
+    background: #ecfdf5;
+    color: #047857;
+    font-size: 11px;
+    font-weight: 800;
+  }
+  .fee-effective strong { color: #047857; font-size: 15px; }
+  .fee-help {
+    display: flex;
+    margin-top: 10px;
+    padding: 0 2px;
+    color: #64748b;
+    font-size: 11px;
+    font-weight: 650;
+    line-height: 1.65;
+  }
+  .fee-help strong { color: #334155; }
+
+  html[data-theme="dark"] .fee-card {
+    border-color: #334155;
+    background: #172033;
+  }
+  html[data-theme="dark"] .fee-quick-button:hover {
+    background: rgba(16, 185, 129, .15);
+    color: #6ee7b7;
+  }
+  html[data-theme="dark"] .fee-quick-button {
+    border-color: #334155;
+    background: #111a2b;
+    color: #aeb9c9;
+  }
+  html[data-theme="dark"] .fee-formula,
+  html[data-theme="dark"] .fee-result-main { border-color: #334155; background: #111a2b; }
+  html[data-theme="dark"] .fee-formula strong,
+  html[data-theme="dark"] .fee-help strong { color: #e4eaf2; }
+  html[data-theme="dark"] .fee-card-title,
+  html[data-theme="dark"] .fee-result-value,
+  html[data-theme="dark"] .fee-breakdown-row strong { color: #f8fafc; }
+  html[data-theme="dark"] .fee-fixed-badge,
+  html[data-theme="dark"] .fee-result-label,
+  html[data-theme="dark"] .fee-result-number,
+  html[data-theme="dark"] .fee-breakdown-row { color: #aeb9c9; }
+  html[data-theme="dark"] .fee-breakdown-row.is-payback strong { color: #34d399; }
+  html[data-theme="dark"] .fee-breakdown-row + .fee-breakdown-row { border-color: #334155; }
+  html[data-theme="dark"] .fee-effective {
+    border-color: #166b57;
+    background: rgba(16, 185, 129, .12);
+  }
+  html[data-theme="dark"] .fee-effective,
+  html[data-theme="dark"] .fee-effective strong { color: #6ee7b7; }
+
+  @media (max-width: 680px) {
+    body.market-fee-page .main-content { padding: 4px 12px 22px !important; }
+    .fee-page { padding-bottom: 14px; }
+    .fee-heading { margin: 0 0 10px; }
+    .fee-title { font-size: 24px; }
+    .fee-description { font-size: 12px; }
+    .fee-layout { grid-template-columns: 1fr; }
+    .fee-card { padding: 15px; }
+  }
+
+  /* v2: additive quick input, profit, ledger */
+  .fee-quick-buttons { grid-template-columns: repeat(4, 1fr) auto; }
+  .fee-quick-button.is-clear { padding: 0 10px; color: #94a3b8; }
+  .fee-price-reading.is-error { color: #e11d48; }
+  .fee-price-reading:empty { min-height: 0; margin: 0; }
+  #buy-price-reading:empty { display: none; }
+  .fee-optional { color: #94a3b8; font-size: 11px; font-weight: 700; }
+  .fee-rate-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px; }
+  .fee-step { width: 44px; height: 44px; border: 1.5px solid #d7e1ea; border-radius: 11px; background: #fff; color: #475569; font: inherit; font-size: 18px; font-weight: 700; cursor: pointer; }
+  .fee-step:hover { border-color: #86efac; color: #047857; }
+  .fee-steps { display: flex; gap: 6px; }
+  .fee-profit { display: none; margin-top: 2px; padding: 12px 13px; border-radius: 9px; background: #f8fafc; }
+  .fee-profit.is-visible { display: grid; gap: 7px; }
+  .fee-profit-row { display: flex; justify-content: space-between; gap: 12px; color: #64748b; font-size: 11px; font-weight: 700; }
+  .fee-profit-row strong { color: #17202a; font-size: 13px; font-weight: 900; text-align: right; }
+  .fee-profit-row.is-main strong { font-size: 15px; }
+  .fee-profit.is-gain .is-main strong { color: #059669; }
+  .fee-profit.is-loss .is-main strong { color: #e11d48; }
+  .fee-effective { margin-top: 10px; }
+  .fee-result-actions { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px; margin-top: 10px; }
+  .fee-action { display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 42px; padding: 0 14px; border: 1px solid #d7e1ea; border-radius: 10px; background: #fff; color: #334155; font: inherit; font-size: 13px; font-weight: 800; cursor: pointer; }
+  .fee-action.is-primary { border-color: #087f5b; background: #087f5b; color: #fff; }
+  .fee-action.is-primary:hover { background: #066a4c; }
+  .fee-action:not(.is-primary):hover { border-color: #86efac; color: #047857; }
+  .fee-ledger { margin-top: 12px; }
+  .fee-ledger-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+  .fee-ledger-head .fee-card-title { gap: 6px; margin: 0; }
+  .fee-ledger-clear { border: 0; background: none; color: #94a3b8; font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; padding: 10px 4px; }
+  .fee-ledger-clear:hover { color: #e11d48; }
+  .fee-ledger-empty { margin: 0; padding: 14px; border: 1px dashed #d7e1ea; border-radius: 9px; color: #94a3b8; font-size: 12px; font-weight: 650; text-align: center; }
+  .fee-ledger-list { display: grid; gap: 0; margin: 0; padding: 0; list-style: none; }
+  .fee-ledger-item { display: grid; grid-template-columns: 24px minmax(0, 1fr) auto 36px; align-items: center; gap: 10px; padding: 9px 0; border-top: 1px solid #eef2f6; font-size: 12px; }
+  .fee-ledger-item:first-child { border-top: 0; }
+  .fee-ledger-index { color: #94a3b8; font-weight: 800; font-variant-numeric: tabular-nums; }
+  .fee-ledger-sale { min-width: 0; color: #64748b; font-size: 11px; font-weight: 650; word-break: keep-all; }
+  .fee-ledger-sale strong { display: block; color: #17202a; font-size: 13px; font-weight: 850; }
+  .fee-ledger-net { text-align: right; color: #17202a; font-weight: 850; font-variant-numeric: tabular-nums; }
+  .fee-ledger-net small { display: block; font-size: 11px; font-weight: 750; }
+  .fee-ledger-net small.is-gain { color: #059669; }
+  .fee-ledger-net small.is-loss { color: #e11d48; }
+  .fee-ledger-remove { width: 36px; height: 36px; border: 0; border-radius: 50%; background: none; color: #94a3b8; font-size: 16px; cursor: pointer; }
+  .fee-ledger-remove:hover { background: #f1f5f9; color: #475569; }
+  .fee-ledger-total { display: grid; gap: 0; margin-top: 10px; padding: 4px 13px; border-radius: 10px; background: #f8fafc; }
+  .fee-ledger-total .fee-breakdown-row strong { font-variant-numeric: tabular-nums; }
+  .fee-holding { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 10px; padding: 9px 0; border-top: 1px solid #e5ebe8; }
+  .fee-holding label { color: #64748b; font-size: 11px; font-weight: 700; }
+  .fee-holding input { height: 36px; padding: 0 10px; border: 1.5px solid #d7e1ea; border-radius: 9px; background: #fff; color: #0f172a; font: inherit; font-size: 16px; font-weight: 800; text-align: right; min-width: 0; outline: none; }
+  .fee-holding input:focus { border-color: #10b981; }
+  .fee-grand { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 0 9px; border-top: 1px solid #d5e3dc; color: #047857; font-size: 12px; font-weight: 850; }
+  .fee-grand strong { font-size: 17px; font-weight: 900; text-align: right; overflow-wrap: anywhere; }
+  .fee-grand small { display: block; color: #64748b; font-size: 11px; font-weight: 700; }
+  .fee-toast { position: fixed; left: 50%; bottom: 24px; z-index: 50; padding: 9px 14px; border-radius: 999px; background: #17202a; color: #fff; font-size: 12px; font-weight: 750; transform: translate(-50%, 12px); opacity: 0; pointer-events: none; transition: opacity .18s, transform .18s; }
+  .fee-toast.is-visible { opacity: 1; transform: translate(-50%, 0); }
+  html[data-theme="dark"] :is(.fee-step, .fee-action:not(.is-primary), .fee-holding input) { border-color: #334155; background: #111a2b; color: #e4eaf2; }
+  html[data-theme="dark"] :is(.fee-profit, .fee-ledger-total) { background: #111a2b; }
+  html[data-theme="dark"] :is(.fee-profit-row strong, .fee-ledger-sale strong, .fee-ledger-net) { color: #f8fafc; }
+  html[data-theme="dark"] .fee-profit.is-gain .is-main strong, html[data-theme="dark"] .fee-ledger-net small.is-gain { color: #34d399; }
+  html[data-theme="dark"] .fee-profit.is-loss .is-main strong, html[data-theme="dark"] .fee-ledger-net small.is-loss { color: #fb7185; }
+  html[data-theme="dark"] :is(.fee-ledger-item, .fee-holding, .fee-grand) { border-color: #334155; }
+  html[data-theme="dark"] .fee-ledger-empty { border-color: #334155; }
+  html[data-theme="dark"] .fee-grand { color: #6ee7b7; }
+  html[data-theme="dark"] .fee-ledger-remove:hover { background: #1e293b; color: #e4eaf2; }
+  @media (max-width: 680px) {
+    .fee-quick-buttons { grid-template-columns: repeat(4, 1fr); }
+    .fee-quick-button.is-clear { grid-column: 1 / -1; height: 36px; }
+    .fee-result-card { position: static; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="fee-page" aria-labelledby="fee-page-title">
+  <header class="fee-heading">
+    <h1 class="fee-title" id="fee-page-title">수수료 계산기</h1>
+    <p class="fee-description">판매 금액과 페이백률을 넣으면 바로 계산됩니다. 결과를 담아 여러 건을 합산할 수 있어요.</p>
+  </header>
+
+  <div class="fee-layout">
+    <section class="fee-card" aria-labelledby="fee-input-title">
+      <h2 class="fee-card-title" id="fee-input-title">판매 조건</h2>
+
+      <div class="fee-field">
+        <div class="fee-label-row">
+          <label class="fee-label" for="sale-price">판매 금액</label>
+          <span class="fee-fixed-badge">예: 3억5천만</span>
+        </div>
+        <div class="fee-input-wrap">
+          <input class="fee-input" id="sale-price" type="text" value="1,000,000,000" inputmode="numeric" autocomplete="off" aria-describedby="sale-price-reading">
+          <span class="fee-input-suffix">MP</span>
+        </div>
+        <p class="fee-price-reading" id="sale-price-reading" aria-live="polite">10억 MP</p>
+        <div class="fee-quick-buttons" aria-label="판매 금액 더하기">
+          <button class="fee-quick-button" type="button" data-add="10000000">+1천만</button>
+          <button class="fee-quick-button" type="button" data-add="100000000">+1억</button>
+          <button class="fee-quick-button" type="button" data-add="1000000000">+10억</button>
+          <button class="fee-quick-button" type="button" data-add="10000000000">+100억</button>
+          <button class="fee-quick-button is-clear" type="button" data-clear="sale-price" aria-label="판매 금액 지우기">지우기</button>
+        </div>
+      </div>
+
+      <div class="fee-field">
+        <div class="fee-label-row">
+          <label class="fee-label" for="payback-rate">수수료 페이백률</label>
+          <span class="fee-fixed-badge">기본 수수료 30%</span>
+        </div>
+        <div class="fee-rate-row">
+          <div class="fee-input-wrap">
+            <input class="fee-input" id="payback-rate" type="number" value="45" min="0" max="100" step="0.1" inputmode="decimal">
+            <span class="fee-input-suffix">%</span>
+          </div>
+          <div class="fee-steps">
+            <button class="fee-step" type="button" data-rate-step="-5" aria-label="페이백률 5% 낮추기">−</button>
+            <button class="fee-step" type="button" data-rate-step="5" aria-label="페이백률 5% 높이기">+</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="fee-field">
+        <div class="fee-label-row">
+          <label class="fee-label" for="buy-price">구매 금액 <span class="fee-optional">선택</span></label>
+          <span class="fee-fixed-badge">입력하면 순이익 계산</span>
+        </div>
+        <div class="fee-input-wrap">
+          <input class="fee-input" id="buy-price" type="text" inputmode="numeric" autocomplete="off" placeholder="산 가격" aria-describedby="buy-price-reading">
+          <span class="fee-input-suffix">MP</span>
+        </div>
+        <p class="fee-price-reading" id="buy-price-reading" aria-live="polite"></p>
+      </div>
+
+      <div class="fee-formula">
+        <strong>계산식</strong><br>
+        판매 금액 × 70% + 판매 금액 × 30% × 페이백률
+      </div>
+    </section>
+
+    <section class="fee-card fee-result-card" aria-labelledby="fee-result-title">
+      <h2 class="fee-card-title" id="fee-result-title">계산 결과</h2>
+      <div class="fee-result-main" aria-live="polite">
+        <span class="fee-result-label">최종 수령액</span>
+        <strong class="fee-result-value" id="net-korean">8억 3,500만 MP</strong>
+        <span class="fee-result-number" id="net-number">835,000,000 MP</span>
+      </div>
+      <div class="fee-breakdown">
+        <div class="fee-breakdown-row">
+          <span>기본 수수료 (30%)</span>
+          <strong id="base-fee">300,000,000 MP</strong>
+        </div>
+        <div class="fee-breakdown-row is-payback">
+          <span>돌려받는 페이백</span>
+          <strong id="payback-amount">+135,000,000 MP</strong>
+        </div>
+        <div class="fee-breakdown-row">
+          <span>실제로 낸 수수료</span>
+          <strong id="actual-fee">165,000,000 MP</strong>
+        </div>
+      </div>
+      <div class="fee-profit" id="fee-profit">
+        <div class="fee-profit-row is-main"><span>순이익</span><strong id="profit-amount">0 MP</strong></div>
+        <div class="fee-profit-row"><span>수익률</span><strong id="profit-rate">0%</strong></div>
+        <div class="fee-profit-row"><span>손해 안 보는 최소 판매가</span><strong id="break-even">0 MP</strong></div>
+      </div>
+      <div class="fee-effective">
+        <span>실질 수수료율</span>
+        <strong id="effective-rate">16.5%</strong>
+      </div>
+      <div class="fee-result-actions">
+        <button class="fee-action is-primary" id="ledger-add" type="button"><i class="bi bi-plus-lg" aria-hidden="true"></i>합산에 담기</button>
+        <button class="fee-action" id="result-copy" type="button" aria-label="결과 복사"><i class="bi bi-clipboard" aria-hidden="true"></i>복사</button>
+      </div>
+    </section>
+  </div>
+
+  <section class="fee-card fee-ledger" aria-labelledby="fee-ledger-title">
+    <div class="fee-ledger-head">
+      <h2 class="fee-card-title" id="fee-ledger-title">합산 <span class="fee-optional" id="ledger-count"></span></h2>
+      <button class="fee-ledger-clear" id="ledger-clear" type="button" hidden>전체 비우기</button>
+    </div>
+    <p class="fee-ledger-empty" id="ledger-empty">계산 결과를 담으면 여러 건의 수령액을 한 번에 더해 볼 수 있어요.</p>
+    <ol class="fee-ledger-list" id="ledger-list"></ol>
+    <div class="fee-ledger-total">
+      <div class="fee-breakdown-row" id="ledger-sale-row" hidden><span>총 판매 금액</span><strong id="ledger-sale">0 MP</strong></div>
+      <div class="fee-breakdown-row" id="ledger-fee-row" hidden><span>총 수수료</span><strong id="ledger-fee">0 MP</strong></div>
+      <div class="fee-breakdown-row" id="ledger-profit-row" hidden><span>총 순이익</span><strong id="ledger-profit">0 MP</strong></div>
+      <div class="fee-holding">
+        <label for="holding-mp">보유 MP 더하기</label>
+        <input id="holding-mp" type="text" inputmode="numeric" autocomplete="off" placeholder="0">
+      </div>
+      <div class="fee-grand">
+        <span>합계<small id="grand-caption">보유 MP + 담은 수령액</small></span>
+        <strong id="grand-total">0 MP</strong>
+      </div>
+    </div>
+  </section>
+
+  <aside class="fee-help">
+    <span>페이백은 판매 금액이 아니라 <strong>기본 수수료 30%</strong>에 적용됩니다. 담은 목록과 보유 MP는 이 기기에만 저장됩니다.</span>
+  </aside>
+  <div class="fee-toast" id="fee-toast" role="status" aria-live="polite"></div>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  (function () {
+    "use strict";
+
+    var FEE = 0.3;
+    var STORE = "fimo-fee-calculator-v2";
+    var salePriceInput = document.getElementById("sale-price");
+    var paybackRateInput = document.getElementById("payback-rate");
+    var buyPriceInput = document.getElementById("buy-price");
+    var holdingInput = document.getElementById("holding-mp");
+    var numberFormatter = new Intl.NumberFormat("ko-KR", { maximumFractionDigits: 0 });
+    var rateFormatter = new Intl.NumberFormat("ko-KR", { maximumFractionDigits: 2 });
+    var state = { ledger: [] };
+    var current = null;
+
+    function $(id) { return document.getElementById(id); }
+
+    // Accepts "1,000,000", "3억5천만", "1.5억", "2조 300억".
+    function parseAmount(value) {
+      var text = String(value || "").replace(/[\s,]/g, "").replace(/mp$/i, "");
+      if (!text) return 0;
+      if (/^\d+$/.test(text)) return Number(text);
+      var big = { "조": 1e12, "억": 1e8, "만": 1e4, "": 1 };
+      var small = { "천": 1000, "백": 100, "십": 10, "": 1 };
+      var re = /(\d+(?:\.\d+)?)([천백십]?)([조억만]?)/g;
+      var total = 0, section = 0, consumed = 0, match;
+      while ((match = re.exec(text)) && match[0]) {
+        consumed += match[0].length;
+        section += Number(match[1]) * small[match[2]];
+        if (match[3]) { total += section * big[match[3]]; section = 0; }
+      }
+      if (consumed !== text.length) return NaN;
+      return Math.round(total + section);
+    }
+
+    function clampRate(value) {
+      var rate = Number(value);
+      if (!Number.isFinite(rate)) return 0;
+      return Math.min(100, Math.max(0, rate));
+    }
+
+    function formatMP(value) {
+      return numberFormatter.format(Math.round(value)) + " MP";
+    }
+
+    function formatKoreanMP(value) {
+      var amount = Math.round(Math.abs(value));
+      if (!amount) return "0 MP";
+      var units = [
+        { value: 1000000000000, label: "조" },
+        { value: 100000000, label: "억" },
+        { value: 10000, label: "만" }
+      ];
+      var parts = [];
+      units.forEach(function (unit) {
+        if (amount >= unit.value) {
+          parts.push(numberFormatter.format(Math.floor(amount / unit.value)) + unit.label);
+          amount %= unit.value;
+        }
+      });
+      if (amount > 0) parts.push(numberFormatter.format(amount));
+      return (value < 0 ? "-" : "") + parts.join(" ") + " MP";
+    }
+
+    function signed(value) {
+      return (value > 0 ? "+" : "") + formatKoreanMP(value);
+    }
+
+    function compute(price, rate, buy) {
+      var baseFee = price * FEE;
+      var payback = baseFee * (rate / 100);
+      var actualFee = baseFee - payback;
+      var keep = 1 - FEE * (1 - rate / 100);
+      var result = { price: price, rate: rate, buy: buy, baseFee: baseFee, payback: payback, actualFee: actualFee, net: price - actualFee, effective: FEE * 100 * (1 - rate / 100) };
+      if (buy > 0) {
+        result.profit = result.net - buy;
+        result.breakEven = keep > 0 ? Math.ceil(buy / keep) : 0;
+      }
+      return result;
+    }
+
+    function setText(id, value) { $(id).textContent = value; }
+
+    function load() {
+      try {
+        var saved = JSON.parse(localStorage.getItem(STORE) || "{}");
+        if (Array.isArray(saved.ledger)) state.ledger = saved.ledger.filter(function (item) { return item && Number.isFinite(item.price); }).slice(0, 50);
+        if (Number.isFinite(saved.rate)) paybackRateInput.value = clampRate(saved.rate);
+        if (Number.isFinite(saved.holding) && saved.holding > 0) holdingInput.value = numberFormatter.format(saved.holding);
+      } catch (error) { /* storage unavailable */ }
+    }
+
+    function persist() {
+      try {
+        localStorage.setItem(STORE, JSON.stringify({ ledger: state.ledger, rate: clampRate(paybackRateInput.value), holding: parseAmount(holdingInput.value) || 0 }));
+      } catch (error) { /* storage unavailable */ }
+    }
+
+    function reading(el, value, emptyText) {
+      el.classList.toggle("is-error", Number.isNaN(value));
+      el.textContent = Number.isNaN(value) ? "금액 형식을 확인해주세요 (예: 3억5천만)" : value ? formatKoreanMP(value) : emptyText;
+    }
+
+    function calculate() {
+      var price = parseAmount(salePriceInput.value);
+      var buy = parseAmount(buyPriceInput.value);
+      reading($("sale-price-reading"), price, "0 MP");
+      reading($("buy-price-reading"), buy, "");
+      current = compute(price || 0, clampRate(paybackRateInput.value), buy || 0);
+
+      setText("net-korean", formatKoreanMP(current.net));
+      setText("net-number", formatMP(current.net));
+      setText("base-fee", formatMP(current.baseFee));
+      setText("payback-amount", "+" + formatMP(current.payback));
+      setText("actual-fee", formatMP(current.actualFee));
+      setText("effective-rate", rateFormatter.format(current.effective) + "%");
+
+      var profitBox = $("fee-profit");
+      var hasBuy = current.buy > 0;
+      profitBox.classList.toggle("is-visible", hasBuy);
+      if (hasBuy) {
+        profitBox.classList.toggle("is-gain", current.profit > 0);
+        profitBox.classList.toggle("is-loss", current.profit < 0);
+        setText("profit-amount", signed(current.profit));
+        setText("profit-rate", (current.profit > 0 ? "+" : "") + rateFormatter.format(current.profit / current.buy * 100) + "%");
+        setText("break-even", formatKoreanMP(current.breakEven));
+      }
+      $("ledger-add").disabled = !current.price;
+      persist();
+    }
+
+    function renderLedger() {
+      var list = $("ledger-list");
+      var totals = { sale: 0, fee: 0, net: 0, profit: 0, hasProfit: false };
+      list.replaceChildren();
+      state.ledger.forEach(function (entry, index) {
+        var item = compute(entry.price, entry.rate, entry.buy || 0);
+        totals.sale += item.price; totals.fee += item.actualFee; totals.net += item.net;
+        if (item.buy > 0) { totals.profit += item.profit; totals.hasProfit = true; }
+
+        var li = document.createElement("li");
+        li.className = "fee-ledger-item";
+        var idx = document.createElement("span"); idx.className = "fee-ledger-index"; idx.textContent = index + 1;
+        var sale = document.createElement("span"); sale.className = "fee-ledger-sale";
+        var saleStrong = document.createElement("strong"); saleStrong.textContent = formatKoreanMP(item.price);
+        sale.append(saleStrong, document.createTextNode("페이백 " + rateFormatter.format(item.rate) + "%" + (item.buy > 0 ? " · 구매 " + formatKoreanMP(item.buy) : "")));
+        var net = document.createElement("span"); net.className = "fee-ledger-net"; net.textContent = formatKoreanMP(item.net);
+        if (item.buy > 0) {
+          var p = document.createElement("small"); p.className = item.profit >= 0 ? "is-gain" : "is-loss"; p.textContent = signed(item.profit);
+          net.append(p);
+        }
+        var remove = document.createElement("button");
+        remove.type = "button"; remove.className = "fee-ledger-remove"; remove.textContent = "×";
+        remove.setAttribute("aria-label", (index + 1) + "번째 항목 삭제");
+        remove.addEventListener("click", function () { state.ledger.splice(index, 1); renderLedger(); persist(); });
+        li.append(idx, sale, net, remove);
+        list.append(li);
+      });
+
+      var count = state.ledger.length;
+      $("ledger-empty").hidden = count > 0;
+      $("ledger-clear").hidden = count === 0;
+      setText("ledger-count", count ? count + "건" : "");
+      $("ledger-sale-row").hidden = count === 0;
+      $("ledger-fee-row").hidden = count === 0;
+      $("ledger-profit-row").hidden = !totals.hasProfit;
+      setText("ledger-sale", formatMP(totals.sale));
+      setText("ledger-fee", formatMP(totals.fee));
+      setText("ledger-profit", signed(totals.profit));
+
+      var holding = parseAmount(holdingInput.value);
+      holding = Number.isNaN(holding) ? 0 : holding;
+      setText("grand-total", formatKoreanMP(holding + totals.net));
+      setText("grand-caption", count ? (holding ? "보유 MP + 수령액 " + count + "건" : "수령액 " + count + "건") : "보유 MP");
+    }
+
+    var toastTimer;
+    function toast(message) {
+      var el = $("fee-toast");
+      el.textContent = message;
+      el.classList.add("is-visible");
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(function () { el.classList.remove("is-visible"); }, 1600);
+    }
+
+    function bindAmountInput(input, after) {
+      input.addEventListener("input", function () {
+        if (/^[\d,]*$/.test(input.value)) {
+          var value = parseAmount(input.value);
+          input.value = value ? numberFormatter.format(value) : "";
+        }
+        after();
+      });
+      input.addEventListener("blur", function () {
+        var value = parseAmount(input.value);
+        if (!Number.isNaN(value)) input.value = value ? numberFormatter.format(value) : (input === salePriceInput ? "0" : "");
+        after();
+      });
+    }
+
+    bindAmountInput(salePriceInput, calculate);
+    bindAmountInput(buyPriceInput, calculate);
+    bindAmountInput(holdingInput, function () { renderLedger(); persist(); });
+
+    paybackRateInput.addEventListener("input", calculate);
+    paybackRateInput.addEventListener("blur", function () {
+      paybackRateInput.value = clampRate(paybackRateInput.value);
+      calculate();
+    });
+    document.querySelectorAll("[data-rate-step]").forEach(function (button) {
+      button.addEventListener("click", function () {
+        var next = clampRate(Math.round((clampRate(paybackRateInput.value) + Number(button.dataset.rateStep)) * 10) / 10);
+        paybackRateInput.value = next;
+        calculate();
+      });
+    });
+
+    document.querySelectorAll("[data-add]").forEach(function (button) {
+      button.addEventListener("click", function () {
+        var base = parseAmount(salePriceInput.value);
+        salePriceInput.value = numberFormatter.format((Number.isNaN(base) ? 0 : base) + Number(button.dataset.add));
+        calculate();
+      });
+    });
+    document.querySelector("[data-clear]").addEventListener("click", function () {
+      salePriceInput.value = "";
+      calculate();
+      salePriceInput.focus();
+    });
+
+    $("ledger-add").addEventListener("click", function () {
+      if (!current || !current.price) return;
+      if (state.ledger.length >= 50) { toast("최대 50건까지 담을 수 있어요"); return; }
+      state.ledger.push({ price: current.price, rate: current.rate, buy: current.buy || 0 });
+      renderLedger();
+      persist();
+      toast(formatKoreanMP(current.net) + " 담았어요");
+    });
+    $("ledger-clear").addEventListener("click", function () {
+      if (!confirm("담은 목록을 모두 비울까요?")) return;
+      state.ledger = [];
+      renderLedger();
+      persist();
+    });
+
+    $("result-copy").addEventListener("click", function () {
+      if (!current) return;
+      var lines = [
+        "판매 " + formatKoreanMP(current.price) + " (페이백 " + rateFormatter.format(current.rate) + "%)",
+        "수령액 " + formatKoreanMP(current.net) + " · 수수료 " + formatKoreanMP(current.actualFee)
+      ];
+      if (current.buy > 0) lines.push("구매 " + formatKoreanMP(current.buy) + " → 순이익 " + signed(current.profit));
+      var text = lines.join("\n");
+      var done = function () { toast("결과를 복사했어요"); };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(done, function () { toast("복사하지 못했어요"); });
+      } else {
+        toast("이 브라우저에서는 복사를 지원하지 않아요");
+      }
+    });
+
+    load();
+    calculate();
+    renderLedger();
+  })();
+</script>
+{% endblock %}

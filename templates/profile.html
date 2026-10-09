@@ -1,0 +1,200 @@
+{% extends "base.html" %}
+{% block body_class %}profile-page{% endblock %}
+{% block title %}{{ profile_user.username }} 프로필 | 피모북{% endblock %}
+
+{% block extra_head %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/profile-page.css', v='20261003-2') }}">
+{% endblock %}
+
+{% block content %}
+{% set stats = profile_stats|default({}) %}
+{% set review_count = stats.get('review_count', reviews|length) %}
+<div class="profile-shell">
+  <header class="profile-page-heading">
+    <div>
+      <h1>{{ '내 프로필' if own_profile else '감독 프로필' }}</h1>
+      <p>{{ '내 활동과 계정 정보를 관리하세요.' if own_profile else '선수 리뷰와 커뮤니티 활동을 확인하세요.' }}</p>
+    </div>
+    {% if own_profile %}
+      <a class="profile-button profile-button-secondary" href="{{ url_for('notifications') }}"><i class="bi bi-bell" aria-hidden="true"></i>알림{% if unread_notification_count %}<span class="profile-notification-count">{{ '99+' if unread_notification_count > 99 else unread_notification_count }}</span>{% endif %}</a>
+    {% endif %}
+  </header>
+
+  <section class="profile-panel profile-summary" aria-label="프로필과 활동 요약">
+  <div class="profile-intro">
+    <div class="profile-avatar" aria-hidden="true">{{ (profile_user.username or '?')[:1] }}</div>
+    <div class="profile-identity">
+      <h2 class="profile-name">{{ profile_user.username }}</h2>
+      <p class="profile-caption">{{ '나의 피모북 활동' if own_profile else '피모북 감독' }}</p>
+      {% if (own_profile and profile_user.email_verified) or stats.get('monthly_rank') %}
+        <div class="profile-badges">
+          {% if own_profile and profile_user.email_verified %}
+            <span class="profile-badge verified"><i class="bi bi-patch-check-fill" aria-hidden="true"></i>이메일 인증</span>
+          {% endif %}
+          {% if stats.get('monthly_rank') %}
+            <span class="profile-badge">이번 달 {{ stats.get('monthly_rank') }}위</span>
+          {% endif %}
+        </div>
+      {% endif %}
+    </div>
+    {% if own_profile %}
+      <a class="profile-button profile-button-secondary profile-edit-link" href="#profile-account" data-profile-edit><i class="bi bi-pencil" aria-hidden="true"></i>프로필 편집</a>
+    {% endif %}
+  </div>
+
+  <dl class="profile-panel profile-activity" aria-label="활동 요약">
+    <div class="profile-activity-item">
+      <dt>작성 리뷰</dt>
+      <dd>{{ '{:,}'.format(review_count|int) }}</dd>
+    </div>
+    <div class="profile-activity-item">
+      <dt>커뮤니티 글</dt>
+      <dd>{{ '{:,}'.format(stats.get('post_count', 0)|int) }}</dd>
+    </div>
+    <div class="profile-activity-item">
+      <dt>작성 댓글</dt>
+      <dd>{{ '{:,}'.format(stats.get('comment_count', 0)|int) }}</dd>
+    </div>
+    <div class="profile-activity-item">
+      <dt>게시글 공감</dt>
+      <dd>{{ '{:,}'.format(stats.get('likes_received', 0)|int) }}</dd>
+    </div>
+  </dl>
+  </section>
+
+  {% if own_profile %}
+    <nav class="profile-section-nav" aria-label="프로필 바로가기">
+      <a href="#my-reviews"><i class="bi bi-chat-square-text" aria-hidden="true"></i>작성 리뷰</a>
+      <a href="#profile-points"><i class="bi bi-coin" aria-hidden="true"></i>리뷰 포인트</a>
+      <a href="#profile-account"><i class="bi bi-person-gear" aria-hidden="true"></i>계정 설정</a>
+    </nav>
+  {% endif %}
+
+  <div class="profile-layout">
+    <section class="profile-panel profile-reviews" id="my-reviews">
+      <div class="profile-section-head">
+        <h2 class="profile-section-title">작성한 선수 리뷰</h2>
+        <span class="profile-count">{{ '{:,}'.format(review_count|int) }}개</span>
+      </div>
+
+      <div class="profile-review-list">
+        {% for review in reviews %}
+          <a class="profile-review" href="{{ url_for('player_review_detail', cid=review.player_cid, review_id=review.id) }}">
+            <div class="profile-review-art" {% if review.player_bimage %}style="background-image:url('{{ review.player_bimage }}');"{% endif %}>
+              {% if review.player_pimage %}
+                <img src="{{ review.player_pimage }}" alt="" loading="lazy">
+              {% endif %}
+            </div>
+            <div class="profile-review-body">
+              <div class="profile-review-player">{{ review.player_name or '선수 리뷰' }}{% if review.player_class %}<span>{{ review.player_class }}</span>{% endif %}</div>
+              <div class="profile-review-head">
+                <h3 class="profile-review-title">{{ review.title }}</h3>
+                {% if review.average_rating %}<span class="profile-review-score"><i class="bi bi-star-fill" aria-hidden="true"></i><span class="profile-sr-only">평점 </span>{{ review.average_rating }}<span class="profile-score-max">/ 10</span></span>{% endif %}
+              </div>
+              <div class="profile-review-meta">
+                {{ review.used_position or '-' }} · {{ review.enhance_level if review.enhance_level is not none else '-' }}진 · {{ review.created_at_display }}
+              </div>
+              {% if review.review_text or review.excerpt %}
+                <p class="profile-review-text">{{ review.excerpt or review.review_text }}</p>
+              {% endif %}
+            </div>
+            <i class="bi bi-chevron-right profile-review-arrow" aria-hidden="true"></i>
+          </a>
+        {% else %}
+          <div class="profile-empty">
+            <i class="bi bi-chat-square-text" aria-hidden="true"></i>
+            <h3>아직 작성한 선수 리뷰가 없습니다</h3>
+            <p>{{ '사용해 본 선수의 후기를 남겨보세요.' if own_profile else '새로운 리뷰가 등록되면 여기에 표시됩니다.' }}</p>
+            <a class="profile-button profile-button-primary" href="{{ url_for('index') }}">선수를 찾아 리뷰 남기기<i class="bi bi-arrow-right" aria-hidden="true"></i></a>
+          </div>
+        {% endfor %}
+      </div>
+    </section>
+
+    <aside class="profile-sidebar{% if not own_profile %} profile-sidebar-public{% endif %}">
+      <section class="profile-panel profile-side-section" id="profile-points" aria-labelledby="profile-points-title">
+        <h2 class="profile-side-title" id="profile-points-title">리뷰 포인트</h2>
+        <div class="profile-points-current">
+          <span>이번 달</span>
+          <strong>{{ '{:,}'.format(monthly_points|int) }}<small>점</small></strong>
+          {% if stats.get('monthly_rank') %}<span class="profile-rank">이번 달 {{ stats.get('monthly_rank') }}위</span>{% endif %}
+        </div>
+        <div class="profile-point-row">
+          <span>전체 기간</span>
+          <strong>{{ '{:,}'.format(all_time_points|int) }}점</strong>
+        </div>
+        <a class="profile-side-link" href="{{ url_for('community', tab='review') }}">리뷰와 월간 순위 보기<i class="bi bi-arrow-right" aria-hidden="true"></i></a>
+      </section>
+
+      {% if own_profile %}
+        <section class="profile-panel profile-side-section" id="profile-account" aria-labelledby="profile-account-title">
+          <h2 class="profile-side-title" id="profile-account-title">계정 설정</h2>
+          <dl class="profile-account-details">
+            <div><dt>로그인 이메일</dt><dd>{{ profile_user.email }}</dd></div>
+            <div><dt>로그인 방식</dt><dd>{% if profile_user.google_sub and profile_user.password_hash %}Google · 이메일{% elif profile_user.google_sub %}Google{% elif profile_user.password_hash %}이메일{% else %}—{% endif %}</dd></div>
+          </dl>
+          <details class="profile-editor" id="profile-name-editor">
+          <summary><i class="bi bi-pencil" aria-hidden="true"></i>감독명 변경<i class="bi bi-chevron-down" aria-hidden="true"></i></summary>
+          <form method="POST" action="{{ url_for('profile') }}" class="profile-form" data-profile-form>
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <label class="profile-label" for="profile-username">새 감독명</label>
+            <input id="profile-username" type="text" name="username" class="form-control" value="{{ profile_user.username }}" maxlength="100" required aria-describedby="profile-name-help">
+            <p class="profile-form-help" id="profile-name-help">리뷰와 커뮤니티에 표시되는 이름입니다.</p>
+            <div class="profile-actions">
+              <button type="button" class="profile-button profile-button-secondary" data-profile-cancel hidden>취소</button>
+              <button type="submit" class="profile-button profile-button-primary" data-profile-save>변경 저장</button>
+            </div>
+            <span class="profile-sr-only" role="status" data-profile-status></span>
+          </form>
+          </details>
+          {% if profile_user.password_hash %}
+            <a class="profile-account-link" href="{{ url_for('forgot_password') }}"><i class="bi bi-shield-lock" aria-hidden="true"></i>비밀번호 재설정<i class="bi bi-chevron-right" aria-hidden="true"></i></a>
+          {% endif %}
+          <a class="profile-account-link" href="{{ url_for('logout') }}"><i class="bi bi-box-arrow-right" aria-hidden="true"></i>로그아웃<i class="bi bi-chevron-right" aria-hidden="true"></i></a>
+          <div class="profile-account-danger"><a class="profile-delete" href="{{ url_for('delete_account') }}">회원탈퇴</a></div>
+        </section>
+      {% endif %}
+    </aside>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+{% if own_profile %}
+<script>
+  (function () {
+    var form = document.querySelector('[data-profile-form]');
+    if (!form) return;
+    var input = form.elements.username;
+    var initial = input.value;
+    var save = form.querySelector('[data-profile-save]');
+    var cancel = form.querySelector('[data-profile-cancel]');
+    var status = form.querySelector('[data-profile-status]');
+    var editor = document.getElementById('profile-name-editor');
+    function update() {
+      var changed = input.value.trim() !== initial.trim();
+      save.disabled = !changed || !input.value.trim();
+      status.textContent = changed ? '변경 저장을 누르면 새 감독명이 적용됩니다.' : '';
+    }
+    cancel.hidden = false;
+    input.addEventListener('input', update);
+    cancel.addEventListener('click', function () {
+      input.value = initial;
+      update();
+      editor.open = false;
+      editor.querySelector('summary').focus();
+    });
+    document.querySelectorAll('[data-profile-edit]').forEach(function (link) {
+      link.addEventListener('click', function (event) {
+        event.preventDefault();
+        editor.open = true;
+        document.getElementById('profile-account').scrollIntoView({ block: 'start' });
+        input.focus({ preventScroll: true });
+        window.history.replaceState(null, '', '#profile-account');
+      });
+    });
+    update();
+  })();
+</script>
+{% endif %}
+{% endblock %}

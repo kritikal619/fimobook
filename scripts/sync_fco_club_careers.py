@@ -23,6 +23,7 @@ DEFAULT_SOURCE_URL = (
 DEFAULT_PROFILE_FILE = ROOT / "instance" / "fco_allp.js"
 DEFAULT_PLAYER_FILE = ROOT / "player_data.json"
 DEFAULT_OUTPUT_FILE = ROOT / "static" / "data" / "player_club_careers.json"
+PLACEHOLDER_TEAM_KEYS = {"아이콘"}
 
 
 def normalize_text(value: object) -> str:
@@ -195,8 +196,14 @@ def choose_candidate(by_name, names, teams):
         scored.append((score, overlap, candidate))
 
     scored.sort(key=lambda item: item[0], reverse=True)
-    if len(scored) == 1 and (not used_abbreviated_alias or scored[0][1] >= 1):
-        return scored[0][2]
+    if len(scored) == 1:
+        unique_abbreviation_for_placeholder = (
+            used_abbreviated_alias
+            and bool(normalized_teams)
+            and all(team in PLACEHOLDER_TEAM_KEYS for team in normalized_teams)
+        )
+        if not used_abbreviated_alias or scored[0][1] >= 1 or unique_abbreviation_for_placeholder:
+            return scored[0][2]
     if scored[0][1] < 1 or scored[0][0] == scored[1][0]:
         return None
     return scored[0][2]

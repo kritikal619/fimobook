@@ -1,0 +1,242 @@
+{% extends "base.html" %}
+
+{% block body_class %}filtered-results-page{% endblock %}
+
+{% block title %}피모북 | 선수 세부검색 결과{% endblock %}
+
+{% block extra_head %}
+{% include "_adsense_head.html" %}
+{% include "_search_results_styles.html" %}
+<style>
+  .title-row { display:flex; align-items:baseline; justify-content:space-between; gap:10px; flex-wrap:wrap; }
+  .title-row .page-title { width:auto; }
+  .filtered-results-page .meta-label { color:var(--muted); }
+  .count { color:var(--muted); font-size:13px; font-weight:700; }
+  .chips { display:flex; flex-wrap:wrap; gap:6px; }
+  .chip { display:inline-flex; flex-wrap:wrap; gap:4px; padding:6px 10px; border:1px solid var(--line); border-radius:8px; background:var(--surface); color:var(--muted); font-size:12px; overflow-wrap:anywhere; max-width:100%; box-sizing:border-box; }
+  .chip b { color:var(--text); }
+  .sort-form { flex-wrap:wrap; }
+  .sort-form button { min-height:34px; padding:0 12px; border:0; border-radius:8px; background:#087f5b; color:#fff; font-weight:700; cursor:pointer; }
+  .card-affiliation { overflow-wrap:anywhere; }
+  .matched-stats { display:flex; flex-wrap:wrap; gap:3px 8px; color:#087f5b; font-size:12px; }
+  .price-row { overflow-wrap:anywhere; }
+  .fimo-ad-shell.is-grid-card { margin:0; align-self:stretch; min-width:0; }
+  .filtered-results-page .player-card { opacity:1; transform:none; animation:none; }
+  .filtered-results-page :is(a,button,select):focus-visible { outline:2px solid #087f5b; outline-offset:3px; }
+  @media (max-width:640px) {
+    .sort-form { width:100%; box-sizing:border-box; }
+    .sort-form select { font-size:16px; min-width:0; flex:1; }
+    .sort-form button { min-height:40px; }
+    .matched-stats { font-size:11px; }
+  }
+  @media (prefers-reduced-motion:reduce) { .filtered-results-page .player-card { transition:none; } }
+  html[data-theme="dark"] .filtered-results-page { --text:#e4eaf2; --muted:#a7b5c7; --line:#334155; --line2:#334155; --card:#172033; --surface:#1c273a; --navy:#e4eaf2; }
+  html[data-theme="dark"] .filtered-results-page :is(.count,.card-sub,.meta-label) { color:#a7b5c7; }
+  html[data-theme="dark"] .filtered-results-page .matched-stats { color:#86c9a9; }
+  html[data-theme="dark"] .filtered-results-page .chip b { color:#e4eaf2; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="results-wrap">
+  <div class="results-topbar">
+    <a class="back-btn" href="{{ url_for('traits_selection') }}{% if request.query_string %}?{{ request.query_string.decode('utf-8')|e }}{% endif %}">← 세부검색으로 돌아가기</a>
+
+  </div>
+
+  <div class="title-row">
+    <h1 class="page-title">선수 세부검색 결과</h1>
+    <div class="count">총 {{ players|length }}명</div>
+  </div>
+
+  <div class="chips">
+    <span class="chip">가격 기준<b>{{ filters.price_enhance }}진</b></span>
+    {% if filters.name %}<span class="chip">이름<b>{{ filters.name }}</b></span>{% endif %}
+    {% if filters.player_classes %}<span class="chip">클래스<b>{{ filters.player_classes|join(', ') }}</b></span>{% endif %}
+    {% if filters.positions %}<span class="chip">포지션<b>{{ filters.positions|join(', ') }}{% if filters.include_sub_position %} + 부포지션{% endif %}</b></span>{% endif %}
+    {% if filters.skill_or_boosts %}<span class="chip">스킬/스킬부스트<b>{{ filters.skill_or_boosts|join(', ') }}</b></span>{% endif %}
+    {% if filters.skill_levels %}<span class="chip">개인기 등급<b>{% for value in filters.skill_levels %}{{ value + 1 }}성{% if not loop.last %}, {% endif %}{% endfor %}</b></span>{% endif %}
+    {% if filters.skill_moves %}<span class="chip">고유 개인기<b>{{ filters.skill_moves|join(', ') }}</b></span>{% endif %}
+    {% if filters.raised_stat_labels %}<span class="chip">상승 스탯<b>{{ filters.raised_stat_labels|join(', ') }}</b></span>{% endif %}
+    {% if filters.work_rate_labels %}<span class="chip">활동량<b>{{ filters.work_rate_labels|join(', ') }}</b></span>{% endif %}
+    {% if filters.playstyles %}<span class="chip">플레이스타일<b>{{ filters.playstyles|join(', ') }}</b></span>{% endif %}
+    {% if filters.empty_playstyle_slot %}<span class="chip">플레이스타일<b>빈 슬롯 있음</b></span>{% endif %}
+    {% if filters.max_stats %}<span class="chip">{{ '만렙' if not filters.max_stat_gap else '만렙 - ' ~ filters.max_stat_gap }} 이상<b>{{ filters.max_stat_labels|join(', ') }}</b></span>{% endif %}
+    {% if filters.traits %}<span class="chip">특성<b>{{ filters.traits|join(', ') }}</b></span>{% endif %}
+    {% if filters.height_group == 'tall' %}<span class="chip">키<b>장신 185cm 이상</b></span>{% endif %}
+    {% if filters.height_group == 'short' %}<span class="chip">키<b>단신 185cm 미만</b></span>{% endif %}
+    {% if filters.min_height is not none or filters.max_height is not none %}<span class="chip">키<b>{{ filters.min_height or '최소 제한 없음' }}~{{ filters.max_height or '최대 제한 없음' }}cm</b></span>{% endif %}
+    {% if filters.min_price is not none or filters.max_price is not none %}<span class="chip">{{ filters.price_enhance }}진 가격<b>{{ filters.min_price or 0 }}~{{ filters.max_price or '제한 없음' }} {{ price_unit }}</b></span>{% endif %}
+    {% if filters.weak_foot_min %}<span class="chip">약발<b>{{ filters.weak_foot_min }} 이상</b></span>{% endif %}
+    {% if filters.league %}<span class="chip">리그<b>{{ filters.league }}</b></span>{% endif %}
+    {% if filters.team %}<span class="chip">팀<b>{{ filters.team }}</b></span>{% endif %}
+    {% if filters.all_career %}<span class="chip">경력<b>전체경력 포함</b></span>{% endif %}
+    {% if filters.min_ovr != 0 or filters.max_ovr != 999 %}<span class="chip">OVR<b>{{ filters.min_ovr }}~{{ filters.max_ovr }}</b></span>{% endif %}
+  </div>
+
+
+
+  <div class="filter-row">
+    <form class="sort-form" method="get" action="{{ url_for('filtered_players') }}" data-ga-event="filtered_results_sort" data-ga-param-source-surface="advanced_search">
+      <input type="hidden" name="name" value="{{ filters.name }}">
+      {% for value in filters.player_classes %}
+        <input type="hidden" name="player_class" value="{{ value }}">
+      {% endfor %}
+      {% for value in filters.skill_or_boosts %}
+        <input type="hidden" name="skill_or_boost" value="{{ value }}">
+      {% endfor %}
+      {% for value in filters.positions %}
+        <input type="hidden" name="position" value="{{ value }}">
+      {% endfor %}
+      {% if filters.include_sub_position %}
+        <input type="hidden" name="include_sub_position" value="1">
+      {% endif %}
+      {% for value in filters.skill_moves %}
+        <input type="hidden" name="skill_move" value="{{ value }}">
+      {% endfor %}
+      {% for value in filters.skill_levels %}
+        <input type="hidden" name="skill_level" value="{{ value }}">
+      {% endfor %}
+      {% for value in filters.raised_stats %}
+        <input type="hidden" name="raised_stat" value="{{ value }}">
+      {% endfor %}
+      {% for value in filters.work_rates %}
+        <input type="hidden" name="work_rate" value="{{ value }}">
+      {% endfor %}
+      {% for value in filters.traits %}
+        <input type="hidden" name="trait" value="{{ value }}">
+      {% endfor %}
+      {% for value in filters.playstyles %}
+        <input type="hidden" name="playstyle" value="{{ value }}">
+      {% endfor %}
+      {% for value in filters.max_stats %}<input type="hidden" name="max_stat" value="{{ value }}">{% endfor %}
+      <input type="hidden" name="max_stat_gap" value="{{ filters.max_stat_gap }}">
+      {% if filters.empty_playstyle_slot %}<input type="hidden" name="empty_playstyle_slot" value="1">{% endif %}
+      <input type="hidden" name="height_group" value="{{ filters.height_group }}">
+      <input type="hidden" name="weak_foot_min" value="{{ filters.weak_foot_min or '' }}">
+      <input type="hidden" name="league" value="{{ filters.league }}">
+      <input type="hidden" name="team" value="{{ filters.team }}">
+      {% if filters.all_career %}
+        <input type="hidden" name="all_career" value="1">
+      {% endif %}
+      <input type="hidden" name="min_ovr" value="{{ filters.min_ovr }}">
+      <input type="hidden" name="max_ovr" value="{{ filters.max_ovr }}">
+      <input type="hidden" name="min_height" value="{{ filters.min_height if filters.min_height is not none else '' }}">
+      <input type="hidden" name="max_height" value="{{ filters.max_height if filters.max_height is not none else '' }}">
+      <input type="hidden" name="price_enhance" value="{{ filters.price_enhance }}">
+      <input type="hidden" name="min_price" value="{{ filters.min_price if filters.min_price is not none else '' }}">
+      <input type="hidden" name="max_price" value="{{ filters.max_price if filters.max_price is not none else '' }}">
+      <label for="sort">정렬</label>
+      <select id="sort" name="sort">
+        <option value="ovr_desc" {% if sort == 'ovr_desc' %}selected{% endif %}>OVR 높은순</option>
+        <option value="ovr_asc" {% if sort == 'ovr_asc' %}selected{% endif %}>OVR 낮은순</option>
+        <option value="name_asc" {% if sort == 'name_asc' %}selected{% endif %}>이름순</option>
+        <option value="price_desc" {% if sort == 'price_desc' %}selected{% endif %}>가격 높은순</option>
+        <option value="price_asc" {% if sort == 'price_asc' %}selected{% endif %}>가격 낮은순</option>
+      </select>
+      <button type="submit">적용</button>
+    </form>
+  </div>
+
+  {% if error %}
+    <div class="error">{{ error }}</div>
+  {% else %}
+    <div class="results-grid" data-live-price-sort="{{ sort }}">
+      {% for player in players %}
+      <a class="player-card" href="{{ url_for('player_detail', cid=player.cid) }}" data-live-price-card data-live-price-value="{{ player.price or '' }}" data-ga-event="player_select" data-ga-param-source-surface="advanced_search" data-ga-param-content-id="{{ player.cid }}" data-ga-param-result-position="{{ loop.index }}">
+        {% set card_thumb = player_thumbnail_url('card', player.cid, 160) %}
+        {% set card_fallback = player.bimage or '' %}
+        <div
+          class="card-image" data-fimo-player-card='{{ player_card_meta(player)|tojson }}'
+          style="background-image:{% if card_thumb %}url('{{ card_thumb }}?v=2'){% if card_fallback %},url('{{ card_fallback }}'){% endif %}{% elif card_fallback %}url('{{ card_fallback }}'){% else %}none{% endif %}"
+        >
+          <img
+            src="{{ player_thumbnail_url('faceon', player.cid, 160) or player.pimage or '' }}"
+            data-fallback-src="{{ player.pimage or '' }}"
+            alt="{{ player.playerKor or '-' }}"
+            loading="{{ 'eager' if loop.index <= 8 else 'lazy' }}"
+            decoding="async"
+            onerror="const fallback=this.dataset.fallbackSrc;this.onerror=null;if(fallback&&this.src!==fallback){this.src=fallback;}"
+          >
+          <div class="card-meta">
+            <div class="meta-top">
+              <div class="meta-ovr">{{ player.ovr or '-' }}</div>
+              <div class="meta-pos">{{ player.position or '-' }}</div>
+            </div>
+            <div class="meta-name">{{ player.playerKor or '-' }}</div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="card-title-row">
+            <div class="player-name">{{ player.playerKor or '-' }}</div>
+          </div>
+          <div class="card-sub">
+            <span class="meta-label">포지션</span>
+            <span>{{ player.position or '-' }}</span>
+            {% if player.potentialPositions %}
+              <span class="meta-label">부포지션</span><span>{{ player.potentialPositions|join(', ') }}</span>
+            {% elif player.potentialPosition %}
+              <span class="meta-label">부포지션</span><span>{{ player.potentialPosition }}</span>
+            {% endif %}
+            <span class="meta-label">국적</span>
+            <span>{{ player.nation or player.nationName or '-' }}</span>
+          </div>
+          <div class="card-sub card-affiliation">
+            <span>{{ player.league or '-' }}</span>
+            <span class="card-team">{{ player.team or '-' }}</span>
+          </div>
+          <div class="card-sub boost-row">
+            <span class="skill-moves-name">{{ player.skillMovesName or '-' }}</span>
+            {% set level = (player.skillMovesLevel or 0)|int + 1 %}
+            <span class="skill-stars" aria-label="개인기 {{ level }}성">
+              {% for i in range(1, 6) %}{% if i <= level %}★{% else %}<span class="off">★</span>{% endif %}{% endfor %}
+            </span>
+          </div>
+          {% if player.playstyleSlots or player.playstyles %}
+            <div class="card-sub playstyle-row" aria-label="플레이스타일">
+              {% if player.playstyleSlots|length == 2 %}
+                {% for slot in player.playstyleSlots %}
+                  {% set slot_name = '빈 플레이스타일 슬롯' if slot.isEmpty else slot.name %}
+                  <span class="playstyle-pill is-icon-only" title="{{ slot_name }}">
+                    <img src="{{ url_for('static', filename='playstyles/PLAYSTYLE_EMPTY_SLOT.png') if slot.isEmpty else slot.imageUrl }}" alt="{{ slot_name }}" loading="lazy">
+                  </span>
+                {% endfor %}
+              {% elif player.playstyleSlots|length == 1 and player.playstyleSlots[0].isEmpty %}
+                <span class="playstyle-pill">
+                  <img src="{{ url_for('static', filename='playstyles/PLAYSTYLE_EMPTY_SLOT.png') }}" alt="빈 슬롯" loading="lazy">
+                  <span>빈 슬롯</span>
+                </span>
+              {% else %}
+                {% for playstyle in player.playstyles[:3] %}
+                  <span class="playstyle-pill">
+                    <img src="{{ playstyle.imageUrl }}" alt="" loading="lazy">
+                    <span>{{ playstyle.name }}</span>
+                  </span>
+                {% endfor %}
+              {% endif %}
+            </div>
+          {% endif %}
+          {% if player.matchedMaxStats %}<div class="matched-stats">{% for stat in player.matchedMaxStats %}<span>{{ stat.label }} <b>{{ stat.value|int }}</b></span>{% endfor %}</div>{% endif %}
+          <div class="card-sub price-row">
+            <span>{{ filters.price_enhance }}진</span>
+            <img class="price-icon" src="{{ url_for('static', filename='images/ea-token.png') }}" alt="재화">
+            <span class="price" data-live-price-cid="{{ player.cid }}" data-live-price-enhance="{{ filters.price_enhance }}" data-live-price-unit="{{ price_unit }}" data-live-price-value="{{ player.price or '' }}" aria-live="polite">{{ "{:,}".format(player.price|int) if player.price is not none else "-" }} {{ price_unit }}</span>
+          </div>
+        </div>
+      </a>
+      {% if loop.index in (8, 32, 56) %}{% with ad_layout="grid-card" %}{% include "_adsense_unit.html" %}{% endwith %}{% endif %}
+      {% endfor %}
+      {% if players|length < 8 %}{% with ad_layout="grid-card" %}{% include "_adsense_unit.html" %}{% endwith %}{% endif %}
+    </div>
+  {% endif %}
+</div>
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    window.fimoAnalytics?.track?.("filtered_results_view", {
+      result_count: {{ players|length }},
+      filter_count: document.querySelectorAll(".chips .chip").length,
+      has_results: {{ (players|length > 0)|tojson }},
+    }, { onceKey: "filtered_results_view" });
+  });
+</script>
+{% endblock %}

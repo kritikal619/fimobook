@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block body_class %}normal-power-page{% endblock %}
+{% block title %}FC모바일 일반모드 파워랭킹 | 피모북{% endblock %}
+{% block extra_head %}
+<meta name="description" content="FC모바일 상위 랭커가 사용하는 카드와 사용 인원, 랭커별 스쿼드를 확인하세요.">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/normal-mode-power-ranking.css', v='20261005-12') }}">
+{% endblock %}
+{% block content %}
+<section class="power-page" id="normalPowerRanking">
+ {% include "_normal_mode_ranking_tabs.html" %}
+ <header class="power-heading">
+  <div><h1>일반모드 파워랭킹</h1></div>
+  <label class="power-date">집계 기준<select id="powerEdition" aria-label="집계 날짜"></select></label>
+ </header>
+ <section class="power-toolbar" aria-label="랭킹 필터">
+  <div class="power-scope-tabs" id="powerScopes" role="group" aria-label="조사 범위"></div>
+  <label class="power-search"><span class="sr-only">선수, 클래스, 랭커 검색</span><input id="powerSearch" type="search" placeholder="선수 · 클래스 · 랭커 검색" autocomplete="off"></label>
+ </section>
+ <label class="power-exclude-eternal"><input type="checkbox" id="powerExcludeEternal">이터널 카드 제외</label>
+ <div class="power-position-tabs" id="powerPositions" role="group" aria-label="포지션"></div>
+ <section class="power-panel" aria-labelledby="powerListTitle">
+  <div class="power-panel-head"><div><h2 id="powerListTitle">포지션별 카드 사용 현황</h2></div><button type="button" id="powerExpandAll">사용 랭커 모두 펼치기</button></div>
+  <p class="power-list-guide">배치 포지션 기준 · 사용률 = 해당 카드 사용 인원 / 조사 스쿼드 수</p>
+  <div class="power-list-head" aria-hidden="true"><span>순위</span><span>선수 / 클래스</span><span>사용 인원</span><span>사용률</span><span>사용 랭커</span></div>
+  <div id="powerRows" aria-live="polite"></div>
+  <button type="button" class="power-more" id="powerMore" hidden>더 보기</button>
+ </section>
+ <dialog class="power-squad-dialog" id="powerSquadDialog" aria-labelledby="powerSquadTitle">
+  <header><div><h2 id="powerSquadTitle"></h2><p id="powerSquadDate"></p></div><button type="button" id="powerSquadClose" aria-label="스쿼드 닫기">닫기 ×</button></header>
+  <img id="powerSquadImage" alt="" decoding="async">
+  <p id="powerSquadError" hidden>스쿼드 이미지를 불러오지 못했습니다.</p>
+ </dialog>
+ <footer class="power-data-credit" id="powerCredit"></footer>
+</section>
+<script type="application/json" id="normalPowerRankingData">{{ ranking_data | tojson }}</script>
+{% endblock %}
+{% block extra_scripts %}<script src="{{ url_for('static', filename='js/normal-mode-power-ranking.js', v='20261005-12') }}" defer></script>{% endblock %}

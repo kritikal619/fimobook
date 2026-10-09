@@ -1,0 +1,12 @@
+[Unit]
+Description=Fimobook player refresh on Tuesday/Saturday 02:00 and Thursday 16:30 KST
+
+[Timer]
+OnCalendar=Tue,Sat *-*-* 02:00:00 Asia/Seoul
+OnCalendar=Thu *-*-* 16:30:00 Asia/Seoul
+AccuracySec=1s
+Persistent=false
+Unit=fimobook-player-refresh.service
+
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,33 @@
+<form id="google-one-tap-form" method="POST" action="{{ url_for('google_login') }}" hidden>
+  <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+  <input type="hidden" name="credential" id="google-one-tap-credential">
+  <input type="hidden" name="next" value="{{ request.full_path }}">
+</form>
+<script>
+  (function initializeGoogleOneTap(attempt) {
+    if (!window.google || !window.google.accounts || !window.google.accounts.id) {
+      if (attempt < 50) {
+        window.setTimeout(function () {
+          initializeGoogleOneTap(attempt + 1);
+        }, 100);
+      }
+      return;
+    }
+
+    window.google.accounts.id.initialize({
+      client_id: {{ google_client_id|tojson }},
+      auto_select: false,
+      button_auto_select: false,
+      use_fedcm_for_prompt: true,
+      context: "signin",
+      callback: function (response) {
+        var form = document.getElementById("google-one-tap-form");
+        var credential = document.getElementById("google-one-tap-credential");
+        if (!form || !credential || !response || !response.credential) return;
+        credential.value = response.credential;
+        form.submit();
+      }
+    });
+    window.google.accounts.id.prompt();
+  })(0);
+</script>

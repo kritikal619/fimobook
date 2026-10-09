@@ -68,7 +68,18 @@ def main() -> None:
     parser.add_argument("--data", default="player_data.json", help="Path to player_data.json")
     parser.add_argument("--workers", type=int, default=20, help="Concurrent worker count")
     parser.add_argument("--force", action="store_true", help="Re-download even when local file exists")
+    parser.add_argument(
+        "--kind",
+        choices=("both", "card", "faceon"),
+        default="both",
+        help="Asset kind to download (default: both)",
+    )
     parser.add_argument("--limit", type=int, default=0, help="Only process first N players (0 means all)")
+    parser.add_argument(
+        "--class-name",
+        default="",
+        help="Only process players whose className exactly matches this value",
+    )
     args = parser.parse_args()
 
     root_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
@@ -80,6 +91,9 @@ def main() -> None:
 
     with open(data_path, "r", encoding="utf-8") as file:
         players = json.load(file)
+
+    if args.class_name:
+        players = [player for player in players if player.get("className") == args.class_name]
 
     if args.limit > 0:
         players = players[: args.limit]
@@ -95,9 +109,9 @@ def main() -> None:
                     continue
                 card_url = player.get("bimage")
                 face_url = player.get("pimage")
-                if card_url:
+                if args.kind in {"both", "card"} and card_url:
                     tasks.append(executor.submit(download_one, session, card_url, card_dir, int(cid), args.force))
-                if face_url:
+                if args.kind in {"both", "faceon"} and face_url:
                     tasks.append(executor.submit(download_one, session, face_url, face_dir, int(cid), args.force))
 
             saved = 0
