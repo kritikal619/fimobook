@@ -445,3 +445,6 @@
     padding: 14px;
   }
 }
+
+html[data-theme="dark"] .admin-review-label { color: #dce6f1; }
+html[data-theme="dark"] .admin-review-label-icon { background: #263449; color: #cbd5e1; }

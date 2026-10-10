@@ -52,3 +52,4 @@ html[data-theme="dark"] .weekly-player-meta { color:#94a3b8; }
 .latest-review-more { font-weight:700; }
 .latest-review-author { font-weight:700; }
 html[data-theme="dark"] .latest-review-kind.summary { background:transparent !important; color:#94a3b8 !important; }
+html[data-theme="dark"] .latest-review-kind { background:transparent !important; color:#94a3b8 !important; padding:0; }
