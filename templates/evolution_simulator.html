@@ -8,7 +8,7 @@
 {% block extra_head %}
 <meta name="description" content="{{ evo_seo_description }}">
 <link rel="preload" as="image" href="{{ url_for('static', filename='evolution-sim/menu.webp') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/evolution-simulator.css', v='20261010-27') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/evolution-simulator.css', v='20261011-4') }}">
 {% endblock %}
 {% block content %}
 {% set coin = url_for('static', filename='pack-opener/images/mp-token-transparent.png') %}
@@ -105,26 +105,18 @@
 
       <!-- ===== 진화 연출 ===== -->
       <div class="evo-view evo-scene" data-view="scene" hidden>
-        <img class="evo-plate evo-plate-stage" src="{{ evo_img }}stage.webp" alt="">
-        <img class="evo-plate evo-plate-beam" src="{{ evo_img }}beam.webp" alt="">
+        <video class="evo-video" data-video="success" src="{{ evo_img }}success.mp4" muted playsinline preload="auto" aria-hidden="true"></video>
+        <video class="evo-video" data-video="fail" src="{{ evo_img }}fail.mp4" muted playsinline preload="auto" aria-hidden="true"></video>
         <img class="evo-plate evo-plate-success" src="{{ evo_img }}success.webp" alt="">
         <img class="evo-plate evo-plate-fail" src="{{ evo_img }}fail.webp" alt="">
-        <div class="evo-beam" aria-hidden="true"></div>
         <div class="evo-s-card"><span class="evo-card" data-show-card></span></div>
-        <img class="evo-s-badge evo-s-old" data-show-old alt="">
-        <img class="evo-s-badge evo-s-new" data-show-new alt="">
-        <h2 class="evo-s-title" data-show-title></h2>
-        <div class="evo-s-flip"><span class="evo-card" data-show-flip></span></div>
-        <canvas class="evo-confetti" data-confetti aria-hidden="true"></canvas>
-
-        <div class="evo-wipe" aria-hidden="true">
-          <div class="evo-wipe-green"></div>
-          <div class="evo-wipe-white"></div>
-          <div class="evo-wipe-frame">
-            <svg viewBox="0 0 700 170" preserveAspectRatio="none"><polygon points="45,4 655,4 696,85 655,166 45,166 4,85"/></svg>
-            <span class="evo-wipe-text" data-wipe-text>진화 성공</span>
-          </div>
+        <img class="evo-s-badge" data-show-old alt="">
+        <img class="evo-s-badge" data-show-new alt="">
+        <div class="evo-s-flip" data-show-flip-wrap>
+          <span class="evo-s-back" aria-hidden="true"></span>
+          <span class="evo-card" data-show-flip></span>
         </div>
+        <canvas class="evo-confetti" data-confetti aria-hidden="true"></canvas>
 
         <div class="evo-result" data-result>
           <div class="evo-r-panel"></div>
@@ -209,4 +201,4 @@
 
 <script type="application/json" id="evo-data">{{ {'steps': evolution_data.steps, 'materials': evolution_materials, 'enhanceSteps': enhance_steps}|tojson }}</script>
 {% endblock %}
-{% block extra_scripts %}<script src="{{ url_for('static', filename='js/evolution-simulator.js', v='20261010-27') }}" defer></script>{% endblock %}
+{% block extra_scripts %}<script src="{{ url_for('static', filename='js/evolution-simulator.js', v='20261011-4') }}" defer></script>{% endblock %}

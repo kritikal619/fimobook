@@ -313,44 +313,57 @@
     els.alert.hidden = true;
     const result = attempt();
     renderLog();
+    unlockMedia();
     playShow(result);
   }
 
   // ---------- 연출 ----------
+  // 녹화한 게임 영상(카드·배지 자리를 지운 것)을 재생하고, 그 위 같은 위치에 고른 선수의 카드와 배지를 올린다.
+  // 아래 시각(초)은 모두 그 영상 안의 재생 시각이다.
   const scene = views.scene;
+  const screenEl = $('[data-screen]');
   const show = {
-    card: $('[data-show-card]'), flip: $('[data-show-flip]'), oldBadge: $('[data-show-old]'), newBadge: $('[data-show-new]'),
-    title: $('[data-show-title]'), wipeText: $('[data-wipe-text]'), canvas: $('[data-confetti]'),
+    card: $('[data-show-card]'), cardWrap: $('.evo-s-card'), flip: $('[data-show-flip]'), flipWrap: $('[data-show-flip-wrap]'),
+    flipBack: $('.evo-s-back'), oldBadge: $('[data-show-old]'), newBadge: $('[data-show-new]'), canvas: $('[data-confetti]'),
     token: 0, particles: [], fountains: false, running: false, last: null,
   };
-  const wait = (ms, token) => new Promise(resolve => setTimeout(() => resolve(token === show.token), ms));
-  // 연출 시각은 녹화 영상에서 카드가 무대에 나타난 순간(0ms)을 기준으로 잰 값이다.
-  const until = (start, at, token) => wait(Math.max(0, at - (performance.now() - start)), token);
-
-  // 소리: 녹화 영상의 성공/실패 구간 (카드 등장 순간부터)
+  const videos = {success: $('[data-video="success"]'), fail: $('[data-video="fail"]')};
   const sounds = {success: new Audio('/static/evolution-sim/success.m4a'), fail: new Audio('/static/evolution-sim/fail.m4a')};
   Object.values(sounds).forEach(audio => { audio.preload = 'auto'; });
   const soundButton = $('[data-sound]');
-  // 연출 배경(숨겨진 화면 안)과 소리를 미리 받아 둔다. 오래 걸려도 6초 뒤에는 그냥 진행한다.
+  const u = () => screenEl.clientWidth / 1200;
+
+  // 첫 진화 전에 영상·배경·소리를 받아 둔다. 오래 걸려도 8초 뒤에는 그냥 진행한다.
   const timeout = ms => new Promise(resolve => setTimeout(resolve, ms));
   const loadImage = src => new Promise(resolve => {
     const img = new Image();
-    img.onload = () => { img.decode?.().catch(() => {}); resolve(); };
-    img.onerror = resolve;
+    img.onload = () => resolve(); img.onerror = () => resolve();
     img.src = src;
+  });
+  const mediaReady = media => new Promise(resolve => {
+    if (media.readyState >= 3) { resolve(); return; }
+    media.addEventListener('canplay', resolve, {once: true});
+    media.addEventListener('loadeddata', resolve, {once: true});
+    media.addEventListener('error', resolve, {once: true});
   });
   const assetsReady = Promise.race([
     Promise.all([
       ...$$('.evo-plate').map(plate => loadImage(plate.currentSrc || plate.src)),
-      ...Object.values(sounds).map(audio => new Promise(resolve => {
-        if (audio.readyState >= 2) { resolve(); return; }
-        audio.addEventListener('loadeddata', resolve, {once: true});
-        audio.addEventListener('error', resolve, {once: true});
-        audio.load();
-      })),
+      ...Object.values(videos).map(mediaReady),
+      ...Object.values(sounds).map(mediaReady),
     ]),
-    timeout(6000),
+    timeout(8000),
   ]);
+  // iOS 등은 사용자가 누른 그 순간에만 소리 재생을 허락하므로, 진화 버튼을 누를 때 미리 깨워 둔다.
+  let mediaUnlocked = false;
+  function unlockMedia() {
+    if (mediaUnlocked) return;
+    mediaUnlocked = true;
+    Object.values(sounds).forEach(audio => {
+      audio.muted = true;
+      audio.play().then(() => { audio.pause(); audio.currentTime = 0; audio.muted = false; }).catch(() => { audio.muted = false; });
+    });
+  }
   let soundOn = true;
   try { soundOn = localStorage.getItem('evoSound') !== 'off'; } catch (_) { /* 저장소를 못 쓰면 기본값 */ }
   function renderSound() {
@@ -358,27 +371,33 @@
     soundButton.setAttribute('aria-label', soundOn ? '소리 끄기' : '소리 켜기');
     soundButton.innerHTML = `<i class="bi ${soundOn ? 'bi-volume-up-fill' : 'bi-volume-mute-fill'}" aria-hidden="true"></i>`;
   }
-  function stopSounds() { Object.values(sounds).forEach(audio => { audio.pause(); }); }
-  function playSound(name) {
-    stopSounds();
-    if (!soundOn) return;
-    const audio = sounds[name];
-    audio.currentTime = 0;
-    audio.play().catch(() => { /* 자동 재생이 막히면 소리 없이 진행 */ });
+  function stopMedia() {
+    Object.values(sounds).forEach(audio => audio.pause());
+    Object.values(videos).forEach(video => video.pause());
   }
-  function setPhases(...names) { scene.className = ['evo-view', 'evo-scene', ...names].join(' '); }
-  function addPhase(name) { scene.classList.add(name); }
+  const wait = (ms, token) => new Promise(resolve => setTimeout(() => resolve(token === show.token), ms));
+  function setScene(...names) { scene.className = ['evo-view', 'evo-scene', ...names].join(' '); }
 
-  async function typeTitle(text, token) {
-    for (let i = 1; i <= text.length; i += 1) {
-      if (token !== show.token) return;
-      show.title.textContent = text.slice(0, i);
-      if (i < text.length) { const cursor = document.createElement('span'); cursor.className = 'evo-cursor'; show.title.append(cursor); }
-      await new Promise(resolve => setTimeout(resolve, 95));
-    }
+  // 영상 재생 시각이 sec 에 이를 때까지 기다린다. 다른 연출이 시작되면 false.
+  function at(video, sec, token) {
+    return new Promise(resolve => {
+      const check = () => {
+        if (token !== show.token) { resolve(false); return; }
+        if (video.currentTime >= sec || video.ended) { resolve(true); return; }
+        setTimeout(check, 16);
+      };
+      check();
+    });
+  }
+  const fade = (el, from, to, ms) => el.animate([{opacity: from}, {opacity: to}], {duration: ms, fill: 'forwards'});
+  function resetOverlays() {
+    [show.cardWrap, show.oldBadge, show.newBadge, show.flipWrap, show.flipBack, show.flip].forEach(el => {
+      el.getAnimations().forEach(anim => anim.cancel());
+      el.style.opacity = '';
+    });
   }
 
-  // 금색 분수와 꽃가루
+  // 결과 전 꽃가루와 카드 등장 때의 금색 불꽃
   const GOLD = ['#fff3c4', '#ffd45c', '#f2b632', '#d99a1e', '#fffbea', '#e9e9e9'];
   function sizeCanvas() {
     const ratio = Math.min(window.devicePixelRatio || 1, 2);
@@ -390,11 +409,11 @@
     const w = show.canvas.clientWidth, h = show.canvas.clientHeight, k = h / 554;
     for (let i = 0; i < count; i += 1) {
       if (origin) {
-        const x0 = origin === 'left' ? 0.235 : 0.765;
+        const x0 = origin === 'left' ? 0.2 : 0.78;
         show.particles.push({
-          x: w * x0 + (Math.random() - 0.5) * 14 * k, y: h * 0.9,
-          vx: (Math.random() - 0.5) * 6.4 * k, vy: -(10 + Math.random() * 11) * k, g: 0.14 * k,
-          size: (1.8 + Math.random() * 3) * k, spark: true, life: 100 + Math.random() * 60,
+          x: w * x0 + (Math.random() - 0.5) * 14 * k, y: h * 0.86,
+          vx: (Math.random() - 0.5) * 5 * k, vy: -(8 + Math.random() * 9) * k, g: 0.16 * k,
+          size: (1.6 + Math.random() * 2.6) * k, spark: true, life: 70 + Math.random() * 50,
           color: GOLD[Math.floor(Math.random() * 5)], rot: Math.random() * 6, vr: (Math.random() - 0.5) * 0.4,
         });
       } else {
@@ -415,7 +434,7 @@
     const ctx = show.canvas.getContext('2d');
     const w = show.canvas.clientWidth, h = show.canvas.clientHeight;
     ctx.clearRect(0, 0, w, h);
-    if (show.fountains) { const n = Math.round(22 * dt); spawn(n, 'left'); spawn(n, 'right'); }
+    if (show.fountains) { const n = Math.round(16 * dt); spawn(n, 'left'); spawn(n, 'right'); }
     show.particles = show.particles.filter(p => p.life > 0 && p.y < h + 30);
     for (const p of show.particles) {
       p.vy += p.g * dt; p.x += p.vx * dt; p.y += p.vy * dt; p.rot += p.vr * dt; p.life -= dt;
@@ -461,6 +480,28 @@
     strip.className = `evo-r-strip${diff < 0 ? ' is-down' : (diff === 0 ? ' is-hold' : '')}`;
   }
 
+  // 배지·카드 움직임 (게임 영상에서 프레임 단위로 잰 위치와 시간)
+  const PEDESTAL = 188;   // 배지 기본 위치(가운데)에서 받침대까지 아래로 (1200 기준 px)
+  const PEDESTAL_SCALE = 1.15;
+  const ease = 'cubic-bezier(.2, .8, .2, 1)';
+  function badgeIn(el, ms = 120) { return el.animate([{opacity: 0}, {opacity: 1}], {duration: ms, fill: 'forwards'}); }
+  function flipToResult(token) {
+    // 배지가 작아지며 사라지고, 카드 뒷면이 돌아 앞면이 나온 뒤 왼쪽 결과 자리로 이동한다.
+    const k = u();
+    [show.oldBadge, show.newBadge].forEach(el => el.animate(
+      [{transform: 'scale(1)', opacity: getComputedStyle(el).opacity}, {transform: 'scale(.35)', opacity: 0}],
+      {duration: 110, fill: 'forwards'}));
+    show.flipWrap.style.opacity = '1';
+    show.flipBack.animate([{opacity: 1, transform: 'scaleX(.12)'}, {opacity: 1, transform: 'scaleX(1)', offset: .5}, {opacity: 1, transform: 'scaleX(.05)'}],
+      {duration: 200, delay: 100, fill: 'forwards'});
+    show.flip.animate([{opacity: 0, transform: 'scaleX(.05)'}, {opacity: 1, transform: 'scaleX(1)'}],
+      {duration: 160, delay: 300, fill: 'both', easing: ease});
+    show.flipWrap.animate([{transform: 'none'}, {transform: `translate(${-271 * k}px, ${20 * k}px)`}],
+      {duration: 140, delay: 460, fill: 'forwards', easing: ease});
+    setTimeout(() => { if (token === show.token) { show.fountains = true; } }, 380);
+    setTimeout(() => { show.fountains = false; }, 900);
+  }
+
   async function playShow(result) {
     const token = ++show.token;
     show.last = result;
@@ -468,73 +509,97 @@
     await assetsReady;
     setLoading(false);
     if (token !== show.token) return;
-    showView('scene');
-    startParticles();
-    show.title.textContent = '';
+    const name = result.success ? 'success' : 'fail';
+    const video = videos[name];
+    resetOverlays();
     show.oldBadge.src = badge(result.from);
     show.newBadge.src = badge(result.to);
     setCard(show.card, state.player, result.from);
     setCard(show.flip, state.player, result.to);
     prepareResult(result);
+    showView('scene');
+    startParticles();
     if (els.skipAnim.checked) { finishShow(result); return; }
 
-    setPhases(); await wait(40, token);
-    const t0 = performance.now();
-    playSound(result.success ? 'success' : 'fail');
-    setPhases('p-stage');
-    if (!await until(t0, 200, token)) return;
-    addPhase('p-beam');
+    setScene(`v-${name}`);
+    video.currentTime = 0;
+    try { await video.play(); } catch (_) {
+      // 불러오는 중에 재생이 끊기면 한 번 더 시도한다.
+      await timeout(200);
+      if (token !== show.token) return;
+      try { video.currentTime = 0; await video.play(); } catch (__) { finishShow(result); return; }
+    }
+    if (soundOn) { const audio = sounds[name]; audio.currentTime = 0; audio.play().catch(() => {}); }
+    const k = u();
+    // 카드가 무대에 놓였다가 하얗게 바뀌는 순간까지 (영상 속 카드 자리는 지워져 있다)
+    show.cardWrap.animate([{opacity: 0, transform: 'scale(.96)'}, {opacity: 1, transform: 'scale(1)', offset: .25}, {opacity: 1, offset: .8}, {opacity: 0, filter: 'brightness(3)'}],
+      {duration: 300, fill: 'forwards'});
 
     if (result.success) {
-      if (!await until(t0, 1600, token)) return;
-      addPhase('p-wipe');
-      if (!await until(t0, 2400, token)) return;
-      addPhase('p-wipe-white');
-      if (!await until(t0, 2500, token)) return;
-      addPhase('p-wipe-fill');
-      if (!await until(t0, 2600, token)) return;
-      addPhase('p-success'); addPhase('p-reveal');
-      spawn(90);
-      if (!await until(t0, 2750, token)) return;
-      await typeTitle('진화 성공', token);
-      if (!await until(t0, 3600, token)) return;
-      addPhase('p-upgrade');
-      show.fountains = true; spawn(60);
-      if (!await until(t0, 5200, token)) return;
-      show.fountains = false;
-      if (!await until(t0, 6300, token)) return;
-      addPhase('p-flip');
-      if (!await until(t0, 6450, token)) return;
-      show.fountains = true;
-      if (!await until(t0, 6800, token)) return;
-      show.fountains = false;
-      if (!await until(t0, 6900, token)) return;
+      // 초록 전환이 걷히며 작게 보이는 배지 → 무대 가운데 배지
+      if (!await at(video, 2.50, token)) return;
+      show.oldBadge.animate([{opacity: 0, transform: 'scale(.42)'}, {opacity: 1, transform: 'scale(.45)', offset: .3}, {opacity: 1, transform: 'scale(1)'}],
+        {duration: 230, fill: 'forwards', easing: ease});
+      if (!await at(video, 3.55, token)) return;
+      // 이전 배지가 하얗게 빛나며 떠오르고, 새 배지가 받침대에서 나타난다
+      show.oldBadge.animate([{opacity: 1, transform: 'none', filter: 'none'}, {opacity: .9, transform: `translateY(${-30 * k}px)`, filter: 'brightness(2.6) saturate(0)', offset: .45}, {opacity: 0, transform: `translateY(${-60 * k}px)`, filter: 'brightness(3) saturate(0)'}],
+        {duration: 230, fill: 'forwards'});
+      show.newBadge.animate([{opacity: 0, transform: `translateY(${PEDESTAL * k}px) scale(${PEDESTAL_SCALE * .9})`, filter: 'brightness(3)'}, {opacity: 1, transform: `translateY(${PEDESTAL * k}px) scale(${PEDESTAL_SCALE})`, filter: 'brightness(1.4)'}],
+        {duration: 160, fill: 'forwards'});
+      if (!await at(video, 3.95, token)) return;
+      show.newBadge.animate([
+        {opacity: 1, transform: `translateY(${PEDESTAL * k}px) scale(${PEDESTAL_SCALE})`, filter: 'brightness(1.2)'},
+        {opacity: 1, transform: `translateY(${-14 * k}px) scale(1)`, filter: 'none', offset: .7},
+        {opacity: 1, transform: 'translateY(0) scale(1)', filter: 'none'}],
+        {duration: 380, fill: 'forwards', easing: 'cubic-bezier(.3, .6, .3, 1)'});
+      if (!await at(video, 4.33, token)) return;
+      show.newBadge.animate([{filter: 'none'}, {filter: 'brightness(2.3)', offset: .4}, {filter: 'none'}], {duration: 300});
+      if (!await at(video, 6.36, token)) return;
+      setScene('plate-success');
+      flipToResult(token);
+      if (!await wait(700, token)) return;
     } else {
-      if (!await until(t0, 1600, token)) return;
-      setPhases('p-fail-flash');
-      if (!await until(t0, 1800, token)) return;
-      addPhase('p-fail');
-      if (!await until(t0, 2600, token)) return;
-      addPhase(result.to < result.from ? 'p-drop' : 'p-hold');
-      if (!await until(t0, 3200, token)) return;
-      await typeTitle('진화 실패', token);
-      if (!await until(t0, 4400, token)) return;
-      addPhase('p-flip');
-      if (!await until(t0, 5000, token)) return;
+      // 회색으로 번쩍이는 순간의 작은 배지
+      if (!await at(video, 1.50, token)) return;
+      show.oldBadge.animate([{opacity: 0, transform: 'scale(.5)', filter: 'grayscale(1) brightness(1.6)'}, {opacity: 1, transform: 'scale(.55)', filter: 'grayscale(1) brightness(1.6)', offset: .4}, {opacity: 1, transform: 'scale(1)', filter: 'none'}],
+        {duration: 220, fill: 'forwards', easing: ease});
+      if (!await at(video, 2.55, token)) return;
+      if (result.to < result.from) {
+        // 이전 배지는 아래로 떨어지고, 낮은 배지가 위에서 내려와 자리를 잡는다
+        show.oldBadge.animate([{opacity: 1, transform: 'none'}, {opacity: 0, transform: `translateY(${120 * k}px) rotate(8deg) scale(.9)`}],
+          {duration: 150, fill: 'forwards', easing: 'ease-in'});
+        show.newBadge.animate([
+          {opacity: 0, transform: `translateY(${-139 * k}px)`},
+          {opacity: 1, transform: `translateY(${-150 * k}px)`, offset: .15},
+          {opacity: 1, transform: `translateY(${-183 * k}px)`, offset: .45},
+          {opacity: 1, transform: `translateY(${10 * k}px)`, offset: .85},
+          {opacity: 1, transform: 'none'}],
+          {duration: 520, fill: 'forwards', easing: 'ease-in-out'});
+      } else {
+        // 보호권(또는 0진화)으로 등급이 유지될 때
+        show.oldBadge.animate([{transform: 'none'}, {transform: `translateX(${-8 * k}px) rotate(-4deg)`}, {transform: `translateX(${7 * k}px) rotate(3deg)`}, {transform: `translateX(${-4 * k}px)`}, {transform: 'none'}],
+          {duration: 500, iterations: 2, composite: 'add'});
+      }
+      if (!await at(video, 4.36, token)) return;
+      setScene('plate-fail');
+      flipToResult(token);
+      if (!await wait(700, token)) return;
     }
     finishShow(result);
   }
   function finishShow(result) {
     show.token += 1;
-    setPhases(result.success ? 'p-success' : 'p-fail', 'p-result');
+    show.fountains = false;
+    setScene(result.success ? 'plate-success' : 'plate-fail', 'p-result');
     scene.classList.toggle('is-fail-result', !result.success);
-    if (result.success) spawn(40);
+    if (result.success) spawn(60);
     $('[data-next]').focus({preventScroll: true});
   }
   function closeShow() {
     show.token += 1;
-    stopSounds();
+    stopMedia();
     show.fountains = false;
+    resetOverlays();
     showView('menu');
     render();
   }
@@ -596,7 +661,7 @@
   soundButton.addEventListener('click', () => {
     soundOn = !soundOn;
     try { localStorage.setItem('evoSound', soundOn ? 'on' : 'off'); } catch (_) { /* 무시 */ }
-    if (!soundOn) stopSounds();
+    if (!soundOn) Object.values(sounds).forEach(audio => audio.pause());
     renderSound();
   });
   renderSound();

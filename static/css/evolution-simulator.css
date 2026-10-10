@@ -160,98 +160,32 @@ body.evolution-sim-page .main-content { max-width: 1240px; padding: 10px 16px 36
 .evo-alert-actions .evo-outline-btn { left: calc(var(--u) * 14); }
 .evo-alert-actions .evo-blue-btn { left: auto; right: calc(var(--u) * 14); top: calc(var(--u) * 189); width: calc(var(--u) * 320); height: calc(var(--u) * 39); font-size: calc(var(--u) * 16); }
 
-/* ===== 연출 ===== */
+/* ===== 연출: 녹화 영상(카드·배지 자리를 지운 것) 위에 고른 선수의 카드와 배지를 같은 위치에 올린다 ===== */
 .evo-scene { background: #000; overflow: hidden; }
-.evo-plate { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity .35s ease, filter .6s ease; }
-.evo-beam {
-  position: absolute; left: calc(var(--u) * 520); top: calc(var(--u) * -30); width: calc(var(--u) * 160); height: calc(var(--u) * 470); opacity: 0; pointer-events: none;
-  background: radial-gradient(ellipse 50% 60% at 50% 30%, rgba(200, 235, 255, .85), rgba(110, 180, 255, .35) 45%, transparent 75%);
-  filter: blur(calc(var(--u) * 6)); mix-blend-mode: screen; transition: opacity .4s;
+.evo-video, .evo-plate { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; }
+.evo-scene.v-success .evo-video[data-video="success"],
+.evo-scene.v-fail .evo-video[data-video="fail"] { opacity: 1; }
+.evo-scene.plate-success .evo-plate-success, .evo-scene.plate-fail .evo-plate-fail { opacity: 1; }
+.evo-scene.plate-success .evo-video, .evo-scene.plate-fail .evo-video { opacity: 0; }
+.evo-s-card { position: absolute; left: calc(var(--u) * 486); top: calc(var(--u) * 161); width: calc(var(--u) * 228); opacity: 0; }
+.evo-s-badge { position: absolute; left: calc(var(--u) * 531); top: calc(var(--u) * 203); width: calc(var(--u) * 138); height: auto; opacity: 0; pointer-events: none; will-change: transform, opacity, filter; }
+.evo-s-flip { position: absolute; left: calc(var(--u) * 486); top: calc(var(--u) * 158); width: calc(var(--u) * 228); aspect-ratio: 1; opacity: 0; will-change: transform; }
+.evo-s-flip .evo-card { position: absolute; inset: 0; }
+.evo-s-back {
+  position: absolute; left: 19%; top: 8%; width: 62%; height: 84%; border-radius: calc(var(--u) * 4); opacity: 0;
+  background: linear-gradient(90deg, #0b0d10, #2a2f36 45%, #0b0d10); box-shadow: inset 0 0 0 calc(var(--u) * 2) #4b525c;
 }
-.evo-s-card { position: absolute; left: calc(var(--u) * 486); top: calc(var(--u) * 161); width: calc(var(--u) * 228); opacity: 0; transform: scale(.94); transition: opacity .35s, transform .5s ease, filter .35s; }
-.evo-s-badge { position: absolute; left: calc(var(--u) * 531); top: calc(var(--u) * 209); width: calc(var(--u) * 138); height: auto; opacity: 0; pointer-events: none; }
-.evo-s-title { position: absolute; left: 0; right: 0; top: calc(var(--u) * 36); margin: 0; text-align: center; font-size: calc(var(--u) * 74); font-weight: 800; letter-spacing: calc(var(--u) * -1.5); line-height: 1.2; text-shadow: 0 calc(var(--u) * 2) calc(var(--u) * 10) rgba(0, 0, 0, .55); white-space: pre; }
-.evo-s-title .evo-cursor { display: inline-block; width: .82em; height: .9em; vertical-align: -.06em; background: #fff; }
-.evo-s-flip { position: absolute; left: calc(var(--u) * 486); top: calc(var(--u) * 150); width: calc(var(--u) * 228); opacity: 0; transform: perspective(calc(var(--u) * 900)) rotateY(90deg) scale(.9); }
 .evo-confetti { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 6; }
-
-/* 로딩: 팩 오프너와 같은 반투명 검정 + 움직이는 로고 */
-.evo-loading { position: absolute; inset: 0; z-index: 60; background: rgba(0, 0, 0, .72); line-height: 0; }
-.evo-loading[hidden] { display: none; }
-.evo-loading img { position: absolute; left: 50%; top: 50%; width: 16%; height: auto; aspect-ratio: 1; object-fit: contain; transform: translate(-50%, -50%); }
-
-.evo-sound {
-  position: absolute; right: calc(var(--u) * 16); top: calc(var(--u) * 10); z-index: 40; width: calc(var(--u) * 38); height: calc(var(--u) * 38); display: grid; place-items: center;
-  border: 0; border-radius: 50%; background: rgba(0, 0, 0, .45); color: #fff; font-size: calc(var(--u) * 19); cursor: pointer;
-}
-.evo-sound[aria-pressed="false"] { color: #9aa3ae; }
-
-/* 초록 전환 */
-.evo-wipe { position: absolute; inset: 0; z-index: 10; pointer-events: none; visibility: hidden; }
-.evo-wipe-green {
-  position: absolute; inset: 0;
-  background:
-    linear-gradient(60deg, transparent 49.6%, rgba(20, 120, 50, .09) 50%, transparent 50.4%) 0 0 / calc(var(--u) * 60) calc(var(--u) * 104),
-    linear-gradient(-60deg, transparent 49.6%, rgba(20, 120, 50, .09) 50%, transparent 50.4%) 0 0 / calc(var(--u) * 60) calc(var(--u) * 104),
-    repeating-linear-gradient(0deg, transparent 0 calc(var(--u) * 51), rgba(20, 120, 50, .1) calc(var(--u) * 51) calc(var(--u) * 52)),
-    #2cf06a;
-  clip-path: polygon(50% 0, 50% 0, 50% 50%, 50% 100%, 50% 100%, 50% 50%);
-}
-.evo-wipe-white { position: absolute; inset: 0; background: #fbfbf6; clip-path: polygon(50% 100%, 50% 100%, 50% 100%, 50% 100%); }
-.evo-wipe-frame { position: absolute; left: calc(var(--u) * 128); top: calc(var(--u) * 128); width: calc(var(--u) * 944); height: calc(var(--u) * 230); display: grid; place-items: center; transform: translateY(calc(var(--u) * 80)) scale(.66); opacity: 0; }
-.evo-wipe-frame svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
-.evo-wipe-frame polygon { fill: none; stroke: #0f2a18; stroke-width: 2; stroke-dasharray: 34 20; vector-effect: non-scaling-stroke; opacity: .75; }
-.evo-wipe-text { position: relative; font-size: calc(var(--u) * 128); font-weight: 900; letter-spacing: calc(var(--u) * -3); line-height: 1; color: transparent; -webkit-text-stroke: calc(var(--u) * 2.5) #10331d; clip-path: inset(0 100% 0 0); }
-
-/* 단계 상태 (JS가 data-phase 를 바꾼다) */
-.evo-scene.p-stage .evo-plate-stage { opacity: 1; }
-.evo-scene.p-stage .evo-s-card { opacity: 1; transform: none; }
-.evo-scene.p-beam .evo-plate-beam { opacity: 1; transition-duration: .3s; }
-.evo-scene.p-beam .evo-s-card { opacity: 0; filter: brightness(4); transform: scale(1.02); }
-.evo-scene.p-beam .evo-beam { opacity: .5; animation: evoBeamPulse 1.2s ease-in-out infinite; }
-
-.evo-scene.p-wipe .evo-wipe { visibility: visible; }
-.evo-scene.p-wipe .evo-wipe-green { animation: evoWipeGreen .22s cubic-bezier(.3, .7, .2, 1) forwards; }
-.evo-scene.p-wipe .evo-wipe-frame { animation: evoFrameIn .9s .1s cubic-bezier(.2, .8, .2, 1) forwards; }
-.evo-scene.p-wipe .evo-wipe-text { animation: evoTextOutline .55s .12s steps(5, end) forwards; }
-.evo-scene.p-wipe-white .evo-wipe-white { animation: evoWipeWhite .32s ease-out forwards; }
-.evo-scene.p-wipe-white .evo-wipe-text { -webkit-text-stroke-color: #c9cbc4; }
-.evo-scene.p-wipe-fill .evo-wipe-white { animation: none; clip-path: polygon(50% 100%, 50% 100%, 50% 100%, 50% 100%); }
-.evo-scene.p-wipe-fill .evo-wipe-text { color: #000; -webkit-text-stroke: 0; clip-path: inset(0 0 0 0); }
-.evo-scene.p-reveal .evo-wipe { animation: evoReveal .38s cubic-bezier(.5, 0, .2, 1) forwards; }
-
-.evo-scene.p-success .evo-plate-success { opacity: 1; transition-duration: 0s; }
-.evo-scene.p-success .evo-plate-stage, .evo-scene.p-success .evo-plate-beam { opacity: 0; transition-duration: 0s; }
-.evo-scene.p-success .evo-beam { opacity: 0; animation: none; }
-.evo-scene.p-success .evo-s-old { opacity: 1; }
-.evo-scene.p-upgrade .evo-beam { left: calc(var(--u) * 540); width: calc(var(--u) * 120); opacity: .85; animation: evoBeamPulse .8s ease-in-out infinite; }
-.evo-scene.p-upgrade .evo-s-old { animation: evoBadgeOut .45s ease-in forwards; }
-.evo-scene.p-upgrade .evo-s-new { animation: evoBadgeRise 1.2s cubic-bezier(.2, .9, .3, 1) forwards; }
-.evo-scene.p-upgrade .evo-plate-success { filter: hue-rotate(-38deg) saturate(1.15); transition-duration: 2.4s; }
-.evo-scene.p-flip .evo-s-title, .evo-scene.p-flip .evo-s-badge { opacity: 0 !important; transition: opacity .25s; animation: none !important; }
-.evo-scene.p-flip .evo-beam { opacity: 0; animation: none; }
-.evo-scene.p-flip .evo-s-flip { animation: evoFlipIn .9s cubic-bezier(.2, .8, .2, 1) forwards; }
-
-.evo-scene.p-fail-flash .evo-plate-fail { opacity: 1; filter: grayscale(1) brightness(2.1) contrast(.55); transition-duration: 0s; }
-.evo-scene.p-fail-flash .evo-plate-stage, .evo-scene.p-fail-flash .evo-plate-beam { opacity: 0; transition-duration: 0s; }
-.evo-scene.p-fail-flash .evo-s-old { opacity: 1; filter: grayscale(1) brightness(1.3); }
-.evo-scene.p-fail .evo-plate-fail { opacity: 1; filter: none; transition: filter .5s; }
-.evo-scene.p-fail .evo-s-old { opacity: 1; filter: none; transition: filter .5s; }
-.evo-scene.p-drop .evo-s-old { animation: evoBadgeFall 1s ease-in forwards; }
-.evo-scene.p-drop .evo-s-new { animation: evoBadgeDescend .9s .45s cubic-bezier(.2, .9, .3, 1) both; }
-.evo-scene.p-hold .evo-s-old { animation: evoBadgeShake .55s ease 2; }
 
 /* 결과 */
 .evo-result { position: absolute; inset: 0; z-index: 20; opacity: 0; pointer-events: none; transition: opacity .35s; }
 .evo-scene.p-result .evo-result { opacity: 1; pointer-events: auto; }
-.evo-scene.p-result .evo-s-title, .evo-scene.p-result .evo-s-badge, .evo-scene.p-result .evo-s-flip, .evo-scene.p-result .evo-s-card { opacity: 0 !important; animation: none !important; }
-.evo-scene.p-result .evo-beam { opacity: 0; animation: none; }
+.evo-scene.p-result .evo-s-badge, .evo-scene.p-result .evo-s-flip, .evo-scene.p-result .evo-s-card { opacity: 0 !important; }
 .evo-scene.p-result .evo-scene.p-result .evo-plate { filter: brightness(.55); }
 .evo-r-panel { position: absolute; left: calc(var(--u) * 556); top: calc(var(--u) * 34); width: calc(var(--u) * 497); height: calc(var(--u) * 421); background: linear-gradient(90deg, rgba(6, 9, 14, .55), rgba(6, 9, 14, .78)); transform: translateX(calc(var(--u) * 40)); transition: transform .45s cubic-bezier(.2, .8, .2, 1); }
 .evo-scene.p-result .evo-r-panel { transform: none; }
 .evo-r-title { position: absolute; left: calc(var(--u) * 226); top: calc(var(--u) * 70); margin: 0; font-size: calc(var(--u) * 45); font-weight: 800; letter-spacing: calc(var(--u) * -1); }
-.evo-r-card { position: absolute; left: calc(var(--u) * 214); top: calc(var(--u) * 178); width: calc(var(--u) * 230); transform: translate(calc(var(--u) * 170), calc(var(--u) * -30)) scale(1.05); transition: transform .55s cubic-bezier(.2, .8, .2, 1); }
-.evo-scene.p-result .evo-r-card { transform: none; }
+.evo-r-card { position: absolute; left: calc(var(--u) * 214); top: calc(var(--u) * 178); width: calc(var(--u) * 230); }
 .evo-r-from { position: absolute; left: calc(var(--u) * 663); top: calc(var(--u) * 60); width: calc(var(--u) * 80); }
 .evo-r-chev { left: calc(var(--u) * 783); top: calc(var(--u) * 87); }
 .evo-r-chev i { width: calc(var(--u) * 14); height: calc(var(--u) * 24); background: linear-gradient(180deg, #5af08a, #13b64b); }
@@ -279,45 +213,7 @@ body.evolution-sim-page .main-content { max-width: 1240px; padding: 10px 16px 36
 .evo-r-bottom .evo-outline-btn { position: absolute; left: calc(var(--u) * 716); top: calc(var(--u) * 4); width: calc(var(--u) * 218); height: calc(var(--u) * 41); }
 .evo-r-bottom .evo-blue-btn { top: calc(var(--u) * 4); right: calc(var(--u) * 28); width: calc(var(--u) * 220); }
 
-@keyframes evoBeamPulse { 0%, 100% { opacity: .55; } 50% { opacity: .85; } }
-@keyframes evoWipeGreen {
-  0% { clip-path: polygon(34% 0, 66% 0, 50% 50%, 66% 100%, 34% 100%, 50% 50%); }
-  45% { clip-path: polygon(0 0, 100% 0, 58% 50%, 100% 100%, 0 100%, 42% 50%); }
-  100% { clip-path: polygon(0 0, 100% 0, 100% 50%, 100% 100%, 0 100%, 0 50%); }
-}
-@keyframes evoFrameIn { to { opacity: 1; transform: none; } }
-@keyframes evoTextOutline { to { clip-path: inset(0 0 0 0); } }
-@keyframes evoWipeWhite { to { clip-path: polygon(26% 0, 74% 0, 100% 100%, 0 100%); } }
-@keyframes evoReveal {
-  0% { clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%); opacity: 1; }
-  45% { clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%); opacity: 1; filter: brightness(1.6); }
-  100% { clip-path: polygon(0 0, 100% 0, 100% 0, 0 0); opacity: 0; filter: brightness(2); }
-}
 
-@keyframes evoBadgeOut { to { opacity: 0; transform: scale(1.35); filter: brightness(3); } }
-@keyframes evoBadgeRise {
-  0% { opacity: 0; transform: translateY(calc(var(--u) * 250)) scale(.55); filter: brightness(2.4); }
-  45% { opacity: 1; filter: brightness(1.8); }
-  75% { transform: translateY(calc(var(--u) * -6)) scale(1.06); filter: brightness(1.2); }
-  100% { opacity: 1; transform: none; filter: none; }
-}
-@keyframes evoFlipIn {
-  0% { opacity: 0; transform: perspective(calc(var(--u) * 900)) rotateY(90deg) scale(.9); }
-  20% { opacity: 1; }
-  100% { opacity: 1; transform: perspective(calc(var(--u) * 900)) rotateY(0deg) scale(1); }
-}
-@keyframes evoBadgeFall {
-  0% { transform: none; opacity: 1; }
-  20% { transform: translateY(calc(var(--u) * -8)) rotate(-4deg); }
-  100% { transform: translateY(calc(var(--u) * 260)) rotate(14deg) scale(.85); opacity: 0; }
-}
-@keyframes evoBadgeDescend { from { opacity: 0; transform: translateY(calc(var(--u) * -230)) scale(.9); } to { opacity: 1; transform: none; } }
-@keyframes evoBadgeShake {
-  0%, 100% { transform: none; }
-  25% { transform: translateX(calc(var(--u) * -8)) rotate(-4deg); }
-  50% { transform: translateX(calc(var(--u) * 7)) rotate(3deg); }
-  75% { transform: translateX(calc(var(--u) * -4)) rotate(-2deg); }
-}
 
 /* ===== 기록 (게임 화면과 같은 어두운 패널, 페이지 일반 크기) ===== */
 .evo-log {
@@ -392,5 +288,5 @@ body.evolution-sim-page .main-content { max-width: 1240px; padding: 10px 16px 36
   .evo-log-result { width: 48px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .evo-scene *, .evo-scene *::before, .evo-scene *::after { animation-duration: .01s !important; transition-duration: .01s !important; }
+  .evo-r-panel { transition: none; }
 }
