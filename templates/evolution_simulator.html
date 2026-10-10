@@ -1,0 +1,212 @@
+{% extends "base.html" %}
+{% set evo_seo_title = 'FC모바일 진화 시뮬레이터 · 진화 확률 계산기 | 피모북' %}
+{% set evo_seo_description = 'FC모바일 선수 진화 시뮬레이터. 넥슨 공식 진화 확률표로 재료별 성공률을 계산하고 실제 게임과 같은 연출로 진화를 체험하세요.' %}
+{% set og_title = evo_seo_title %}
+{% set og_description = evo_seo_description %}
+{% block title %}{{ evo_seo_title }}{% endblock %}
+{% block body_class %}evolution-sim-page{% endblock %}
+{% block extra_head %}
+<meta name="description" content="{{ evo_seo_description }}">
+<link rel="preload" as="image" href="{{ url_for('static', filename='evolution-sim/menu.webp') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/evolution-simulator.css', v='20261010-27') }}">
+{% endblock %}
+{% block content %}
+{% set coin = url_for('static', filename='pack-opener/images/mp-token-transparent.png') %}
+{% set evo_img = url_for('static', filename='evolution-sim/') %}
+<section class="evo-page">
+  <h1 class="evo-visually-hidden">FC모바일 진화 시뮬레이터</h1>
+
+  <div class="evo-screen" data-screen>
+    <div class="evo-ui">
+
+      <!-- ===== 선수 진화 메인 ===== -->
+      <div class="evo-view evo-menu" data-view="menu">
+        <div class="evo-topbar">
+          <a class="evo-back" href="{{ url_for('index') }}" aria-label="홈으로"><i class="bi bi-chevron-left" aria-hidden="true"></i></a>
+          <h2>선수 진화</h2>
+        </div>
+
+        <button class="evo-m-card" type="button" data-open-player aria-label="진화할 선수 선택">
+          <span class="evo-card" data-target-card></span>
+          <img class="evo-card-badge" data-target-badge alt="" hidden>
+          <span class="evo-m-card-empty" data-target-empty><i class="bi bi-plus-lg" aria-hidden="true"></i><b>선수 선택</b></span>
+        </button>
+        <label class="evo-m-level"><span>현재 진화</span><select data-level-select aria-label="현재 진화 단계"></select></label>
+        <dl class="evo-m-values">
+          <dt>현재 선수 가치</dt>
+          <dd><img src="{{ coin }}" alt=""><span data-value-now>-</span></dd>
+          <dt>진화 성공 후 선수 가치</dt>
+          <dd><img src="{{ coin }}" alt=""><span data-value-next>-</span></dd>
+        </dl>
+
+        <div class="evo-panel evo-m-center">
+          <div class="evo-m-badges">
+            <img class="evo-m-from" data-from-badge alt="">
+            <span class="evo-chev" aria-hidden="true"><i></i><i></i></span>
+            <img class="evo-m-to" data-to-badge alt="">
+          </div>
+          <p class="evo-m-line1">진화 단계별 상세 확률은 하단 <i class="bi bi-info-circle" aria-hidden="true"></i> 버튼 확인해 주세요</p>
+          <p class="evo-m-line2" data-fail-note>진화 실패 시 등급이 하락합니다.</p>
+          <div class="evo-m-gain evo-m-gain-ovr"><span>OVR</span><b data-gain-ovr>+0</b></div>
+          <div class="evo-m-gain evo-m-gain-stat"><span>능력치</span><b data-gain-stat>+0</b></div>
+          <div class="evo-m-gain evo-m-gain-skill"><span>스킬 포인트</span><b>+1</b></div>
+          <div class="evo-m-divider"></div>
+          <div class="evo-m-protect" data-protect hidden>
+            <span class="evo-m-shield" aria-hidden="true"><i class="bi bi-check-lg"></i></span>
+            <span class="evo-m-protect-count" data-protect-count></span>
+            <label class="evo-m-switch">
+              <span class="evo-m-switch-text">진화 등급 보호<em data-protect-state>OFF</em></span>
+              <input type="checkbox" data-protect-toggle>
+              <span class="evo-m-switch-track" aria-hidden="true"></span>
+            </label>
+          </div>
+          <p class="evo-m-protect-na" data-protect-na>진화6 단계 도달 이후부터 진화 등급 보호권을 사용할 수 있습니다.</p>
+          <p class="evo-m-fine">같은 진화 단계의 동일 선수를 재료로 사용할 경우, 진화 실패 시 단계가 유지됩니다.</p>
+        </div>
+
+        <div class="evo-panel evo-m-boost">
+          <span class="evo-boost-title">성공률 부스트</span>
+          <div class="evo-gauge" data-gauge></div>
+          <div class="evo-slots" data-slots></div>
+        </div>
+
+        <div class="evo-bottombar">
+          <button class="evo-info-btn" type="button" data-open-info><span class="evo-info-icon" aria-hidden="true">i</span>진화 성공률</button>
+          <span class="evo-rate-readout" data-rate-readout></span>
+          <button class="evo-blue-btn evo-go" type="button" data-go disabled>진화</button>
+        </div>
+      </div>
+
+      <!-- ===== 재료 선택 ===== -->
+      <div class="evo-view evo-picker" data-view="picker" hidden>
+        <div class="evo-topbar">
+          <button class="evo-back" type="button" data-picker-done aria-label="재료 선택 닫기"><i class="bi bi-chevron-left" aria-hidden="true"></i></button>
+          <h2>선수 진화</h2>
+        </div>
+        <div class="evo-panel evo-p-boost">
+          <span class="evo-boost-title">성공률 부스트</span>
+          <div class="evo-gauge" data-gauge></div>
+          <div class="evo-slots" data-slots></div>
+        </div>
+        <div class="evo-panel evo-p-list">
+          <div class="evo-p-head">
+            <label class="evo-p-toggle"><span>기본 OVR</span><input type="checkbox" data-base-ovr><span class="evo-m-switch-track" aria-hidden="true"></span></label>
+            <label class="evo-p-select"><select data-material-level aria-label="재료 진화 단계"></select><i class="bi bi-caret-down-fill" aria-hidden="true"></i></label>
+            <button class="evo-p-auto" type="button" data-autofill>자동 채우기</button>
+          </div>
+          <div class="evo-p-grid" data-material-grid></div>
+        </div>
+        <div class="evo-bottombar">
+          <button class="evo-info-btn" type="button" data-open-info><span class="evo-info-icon" aria-hidden="true">i</span>진화 성공률</button>
+          <span class="evo-rate-readout" data-rate-readout></span>
+          <button class="evo-blue-btn" type="button" data-picker-done>확인</button>
+        </div>
+      </div>
+
+      <!-- ===== 진화 연출 ===== -->
+      <div class="evo-view evo-scene" data-view="scene" hidden>
+        <img class="evo-plate evo-plate-stage" src="{{ evo_img }}stage.webp" alt="">
+        <img class="evo-plate evo-plate-beam" src="{{ evo_img }}beam.webp" alt="">
+        <img class="evo-plate evo-plate-success" src="{{ evo_img }}success.webp" alt="">
+        <img class="evo-plate evo-plate-fail" src="{{ evo_img }}fail.webp" alt="">
+        <div class="evo-beam" aria-hidden="true"></div>
+        <div class="evo-s-card"><span class="evo-card" data-show-card></span></div>
+        <img class="evo-s-badge evo-s-old" data-show-old alt="">
+        <img class="evo-s-badge evo-s-new" data-show-new alt="">
+        <h2 class="evo-s-title" data-show-title></h2>
+        <div class="evo-s-flip"><span class="evo-card" data-show-flip></span></div>
+        <canvas class="evo-confetti" data-confetti aria-hidden="true"></canvas>
+
+        <div class="evo-wipe" aria-hidden="true">
+          <div class="evo-wipe-green"></div>
+          <div class="evo-wipe-white"></div>
+          <div class="evo-wipe-frame">
+            <svg viewBox="0 0 700 170" preserveAspectRatio="none"><polygon points="45,4 655,4 696,85 655,166 45,166 4,85"/></svg>
+            <span class="evo-wipe-text" data-wipe-text>진화 성공</span>
+          </div>
+        </div>
+
+        <div class="evo-result" data-result>
+          <div class="evo-r-panel"></div>
+          <h2 class="evo-r-title" data-result-title>진화 성공</h2>
+          <div class="evo-r-card"><span class="evo-card" data-result-card></span><img class="evo-card-badge" data-result-card-badge alt=""></div>
+          <img class="evo-r-from" data-result-from alt="">
+          <span class="evo-chev evo-r-chev" aria-hidden="true"><i></i><i></i><i></i></span>
+          <img class="evo-r-to" data-result-to alt="">
+          <dl class="evo-r-stats" data-result-stats></dl>
+          <p class="evo-r-strip" data-result-strip></p>
+          <div class="evo-r-bottom">
+            <label class="evo-r-skip"><span>애니메이션 스킵</span><input type="checkbox" data-skip-anim><span class="evo-r-box" aria-hidden="true"></span></label>
+            <button class="evo-outline-btn" type="button" data-again>같은 재료로 다시</button>
+            <button class="evo-blue-btn" type="button" data-next>다음</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="evo-loading" data-loading aria-label="불러오는 중" role="status"><img src="{{ url_for('static', filename='pack-opener/images/loading-logo-animated.png') }}" alt=""></div>
+      <button class="evo-sound" type="button" data-sound aria-pressed="true" aria-label="소리 끄기"><i class="bi bi-volume-up-fill" aria-hidden="true"></i></button>
+
+      <!-- ===== 알림 ===== -->
+      <div class="evo-alert" data-alert hidden role="alertdialog" aria-modal="true" aria-labelledby="evo-alert-title">
+        <div class="evo-alert-box">
+          <h3 id="evo-alert-title">알림</h3>
+          <button class="evo-alert-x" type="button" data-alert-cancel aria-label="닫기"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
+          <p>진화 등급 보호가 비활성화되어 있습니다. 진화 실패 시 등급이 하락할 수 있습니다. 진화를 시도하시겠습니까?</p>
+          <div class="evo-alert-actions">
+            <button class="evo-outline-btn" type="button" data-alert-cancel>뒤로가기</button>
+            <button class="evo-blue-btn" type="button" data-alert-ok>계속하기</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <section class="evo-log" aria-labelledby="evo-log-title">
+    <div class="evo-log-head">
+      <h2 id="evo-log-title">진화 기록</h2>
+      <button class="evo-log-reset" type="button" data-reset-log><i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i>기록 초기화</button>
+    </div>
+    <dl class="evo-log-stats">
+      <div><dt>시도</dt><dd data-log-tries>0</dd></div>
+      <div class="is-success"><dt>성공</dt><dd data-log-success>0</dd></div>
+      <div class="is-fail"><dt>실패</dt><dd data-log-fail>0</dd></div>
+      <div><dt>실제 성공률</dt><dd data-log-rate>-</dd></div>
+      <div><dt>사용 재료</dt><dd data-log-materials>0</dd></div>
+      <div><dt>사용 보호권</dt><dd data-log-protect>0</dd></div>
+    </dl>
+    <ol class="evo-log-list" data-log-list></ol>
+    <p class="evo-log-empty" data-log-empty>진화를 시도하면 여기에 결과가 쌓입니다.</p>
+  </section>
+</section>
+
+<dialog class="evo-dialog" data-player-dialog aria-labelledby="evo-player-title">
+  <div class="evo-dialog-head">
+    <h2 id="evo-player-title">진화할 선수 선택</h2>
+    <button class="evo-dialog-close" type="button" data-close aria-label="닫기"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
+  </div>
+  <input class="evo-search" type="search" data-player-search placeholder="선수 이름 또는 시즌 검색" autocomplete="off">
+  <div class="evo-player-results" data-player-results></div>
+</dialog>
+
+<dialog class="evo-dialog" data-info-dialog aria-labelledby="evo-info-title">
+  <div class="evo-dialog-head">
+    <h2 id="evo-info-title">진화 성공률</h2>
+    <button class="evo-dialog-close" type="button" data-close aria-label="닫기"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
+  </div>
+  <div class="evo-info-body">
+    <table class="evo-info-table">
+      <thead><tr><th>진화</th><th>최대 성공률</th><th>재료</th><th>보호권</th></tr></thead>
+      <tbody data-info-rows></tbody>
+    </table>
+    <ul class="evo-info-rules">
+      <li>재료마다 대상 선수와의 기본 OVR 차이(-20 ~ +10)와 재료의 진화 단계로 성공률이 정해지고, 합산 값은 단계별 최대 성공률을 넘지 않습니다.</li>
+      <li>OVR 차이가 -20보다 낮은 재료는 성공률을 올리지 못합니다.</li>
+      <li>보호권을 켜면 실패해도 등급이 내려가지 않습니다. 성공해도 보호권은 소모됩니다.</li>
+    </ul>
+    <p class="evo-info-source">확률 출처: <a href="https://fcmobile.nexon.com/forumcrafting" target="_blank" rel="noopener">넥슨 FC모바일 진화 확률 안내</a></p>
+  </div>
+</dialog>
+
+<script type="application/json" id="evo-data">{{ {'steps': evolution_data.steps, 'materials': evolution_materials, 'enhanceSteps': enhance_steps}|tojson }}</script>
+{% endblock %}
+{% block extra_scripts %}<script src="{{ url_for('static', filename='js/evolution-simulator.js', v='20261010-27') }}" defer></script>{% endblock %}

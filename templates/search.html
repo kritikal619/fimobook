@@ -972,7 +972,7 @@
   }
   @media (min-width: 641px){
     .quick-links{
-      grid-template-columns: repeat(6, minmax(0, 1fr));
+      grid-template-columns: repeat(7, minmax(0, 1fr));
     }
     .quick-card{
       height:auto;
@@ -1436,7 +1436,7 @@
   }
 
 </style>
-<link rel="stylesheet" href="{{ url_for('static', filename='css/home-mobile-shortcuts.css') }}?v=20261004">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/home-mobile-shortcuts.css') }}?v=20261010">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/home-quiet.css') }}?v=20261010-6">
 {% endblock %}
 
@@ -1626,6 +1626,10 @@
         <a href="{{ url_for('pack_opener_page') }}" class="quick-card tool-squad">
           <span class="tool-glyph" aria-hidden="true"><i class="bi bi-box-seam"></i></span>
           <span class="tool-name">팩 오프너</span>
+        </a>
+        <a href="{{ url_for('evolution_simulator_page') }}" class="quick-card tool-squad">
+          <span class="tool-glyph" aria-hidden="true"><i class="bi bi-arrow-up-square"></i></span>
+          <span class="tool-name">진화 시뮬</span>
         </a>
         <a href="{{ url_for('player_compare_page') }}" class="quick-card tool-squad">
           <span class="tool-glyph" aria-hidden="true"><i class="bi bi-people"></i></span>

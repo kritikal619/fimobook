@@ -11782,6 +11782,93 @@ def pack_opener_page():
     )
 
 
+EVOLUTION_SUMMARY_WEIGHTS = (
+    ("pace", "속도", (("ACC", 50), ("SPD", 50))),
+    ("shooting", "슈팅", (("FIN", 35), ("LSA", 20), ("SHO", 20), ("POS", 15), ("VOL", 5), ("PEN", 5))),
+    ("passing", "패스", (("SPA", 30), ("LPA", 20), ("VIS", 25), ("CRO", 15), ("CUR", 5), ("FRK", 5))),
+    ("dribbling", "드리블", (("DRI", 25), ("BAC", 25), ("AGI", 25), ("REA", 15), ("BAL", 10))),
+    ("defending", "수비", (("MRK", 25), ("STT", 20), ("SLT", 20), ("AWR", 20), ("HEA", 15))),
+    ("physical", "피지컬", (("STR", 45), ("AGG", 30), ("JMP", 25))),
+)
+EVOLUTION_MATERIAL_CLASS_PREFIX = "New Generation"
+_EVOLUTION_DATA_CACHE = {}
+
+
+def _evolution_probability_data():
+    path = os.path.join(app.root_path, "static", "data", "evolution_probabilities.json")
+    mtime = os.path.getmtime(path)
+    cached = _EVOLUTION_DATA_CACHE.get("data")
+    if cached and cached[0] == mtime:
+        return cached[1]
+    with open(path, "r", encoding="utf-8") as f:
+        data = json.load(f)
+    _EVOLUTION_DATA_CACHE["data"] = (mtime, data)
+    return data
+
+
+def _evolution_int(value):
+    try:
+        return int(float(str(value).replace(",", "")))
+    except (TypeError, ValueError):
+        return 0
+
+
+def _evolution_player_payload(player, include_stats=True):
+    payload = {
+        "cid": player.get("cid"),
+        "playerKor": player.get("playerKor"),
+        "className": player.get("className"),
+        "ovr": _evolution_int(player.get("ovr")),
+        "position": player.get("position"),
+        "card": _player_thumbnail_url("card", player.get("cid"), 256) or player.get("bimage") or "",
+        "face": _player_thumbnail_url("faceon", player.get("cid"), 256) or player.get("pimage") or "",
+    }
+    if include_stats:
+        # 상세 페이지와 같은 가중치로 요약 능력치를 만든다. 진화 단계마다 각 세부 능력치가 같은 값만큼 오르므로 요약치도 같은 값만큼 오른다.
+        payload["summary"] = [
+            {
+                "key": key,
+                "label": label,
+                "value": sum(_evolution_int(player.get(code)) * weight for code, weight in weights) // 100,
+            }
+            for key, label, weights in EVOLUTION_SUMMARY_WEIGHTS
+        ]
+        payload["priceByEnhance"] = {
+            str(level): price for level, price in _build_price_by_enhance(player).items()
+        }
+    return payload
+
+
+def _evolution_materials():
+    materials = [
+        _evolution_player_payload(player, include_stats=False)
+        for player in PLAYER_DATA
+        if str(player.get("className") or "").startswith(EVOLUTION_MATERIAL_CLASS_PREFIX)
+    ]
+    return sorted(materials, key=lambda item: (-item["ovr"], item["playerKor"] or ""))
+
+
+@app.route("/evolution-simulator")
+def evolution_simulator_page():
+    return render_template(
+        "evolution_simulator.html",
+        canonical_url=_canonical("/evolution-simulator"),
+        meta_description="FC모바일 선수 진화 시뮬레이터. 넥슨 공식 진화 확률표로 진화 성공률을 계산하고 실제와 같은 연출로 진화를 체험하세요.",
+        og_title="FC모바일 진화 시뮬레이터 | 피모북",
+        evolution_data=_evolution_probability_data(),
+        evolution_materials=_evolution_materials(),
+        enhance_steps=ENHANCE_LEVEL_STEPS,
+    )
+
+
+@app.route("/api/evolution-simulator/player/<int:cid>")
+def evolution_simulator_player_api(cid):
+    player = _get_local_player_by_cid(cid)
+    if not player:
+        return jsonify({"error": "not_found"}), 404
+    return jsonify(_evolution_player_payload(player))
+
+
 @app.route("/api/pack-opener/catalog")
 def pack_opener_catalog_api():
     return jsonify(get_pack_catalog(app.root_path, PLAYER_DATA).catalog())
