@@ -100,6 +100,7 @@ body.evolution-sim-page .main-content { max-width: 1240px; padding: 10px 16px 36
 .evo-gauge span { position: relative; overflow: hidden; display: grid; place-items: center; background: #5a626d; font-size: calc(var(--u) * 9.5); font-weight: 600; color: #e9edf2; }
 .evo-gauge span::before { content: ""; position: absolute; inset: 0; background: #1d9bf0; transform-origin: left; transform: scaleX(var(--cell, 0)); transition: transform .35s ease; }
 .evo-gauge span b { position: relative; font-weight: 600; }
+.evo-gauge.is-full span::before { background: #26d465; }
 .evo-slots { position: absolute; left: calc(var(--u) * 13); top: calc(var(--u) * 56); width: calc(var(--u) * 281); display: grid; grid-template-columns: repeat(3, calc(var(--u) * 81)); justify-content: space-between; row-gap: calc(var(--u) * 9); }
 .evo-slot { position: relative; width: calc(var(--u) * 81); height: calc(var(--u) * 102); padding: 0; border: 0; background: none; cursor: pointer; }
 .evo-slot.is-empty { border: calc(var(--u) * 1.5) solid #1fd078; border-radius: calc(var(--u) * 6); background: rgba(0, 0, 0, .22); color: #2ee07a; font-size: calc(var(--u) * 30); }

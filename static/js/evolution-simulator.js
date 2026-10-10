@@ -94,6 +94,8 @@
   function renderGauges(step) {
     const fill = step && state.player ? totalRate(step) / step.maxRate : 0;
     $$('[data-gauge]').forEach(gauge => {
+      // 게임처럼 성공률 부스트가 가득 차면 게이지가 초록색으로 바뀐다.
+      gauge.classList.toggle('is-full', fill >= 0.9999);
       gauge.replaceChildren(...Array.from({length: 5}, (_, i) => {
         const cell = document.createElement('span');
         cell.style.setProperty('--cell', Math.max(0, Math.min(1, fill * 5 - i)).toFixed(3));
