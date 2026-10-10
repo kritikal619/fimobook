@@ -144,3 +144,36 @@ html[data-theme="dark"] .detail-search-lede { color:#a7b5c7 !important; }
   .active-filter-chip { height:36px; }
   .active-filter-chip .bi { font-size:17px; }
 }
+
+/* 2026-10-10: 밀도 정리 — 작은 제목, 낮은 입력, 0 배지 숨김, 5열 조건 목록 */
+body.detail-search-page .main-content { max-width:1040px; }
+.detail-search-page .detail-search-wrap { gap:12px; }
+.detail-search-page .hero h1 { font-size:22px; letter-spacing:-.5px; }
+.detail-search-page .detail-search-lede { margin-top:2px !important; font-size:13px !important; }
+.detail-search-page .panel { padding:16px 18px; border-radius:8px; box-shadow:none; }
+.detail-search-page .filter-label { font-size:12px; font-weight:650; color:#64748b; }
+.detail-search-page :is(.control,.control-select) { min-height:38px; font-size:14px; font-weight:500; border-radius:6px; }
+.detail-search-page .multi-box { border-radius:6px; }
+.detail-search-page .multi-head { min-height:40px; padding-top:0; padding-bottom:0; }
+.detail-search-page .multi-box:not(.has-selection) .count-pill { display:none; }
+.detail-search-page .multi-head, .detail-search-page .multi-head * { font-weight:600; }
+.detail-search-page .active-filters-count:not(.has-filters) { display:none; }
+.detail-search-page .detail-search-buttons .btn { min-height:38px; font-size:14px; }
+.detail-search-page .detail-search-buttons .btn-primary { min-width:96px; }
+@media (min-width:1101px) {
+  .detail-search-page .filter-grid { grid-template-columns:repeat(5,minmax(0,1fr)); gap:8px; }
+}
+html[data-theme="dark"] .detail-search-page .filter-label { color:#a7b5c7 !important; }
+
+/* 2026-10-10: 하단 검색 바 플로팅 해제 — 폼 맨 아래에 일반 흐름으로 배치 */
+.detail-search-page .detail-search-actions {
+  position:static; bottom:auto; z-index:auto;
+  margin:16px 0 0; padding:14px 0 0;
+  background:transparent; backdrop-filter:none; -webkit-backdrop-filter:none; box-shadow:none;
+  border-radius:0; justify-content:flex-end;
+}
+.detail-search-page .active-filters { justify-content:flex-start; }
+@media (max-width:720px) {
+  .detail-search-page .detail-search-actions { margin:14px 0 0; padding:12px 0 0; }
+}
+html[data-theme="dark"] .detail-search-page .detail-search-actions { background:transparent; box-shadow:none; }

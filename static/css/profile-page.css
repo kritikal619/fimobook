@@ -166,3 +166,26 @@ html[data-theme="dark"] .profile-shell .profile-badge.verified { color: var(--pr
 @media (prefers-reduced-motion: reduce) {
   .profile-shell *, .profile-shell *::before, .profile-shell *::after { transition: none; }
 }
+
+/* 2026-10-10: 단순화 — 중복 안내 제거, 평평한 카드, 단색 버튼 */
+.profile-shell { gap: 14px; }
+.profile-panel { border-radius: 8px; }
+.profile-intro { padding: 20px; gap: 14px; }
+.profile-avatar { width: 48px; height: 48px; flex-basis: 48px; border-radius: 50%; background: var(--profile-soft); color: var(--muted); font-size: 20px; font-weight: 600; border: 1px solid var(--line); }
+.profile-name { font-size: 22px; letter-spacing: -.4px; }
+.profile-badges { margin-top: 6px; }
+.profile-summary .profile-activity { background: transparent; }
+.profile-activity-item { margin: 14px 0; padding: 0 20px; }
+.profile-activity dd { font-size: 20px; font-weight: 600; margin-top: 4px; }
+.profile-button { border-radius: 6px; min-height: 38px; }
+.profile-shell .profile-button-primary { background: #059669; }
+.profile-button-primary:disabled:hover { background: #059669; }
+.profile-section-head { padding: 14px 18px; }
+.profile-section-title, .profile-side-title { font-size: 15px; font-weight: 600; }
+.profile-review { padding: 14px 18px; }
+.profile-side-section { padding: 18px; }
+.profile-points-current { background: transparent; padding: 0 0 10px; border-radius: 0; color: var(--ink); }
+.profile-points-current > span { color: var(--muted); }
+.profile-points-current strong { font-size: 24px; }
+.profile-editor { border-radius: 6px; }
+.profile-form .form-control { border-radius: 6px; }

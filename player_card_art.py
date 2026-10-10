@@ -32,8 +32,12 @@ def card_art_metadata(root, player):
         if not re.fullmatch(r'PLAYSTYLE_[A-Z0-9_]+', code):
             continue
         meta = style_meta.get(code, {})
-        icon = (f'/static/playstyles/{code}.png' if (root / 'static/playstyles' / f'{code}.png').is_file()
-                else f'https://fco.vod.nexoncdn.co.kr/jade_assets/playstyle/playstyle_128/{code}.png')
+        # 일부 플레이스타일은 코드와 아이콘 파일명이 다르다 (예: FINESSE_SHOT → POWER_FINESSE).
+        icon_name = str(item.get('icon') or meta.get('icon') or code)
+        if not re.fullmatch(r'PLAYSTYLE_[A-Z0-9_]+', icon_name):
+            icon_name = code
+        icon = (f'/static/playstyles/{icon_name}.png' if (root / 'static/playstyles' / f'{icon_name}.png').is_file()
+                else f'https://fco.vod.nexoncdn.co.kr/jade_assets/playstyle/playstyle_128/{icon_name}.png')
         styles.append({'code': code, 'name': item.get('name') or meta.get('korname') or code,
                        'imageUrl': icon, 'isEmpty': False})
     slot_levels = player.get('playStyleSlotMaxLevels') or []

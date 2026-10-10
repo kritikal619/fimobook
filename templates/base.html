@@ -515,7 +515,7 @@
     }
   </style>
   {% include "_theme_head.html" %}
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/site-header.css', v='20261009-ranknav-1') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/site-header.css', v='20261010-ranknav-2') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/site-notices.css', v='20261009-quiet-1') }}">
   {% if request.endpoint in ('index', 'times') %}
   <link rel="stylesheet" href="{{ url_for('static', filename='css/material-interactions.css', v='20261009-1') }}">
@@ -541,12 +541,10 @@
         <summary>일반모드 랭킹 <i class="bi bi-chevron-down" aria-hidden="true"></i></summary>
         <div class="ranking-nav-links">
           <a href="{{ url_for('normal_mode_power_ranking') }}"{% if ranking_endpoint == 'normal_mode_power_ranking' %} aria-current="page"{% endif %}>
-            <i class="bi bi-lightning-charge" aria-hidden="true"></i>
-            <span><strong>파워랭킹</strong><small>랭커들이 쓰는 카드와 스쿼드</small></span>
+            파워랭킹
           </a>
           <a href="{{ url_for('normal_mode_season_ranking') }}"{% if ranking_endpoint == 'normal_mode_season_ranking' %} aria-current="page"{% endif %}>
-            <i class="bi bi-trophy" aria-hidden="true"></i>
-            <span><strong>시즌 5 랭킹</strong><small>상위 250명 순위·팀 OVR</small></span>
+            시즌 5 랭킹
           </a>
         </div>
       </details>

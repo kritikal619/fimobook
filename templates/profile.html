@@ -3,29 +3,18 @@
 {% block title %}{{ profile_user.username }} 프로필 | 피모북{% endblock %}
 
 {% block extra_head %}
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/profile-page.css', v='20261003-2') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/profile-page.css', v='20261010-1') }}">
 {% endblock %}
 
 {% block content %}
 {% set stats = profile_stats|default({}) %}
 {% set review_count = stats.get('review_count', reviews|length) %}
 <div class="profile-shell">
-  <header class="profile-page-heading">
-    <div>
-      <h1>{{ '내 프로필' if own_profile else '감독 프로필' }}</h1>
-      <p>{{ '내 활동과 계정 정보를 관리하세요.' if own_profile else '선수 리뷰와 커뮤니티 활동을 확인하세요.' }}</p>
-    </div>
-    {% if own_profile %}
-      <a class="profile-button profile-button-secondary" href="{{ url_for('notifications') }}"><i class="bi bi-bell" aria-hidden="true"></i>알림{% if unread_notification_count %}<span class="profile-notification-count">{{ '99+' if unread_notification_count > 99 else unread_notification_count }}</span>{% endif %}</a>
-    {% endif %}
-  </header>
-
   <section class="profile-panel profile-summary" aria-label="프로필과 활동 요약">
   <div class="profile-intro">
     <div class="profile-avatar" aria-hidden="true">{{ (profile_user.username or '?')[:1] }}</div>
     <div class="profile-identity">
-      <h2 class="profile-name">{{ profile_user.username }}</h2>
-      <p class="profile-caption">{{ '나의 피모북 활동' if own_profile else '피모북 감독' }}</p>
+      <h1 class="profile-name">{{ profile_user.username }}</h1>
       {% if (own_profile and profile_user.email_verified) or stats.get('monthly_rank') %}
         <div class="profile-badges">
           {% if own_profile and profile_user.email_verified %}
@@ -61,14 +50,6 @@
     </div>
   </dl>
   </section>
-
-  {% if own_profile %}
-    <nav class="profile-section-nav" aria-label="프로필 바로가기">
-      <a href="#my-reviews"><i class="bi bi-chat-square-text" aria-hidden="true"></i>작성 리뷰</a>
-      <a href="#profile-points"><i class="bi bi-coin" aria-hidden="true"></i>리뷰 포인트</a>
-      <a href="#profile-account"><i class="bi bi-person-gear" aria-hidden="true"></i>계정 설정</a>
-    </nav>
-  {% endif %}
 
   <div class="profile-layout">
     <section class="profile-panel profile-reviews" id="my-reviews">
@@ -117,7 +98,6 @@
         <div class="profile-points-current">
           <span>이번 달</span>
           <strong>{{ '{:,}'.format(monthly_points|int) }}<small>점</small></strong>
-          {% if stats.get('monthly_rank') %}<span class="profile-rank">이번 달 {{ stats.get('monthly_rank') }}위</span>{% endif %}
         </div>
         <div class="profile-point-row">
           <span>전체 기간</span>
