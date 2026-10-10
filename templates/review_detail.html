@@ -222,19 +222,21 @@
   }
   .review-rating-card {
     display: grid;
-    grid-template-columns: minmax(80px, auto) 42px minmax(0, 1fr);
-    gap: 10px;
-    align-items: center;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas: "label score" "note note";
+    gap: 6px 12px;
+    align-items: baseline;
     min-width: 0;
-    padding: 13px 14px;
+    padding: 12px 14px;
     border: 1px solid #e2e8f0;
     border-radius: 8px;
     background: #fbfcfd;
   }
-  .rating-label { color: #334155; font-size: 13px; font-weight: 950; }
-  .rating-score { color: #1e293b; font-size: 15px; font-weight: 700; }
+  .rating-label { grid-area: label; color: #334155; font-size: 13px; font-weight: 700; }
+  .rating-score { grid-area: score; color: #1e293b; font-size: 15px; font-weight: 700; font-variant-numeric: tabular-nums; }
   html[data-theme="dark"] .review-detail-page .rating-score { color: #e2e8f0 !important; }
   .rating-note {
+    grid-area: note;
     min-width: 0;
     color: #64748b;
     font-size: 12px;
@@ -395,7 +397,7 @@
     .review-average { font-size: 15px; }
     .review-actions { grid-column: 1 / -1; margin-top: 11px; }
     .review-rating-grid, .review-playstyle-grid, .related-grid { grid-template-columns: 1fr; }
-    .review-rating-card { grid-template-columns: 76px 36px minmax(0, 1fr); padding: 11px; gap: 7px; }
+    .review-rating-card { padding: 11px 12px; gap: 5px 10px; }
     .review-copy { font-size: 14px; line-height: 1.75; }
     .reply-list { margin-left: 4px; }
   }
