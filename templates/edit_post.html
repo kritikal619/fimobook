@@ -14,9 +14,7 @@
     <div class="edit-post-heading">
       <div>
         <h1 class="post-editor-title">글 수정</h1>
-        <p class="post-editor-desc">수정할 내용을 확인하고 변경사항을 저장하세요.</p>
       </div>
-      <span class="edit-post-badge"><i class="bi bi-pencil" aria-hidden="true"></i> 수정 중</span>
     </div>
   </header>
 
@@ -53,14 +51,12 @@
       <aside class="edit-post-sidebar" aria-label="첨부 및 게시 설정">
         <section class="post-editor-card edit-post-setting">
           <h2 class="edit-post-section-title"><i class="bi bi-image" aria-hidden="true"></i> 이미지</h2>
-          <p class="post-editor-help edit-post-section-help">글에 첨부할 이미지를 관리하세요.</p>
           <div class="edit-post-image-preview" data-image-preview {% if not post.image_filename %}hidden{% endif %}>
             <img data-preview-image {% if post.image_filename %}src="{{ url_for('static', filename='uploads/' ~ post.image_filename) }}"{% endif %} alt="첨부 이미지 미리보기">
             <span class="edit-post-image-caption" data-image-caption>현재 첨부 이미지</span>
           </div>
           <div class="post-editor-label-row">{{ form.image.label(class_="post-editor-label", text="이미지 선택") }}</div>
           {{ form.image(class_="form-control", accept="image/jpeg,image/png,image/gif,image/webp", data_image_input="") }}
-          <small class="post-editor-help">JPG, PNG, GIF, WEBP · 최대 10MB<br>새 이미지를 선택하면 기존 이미지를 교체합니다.</small>
           {% for error in form.image.errors %}<small class="post-editor-error" role="alert">{{ error }}</small>{% endfor %}
           <button type="button" class="edit-post-reset-image" data-reset-image hidden>새 이미지 선택 취소</button>
           {% if post.image_filename %}
@@ -71,7 +67,6 @@
 
         <section class="post-editor-card edit-post-setting" data-poll-box>
           <h2 class="edit-post-section-title"><i class="bi bi-bar-chart" aria-hidden="true"></i> 투표</h2>
-          <p class="post-editor-help edit-post-section-help">다른 회원의 의견을 모아보세요.</p>
           <label class="post-editor-check">
             <input type="checkbox" name="poll_enabled" value="1" data-poll-toggle aria-controls="edit-poll-fields" {% if poll_enabled %}checked{% endif %} {% if poll_has_votes %}disabled{% endif %}>
             투표 사용
@@ -92,7 +87,6 @@
             </div>
             {% if not poll_has_votes %}
               <button type="button" class="poll-add" data-add-poll-option>+ 항목 추가</button>
-              <small class="post-editor-help">항목은 2개부터 6개까지 등록할 수 있습니다.</small>
             {% endif %}
           </div>
         </section>
@@ -107,7 +101,7 @@
       </aside>
     </div>
     <div class="post-editor-actions edit-post-actions">
-      <span class="edit-post-save-status" data-save-status role="status">저장하면 게시글에 반영됩니다.</span>
+      <span class="edit-post-save-status" data-save-status role="status"></span>
       <div class="edit-post-action-buttons">
         <a class="post-editor-cancel" href="{{ url_for('post_detail', post_id=post.id) }}">취소</a>
         <button type="submit" class="post-editor-submit"><i class="bi bi-check2" aria-hidden="true"></i> 변경사항 저장</button>

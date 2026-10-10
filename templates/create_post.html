@@ -11,7 +11,6 @@
   <header class="post-editor-header">
     <a class="post-editor-back" href="{{ url_for('community', tab=active_board) }}"><i class="bi bi-arrow-left" aria-hidden="true"></i>게시판으로</a>
     <h1 class="post-editor-title">새 글 작성</h1>
-    <p class="post-editor-desc">게시판을 선택하고 내용을 작성해주세요.</p>
   </header>
 
   <section class="post-editor-card">
@@ -86,14 +85,12 @@
             {% endfor %}
           </div>
           <button type="button" class="poll-add" data-add-poll-option>항목 추가</button>
-          <small class="post-editor-help">투표 항목은 2개부터 6개까지 등록할 수 있습니다.</small>
         </div>
       </div>
 
       <div class="post-editor-field">
         <div class="post-editor-label-row">{{ form.image.label(class_="post-editor-label") }}</div>
         {{ form.image(class_="form-control", accept="image/jpeg,image/png,image/gif,image/webp") }}
-        <small class="post-editor-help">JPG, PNG, GIF, WEBP 파일을 첨부할 수 있습니다.</small>
         {% for error in form.image.errors %}<small class="post-editor-error">{{ error }}</small>{% endfor %}
       </div>
 
