@@ -27,7 +27,7 @@
 } | tojson }}
 </script>
 <link rel="preload" as="image" href="{{ url_for('static', filename='evolution-sim/menu.webp') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/evolution-simulator.css', v='20261011-5') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/evolution-simulator.css', v='20261011-6') }}">
 {% endblock %}
 {% block content %}
 {% set coin = url_for('static', filename='pack-opener/images/mp-token-transparent.png') %}
@@ -35,7 +35,6 @@
 <section class="evo-page">
   <header class="evo-heading">
     <h1>FC모바일 진화 시뮬레이터</h1>
-    <p>넥슨 공식 진화 확률표로 성공률을 계산하고, 실제 게임과 같은 연출로 진화해 보세요.</p>
   </header>
 
   <div class="evo-screen" data-screen>
@@ -256,4 +255,4 @@
 
 <script type="application/json" id="evo-data">{{ {'steps': evolution_data.steps, 'materials': evolution_materials, 'enhanceSteps': enhance_steps}|tojson }}</script>
 {% endblock %}
-{% block extra_scripts %}<script src="{{ url_for('static', filename='js/evolution-simulator.js', v='20261011-5') }}" defer></script>{% endblock %}
+{% block extra_scripts %}<script src="{{ url_for('static', filename='js/evolution-simulator.js', v='20261011-6') }}" defer></script>{% endblock %}

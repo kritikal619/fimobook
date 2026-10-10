@@ -213,60 +213,71 @@ body.evolution-sim-page .main-content { max-width: 1240px; padding: 10px 16px 36
 
 
 
-/* ===== 페이지 제목 / 이용 안내 (페이지 일반 크기) ===== */
-.evo-heading { display: grid; gap: 4px; }
-.evo-heading h1 { margin: 0; font-size: 22px; font-weight: 800; letter-spacing: -.5px; color: var(--text, #172033); }
-.evo-heading p { margin: 0; font-size: 13px; color: #64748b; }
-html[data-theme="dark"] .evo-heading h1 { color: #e7ecf2; }
-html[data-theme="dark"] .evo-heading p { color: #94a3b8; }
+/* ===== 페이지 제목 / 기록 / 이용 안내 (페이지 일반 크기, 사이트 밝은/어두운 테마를 따름) ===== */
+.evo-page {
+  --log-bg: #fff; --log-line: #e2e8f0; --log-line-soft: #eef2f6; --log-ink: #172033; --log-sub: #64748b; --log-faint: #94a3b8;
+  --log-up: #059669; --log-down: #dc2626;
+}
+html[data-theme="dark"] .evo-page {
+  --log-bg: #131d2e; --log-line: #334155; --log-line-soft: #243145; --log-ink: #e7ecf2; --log-sub: #a7b5c7; --log-faint: #7b8aa0;
+  --log-up: #4ade80; --log-down: #f87171;
+}
+.evo-heading h1 { margin: 0; font-size: 22px; font-weight: 800; letter-spacing: -.5px; color: var(--log-ink); }
+
 .evo-guide { text-align: right; }
-.evo-guide summary { display: inline-flex; align-items: center; gap: 4px; padding: 4px 2px; color: #94a3b8; font-size: 12px; font-weight: 600; cursor: pointer; list-style: none; }
+.evo-guide summary { display: inline-flex; align-items: center; gap: 4px; padding: 4px 2px; color: var(--log-faint); font-size: 12px; font-weight: 600; cursor: pointer; list-style: none; }
 .evo-guide summary::-webkit-details-marker { display: none; }
 .evo-guide summary::after { content: '›'; font-size: 13px; transform: rotate(90deg); transition: transform .15s ease; }
 .evo-guide[open] summary::after { transform: rotate(-90deg); }
-.evo-guide summary:focus-visible { outline: 2px solid #7dd3fc; outline-offset: 2px; }
-.evo-guide-content { margin-top: 6px; padding: 16px 18px; border: 1px solid rgba(118, 160, 200, .28); border-radius: 8px; background: #121a26; color: #c9d1db; text-align: left; }
-.evo-guide-content h2 { margin: 0 0 8px; font-size: 16px; font-weight: 700; color: #fff; }
-.evo-guide-content h3 { margin: 16px 0 6px; font-size: 14px; font-weight: 700; color: #fff; }
+.evo-guide summary:focus-visible { outline: 2px solid #0ea5e9; outline-offset: 2px; }
+.evo-guide-content { margin-top: 6px; padding: 16px 18px; border: 1px solid var(--log-line); border-radius: 8px; background: var(--log-bg); color: var(--log-sub); text-align: left; }
+.evo-guide-content h2 { margin: 0 0 8px; font-size: 16px; font-weight: 700; color: var(--log-ink); }
+.evo-guide-content h3 { margin: 16px 0 6px; font-size: 14px; font-weight: 700; color: var(--log-ink); }
 .evo-guide-content ol, .evo-guide-content ul { margin: 0; padding-left: 20px; display: grid; gap: 4px; font-size: 13px; line-height: 1.65; }
-.evo-guide-content p { margin: 12px 0 0; font-size: 12.5px; line-height: 1.6; color: #8f9bab; }
-.evo-guide-content a { color: #7dd3fc; }
+.evo-guide-content p { margin: 12px 0 0; font-size: 12.5px; line-height: 1.6; color: var(--log-faint); }
+.evo-guide-content a { color: #0284c7; }
+html[data-theme="dark"] .evo-guide-content a { color: #7dd3fc; }
 .evo-guide-table { width: 100%; max-width: 560px; border-collapse: collapse; font-size: 13px; }
-.evo-guide-table th, .evo-guide-table td { padding: 6px 8px; border-bottom: 1px solid rgba(255, 255, 255, .07); text-align: left; }
-.evo-guide-table th { color: #8f9bab; font-weight: 500; font-size: 12px; }
+.evo-guide-table th, .evo-guide-table td { padding: 6px 8px; border-bottom: 1px solid var(--log-line-soft); text-align: left; }
+.evo-guide-table th { color: var(--log-faint); font-weight: 500; font-size: 12px; }
+.evo-guide-table td { color: var(--log-ink); }
 
-/* ===== 기록 (페이지 일반 크기) ===== */
-.evo-log { border: 1px solid rgba(118, 160, 200, .28); border-radius: 8px; padding: 14px 18px 10px; color: #e7ecf2; background: #121a26; }
+.evo-log { border: 1px solid var(--log-line); border-radius: 8px; padding: 14px 18px 10px; color: var(--log-ink); background: var(--log-bg); }
 .evo-log-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 30px; }
-.evo-log-head h2 { margin: 0; font-size: 15px; font-weight: 700; color: #fff; }
-.evo-log-reset { min-height: 30px; padding: 0 10px; border: 0; border-radius: 6px; background: transparent; color: #8f9bab; font: inherit; font-size: 12.5px; cursor: pointer; }
-.evo-log-reset:hover { color: #fff; background: rgba(255, 255, 255, .06); }
+.evo-log-head h2 { margin: 0; font-size: 15px; font-weight: 700; color: var(--log-ink); }
+.evo-log-reset { min-height: 30px; padding: 0 10px; border: 0; border-radius: 6px; background: transparent; color: var(--log-faint); font: inherit; font-size: 12.5px; cursor: pointer; }
+.evo-log-reset:hover { color: var(--log-ink); background: var(--log-line-soft); }
 .evo-log-reset[hidden] { display: none; }
-.evo-log-reset:focus-visible { outline: 2px solid #7dd3fc; outline-offset: 2px; }
-.evo-log-stats { display: flex; flex-wrap: wrap; margin: 8px 0 0; padding: 10px 0 12px; border-bottom: 1px solid rgba(255, 255, 255, .08); }
-.evo-log-stats div { display: flex; align-items: baseline; gap: 6px; padding: 0 16px; border-left: 1px solid rgba(255, 255, 255, .1); }
+.evo-log-reset:focus-visible { outline: 2px solid #0ea5e9; outline-offset: 2px; }
+.evo-log-stats { display: flex; flex-wrap: wrap; margin: 8px 0 0; padding: 10px 0 12px; border-bottom: 1px solid var(--log-line-soft); }
+.evo-log-stats div { display: flex; align-items: baseline; gap: 6px; padding: 0 16px; border-left: 1px solid var(--log-line); }
 .evo-log-stats div:first-child { padding-left: 0; border-left: 0; }
-.evo-log-stats dt { font-size: 12.5px; color: #8f9bab; font-weight: 500; }
-.evo-log-stats dd { margin: 0; font-size: 16px; font-weight: 700; color: #fff; font-variant-numeric: tabular-nums; }
-.evo-log-stats .is-success dd { color: #3ae06a; }
-.evo-log-stats .is-fail dd { color: #ff6b6b; }
-.evo-log-table { max-height: 300px; overflow-y: auto; margin-top: 4px; scrollbar-width: thin; scrollbar-color: #4b5563 transparent; }
+.evo-log-stats dt { font-size: 12.5px; color: var(--log-sub); font-weight: 500; }
+.evo-log-stats dd { margin: 0; font-size: 16px; font-weight: 700; color: var(--log-ink); font-variant-numeric: tabular-nums; }
+.evo-log-stats .is-success dd { color: var(--log-up); }
+.evo-log-stats .is-fail dd { color: var(--log-down); }
+.evo-log-table { max-height: 300px; overflow-y: auto; margin-top: 4px; scrollbar-width: thin; }
 .evo-log-table[hidden] { display: none; }
-.evo-log-table table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
-.evo-log-table th { position: sticky; top: 0; z-index: 1; padding: 8px 6px; background: #121a26; color: #6f7b8b; font-size: 12px; font-weight: 500; text-align: left; }
-.evo-log-table td { padding: 6px; border-top: 1px solid rgba(255, 255, 255, .06); vertical-align: middle; }
-.evo-log-table th:nth-child(1), .evo-log-no { width: 44px; color: #6f7b8b; font-variant-numeric: tabular-nums; }
-.evo-log-name { max-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.evo-log-step { width: 96px; white-space: nowrap; }
+/* 열 너비를 고르게 나눠 이름 뒤에 큰 빈칸이 생기지 않게 한다 */
+.evo-log-table table { width: 100%; table-layout: fixed; border-collapse: collapse; font-size: 13.5px; }
+.evo-log-table th { position: sticky; top: 0; z-index: 1; padding: 8px 6px; background: var(--log-bg); color: var(--log-faint); font-size: 12px; font-weight: 500; text-align: center; }
+.evo-log-table td { padding: 6px; border-top: 1px solid var(--log-line-soft); vertical-align: middle; text-align: center; }
+.evo-log-table th:nth-child(1) { width: 12%; }
+.evo-log-table th:nth-child(2) { width: 34%; text-align: left; }
+.evo-log-table th:nth-child(3) { width: 22%; }
+.evo-log-table th:nth-child(4) { width: 16%; }
+.evo-log-table th:nth-child(5) { width: 16%; }
+.evo-log-no { color: var(--log-faint); font-variant-numeric: tabular-nums; }
+.evo-log-name { text-align: left !important; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.evo-log-step { white-space: nowrap; }
 .evo-log-step img { width: 28px; height: 28px; vertical-align: middle; }
-.evo-log-step i { margin: 0 2px; color: #6f7b8b; font-size: 11px; vertical-align: middle; }
-.evo-log-table th:nth-child(4), .evo-log-result { width: 72px; }
+.evo-log-step i { margin: 0 2px; color: var(--log-faint); font-size: 11px; vertical-align: middle; }
 .evo-log-result span { font-weight: 700; font-size: 13px; }
-.is-success .evo-log-result span { color: #3ae06a; }
-.is-fail .evo-log-result span { color: #ff6b6b; }
-.is-protected .evo-log-result span { color: #c9d1db; }
-.evo-log-table th:nth-child(5), .evo-log-rate { width: 70px; text-align: right; color: #aab4c0; font-variant-numeric: tabular-nums; }
-.evo-log-empty { margin: 0; padding: 18px 0 10px; text-align: center; font-size: 13px; color: #6f7b8b; }
+.is-success .evo-log-result span { color: var(--log-up); }
+.is-fail .evo-log-result span { color: var(--log-down); }
+.is-protected .evo-log-result span { color: var(--log-sub); }
+.evo-log-rate { color: var(--log-sub); font-variant-numeric: tabular-nums; }
+.evo-log-empty { margin: 0; padding: 18px 0 10px; text-align: center; font-size: 13px; color: var(--log-faint); }
 .evo-log-empty[hidden] { display: none; }
 
 .evo-dialog { width: min(540px, calc(100vw - 24px)); max-height: min(80vh, 680px); padding: 0; border: 1px solid #3fb3a5; border-radius: 8px; background: linear-gradient(180deg, #1c4b57 0%, #18303f 18%, #141e2d 100%); color: #eef2f6; }
@@ -303,8 +314,10 @@ html[data-theme="dark"] .evo-heading p { color: #94a3b8; }
   .evo-log-stats div { flex: 0 0 33.33%; box-sizing: border-box; padding: 0 0 0 10px; }
   .evo-log-stats div:nth-child(3n+1) { padding-left: 0; border-left: 0; }
   .evo-log-table th:nth-child(5), .evo-log-rate { display: none; }
-  .evo-log-table th:nth-child(1), .evo-log-no { width: 30px; }
-  .evo-log-step { width: 84px; }
+  .evo-log-table th:nth-child(1) { width: 12%; }
+  .evo-log-table th:nth-child(2) { width: 38%; }
+  .evo-log-table th:nth-child(3) { width: 30%; }
+  .evo-log-table th:nth-child(4) { width: 20%; }
   .evo-log-step img { width: 24px; height: 24px; }
 }
 @media (prefers-reduced-motion: reduce) {
