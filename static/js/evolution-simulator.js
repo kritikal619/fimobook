@@ -271,18 +271,20 @@
     $('[data-log-protect]').textContent = log.protect.toLocaleString('ko-KR');
     $('[data-log-rate]').textContent = log.tries ? `${Math.round(log.success / log.tries * 1000) / 10}%` : '-';
     $('[data-log-empty]').hidden = log.entries.length > 0;
+    $('[data-log-table]').hidden = log.entries.length === 0;
+    $('[data-reset-log]').hidden = log.entries.length === 0;
     $('[data-log-list]').replaceChildren(...log.entries.slice(0, 50).map(entry => {
-      const item = document.createElement('li');
-      item.className = entry.success ? 'is-success' : (entry.protected ? 'is-fail is-protected' : 'is-fail');
-      item.innerHTML = '<span class="evo-log-no"></span><span class="evo-log-name"></span><span class="evo-log-step"><img alt=""><i class="bi bi-chevron-double-right" aria-hidden="true"></i><img alt=""></span><span class="evo-log-result"></span><span class="evo-log-rate"></span>';
-      item.querySelector('.evo-log-no').textContent = `#${entry.no}`;
-      item.querySelector('.evo-log-name').textContent = entry.name;
-      const [from, to] = item.querySelectorAll('img');
+      const row = document.createElement('tr');
+      row.className = entry.success ? 'is-success' : (entry.protected ? 'is-protected' : 'is-fail');
+      row.innerHTML = '<td class="evo-log-no"></td><td class="evo-log-name"></td><td class="evo-log-step"><img alt=""><i class="bi bi-chevron-double-right" aria-hidden="true"></i><img alt=""></td><td class="evo-log-result"><span></span></td><td class="evo-log-rate"></td>';
+      row.querySelector('.evo-log-no').textContent = entry.no;
+      row.querySelector('.evo-log-name').textContent = entry.name;
+      const [from, to] = row.querySelectorAll('img');
       from.src = badge(entry.from); from.alt = `${entry.from}진화`;
       to.src = badge(entry.to); to.alt = `${entry.to}진화`;
-      item.querySelector('.evo-log-result').textContent = entry.success ? '성공' : (entry.protected ? '보호' : '실패');
-      item.querySelector('.evo-log-rate').textContent = pct(entry.rate);
-      return item;
+      row.querySelector('.evo-log-result span').textContent = entry.success ? '성공' : (entry.protected ? '실패·보호' : '실패');
+      row.querySelector('.evo-log-rate').textContent = pct(entry.rate);
+      return row;
     }));
   }
 
@@ -312,7 +314,6 @@
   function run() {
     els.alert.hidden = true;
     const result = attempt();
-    renderLog();
     unlockMedia();
     playShow(result);
   }
@@ -476,8 +477,9 @@
     }));
     const strip = $('[data-result-strip]');
     const diff = result.to - result.from;
-    strip.textContent = diff > 0 ? `스킬 포인트+${diff}` : (diff < 0 ? `스킬 포인트${diff}` : '진화 등급 유지');
-    strip.className = `evo-r-strip${diff < 0 ? ' is-down' : (diff === 0 ? ' is-hold' : '')}`;
+    // 게임과 같이: 성공하면 스킬 포인트 증가, 실패로 등급이 내려가면 스킬 초기화
+    strip.textContent = diff > 0 ? `스킬 포인트+${diff}` : (diff < 0 ? '스킬 초기화' : '진화 등급 유지');
+    strip.className = `evo-r-strip${diff > 0 ? '' : ' is-hold'}`;
   }
 
   // 배지·카드 움직임 (게임 영상에서 프레임 단위로 잰 위치와 시간)
@@ -589,6 +591,7 @@
   }
   function finishShow(result) {
     show.token += 1;
+    renderLog();
     show.fountains = false;
     setScene(result.success ? 'plate-success' : 'plate-fail', 'p-result');
     scene.classList.toggle('is-fail-result', !result.success);

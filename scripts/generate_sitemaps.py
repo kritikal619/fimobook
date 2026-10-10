@@ -56,6 +56,7 @@ def main() -> None:
         _abs("/"),
         _abs("/players"),
         _abs("/pack-opener"),
+        _abs("/evolution-simulator"),
         _abs("/traits_selection"),
         _abs("/player_compare"),
         _abs("/normal-mode-power-ranking"),

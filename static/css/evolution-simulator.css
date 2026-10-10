@@ -191,7 +191,6 @@ body.evolution-sim-page .main-content { max-width: 1240px; padding: 10px 16px 36
 .evo-r-chev i { width: calc(var(--u) * 14); height: calc(var(--u) * 24); background: linear-gradient(180deg, #5af08a, #13b64b); }
 .evo-r-to { position: absolute; left: calc(var(--u) * 857); top: calc(var(--u) * 52); width: calc(var(--u) * 98); filter: drop-shadow(0 0 calc(var(--u) * 16) rgba(40, 220, 110, .55)); }
 .evo-scene.is-fail-result .evo-r-chev i { background: linear-gradient(180deg, #d1d5db, #6b7280); }
-.evo-scene.is-fail-result .evo-r-to { filter: none; }
 .evo-r-stats { position: absolute; left: calc(var(--u) * 585); top: calc(var(--u) * 186); width: calc(var(--u) * 432); margin: 0; display: grid; grid-template-columns: 1fr 1fr; column-gap: calc(var(--u) * 62); }
 .evo-r-stats div { position: relative; display: flex; align-items: center; justify-content: space-between; height: calc(var(--u) * 62); border-bottom: calc(var(--u) * 1) solid rgba(255, 255, 255, .13); }
 .evo-r-stats div:nth-last-child(-n+2) { border-bottom: 0; }
@@ -203,8 +202,7 @@ body.evolution-sim-page .main-content { max-width: 1240px; padding: 10px 16px 36
 .evo-r-stats dd.is-up::after { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2 6l4-3.6L10 6M2 10l4-3.6L10 10' fill='none' stroke='%233ae06a' stroke-width='2'/%3E%3C/svg%3E"); }
 .evo-r-stats dd.is-down::after { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2 2l4 3.6L10 2M2 6l4 3.6L10 6' fill='none' stroke='%23ff5d5d' stroke-width='2'/%3E%3C/svg%3E"); top: calc(var(--u) * 22); }
 .evo-r-strip { position: absolute; left: calc(var(--u) * 556); top: calc(var(--u) * 398); width: calc(var(--u) * 497); height: calc(var(--u) * 57); margin: 0; background: rgba(0, 0, 0, .86); text-align: center; line-height: calc(var(--u) * 57); font-size: calc(var(--u) * 25); font-weight: 800; color: #39e46a; }
-.evo-r-strip.is-down { color: #ff5d5d; }
-.evo-r-strip.is-hold { color: #d7dce3; }
+.evo-r-strip.is-hold { color: #fff; }
 .evo-r-bottom { position: absolute; left: 0; right: 0; top: calc(var(--u) * 500); height: calc(var(--u) * 54); background: rgba(0, 0, 0, .86); }
 .evo-r-skip { position: absolute; left: calc(var(--u) * 527); top: 0; height: calc(var(--u) * 54); display: flex; align-items: center; gap: calc(var(--u) * 13); font-size: calc(var(--u) * 16.5); font-weight: 400; letter-spacing: calc(var(--u) * -.3); cursor: pointer; }
 .evo-r-box { width: calc(var(--u) * 22); height: calc(var(--u) * 22); box-sizing: border-box; border: calc(var(--u) * 1.5) solid #6f7680; border-radius: calc(var(--u) * 3); background: #1b1e24; }
@@ -215,41 +213,60 @@ body.evolution-sim-page .main-content { max-width: 1240px; padding: 10px 16px 36
 
 
 
-/* ===== 기록 (게임 화면과 같은 어두운 패널, 페이지 일반 크기) ===== */
-.evo-log {
-  border: 1px solid rgba(118, 160, 200, .3); border-radius: 8px; padding: 16px 18px 12px; color: #e7ecf2;
-  background: linear-gradient(180deg, #172131 0%, #111824 100%);
-}
-.evo-log-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-.evo-log-head h2 { margin: 0; font-size: 16px; font-weight: 700; color: #fff; }
-.evo-log-reset { display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 0 12px; border: 1px solid rgba(255, 255, 255, .18); border-radius: 16px; background: transparent; color: #c9d1db; font: inherit; font-size: 12.5px; cursor: pointer; }
-.evo-log-reset:hover { border-color: rgba(255, 255, 255, .4); color: #fff; }
+/* ===== 페이지 제목 / 이용 안내 (페이지 일반 크기) ===== */
+.evo-heading { display: grid; gap: 4px; }
+.evo-heading h1 { margin: 0; font-size: 22px; font-weight: 800; letter-spacing: -.5px; color: var(--text, #172033); }
+.evo-heading p { margin: 0; font-size: 13px; color: #64748b; }
+html[data-theme="dark"] .evo-heading h1 { color: #e7ecf2; }
+html[data-theme="dark"] .evo-heading p { color: #94a3b8; }
+.evo-guide { text-align: right; }
+.evo-guide summary { display: inline-flex; align-items: center; gap: 4px; padding: 4px 2px; color: #94a3b8; font-size: 12px; font-weight: 600; cursor: pointer; list-style: none; }
+.evo-guide summary::-webkit-details-marker { display: none; }
+.evo-guide summary::after { content: '›'; font-size: 13px; transform: rotate(90deg); transition: transform .15s ease; }
+.evo-guide[open] summary::after { transform: rotate(-90deg); }
+.evo-guide summary:focus-visible { outline: 2px solid #7dd3fc; outline-offset: 2px; }
+.evo-guide-content { margin-top: 6px; padding: 16px 18px; border: 1px solid rgba(118, 160, 200, .28); border-radius: 8px; background: #121a26; color: #c9d1db; text-align: left; }
+.evo-guide-content h2 { margin: 0 0 8px; font-size: 16px; font-weight: 700; color: #fff; }
+.evo-guide-content h3 { margin: 16px 0 6px; font-size: 14px; font-weight: 700; color: #fff; }
+.evo-guide-content ol, .evo-guide-content ul { margin: 0; padding-left: 20px; display: grid; gap: 4px; font-size: 13px; line-height: 1.65; }
+.evo-guide-content p { margin: 12px 0 0; font-size: 12.5px; line-height: 1.6; color: #8f9bab; }
+.evo-guide-content a { color: #7dd3fc; }
+.evo-guide-table { width: 100%; max-width: 560px; border-collapse: collapse; font-size: 13px; }
+.evo-guide-table th, .evo-guide-table td { padding: 6px 8px; border-bottom: 1px solid rgba(255, 255, 255, .07); text-align: left; }
+.evo-guide-table th { color: #8f9bab; font-weight: 500; font-size: 12px; }
+
+/* ===== 기록 (페이지 일반 크기) ===== */
+.evo-log { border: 1px solid rgba(118, 160, 200, .28); border-radius: 8px; padding: 14px 18px 10px; color: #e7ecf2; background: #121a26; }
+.evo-log-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 30px; }
+.evo-log-head h2 { margin: 0; font-size: 15px; font-weight: 700; color: #fff; }
+.evo-log-reset { min-height: 30px; padding: 0 10px; border: 0; border-radius: 6px; background: transparent; color: #8f9bab; font: inherit; font-size: 12.5px; cursor: pointer; }
+.evo-log-reset:hover { color: #fff; background: rgba(255, 255, 255, .06); }
+.evo-log-reset[hidden] { display: none; }
 .evo-log-reset:focus-visible { outline: 2px solid #7dd3fc; outline-offset: 2px; }
-.evo-log-stats { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; margin: 14px 0 0; }
-.evo-log-stats div { padding: 10px 12px; border-radius: 6px; background: rgba(255, 255, 255, .05); }
-.evo-log-stats dt { font-size: 12px; color: #8f9bab; font-weight: 500; }
-.evo-log-stats dd { margin: 4px 0 0; font-size: 20px; font-weight: 700; color: #fff; font-variant-numeric: tabular-nums; }
+.evo-log-stats { display: flex; flex-wrap: wrap; margin: 8px 0 0; padding: 10px 0 12px; border-bottom: 1px solid rgba(255, 255, 255, .08); }
+.evo-log-stats div { display: flex; align-items: baseline; gap: 6px; padding: 0 16px; border-left: 1px solid rgba(255, 255, 255, .1); }
+.evo-log-stats div:first-child { padding-left: 0; border-left: 0; }
+.evo-log-stats dt { font-size: 12.5px; color: #8f9bab; font-weight: 500; }
+.evo-log-stats dd { margin: 0; font-size: 16px; font-weight: 700; color: #fff; font-variant-numeric: tabular-nums; }
 .evo-log-stats .is-success dd { color: #3ae06a; }
 .evo-log-stats .is-fail dd { color: #ff6b6b; }
-.evo-log-list { display: grid; margin: 12px 0 0; padding: 0; list-style: none; max-height: 330px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: #4b5563 transparent; }
-.evo-log-list:empty { display: none; }
-.evo-log-list li {
-  display: grid; grid-template-columns: 40px minmax(0, 1fr) auto 64px 64px; align-items: center; gap: 10px;
-  min-height: 46px; padding: 4px 4px; border-top: 1px solid rgba(255, 255, 255, .07); font-size: 13.5px;
-}
-.evo-log-no { color: #6f7b8b; font-size: 12px; font-variant-numeric: tabular-nums; }
-.evo-log-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #e7ecf2; }
-.evo-log-name small { margin-left: 6px; color: #8f9bab; font-size: 12px; }
-.evo-log-step { display: inline-flex; align-items: center; gap: 4px; }
-.evo-log-step img { width: 30px; height: 30px; }
-.evo-log-step i { color: #8f9bab; font-size: 12px; }
-.is-success .evo-log-step i { color: #3ae06a; }
-.evo-log-result { justify-self: center; padding: 3px 0; width: 56px; text-align: center; border-radius: 4px; font-size: 12.5px; font-weight: 700; }
-.is-success .evo-log-result { color: #3ae06a; background: rgba(58, 224, 106, .12); }
-.is-fail .evo-log-result { color: #ff6b6b; background: rgba(255, 107, 107, .12); }
-.is-protected .evo-log-result { color: #c9d1db; background: rgba(255, 255, 255, .08); }
-.evo-log-rate { text-align: right; color: #c9d1db; font-variant-numeric: tabular-nums; font-size: 12.5px; }
-.evo-log-empty { margin: 14px 0 4px; padding: 18px; border: 1px dashed rgba(255, 255, 255, .14); border-radius: 6px; text-align: center; font-size: 13px; color: #8f9bab; }
+.evo-log-table { max-height: 300px; overflow-y: auto; margin-top: 4px; scrollbar-width: thin; scrollbar-color: #4b5563 transparent; }
+.evo-log-table[hidden] { display: none; }
+.evo-log-table table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+.evo-log-table th { position: sticky; top: 0; z-index: 1; padding: 8px 6px; background: #121a26; color: #6f7b8b; font-size: 12px; font-weight: 500; text-align: left; }
+.evo-log-table td { padding: 6px; border-top: 1px solid rgba(255, 255, 255, .06); vertical-align: middle; }
+.evo-log-table th:nth-child(1), .evo-log-no { width: 44px; color: #6f7b8b; font-variant-numeric: tabular-nums; }
+.evo-log-name { max-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.evo-log-step { width: 96px; white-space: nowrap; }
+.evo-log-step img { width: 28px; height: 28px; vertical-align: middle; }
+.evo-log-step i { margin: 0 2px; color: #6f7b8b; font-size: 11px; vertical-align: middle; }
+.evo-log-table th:nth-child(4), .evo-log-result { width: 72px; }
+.evo-log-result span { font-weight: 700; font-size: 13px; }
+.is-success .evo-log-result span { color: #3ae06a; }
+.is-fail .evo-log-result span { color: #ff6b6b; }
+.is-protected .evo-log-result span { color: #c9d1db; }
+.evo-log-table th:nth-child(5), .evo-log-rate { width: 70px; text-align: right; color: #aab4c0; font-variant-numeric: tabular-nums; }
+.evo-log-empty { margin: 0; padding: 18px 0 10px; text-align: center; font-size: 13px; color: #6f7b8b; }
 .evo-log-empty[hidden] { display: none; }
 
 .evo-dialog { width: min(540px, calc(100vw - 24px)); max-height: min(80vh, 680px); padding: 0; border: 1px solid #3fb3a5; border-radius: 8px; background: linear-gradient(180deg, #1c4b57 0%, #18303f 18%, #141e2d 100%); color: #eef2f6; }
@@ -278,14 +295,17 @@ body.evolution-sim-page .main-content { max-width: 1240px; padding: 10px 16px 36
 @media (max-width: 620px) {
   body.evolution-sim-page .main-content { padding: 6px 0 28px; }
   .evo-screen { border-radius: 0; width: 100vw; margin-left: calc(50% - 50vw); }
-  .evo-log { margin: 0 12px; padding: 14px 12px 10px; }
-  .evo-log-stats { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
-  .evo-log-stats div { padding: 8px 10px; }
-  .evo-log-stats dd { font-size: 17px; }
-  .evo-log-list li { grid-template-columns: 30px minmax(0, 1fr) auto 50px; gap: 8px; font-size: 13px; }
-  .evo-log-rate { display: none; }
-  .evo-log-step img { width: 26px; height: 26px; }
-  .evo-log-result { width: 48px; }
+  .evo-log { margin: 0 12px; padding: 12px 12px 8px; }
+  .evo-heading, .evo-guide { margin: 0 12px; }
+  .evo-heading h1 { font-size: 19px; }
+  .evo-guide-content { padding: 14px 12px; }
+  .evo-log-stats { row-gap: 8px; }
+  .evo-log-stats div { flex: 0 0 33.33%; box-sizing: border-box; padding: 0 0 0 10px; }
+  .evo-log-stats div:nth-child(3n+1) { padding-left: 0; border-left: 0; }
+  .evo-log-table th:nth-child(5), .evo-log-rate { display: none; }
+  .evo-log-table th:nth-child(1), .evo-log-no { width: 30px; }
+  .evo-log-step { width: 84px; }
+  .evo-log-step img { width: 24px; height: 24px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .evo-r-panel { transition: none; }

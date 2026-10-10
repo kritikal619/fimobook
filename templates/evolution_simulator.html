@@ -7,14 +7,36 @@
 {% block body_class %}evolution-sim-page{% endblock %}
 {% block extra_head %}
 <meta name="description" content="{{ evo_seo_description }}">
+<meta name="twitter:title" content="{{ evo_seo_title }}">
+<meta name="twitter:description" content="{{ evo_seo_description }}">
+<script type="application/ld+json">
+{{ {
+  '@context': 'https://schema.org',
+  '@type': 'WebApplication',
+  '@id': 'https://fcbook.info/evolution-simulator#app',
+  'name': 'FC모바일 진화 시뮬레이터 · 피모북',
+  'alternateName': ['FC모바일 진화 확률 계산기', 'FC모바일 진화 시뮬', 'FC Mobile Evolution Simulator'],
+  'url': 'https://fcbook.info/evolution-simulator',
+  'description': evo_seo_description,
+  'inLanguage': 'ko-KR',
+  'applicationCategory': 'GameApplication',
+  'operatingSystem': 'Any',
+  'isAccessibleForFree': true,
+  'offers': {'@type': 'Offer', 'price': '0', 'priceCurrency': 'KRW'},
+  'featureList': ['넥슨 공식 진화 확률표 기반 성공률 계산', '재료 선수 OVR 차이와 진화 단계별 확률', '진화 등급 보호권 적용', '실제 게임과 같은 진화 성공·실패 연출']
+} | tojson }}
+</script>
 <link rel="preload" as="image" href="{{ url_for('static', filename='evolution-sim/menu.webp') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/evolution-simulator.css', v='20261011-4') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/evolution-simulator.css', v='20261011-5') }}">
 {% endblock %}
 {% block content %}
 {% set coin = url_for('static', filename='pack-opener/images/mp-token-transparent.png') %}
 {% set evo_img = url_for('static', filename='evolution-sim/') %}
 <section class="evo-page">
-  <h1 class="evo-visually-hidden">FC모바일 진화 시뮬레이터</h1>
+  <header class="evo-heading">
+    <h1>FC모바일 진화 시뮬레이터</h1>
+    <p>넥슨 공식 진화 확률표로 성공률을 계산하고, 실제 게임과 같은 연출로 진화해 보세요.</p>
+  </header>
 
   <div class="evo-screen" data-screen>
     <div class="evo-ui">
@@ -156,7 +178,7 @@
   <section class="evo-log" aria-labelledby="evo-log-title">
     <div class="evo-log-head">
       <h2 id="evo-log-title">진화 기록</h2>
-      <button class="evo-log-reset" type="button" data-reset-log><i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i>기록 초기화</button>
+      <button class="evo-log-reset" type="button" data-reset-log hidden>초기화</button>
     </div>
     <dl class="evo-log-stats">
       <div><dt>시도</dt><dd data-log-tries>0</dd></div>
@@ -166,9 +188,42 @@
       <div><dt>사용 재료</dt><dd data-log-materials>0</dd></div>
       <div><dt>사용 보호권</dt><dd data-log-protect>0</dd></div>
     </dl>
-    <ol class="evo-log-list" data-log-list></ol>
-    <p class="evo-log-empty" data-log-empty>진화를 시도하면 여기에 결과가 쌓입니다.</p>
+    <div class="evo-log-table" data-log-table hidden>
+      <table>
+        <thead><tr><th scope="col">회차</th><th scope="col">선수</th><th scope="col">진화</th><th scope="col">결과</th><th scope="col">확률</th></tr></thead>
+        <tbody data-log-list></tbody>
+      </table>
+    </div>
+    <p class="evo-log-empty" data-log-empty>진화를 시도하면 결과가 여기에 기록됩니다.</p>
   </section>
+
+  <details class="evo-guide">
+    <summary>이용 안내</summary>
+    <div class="evo-guide-content">
+      <h2>FC모바일 진화 시뮬레이터 사용 방법</h2>
+      <ol>
+        <li>왼쪽 카드 자리를 눌러 진화할 선수를 검색하고, 카드 아래에서 현재 진화 단계를 고릅니다.</li>
+        <li>성공률 부스트 칸을 눌러 재료 선수(NG 시즌)를 넣습니다. 재료의 진화 단계를 바꾸거나 자동 채우기로 게이지를 채울 수 있습니다.</li>
+        <li>6진화 이상에서는 진화 등급 보호권을 켤지 정한 뒤 진화를 누릅니다.</li>
+      </ol>
+      <h3>진화 확률 규칙</h3>
+      <ul>
+        <li>재료 선수마다 대상 선수와의 기본 OVR 차이(-20 ~ +10)와 재료의 진화 단계에 따라 성공률이 정해지고, 넣은 재료의 성공률을 더한 값이 최종 성공률입니다.</li>
+        <li>합산 성공률은 진화 단계별 최대 성공률을 넘을 수 없습니다. OVR 차이가 -20보다 낮은 재료는 성공률을 올리지 못합니다.</li>
+        <li>진화에 실패하면 진화 등급이 한 단계 내려가고 스킬이 초기화됩니다. 진화 등급 보호권을 쓰면 실패해도 등급이 유지되며, 보호권은 성공해도 소모됩니다.</li>
+      </ul>
+      <h3>진화 단계별 최대 성공률</h3>
+      <table class="evo-guide-table">
+        <thead><tr><th scope="col">진화</th><th scope="col">최대 성공률</th><th scope="col">재료 수</th><th scope="col">진화등급 보호권</th></tr></thead>
+        <tbody>
+          {% for step in evolution_data.steps %}
+          <tr><td>{{ step.from }} → {{ step.to }}</td><td>{{ step.maxRate|round|int }}%</td><td>{{ step.slots }}개</td><td>{% if step.protection %}[{{ step.protection.tier }}] {{ step.protection.count }}개{% else %}-{% endif %}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      <p>확률은 <a href="https://fcmobile.nexon.com/forumcrafting" target="_blank" rel="noopener">넥슨 FC모바일 진화 확률 안내</a>의 확률표를 그대로 사용했습니다. 실제 게임의 진화와는 관계없는 시뮬레이터입니다.</p>
+    </div>
+  </details>
 </section>
 
 <dialog class="evo-dialog" data-player-dialog aria-labelledby="evo-player-title">
@@ -201,4 +256,4 @@
 
 <script type="application/json" id="evo-data">{{ {'steps': evolution_data.steps, 'materials': evolution_materials, 'enhanceSteps': enhance_steps}|tojson }}</script>
 {% endblock %}
-{% block extra_scripts %}<script src="{{ url_for('static', filename='js/evolution-simulator.js', v='20261011-4') }}" defer></script>{% endblock %}
+{% block extra_scripts %}<script src="{{ url_for('static', filename='js/evolution-simulator.js', v='20261011-5') }}" defer></script>{% endblock %}
