@@ -183,7 +183,7 @@
       border: 1px solid #dbe3ec;
       border-radius: 12px;
       background: #f8fafc;
-      box-shadow: 0 1px 4px rgba(15,23,42,0.03);
+      box-shadow: none;
     }
 
     .stat-group-head {
@@ -308,7 +308,7 @@
       border: none;
       border-radius: 10px;
       cursor: pointer;
-      box-shadow: 0 12px 28px rgba(5,150,105,0.18);
+      box-shadow: none;
       letter-spacing: 0.2px;
       text-align: center;
       text-decoration: none;
@@ -812,7 +812,7 @@
       background-color: #f7faff;
       border: 1px solid #eaf4fd;
       border-radius: 10px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      box-shadow: none;
       text-align: center;
     }
 
@@ -1268,7 +1268,7 @@
       font-weight: 700;
       font-size: 14px;
       text-decoration: none;
-      box-shadow: 0 10px 24px rgba(15,23,42,0.05);
+      box-shadow: none;
       display: inline-flex;
       align-items: center;
       gap: 6px;
@@ -1591,7 +1591,7 @@
       border-color: #86efac;
       background: #ffffff;
       text-decoration: none;
-      transform: translateY(-1px);
+      transform: none;
     }
     .review-preview-link {
       display: block;
@@ -1929,7 +1929,7 @@
       border: 1px solid #dbe3ec;
       border-radius: 16px;
       background: #fff;
-      box-shadow: 0 8px 24px rgba(15, 23, 42, .05);
+      box-shadow: none;
       box-sizing: border-box;
     }
     .tier-heading {
@@ -2019,8 +2019,8 @@
     }
     .tier-vote.is-selected {
       border-color: var(--tier-color);
-      box-shadow: 0 0 0 3px color-mix(in srgb, var(--tier-color) 18%, transparent);
-      transform: translateY(-1px);
+      box-shadow: inset 0 0 0 1px var(--tier-color);
+      transform: none;
     }
     .tier-help {
       margin-top: 11px;
@@ -2176,7 +2176,7 @@
       padding: 0 !important;
     }
   </style>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/player-reviews.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/player-reviews.css', v='20261010-2') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/player-price-history.css', v='20260823-1') }}">
 {% endblock %}
 
@@ -2500,7 +2500,6 @@
       <section class="tier-section" aria-labelledby="community-tier-title" data-tier-section>
         <div class="tier-heading">
           <div>
-            <div class="tier-kicker">TIER VOTE</div>
             <h2 id="community-tier-title">이선수의 티어는?</h2>
           </div>
           <div class="tier-consensus">
@@ -2649,7 +2648,6 @@
       <section class="review-section" id="player-reviews">
         <div class="review-content-heading">
           <div class="review-content-heading-main">
-            <span class="review-content-kicker">PLAYER REVIEWS</span>
             <div class="review-content-title-row">
               <h2 class="review-content-title">사용자 리뷰</h2>
               <span class="review-content-count">{{ firebase_reviews|length }}개</span>

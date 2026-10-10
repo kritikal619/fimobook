@@ -1,0 +1,54 @@
+/* 홈 정리: 배너의 그라데이션 광원·사선 패턴·회전을 걷어내고 단색 면으로 둔다. */
+.prime-home-banner { border-radius:10px; border-width:1px; }
+.prime-home-banner::before,
+.prime-home-visual::before { display:none; }
+.prime-home-kicker::before { display:none; }
+.prime-home-kicker { letter-spacing:0; font-weight:700; font-size:11px; }
+.prime-home-cta { border-radius:6px; background:transparent; font-weight:700; font-size:12px; }
+.prime-home-logo,
+.pack-home-graphic,
+.power-ranking-home-board { transform:none; box-shadow:none; }
+.pack-home-moon { filter:none; }
+
+.pack-home-banner { background:#1b1530 url('/static/pack-opener/images/background.png') center/cover; border-color:#3a2f5c; }
+.pack-home-banner::after { content:""; position:absolute; inset:0; z-index:-1; background:rgba(17,12,34,.62); }
+.pack-home-banner .prime-home-kicker { color:#cbbcee; }
+
+.power-ranking-home-banner { background:#16294a; border-color:#27416d; }
+.power-ranking-home-banner .prime-home-kicker { color:#a9c4ee; }
+.power-ranking-home-banner .prime-home-cta { border-color:rgba(255,255,255,.28); background:transparent; color:#e8f0fb; }
+.power-ranking-home-board { border-radius:6px; background:rgba(255,255,255,.06); border-color:rgba(255,255,255,.22); }
+
+.career-home-banner { background:#f4f7f5; border-color:#d3ddd8; }
+.career-home-banner .prime-home-kicker,
+.career-home-banner .prime-home-cta { color:#2f4a40; }
+.career-home-banner .prime-home-cta { border-color:#b7c7bf; background:#fff; }
+.career-home-visual::before { display:none; }
+
+html[data-theme="dark"] .career-home-banner { background:#18231f; border-color:#2d3f38; }
+html[data-theme="dark"] .career-home-banner .prime-home-title { color:#e8f1ed; }
+html[data-theme="dark"] .career-home-banner .prime-home-desc { color:#a8bab3; }
+html[data-theme="dark"] .career-home-banner .prime-home-kicker,
+html[data-theme="dark"] .career-home-banner .prime-home-cta { color:#cfe3da; }
+html[data-theme="dark"] .career-home-banner .prime-home-cta { background:#1f2d28; border-color:#3a4f46; }
+
+/* 카드 모서리를 줄이고, 설명용 초록 글씨는 회색으로 낮춘다. 링크와 평점만 색을 유지. */
+.latest-review-item { border-radius:8px; }
+.weekly-card { border-radius:8px; }
+.latest-review-kind { background:transparent; color:#64748b; border-radius:0; padding:0; font-weight:600; }
+.latest-review-name { color:#334155; font-weight:600; }
+html[data-theme="dark"] .latest-review-kind { color:#94a3b8; background:transparent; }
+html[data-theme="dark"] .latest-review-name { color:#cbd5e1; }
+.weekly-player-meta { color:#64748b; font-weight:600; }
+html[data-theme="dark"] .weekly-player-meta { color:#94a3b8; }
+
+/* 최신 리뷰 목록: 리뷰 상세 페이지와 같은 문법(흰 면, 얇은 선, 작은 모서리, 알약 없음) */
+.latest-review-item { background:#fff; padding:10px 12px 10px 10px; transition:border-color .12s ease; }
+.latest-review-item:hover { border-color:#94a3b8; transform:none; background:#fff; }
+.latest-review-art { border-radius:6px; }
+.latest-review-kind.summary { background:transparent; color:#64748b; }
+.latest-review-post-title { font-weight:800; }
+.latest-review-title { font-weight:800; }
+.latest-review-more { font-weight:700; }
+.latest-review-author { font-weight:700; }
+html[data-theme="dark"] .latest-review-kind.summary { background:transparent !important; color:#94a3b8 !important; }

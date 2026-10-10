@@ -22,17 +22,17 @@
     grid-template-columns: 128px minmax(0, 1fr);
     gap: 24px;
     align-items: center;
-    padding: 22px;
+    padding: 20px;
     border: 1px solid #dbe3ec;
-    border-radius: 16px;
-    background: linear-gradient(135deg, #f5fdf9 0%, #ffffff 65%);
+    border-radius: 10px;
+    background: #ffffff;
   }
   .review-player-art {
     width: 118px;
     height: 154px;
     position: relative;
     overflow: hidden;
-    border-radius: 14px;
+    border-radius: 8px;
     background-color: #e9eef5;
     background-repeat: no-repeat;
     background-position: center;
@@ -53,26 +53,24 @@
     align-items: center;
     gap: 7px;
     flex-wrap: wrap;
-    color: #059669;
+    color: #64748b;
     font-size: 13px;
-    font-weight: 950;
+    font-weight: 700;
   }
   .review-position {
     display: inline-flex;
     align-items: center;
-    min-height: 25px;
-    padding: 0 9px;
-    border-radius: 999px;
-    background: #d1fae5;
-    color: #047857;
+    padding: 0;
+    background: transparent;
+    color: #334155;
   }
   .review-detail-title {
     margin: 8px 0 7px;
     color: #172033;
     font-size: clamp(24px, 4vw, 34px);
-    font-weight: 950;
+    font-weight: 800;
     line-height: 1.25;
-    letter-spacing: -1px;
+    letter-spacing: -.6px;
     word-break: keep-all;
   }
   .review-player-class {
@@ -152,6 +150,7 @@
     background: #500724;
     color: #f9a8d4;
   }
+  html[data-theme="dark"] .review-detail-page .review-position { background: transparent !important; color: #cbd5e1 !important; padding: 0; }
   .review-section {
     margin-top: 22px;
     padding-top: 22px;
@@ -176,11 +175,11 @@
     min-height: 30px;
     padding: 0 10px;
     border: 1px solid #dbe3ec;
-    border-radius: 999px;
-    background: #f1f5f9;
+    border-radius: 6px;
+    background: #f8fafc;
     color: #475569;
     font-size: 12px;
-    font-weight: 850;
+    font-weight: 600;
   }
   .review-playstyle-grid {
     display: grid;
@@ -195,7 +194,7 @@
     align-items: center;
     padding: 11px;
     border: 1px solid #e2e8f0;
-    border-radius: 12px;
+    border-radius: 8px;
     background: #fbfcfd;
   }
   .review-playstyle-card img {
@@ -229,11 +228,11 @@
     min-width: 0;
     padding: 13px 14px;
     border: 1px solid #e2e8f0;
-    border-radius: 12px;
+    border-radius: 8px;
     background: #fbfcfd;
   }
   .rating-label { color: #334155; font-size: 13px; font-weight: 950; }
-  .rating-score { color: #059669; font-size: 15px; font-weight: 950; }
+  .rating-score { color: #1e293b; font-size: 15px; font-weight: 700; }
   .rating-note {
     min-width: 0;
     color: #64748b;
@@ -255,7 +254,7 @@
     gap: 9px;
     padding: 14px;
     border: 1px solid #dbe3ec;
-    border-radius: 13px;
+    border-radius: 8px;
     background: #f8fafc;
   }
   .comment-form textarea {
@@ -287,7 +286,7 @@
   }
   .comment-login {
     padding: 14px;
-    border-radius: 12px;
+    border-radius: 8px;
     background: #f8fafc;
     color: #64748b;
     font-size: 13px;
@@ -297,7 +296,7 @@
   .comment-item {
     padding: 13px 14px;
     border: 1px solid #e2e8f0;
-    border-radius: 12px;
+    border-radius: 8px;
     background: #ffffff;
   }
   .comment-meta {
@@ -352,7 +351,7 @@
     min-width: 0;
     padding: 11px;
     border: 1px solid #e2e8f0;
-    border-radius: 12px;
+    border-radius: 8px;
     background: #ffffff;
     color: inherit;
     text-decoration: none;
@@ -388,7 +387,7 @@
   .related-meta { margin-top: 4px; color: #64748b; font-size: 11px; font-weight: 750; }
   @media (max-width: 640px) {
     .review-breadcrumb { margin-bottom: 12px; }
-    .review-hero { grid-template-columns: 82px minmax(0, 1fr); gap: 13px; padding: 14px; border-radius: 14px; }
+    .review-hero { grid-template-columns: 82px minmax(0, 1fr); gap: 13px; padding: 14px; border-radius: 10px; }
     .review-player-art { width: 78px; height: 102px; border-radius: 10px; }
     .review-detail-title { margin-top: 6px; font-size: 21px; letter-spacing: -.6px; }
     .review-player-line, .review-player-class, .review-byline { font-size: 11px; }

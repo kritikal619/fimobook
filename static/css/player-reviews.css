@@ -103,8 +103,8 @@
 
 .fimo-review-card:hover {
   border-color: #86efac;
-  box-shadow: 0 10px 24px rgba(15, 23, 42, .055);
-  transform: translateY(-1px);
+  box-shadow: none;
+  transform: none;
 }
 
 .fimo-review-card-main {
@@ -300,8 +300,8 @@
 .admin-review-panel {
   width: 100%;
   overflow: hidden;
-  border: 1px solid #cfe3dc;
-  border-radius: 16px;
+  border: 1px solid #dbe3ec;
+  border-radius: 10px;
   background: #fff;
 }
 
@@ -319,12 +319,9 @@
   border-left: 1px solid #e2e8f0;
 }
 
-.admin-review-box.pros {
-  background: linear-gradient(145deg, #f5fdf9 0%, #fff 72%);
-}
-
+.admin-review-box.pros,
 .admin-review-box.cons {
-  background: linear-gradient(145deg, #fffaf7 0%, #fff 72%);
+  background: #fff;
 }
 
 .admin-review-label {
@@ -332,28 +329,22 @@
   align-items: center;
   gap: 7px;
   margin-bottom: 10px;
-  color: #047857;
+  color: #334155;
   font-size: 13px;
-  font-weight: 900;
-}
-
-.admin-review-box.cons .admin-review-label {
-  color: #b45309;
+  font-weight: 700;
 }
 
 .admin-review-label-icon {
   width: 24px;
   height: 24px;
-  border-radius: 8px;
-  background: #d1fae5;
+  border-radius: 6px;
+  background: #f1f5f9;
+  color: #475569;
   display: inline-flex;
   align-items: center;
   justify-content: center;
 }
 
-.admin-review-box.cons .admin-review-label-icon {
-  background: #ffedd5;
-}
 
 .admin-review-text {
   color: #334155;
@@ -374,7 +365,7 @@
   margin-bottom: 7px;
   color: #172033;
   font-size: 12px;
-  font-weight: 900;
+  font-weight: 700;
 }
 
 .admin-review-verdict-copy {
