@@ -151,6 +151,18 @@
     els.gainOvr.textContent = `+${gain}`;
     els.gainStat.textContent = `+${gain}`;
     els.failNote.textContent = !step ? '최대 진화 단계입니다.' : (state.level === 0 ? '진화 실패 시 단계가 유지됩니다.' : '진화 실패 시 등급이 하락합니다.');
+    const infoTitle = $('[data-info-title]'), infoSub = $('[data-info-sub]');
+    if (infoTitle && infoSub) {
+      if (!player) {
+        infoTitle.textContent = '진화할 선수를 선택하세요';
+        infoSub.textContent = '현재 진화 단계를 고르고 재료 선수를 넣어 성공률을 올립니다.';
+      } else {
+        infoTitle.textContent = `${player.playerKor} · ${player.className || ''} OVR ${player.ovr + (enhanceTotals[state.level] || 0)}`.replace(' ·  OVR', ' · OVR');
+        infoSub.textContent = step
+          ? `${state.level}진화 → ${step.to}진화 · 재료 ${step.slots}칸 · 최대 성공률 ${Math.round(step.maxRate * 10) / 10}%`
+          : '최대 진화 단계입니다.';
+      }
+    }
     const prices = player?.priceByEnhance || {};
     els.valueNow.textContent = player ? fmt(prices[state.level]) : '-';
     els.valueNext.textContent = player && step ? fmt(prices[step.to]) : '-';

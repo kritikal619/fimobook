@@ -1,6 +1,6 @@
 /* FC모바일 진화 시뮬레이터: 게임 화면(가로)을 1200×554 좌표 그대로 옮긴다. 세로 화면에서는 같은 화면을 폭에 맞춰 축소한다.
    이 파일의 길이 단위는 1200 기준 화면의 1px = var(--u) 이다. */
-body.evolution-sim-page .main-content { max-width: 1240px; padding: 10px 16px 36px; }
+body.evolution-sim-page .main-content { max-width: 1240px; padding: 12px 28px 36px; }
 .evo-page { width: 100%; display: grid; gap: 14px; }
 .evo-visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 
@@ -215,55 +215,64 @@ body.evolution-sim-page .main-content { max-width: 1240px; padding: 10px 16px 36
 
 
 
-/* ===== 페이지 제목 / 기록 / 이용 안내 (페이지 일반 크기, 사이트 밝은/어두운 테마를 따름) ===== */
+/* ===== 페이지 제목 / 선택 정보 / 기록 / 이용 안내 (팩 오프너와 같은 구성: 상자 없이 구분선과 여백) ===== */
 .evo-page {
-  --log-bg: #fff; --log-line: #e2e8f0; --log-line-soft: #eef2f6; --log-ink: #172033; --log-sub: #64748b; --log-faint: #94a3b8;
+  --log-bg: #fff; --log-line: #dce3e8; --log-line-soft: #eef2f6; --log-ink: #172033; --log-sub: #70808d; --log-faint: #8b969f;
   --log-up: #059669; --log-down: #dc2626;
+  gap: 0;
 }
 html[data-theme="dark"] .evo-page {
   --log-bg: #131d2e; --log-line: #334155; --log-line-soft: #243145; --log-ink: #e7ecf2; --log-sub: #a7b5c7; --log-faint: #7b8aa0;
   --log-up: #4ade80; --log-down: #f87171;
 }
-.evo-heading h1 { margin: 0; font-size: 22px; font-weight: 800; letter-spacing: -.5px; color: var(--log-ink); }
+.evo-heading { margin: 6px 0 24px; }
+.evo-heading h1 { margin: 0; font-size: 32px; line-height: 1.25; font-weight: 800; letter-spacing: -1.2px; color: var(--log-ink); }
 
-.evo-guide { text-align: right; }
-.evo-guide summary { display: inline-flex; align-items: center; gap: 4px; padding: 4px 2px; color: var(--log-faint); font-size: 12px; font-weight: 600; cursor: pointer; list-style: none; }
+/* 화면 아래 선택 정보 줄 */
+.evo-info { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 0; border-bottom: 1px solid var(--log-line); }
+.evo-info strong { display: block; font-size: 14px; line-height: 1.6; color: var(--log-ink); }
+.evo-info p { margin: 4px 0 0; font-size: 12px; line-height: 1.6; color: var(--log-sub); }
+.evo-info button { flex: 0 0 auto; padding: 9px 12px; border: 1px solid var(--log-line); border-radius: 5px; background: transparent; color: var(--log-ink); font: inherit; font-size: 12px; white-space: nowrap; cursor: pointer; }
+.evo-info button:hover { border-color: var(--log-sub); }
+.evo-info button:focus-visible { outline: 2px solid #4b5563; outline-offset: 2px; }
+
+/* 이용 안내 */
+.evo-guide { margin-top: 6px; text-align: left; }
+.evo-guide summary { display: inline-flex; align-items: center; gap: 6px; padding: 10px 0; color: var(--log-sub); font-size: 12px; font-weight: 500; cursor: pointer; list-style: none; }
 .evo-guide summary::-webkit-details-marker { display: none; }
-.evo-guide summary::after { content: '›'; font-size: 13px; transform: rotate(90deg); transition: transform .15s ease; }
-.evo-guide[open] summary::after { transform: rotate(-90deg); }
-.evo-guide summary:focus-visible { outline: 2px solid #0ea5e9; outline-offset: 2px; }
-.evo-guide-content { margin-top: 6px; padding: 16px 18px; border: 1px solid var(--log-line); border-radius: 8px; background: var(--log-bg); color: var(--log-sub); text-align: left; }
+.evo-guide summary::before { content: '▸'; font-size: 11px; transition: transform .15s ease; }
+.evo-guide[open] summary::before { transform: rotate(90deg); }
+.evo-guide summary:focus-visible { outline: 2px solid #4b5563; outline-offset: 2px; }
+.evo-guide-content { max-width: 760px; margin-top: 2px; padding: 4px 0 8px; border: 0; border-radius: 0; background: transparent; color: var(--log-sub); text-align: left; }
 .evo-guide-content h2 { margin: 0 0 8px; font-size: 16px; font-weight: 700; color: var(--log-ink); }
-.evo-guide-content h3 { margin: 16px 0 6px; font-size: 14px; font-weight: 700; color: var(--log-ink); }
-.evo-guide-content ol, .evo-guide-content ul { margin: 0; padding-left: 20px; display: grid; gap: 4px; font-size: 13px; line-height: 1.65; }
+.evo-guide-content h3 { margin: 18px 0 6px; font-size: 14px; font-weight: 700; color: var(--log-ink); }
+.evo-guide-content ol, .evo-guide-content ul { margin: 0; padding-left: 20px; display: grid; gap: 4px; font-size: 13px; line-height: 1.7; }
 .evo-guide-content p { margin: 12px 0 0; font-size: 12.5px; line-height: 1.6; color: var(--log-faint); }
-.evo-guide-content a { color: #0284c7; }
-html[data-theme="dark"] .evo-guide-content a { color: #7dd3fc; }
+.evo-guide-content a { color: var(--brand-dark, #087f5b); }
 .evo-guide-table { width: 100%; max-width: 560px; border-collapse: collapse; font-size: 13px; }
-.evo-guide-table th, .evo-guide-table td { padding: 6px 8px; border-bottom: 1px solid var(--log-line-soft); text-align: left; }
+.evo-guide-table th, .evo-guide-table td { padding: 7px 8px; border-bottom: 1px solid var(--log-line-soft); text-align: left; }
 .evo-guide-table th { color: var(--log-faint); font-weight: 500; font-size: 12px; }
 .evo-guide-table td { color: var(--log-ink); }
 
-.evo-log { border: 1px solid var(--log-line); border-radius: 8px; padding: 14px 18px 10px; color: var(--log-ink); background: var(--log-bg); }
-.evo-log-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 30px; }
-.evo-log-head h2 { margin: 0; font-size: 15px; font-weight: 700; color: var(--log-ink); }
-.evo-log-reset { min-height: 30px; padding: 0 10px; border: 0; border-radius: 6px; background: transparent; color: var(--log-faint); font: inherit; font-size: 12.5px; cursor: pointer; }
-.evo-log-reset:hover { color: var(--log-ink); background: var(--log-line-soft); }
+/* 진화 기록: 제목 + 한 줄 요약(라벨 위, 숫자 아래) + 표 */
+.evo-log { padding: 22px 0 8px; color: var(--log-ink); }
+.evo-log-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.evo-log-head h2 { margin: 4px 0; font-size: 17px; font-weight: 700; color: var(--log-ink); }
+.evo-log-reset { padding: 8px 12px; border: 1px solid var(--log-line); border-radius: 5px; background: transparent; color: var(--log-sub); font: inherit; font-size: 12px; cursor: pointer; }
+.evo-log-reset:hover { color: var(--log-ink); border-color: var(--log-sub); }
 .evo-log-reset[hidden] { display: none; }
-.evo-log-reset:focus-visible { outline: 2px solid #0ea5e9; outline-offset: 2px; }
-.evo-log-stats { display: flex; flex-wrap: wrap; margin: 8px 0 0; padding: 10px 0 12px; border-bottom: 1px solid var(--log-line-soft); }
-.evo-log-stats div { display: flex; align-items: baseline; gap: 6px; padding: 0 16px; border-left: 1px solid var(--log-line); }
-.evo-log-stats div:first-child { padding-left: 0; border-left: 0; }
-.evo-log-stats dt { font-size: 12.5px; color: var(--log-sub); font-weight: 500; }
+.evo-log-reset:focus-visible { outline: 2px solid #4b5563; outline-offset: 2px; }
+.evo-log-stats { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 12px 24px; margin: 14px 0 20px; padding: 0; border: 0; }
+.evo-log-stats div { display: block; padding: 0; border: 0; }
+.evo-log-stats dt { margin-bottom: 4px; font-size: 12px; color: var(--log-sub); font-weight: 500; }
 .evo-log-stats dd { margin: 0; font-size: 16px; font-weight: 700; color: var(--log-ink); font-variant-numeric: tabular-nums; }
 .evo-log-stats .is-success dd { color: var(--log-up); }
 .evo-log-stats .is-fail dd { color: var(--log-down); }
-.evo-log-table { max-height: 300px; overflow-y: auto; margin-top: 4px; scrollbar-width: thin; }
+.evo-log-table { max-width: 760px; max-height: 300px; overflow-y: auto; scrollbar-width: thin; }
 .evo-log-table[hidden] { display: none; }
-/* 열 너비를 고르게 나눠 이름 뒤에 큰 빈칸이 생기지 않게 한다 */
 .evo-log-table table { width: 100%; table-layout: fixed; border-collapse: collapse; font-size: 13.5px; }
-.evo-log-table th { position: sticky; top: 0; z-index: 1; padding: 8px 6px; background: var(--log-bg); color: var(--log-faint); font-size: 12px; font-weight: 500; text-align: center; }
-.evo-log-table td { padding: 6px; border-top: 1px solid var(--log-line-soft); vertical-align: middle; text-align: center; }
+.evo-log-table th { position: sticky; top: 0; z-index: 1; padding: 8px 6px; background: var(--log-bg); color: var(--log-faint); font-size: 12px; font-weight: 500; text-align: center; border-bottom: 1px solid var(--log-line); }
+.evo-log-table td { padding: 8px 6px; border-bottom: 1px solid var(--log-line-soft); vertical-align: middle; text-align: center; }
 .evo-log-table th:nth-child(1) { width: 12%; }
 .evo-log-table th:nth-child(2) { width: 34%; text-align: left; }
 .evo-log-table th:nth-child(3) { width: 22%; }
@@ -279,7 +288,7 @@ html[data-theme="dark"] .evo-guide-content a { color: #7dd3fc; }
 .is-fail .evo-log-result span { color: var(--log-down); }
 .is-protected .evo-log-result span { color: var(--log-sub); }
 .evo-log-rate { color: var(--log-sub); font-variant-numeric: tabular-nums; }
-.evo-log-empty { margin: 0; padding: 18px 0 10px; text-align: center; font-size: 13px; color: var(--log-faint); }
+.evo-log-empty { margin: 0; padding: 4px 0 12px; text-align: left; font-size: 13px; color: var(--log-faint); }
 .evo-log-empty[hidden] { display: none; }
 
 .evo-dialog { width: min(560px, calc(100vw - 24px)); max-height: min(82vh, 700px); padding: 0; border: 1px solid var(--line); border-radius: 8px; background: var(--panel, #fff); color: var(--ink, #1f2937); }
@@ -309,26 +318,17 @@ html[data-theme="dark"] .evo-guide-content a { color: #7dd3fc; }
 .evo-info-source { margin: 10px 0 0; font-size: 12px; color: var(--muted); }
 .evo-info-source a { color: var(--brand-dark); }
 
-/* 넓은 화면: 기록 표(왼쪽)와 요약 수치(오른쪽)를 나란히 두어 좌우가 비지 않게 한다 */
-@media (min-width: 900px) {
-  .evo-log { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(260px, 1fr); column-gap: 40px; align-items: start; }
-  .evo-log-head { grid-column: 1 / -1; }
-  .evo-log-table, .evo-log-empty { grid-column: 1; grid-row: 2; }
-  .evo-log-stats { grid-column: 2; grid-row: 2; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 28px; margin: 4px 0 0; padding: 0; border-bottom: 0; align-content: start; }
-  .evo-log-stats div, .evo-log-stats div:first-child { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; padding: 11px 0; border: 0; border-bottom: 1px solid var(--log-line-soft); }
-  .evo-log-stats dd { font-size: 17px; }
-  .evo-log-table { margin-top: 0; }
-}
 @media (max-width: 620px) {
   body.evolution-sim-page .main-content { padding: 6px 0 28px; }
   .evo-screen { border-radius: 0; width: 100vw; margin-left: calc(50% - 50vw); }
-  .evo-log { margin: 0 12px; padding: 12px 12px 8px; }
-  .evo-heading, .evo-guide { margin: 0 12px; }
-  .evo-heading h1 { font-size: 19px; }
-  .evo-guide-content { padding: 14px 12px; }
-  .evo-log-stats { row-gap: 8px; }
-  .evo-log-stats div { flex: 0 0 33.33%; box-sizing: border-box; padding: 0 0 0 10px; }
-  .evo-log-stats div:nth-child(3n+1) { padding-left: 0; border-left: 0; }
+  .evo-heading, .evo-info, .evo-log, .evo-guide { margin-left: 14px; margin-right: 14px; }
+  .evo-heading { margin-top: 14px; margin-bottom: 16px; }
+  .evo-heading h1 { font-size: 24px; letter-spacing: -.8px; }
+  .evo-info { gap: 8px; padding: 12px 0; }
+  .evo-info p { font-size: 11px; }
+  .evo-info button { padding: 8px 10px; font-size: 11px; }
+  .evo-log { padding-top: 16px; }
+  .evo-log-stats { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px 12px; }
   .evo-log-table th:nth-child(5), .evo-log-rate { display: none; }
   .evo-log-table th:nth-child(1) { width: 12%; }
   .evo-log-table th:nth-child(2) { width: 38%; }
