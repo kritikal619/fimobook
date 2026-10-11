@@ -525,7 +525,7 @@
   <section class="review-section" id="review-comments">
     <h2 class="review-section-title">댓글 {{ total_comments }}</h2>
     {% if current_user.is_authenticated %}
-      <form class="comment-form" method="post" action="{{ url_for('add_player_review_comment', cid=review.player_cid, review_id=review.id) }}">
+      <form class="comment-form" data-same-page data-anchor="#review-comments" method="post" action="{{ url_for('add_player_review_comment', cid=review.player_cid, review_id=review.id) }}">
         <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
         <textarea name="content" maxlength="1000" placeholder="리뷰에 대한 의견이나 질문을 남겨주세요." required></textarea>
         <button class="comment-submit" type="submit">댓글 등록</button>
@@ -542,14 +542,14 @@
           <div class="comment-tools">
             {% if current_user.is_authenticated %}<button class="comment-tool" type="button" data-reply-toggle="reply-{{ comment.id }}">답글</button>{% endif %}
             {% if current_user.is_authenticated and (comment.author_id == current_user.id or is_admin_user) %}
-              <form method="post" action="{{ url_for('delete_player_review_comment', comment_id=comment.id) }}" onsubmit="return confirm('댓글을 삭제할까요?');">
+              <form method="post" action="{{ url_for('delete_player_review_comment', comment_id=comment.id) }}" data-same-page data-anchor="#review-comments" onsubmit="return confirm('댓글을 삭제할까요?');">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
                 <button class="comment-tool danger" type="submit">삭제</button>
               </form>
             {% endif %}
           </div>
           {% if current_user.is_authenticated %}
-            <form id="reply-{{ comment.id }}" class="comment-form reply-form" method="post" action="{{ url_for('add_player_review_comment', cid=review.player_cid, review_id=review.id) }}" hidden>
+            <form id="reply-{{ comment.id }}" class="comment-form reply-form" data-same-page data-anchor="#review-comments" method="post" action="{{ url_for('add_player_review_comment', cid=review.player_cid, review_id=review.id) }}" hidden>
               <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
               <input type="hidden" name="parent_id" value="{{ comment.id }}">
               <textarea name="content" maxlength="1000" placeholder="답글을 입력하세요." required></textarea>
@@ -564,7 +564,7 @@
                   <div class="comment-content">{{ reply.content }}</div>
                   {% if current_user.is_authenticated and (reply.author_id == current_user.id or is_admin_user) %}
                     <div class="comment-tools">
-                      <form method="post" action="{{ url_for('delete_player_review_comment', comment_id=reply.id) }}" onsubmit="return confirm('답글을 삭제할까요?');">
+                      <form method="post" action="{{ url_for('delete_player_review_comment', comment_id=reply.id) }}" data-same-page data-anchor="#review-comments" onsubmit="return confirm('답글을 삭제할까요?');">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
                         <button class="comment-tool danger" type="submit">삭제</button>
                       </form>
@@ -603,6 +603,7 @@
   </section>
 </div>
 
+<script src="{{ url_for('static', filename='js/same-page-forms.js', v='20261011-1') }}" defer></script>
 <script>
   document.querySelectorAll('[data-reply-toggle]').forEach(function (button) {
     button.addEventListener('click', function () {

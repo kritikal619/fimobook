@@ -551,7 +551,7 @@
                       data-reply-author="{{ comment.author.username if comment.author else '익명' }}">답글</button>
             {% endif %}
             {% if current_user.is_authenticated and (comment.author_id == current_user.id or is_admin_user) %}
-              <form action="{{ url_for('delete_comment', comment_id=comment.id) }}" method="POST" onsubmit="return confirm('댓글과 답글을 삭제하시겠습니까?');">
+              <form action="{{ url_for('delete_comment', comment_id=comment.id) }}" method="POST" data-same-page data-anchor="#comments" onsubmit="return confirm('댓글과 답글을 삭제하시겠습니까?');">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
                 <button type="submit" class="comment-action danger">삭제</button>
               </form>
@@ -559,7 +559,7 @@
           </div>
 
           {% if current_user.is_authenticated %}
-            <form id="reply-form-{{ comment.id }}" action="{{ url_for('add_comment', post_id=post.id) }}" method="POST" class="reply-form" hidden>
+            <form id="reply-form-{{ comment.id }}" action="{{ url_for('add_comment', post_id=post.id) }}" method="POST" data-same-page data-anchor="#comments" class="reply-form" hidden>
               <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
               <input type="hidden" name="parent_id" value="{{ comment.id }}" data-reply-parent>
               <div class="reply-target" data-reply-target>@{{ comment.author.username if comment.author else '익명' }}님에게 답글</div>
@@ -594,7 +594,7 @@
                               data-reply-author="{{ reply.author.username if reply.author else '익명' }}">답글</button>
                     {% endif %}
                     {% if current_user.is_authenticated and (reply.author_id == current_user.id or is_admin_user) %}
-                      <form action="{{ url_for('delete_comment', comment_id=reply.id) }}" method="POST" onsubmit="return confirm('답글을 삭제하시겠습니까?');">
+                      <form action="{{ url_for('delete_comment', comment_id=reply.id) }}" method="POST" data-same-page data-anchor="#comments" onsubmit="return confirm('답글을 삭제하시겠습니까?');">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
                         <button type="submit" class="comment-action danger">삭제</button>
                       </form>
@@ -611,7 +611,7 @@
     </div>
 
     {% if current_user.is_authenticated %}
-      <form action="{{ url_for('add_comment', post_id=post.id) }}" method="POST" class="new-comment-form">
+      <form action="{{ url_for('add_comment', post_id=post.id) }}" method="POST" class="new-comment-form" data-same-page data-anchor="#comments">
         <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
         <textarea name="content" rows="3" maxlength="1000" class="comment-textarea" placeholder="댓글을 입력하세요" required></textarea>
         <div class="comment-submit-row">
@@ -624,6 +624,7 @@
   </section>
 </article>
 
+<script src="{{ url_for('static', filename='js/same-page-forms.js', v='20261011-1') }}" defer></script>
 <script>
   (() => {
     document.querySelectorAll(".reply-toggle").forEach((button) => {
