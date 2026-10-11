@@ -27,7 +27,7 @@
 } | tojson }}
 </script>
 <link rel="preload" as="image" href="{{ url_for('static', filename='evolution-sim/menu.webp') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/evolution-simulator.css', v='20261011-7') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/evolution-simulator.css', v='20261011-8') }}">
 {% endblock %}
 {% block content %}
 {% set coin = url_for('static', filename='pack-opener/images/mp-token-transparent.png') %}
@@ -49,7 +49,6 @@
 
         <button class="evo-m-card" type="button" data-open-player aria-label="진화할 선수 선택">
           <span class="evo-card" data-target-card></span>
-          <img class="evo-card-badge" data-target-badge alt="" hidden>
           <span class="evo-m-card-empty" data-target-empty><i class="bi bi-plus-lg" aria-hidden="true"></i><b>선수 선택</b></span>
         </button>
         <label class="evo-m-level"><span>현재 진화</span><select data-level-select aria-label="현재 진화 단계"></select></label>
@@ -142,7 +141,7 @@
         <div class="evo-result" data-result>
           <div class="evo-r-panel"></div>
           <h2 class="evo-r-title" data-result-title>진화 성공</h2>
-          <div class="evo-r-card"><span class="evo-card" data-result-card></span><img class="evo-card-badge" data-result-card-badge alt=""></div>
+          <div class="evo-r-card"><span class="evo-card" data-result-card></span></div>
           <img class="evo-r-from" data-result-from alt="">
           <span class="evo-chev evo-r-chev" aria-hidden="true"><i></i><i></i><i></i></span>
           <img class="evo-r-to" data-result-to alt="">
@@ -255,4 +254,4 @@
 
 <script type="application/json" id="evo-data">{{ {'steps': evolution_data.steps, 'materials': evolution_materials, 'enhanceSteps': enhance_steps}|tojson }}</script>
 {% endblock %}
-{% block extra_scripts %}<script src="{{ url_for('static', filename='js/evolution-simulator.js', v='20261011-7') }}" defer></script>{% endblock %}
+{% block extra_scripts %}<script src="{{ url_for('static', filename='js/evolution-simulator.js', v='20261011-8') }}" defer></script>{% endblock %}

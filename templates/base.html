@@ -735,7 +735,7 @@
   {% if current_user.is_authenticated %}
   <script src="{{ url_for('static', filename='js/renewal-alerts.js', v='20261009-pwa-push-1') }}" data-csrf="{{ csrf_token }}" defer></script>
   {% endif %}
-  <script src="{{ url_for('static', filename='js/player-card-art.js', v='20261004-1') }}"></script>
+  <script src="{{ url_for('static', filename='js/player-card-art.js', v='20261011-1') }}"></script>
   {% block extra_scripts %}{% endblock %}
   <script src="{{ url_for('static', filename='js/pwa.js', v='20261009-pwa-push-1') }}" defer></script>
   <script src="{{ url_for('static', filename='js/live-prices.js', v='20261009-price-sync-1') }}" defer></script>

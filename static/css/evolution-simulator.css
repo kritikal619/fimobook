@@ -34,8 +34,10 @@ body.evolution-sim-page .main-content { max-width: 1240px; padding: 10px 16px 36
 /* 대상 선수 */
 .evo-m-card { position: absolute; left: calc(var(--u) * 156); top: calc(var(--u) * 70); width: calc(var(--u) * 228); height: calc(var(--u) * 228); padding: 0; border: 0; background: none; cursor: pointer; }
 .evo-card { position: relative; display: block; width: 100%; aspect-ratio: 1; }
-.evo-card-badge { position: absolute; left: 17%; top: 33%; width: 14.5%; height: auto; z-index: 4; pointer-events: none; }
-.evo-card-badge[hidden] { display: none; }
+@keyframes evo-card-fallback { to { opacity: 1; } }
+.evo-card:not(.fimo-card-art) { opacity: 0; animation: evo-card-fallback 0s 1.5s forwards; }
+.evo-card.fimo-card-art { animation: evo-card-in .12s ease-out; }
+@keyframes evo-card-in { from { opacity: 0; } }
 .evo-m-card-empty {
   position: absolute; left: calc(var(--u) * 32); top: calc(var(--u) * 14); width: calc(var(--u) * 164); height: calc(var(--u) * 200); display: grid; place-content: center; justify-items: center; gap: calc(var(--u) * 8);
   border: calc(var(--u) * 2) dashed rgba(70, 220, 140, .6); border-radius: calc(var(--u) * 10); background: rgba(0, 0, 0, .35); color: #fff; font-size: calc(var(--u) * 15);
@@ -109,7 +111,6 @@ body.evolution-sim-page .main-content { max-width: 1240px; padding: 10px 16px 36
 .evo-slot.is-locked { border: calc(var(--u) * 1) solid rgba(255, 255, 255, .13); border-radius: calc(var(--u) * 6); background: rgba(0, 0, 0, .28); color: #7a828d; font-size: calc(var(--u) * 19); cursor: default; }
 .evo-slot.is-filled .evo-card { left: calc(var(--u) * -10); top: calc(var(--u) * -6); width: calc(var(--u) * 101); }
 .evo-slot.is-filled:hover .evo-card { filter: brightness(.8); }
-.evo-slot .evo-card-badge { width: 14.5%; }
 .evo-bar { position: absolute; left: calc(var(--u) * 12); right: calc(var(--u) * 12); bottom: 0; height: calc(var(--u) * 4); display: grid; grid-template-columns: repeat(5, 1fr); gap: calc(var(--u) * 2); }
 .evo-bar i { position: relative; overflow: hidden; background: #3d4652; }
 .evo-bar i::before { content: ""; position: absolute; inset: 0; background: #1d9bf0; transform-origin: left; transform: scaleX(var(--cell, 0)); }
@@ -281,29 +282,43 @@ html[data-theme="dark"] .evo-guide-content a { color: #7dd3fc; }
 .evo-log-empty { margin: 0; padding: 18px 0 10px; text-align: center; font-size: 13px; color: var(--log-faint); }
 .evo-log-empty[hidden] { display: none; }
 
-.evo-dialog { width: min(540px, calc(100vw - 24px)); max-height: min(80vh, 680px); padding: 0; border: 1px solid #3fb3a5; border-radius: 8px; background: linear-gradient(180deg, #1c4b57 0%, #18303f 18%, #141e2d 100%); color: #eef2f6; }
-.evo-dialog::backdrop { background: rgba(0, 0, 0, .65); }
-.evo-dialog-head { display: flex; align-items: center; justify-content: space-between; padding: 12px 14px 8px; }
-.evo-dialog-head h2 { margin: 0; font-size: 18px; font-weight: 700; }
-.evo-dialog-close { border: 0; background: none; color: #fff; font-size: 18px; cursor: pointer; padding: 6px; }
-.evo-search { display: block; width: calc(100% - 28px); margin: 0 14px 8px; min-height: 40px; padding: 0 12px; border: 1px solid rgba(255, 255, 255, .2); border-radius: 6px; background: #0b1220; color: #fff; font: inherit; font-size: 16px; box-sizing: border-box; }
-.evo-player-results { display: grid; gap: 2px; padding: 0 8px 12px; overflow-y: auto; max-height: calc(min(80vh, 680px) - 110px); }
-.evo-player-row { display: grid; grid-template-columns: 58px minmax(0, 1fr); align-items: center; gap: 10px; padding: 3px 8px; border: 0; border-radius: 6px; background: transparent; color: inherit; text-align: left; cursor: pointer; font: inherit; }
-.evo-player-row:hover, .evo-player-row:focus-visible { background: rgba(255, 255, 255, .08); }
+.evo-dialog { width: min(560px, calc(100vw - 24px)); max-height: min(82vh, 700px); padding: 0; border: 1px solid var(--line); border-radius: 8px; background: var(--panel, #fff); color: var(--ink, #1f2937); }
+.evo-dialog::backdrop { background: rgba(15, 23, 42, .5); }
+.evo-dialog-head { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px 10px; }
+.evo-dialog-head h2 { margin: 0; font-size: 17px; font-weight: 700; }
+.evo-dialog-close { border: 0; background: none; color: var(--muted); font-size: 17px; cursor: pointer; padding: 6px; }
+.evo-dialog-close:hover { color: var(--ink); }
+.evo-search { display: block; width: calc(100% - 32px); margin: 0 16px 8px; min-height: 42px; padding: 0 12px; border: 1px solid var(--line); border-radius: 6px; background: var(--panel, #fff); color: var(--ink); font: inherit; font-size: 16px; box-sizing: border-box; outline: none; }
+.evo-search:focus { border-color: #4b5563; }
+.evo-search::placeholder { color: var(--muted); }
+.evo-player-results { display: grid; gap: 0; padding: 0 8px 12px; overflow-y: auto; max-height: calc(min(82vh, 700px) - 120px); }
+.evo-player-row { display: grid; grid-template-columns: 58px minmax(0, 1fr); align-items: center; gap: 12px; padding: 4px 8px; border: 0; border-bottom: 1px solid var(--line); border-radius: 0; background: transparent; color: inherit; text-align: left; cursor: pointer; font: inherit; }
+.evo-player-row:last-child { border-bottom: 0; }
+.evo-player-row:hover, .evo-player-row:focus-visible { background: rgba(100, 116, 139, .1); outline: none; }
 .evo-player-row .evo-card { width: 58px; }
 .evo-player-meta { display: grid; gap: 2px; min-width: 0; }
-.evo-player-meta b { font-size: 14px; font-weight: 700; }
-.evo-player-meta small { font-size: 12px; color: #9aa7b8; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.evo-muted { margin: 16px; color: #9aa7b8; font-size: 13px; text-align: center; }
-.evo-info-body { padding: 0 14px 14px; overflow-y: auto; max-height: calc(min(80vh, 680px) - 56px); }
+.evo-player-meta b { font-size: 15px; font-weight: 700; }
+.evo-player-meta small { font-size: 12.5px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.evo-muted { margin: 20px 16px; color: var(--muted); font-size: 13px; text-align: center; }
+.evo-info-body { padding: 0 16px 16px; overflow-y: auto; max-height: calc(min(82vh, 700px) - 56px); }
 .evo-info-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-.evo-info-table th, .evo-info-table td { padding: 7px 8px; border-bottom: 1px solid rgba(255, 255, 255, .08); text-align: left; }
-.evo-info-table th { color: #9aa7b8; font-weight: 600; }
-.evo-info-table tr.is-current td { color: #4fd0ff; font-weight: 700; }
-.evo-info-rules { margin: 12px 0 0; padding-left: 18px; display: grid; gap: 6px; font-size: 13px; line-height: 1.55; color: #cfd6df; }
-.evo-info-source { margin: 10px 0 0; font-size: 12px; color: #9aa7b8; }
-.evo-info-source a { color: #7dd3fc; }
+.evo-info-table th, .evo-info-table td { padding: 8px; border-bottom: 1px solid var(--line); text-align: left; }
+.evo-info-table th { color: var(--muted); font-weight: 600; }
+.evo-info-table tr.is-current td { color: var(--brand-dark); font-weight: 700; }
+.evo-info-rules { margin: 12px 0 0; padding-left: 18px; display: grid; gap: 6px; font-size: 13px; line-height: 1.6; color: var(--ink); }
+.evo-info-source { margin: 10px 0 0; font-size: 12px; color: var(--muted); }
+.evo-info-source a { color: var(--brand-dark); }
 
+/* 넓은 화면: 기록 표(왼쪽)와 요약 수치(오른쪽)를 나란히 두어 좌우가 비지 않게 한다 */
+@media (min-width: 900px) {
+  .evo-log { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(260px, 1fr); column-gap: 40px; align-items: start; }
+  .evo-log-head { grid-column: 1 / -1; }
+  .evo-log-table, .evo-log-empty { grid-column: 1; grid-row: 2; }
+  .evo-log-stats { grid-column: 2; grid-row: 2; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 28px; margin: 4px 0 0; padding: 0; border-bottom: 0; align-content: start; }
+  .evo-log-stats div, .evo-log-stats div:first-child { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; padding: 11px 0; border: 0; border-bottom: 1px solid var(--log-line-soft); }
+  .evo-log-stats dd { font-size: 17px; }
+  .evo-log-table { margin-top: 0; }
+}
 @media (max-width: 620px) {
   body.evolution-sim-page .main-content { padding: 6px 0 28px; }
   .evo-screen { border-radius: 0; width: 100vw; margin-left: calc(50% - 50vw); }

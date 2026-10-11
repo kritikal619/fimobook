@@ -101,19 +101,26 @@ window.FimoCardArt = (() => {
         batch.forEach(([cid, elements]) => {
           const meta = payload.cards?.[cid]; if (!meta) return;
           cache.set(cid, meta);
-          elements.forEach(element => { if (element.isConnected && element.dataset.fimoCardCid === cid) render(element, meta, {ovr: element.dataset.fimoCardOvr}); });
+          elements.forEach(element => { if (element.isConnected && element.dataset.fimoCardCid === cid) render(element, meta, elementOptions(element)); });
         });
       } catch (_) { /* Existing card text remains usable if metadata is unavailable. */ }
     }
   }
+  // Hydrated cards read their OVR and evolution level from data attributes.
+  function elementOptions(element) {
+    const options = {ovr: element.dataset.fimoCardOvr};
+    const enhance = element.dataset.fimoCardEnhance;
+    if (/^\d+$/.test(enhance || '')) options.enhance = Number(enhance);
+    return options;
+  }
   function hydrate(element) {
     if (element.dataset.fimoPlayerCard) {
-      try { const player = JSON.parse(element.dataset.fimoPlayerCard); if (player.cid) cache.set(String(player.cid), player); render(element, player); } catch (_) { /* Ignore invalid markup. */ }
+      try { const player = JSON.parse(element.dataset.fimoPlayerCard); if (player.cid) cache.set(String(player.cid), player); render(element, player, elementOptions(element)); } catch (_) { /* Ignore invalid markup. */ }
       return;
     }
     const cid = element.dataset.fimoCardCid;
     if (!/^\d+$/.test(cid || '')) return;
-    if (cache.has(cid)) { render(element, cache.get(cid), {ovr: element.dataset.fimoCardOvr}); return; }
+    if (cache.has(cid)) { render(element, cache.get(cid), elementOptions(element)); return; }
     if (!pending.has(cid)) pending.set(cid, new Set()); pending.get(cid).add(element);
     if (!scheduled) { scheduled = true; queueMicrotask(flush); }
   }
@@ -129,7 +136,7 @@ window.FimoCardArt = (() => {
   function start() {
     scan(document);
     observer.observe(document.body, {subtree:true, childList:true, attributes:true,
-      attributeFilter:['data-fimo-player-card', 'data-fimo-card-cid', 'data-fimo-card-ovr']});
+      attributeFilter:['data-fimo-player-card', 'data-fimo-card-cid', 'data-fimo-card-ovr', 'data-fimo-card-enhance']});
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start, {once:true}); else start();
   return {render, clear};

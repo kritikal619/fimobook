@@ -23,7 +23,7 @@
   };
   const views = {menu: $('[data-view="menu"]'), picker: $('[data-view="picker"]'), scene: $('[data-view="scene"]')};
   const els = {
-    targetCard: $('[data-target-card]'), targetBadge: $('[data-target-badge]'), targetEmpty: $('[data-target-empty]'),
+    targetCard: $('[data-target-card]'), targetEmpty: $('[data-target-empty]'),
     levelSelect: $('[data-level-select]'), valueNow: $('[data-value-now]'), valueNext: $('[data-value-next]'),
     fromBadge: $('[data-from-badge]'), toBadge: $('[data-to-badge]'), failNote: $('[data-fail-note]'),
     gainOvr: $('[data-gain-ovr]'), gainStat: $('[data-gain-stat]'),
@@ -64,10 +64,10 @@
   }
 
   // ---------- 카드 ----------
-  function setCard(element, player, level = 0, ovrOverride) {
+  function setCard(element, player, level = 0, ovrOverride, withBadge = true) {
     element.replaceChildren();
     element.className = element.className.split(' ').filter(name => !name.startsWith('fimo-card')).join(' ');
-    delete element.dataset.fimoCardCid; delete element.dataset.fimoCardOvr;
+    delete element.dataset.fimoCardCid; delete element.dataset.fimoCardOvr; delete element.dataset.fimoCardEnhance;
     if (!player) return;
     [[player.card, 'card-background'], [player.face, 'card-face']].forEach(([src, className]) => {
       if (!src) return;
@@ -76,6 +76,7 @@
       element.append(img);
     });
     element.dataset.fimoCardOvr = String(ovrOverride ?? (player.ovr + (enhanceTotals[level] || 0)));
+    if (withBadge) element.dataset.fimoCardEnhance = String(level || 0);
     element.dataset.fimoCardCid = String(player.cid);
   }
   function fillBar(bar, share) {
@@ -121,7 +122,7 @@
           cell.setAttribute('aria-label', '잠긴 슬롯');
         } else if (material) {
           cell.classList.add('is-filled');
-          cell.innerHTML = `<span class="evo-card"></span>${material.level ? `<img class="evo-card-badge" src="${badge(material.level)}" alt="">` : ''}<span class="evo-bar"></span>`;
+          cell.innerHTML = '<span class="evo-card"></span><span class="evo-bar"></span>';
           setCard(cell.querySelector('.evo-card'), material, material.level);
           fillBar(cell.querySelector('.evo-bar'), step ? materialRate(step, material) / step.maxRate : 0);
           cell.setAttribute('aria-label', inPicker ? `${material.playerKor} 재료 빼기` : `${material.playerKor} 재료 변경`);
@@ -142,8 +143,6 @@
     if (step) state.slots = state.slots.slice(0, step.slots); else state.slots = [];
     els.levelSelect.value = String(state.level);
     els.targetEmpty.hidden = !!player;
-    els.targetBadge.hidden = !player || state.level === 0;
-    els.targetBadge.src = badge(state.level);
     setCard(els.targetCard, player, state.level);
 
     els.fromBadge.src = badge(state.level);
@@ -181,7 +180,7 @@
       button.type = 'button'; button.className = 'evo-mat'; button.dataset.cid = material.cid;
       if (rate <= 0) button.classList.add('is-zero');
       button.setAttribute('aria-label', `${material.playerKor} OVR ${material.ovr} 재료 추가, 성공률 ${pct(rate)}`);
-      button.innerHTML = `<span class="evo-card"></span>${level ? `<img class="evo-card-badge" src="${badge(level)}" alt="">` : ''}<span class="evo-mat-rate">+${pct(rate)}</span><span class="evo-bar"></span>`;
+      button.innerHTML = `<span class="evo-card"></span><span class="evo-mat-rate">+${pct(rate)}</span><span class="evo-bar"></span>`;
       setCard(button.querySelector('.evo-card'), material, level, showBase ? material.ovr : undefined);
       fillBar(button.querySelector('.evo-bar'), step ? rate / step.maxRate : 0);
       return button;
@@ -464,8 +463,6 @@
     $('[data-result-from]').src = badge(result.from);
     $('[data-result-to]').src = badge(result.to);
     setCard($('[data-result-card]'), player, result.to);
-    const cardBadge = $('[data-result-card-badge]');
-    cardBadge.src = badge(result.to); cardBadge.hidden = result.to === 0;
     const delta = (enhanceTotals[result.to] || 0) - (enhanceTotals[result.from] || 0);
     $('[data-result-stats]').replaceChildren(...(player.summary || []).map(item => {
       const row = document.createElement('div');
@@ -518,8 +515,8 @@
     resetOverlays();
     show.oldBadge.src = badge(result.from);
     show.newBadge.src = badge(result.to);
-    setCard(show.card, state.player, result.from);
-    setCard(show.flip, state.player, result.to);
+    setCard(show.card, state.player, result.from, undefined, false);
+    setCard(show.flip, state.player, result.to, undefined, false);
     prepareResult(result);
     showView('scene');
     startParticles();

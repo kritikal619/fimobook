@@ -364,6 +364,9 @@
                 const base = Number(el.dataset.base || 0);
                 el.textContent = Number.isFinite(base) ? base + enhanceOvrBonus : '-';
             });
+            // The evolution logo sits on the card art at the same spot as in the pack opener.
+            const cardArt = document.querySelector('.player-card-wrapper .player-card');
+            if (cardArt) cardArt.dataset.fimoCardEnhance = String(enhance);
             if (maxLevelStat) {
                 const baseOvr = Number(ovrValues[0]?.dataset.base || 0);
                 const maxStat = maxLevelStatForOvr(baseOvr);
