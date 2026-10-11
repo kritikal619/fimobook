@@ -12,6 +12,10 @@
   .title-row .page-title { width:auto; }
   .filtered-results-page .meta-label { color:var(--muted); }
   .count { color:var(--muted); font-size:13px; font-weight:700; }
+  .result-pages { display:flex; flex-wrap:wrap; justify-content:center; align-items:center; gap:4px; margin:24px 0 8px; }
+  .result-pages a, .result-pages strong, .result-pages span { display:inline-flex; align-items:center; justify-content:center; min-width:36px; height:36px; padding:0 8px; border-radius:6px; font-size:14px; color:var(--muted); text-decoration:none; }
+  .result-pages a:hover { color:var(--text); background:var(--surface); }
+  .result-pages strong { color:var(--text); font-weight:800; border:1px solid var(--line); }
   .chips { display:flex; flex-wrap:wrap; gap:6px; }
   .chip { display:inline-flex; flex-wrap:wrap; gap:4px; padding:6px 10px; border:1px solid var(--line); border-radius:8px; background:var(--surface); color:var(--muted); font-size:12px; overflow-wrap:anywhere; max-width:100%; box-sizing:border-box; }
   .chip b { color:var(--text); }
@@ -46,7 +50,7 @@
 
   <div class="title-row">
     <h1 class="page-title">선수 세부검색 결과</h1>
-    <div class="count">총 {{ players|length }}명</div>
+    <div class="count">총 {{ "{:,}".format(total_count or players|length) }}명{% if page_count and page_count > 1 %} · {{ page }}/{{ page_count }} 페이지{% endif %}</div>
   </div>
 
   <div class="chips">
@@ -143,7 +147,7 @@
   {% else %}
     <div class="results-grid" data-live-price-sort="{{ sort }}">
       {% for player in players %}
-      <a class="player-card" href="{{ url_for('player_detail', cid=player.cid) }}" data-live-price-card data-live-price-value="{{ player.price or '' }}" data-ga-event="player_select" data-ga-param-source-surface="advanced_search" data-ga-param-content-id="{{ player.cid }}" data-ga-param-result-position="{{ loop.index }}">
+      <a class="player-card" href="{{ url_for('player_detail', cid=player.cid) }}" data-live-price-card data-live-price-value="{{ player.price or '' }}" data-ga-event="player_select" data-ga-param-source-surface="advanced_search" data-ga-param-content-id="{{ player.cid }}" data-ga-param-result-position="{{ (page_offset or 0) + loop.index }}">
         {% set card_thumb = player_thumbnail_url('card', player.cid, 160) %}
         {% set card_fallback = player.bimage or '' %}
         <div
@@ -228,12 +232,26 @@
       {% endfor %}
       {% if players|length < 8 %}{% with ad_layout="grid-card" %}{% include "_adsense_unit.html" %}{% endwith %}{% endif %}
     </div>
+    {% if page_count and page_count > 1 %}
+      {% set first = [page - 2, 1]|max %}
+      {% set last = [first + 4, page_count]|min %}
+      {% set first = [last - 4, 1]|max %}
+      <nav class="result-pages" aria-label="검색 결과 페이지">
+        {% if page > 1 %}<a href="{{ page_url(page - 1) }}" rel="prev">이전</a>{% endif %}
+        {% if first > 1 %}<a href="{{ page_url(1) }}">1</a>{% if first > 2 %}<span>…</span>{% endif %}{% endif %}
+        {% for number in range(first, last + 1) %}
+          {% if number == page %}<strong aria-current="page">{{ number }}</strong>{% else %}<a href="{{ page_url(number) }}">{{ number }}</a>{% endif %}
+        {% endfor %}
+        {% if last < page_count %}{% if last < page_count - 1 %}<span>…</span>{% endif %}<a href="{{ page_url(page_count) }}">{{ page_count }}</a>{% endif %}
+        {% if page < page_count %}<a href="{{ page_url(page + 1) }}" rel="next">다음</a>{% endif %}
+      </nav>
+    {% endif %}
   {% endif %}
 </div>
 <script>
   document.addEventListener("DOMContentLoaded", () => {
     window.fimoAnalytics?.track?.("filtered_results_view", {
-      result_count: {{ players|length }},
+      result_count: {{ total_count or players|length }},
       filter_count: document.querySelectorAll(".chips .chip").length,
       has_results: {{ (players|length > 0)|tojson }},
     }, { onceKey: "filtered_results_view" });

@@ -17,7 +17,7 @@ import warnings
 import stat
 import requests
 from io import BytesIO
-from urllib.parse import quote, unquote, urljoin, urlparse
+from urllib.parse import quote, unquote, urlencode, urljoin, urlparse
 from flask import Flask, request, render_template, redirect, url_for, jsonify, flash, Response, send_from_directory, send_file, abort, session, has_request_context
 from bs4 import BeautifulSoup
 import os
@@ -5637,6 +5637,7 @@ PLAYER_CLASS_MAP_FILE = os.path.join(
 PLAYER_CLASS_NAMES_BY_CID = {}
 DETAIL_SEARCH_DEFAULT_MIN_OVR = 132
 DETAIL_SEARCH_DEFAULT_MAX_OVR = 160
+DETAIL_SEARCH_PAGE_SIZE = 60
 PLAYER_POSITION_GROUPS = (
     {"key": "attack", "label": "공격", "positions": ("ST", "CF", "LW", "LF", "RF", "RW")},
     {"key": "midfield", "label": "미드", "positions": ("CAM", "CM", "CDM", "LM", "RM")},
@@ -7048,6 +7049,24 @@ LATEST_PLAYER_REVIEWS_REMOTE_TTL = 90
 _PLAYER_REVIEWS_FIRESTORE_CACHE = {}
 _PLAYER_REVIEWS_FIRESTORE_CACHE_LOCK = threading.Lock()
 PLAYER_REVIEWS_FIRESTORE_CACHE_TTL = 120
+# A query that needs a Firestore index which does not exist fails the same way on
+# every request. Skip it for a while instead of paying the round trip each time.
+FIRESTORE_MISSING_INDEX_RETRY_SECONDS = 6 * 60 * 60
+_FIRESTORE_MISSING_INDEX_UNTIL = {}
+
+
+class _FirestoreIndexSkipped(Exception):
+    """Raised instead of sending a query whose index is known to be missing."""
+
+
+def _firestore_index_missing(key):
+    return time.time() < _FIRESTORE_MISSING_INDEX_UNTIL.get(key, 0)
+
+
+def _note_firestore_index_error(key, error):
+    text = str(error).lower()
+    if "requires" in text and "index" in text:
+        _FIRESTORE_MISSING_INDEX_UNTIL[key] = time.time() + FIRESTORE_MISSING_INDEX_RETRY_SECONDS
 
 
 def _invalidate_player_reviews_firestore_cache(*cids):
@@ -7434,6 +7453,8 @@ def _latest_remote_player_reviews(limit=30):
 
     reviews = []
     try:
+        if _firestore_index_missing("reviews.created_at_iso"):
+            raise _FirestoreIndexSkipped("missing index (skipped)")
         query = (
             fs.collection_group("reviews")
             .order_by("created_at_iso", direction=firestore.Query.DESCENDING)
@@ -7441,7 +7462,9 @@ def _latest_remote_player_reviews(limit=30):
         )
         reviews = [_format_player_review_doc(doc) for doc in query.stream(retry=None, timeout=1.5)]
     except Exception as e:
-        print(f"Latest player review feed read failed: {e}")
+        if not isinstance(e, _FirestoreIndexSkipped):
+            print(f"Latest player review feed read failed: {e}")
+            _note_firestore_index_error("reviews.created_at_iso", e)
         error_text = str(e).lower()
         if "index" in error_text or "failedprecondition" in error_text or "failed precondition" in error_text:
             try:
@@ -7763,19 +7786,27 @@ def _get_player_reviews_from_firestore(cid, limit=50, extra_cids=None):
     if not reviews and fs:
         fallback_queries = []
         for cid_value in review_cids:
+            if not _firestore_index_missing("reviews.player_cid"):
+                fallback_queries.append((
+                    "reviews.player_cid",
+                    _fs_where(fs.collection_group("reviews"), "player_cid", "==", cid_value).limit(limit),
+                ))
             fallback_queries.extend(
                 [
-                    _fs_where(fs.collection_group("reviews"), "player_cid", "==", cid_value).limit(limit),
-                    _fs_where(fs.collection("player_reviews"), "player_cid", "==", cid_value).limit(limit),
-                    _fs_where(fs.collection("reviews"), "player_cid", "==", cid_value).limit(limit),
+                    (None, _fs_where(fs.collection("player_reviews"), "player_cid", "==", cid_value).limit(limit)),
+                    (None, _fs_where(fs.collection("reviews"), "player_cid", "==", cid_value).limit(limit)),
                 ]
             )
 
-        for query in fallback_queries:
+        for index_key, query in fallback_queries:
+            if index_key and _firestore_index_missing(index_key):
+                continue
             try:
                 reviews.extend(_format_player_review_doc(doc) for doc in query.stream(retry=None, timeout=8))
             except Exception as e:
                 print(f"Firestore player review fallback read failed for {cid}: {e}")
+                if index_key:
+                    _note_firestore_index_error(index_key, e)
 
     reviews = _dedupe_player_reviews(reviews, limit=limit)
     with _PLAYER_REVIEWS_FIRESTORE_CACHE_LOCK:
@@ -11811,20 +11842,13 @@ def filtered_players():
         ):
             continue
 
-        normalized = _apply_local_assets(_normalize_player_record(player.copy()))
-        normalized["price"] = _extract_price_at_enhance(normalized, filters["price_enhance"])
-        normalized["skillLabels"] = _extract_player_skills(normalized)
-        normalized["playstyles"] = _extract_player_playstyles(normalized)
-        normalized["playstyleSlots"] = _build_player_playstyle_slots(
-            normalized,
-            normalized["playstyles"],
-        )
-        normalized["matchedMaxStats"] = [
-            {"label": STAT_CODE_LABELS[code], "value": player[code]}
-            for code in filters["max_stats"]
-        ]
-        normalized["potentialPositions"] = _extract_potential_positions(normalized)
-        filtered_list.append(normalized)
+        # Only the sort keys here; card fields are built for the requested page below.
+        filtered_list.append({
+            "ovr": player.get("ovr"),
+            "playerKor": player.get("playerKor"),
+            "price": player_price,
+            "_source": player,
+        })
 
     sort_detail_search_players(filtered_list, sort)
 
@@ -11839,10 +11863,43 @@ def filtered_players():
             robots_meta="noindex,follow",
         )
 
+    total_count = len(filtered_list)
+    page_count = math.ceil(total_count / DETAIL_SEARCH_PAGE_SIZE)
+    page = min(max(request.args.get("page", 1, type=int) or 1, 1), page_count)
+    offset = (page - 1) * DETAIL_SEARCH_PAGE_SIZE
+    page_players = []
+    for entry in filtered_list[offset:offset + DETAIL_SEARCH_PAGE_SIZE]:
+        player = entry["_source"]
+        normalized = _apply_local_assets(_normalize_player_record(player.copy()))
+        normalized["price"] = _extract_price_at_enhance(normalized, filters["price_enhance"])
+        normalized["skillLabels"] = _extract_player_skills(normalized)
+        normalized["playstyles"] = _extract_player_playstyles(normalized)
+        normalized["playstyleSlots"] = _build_player_playstyle_slots(
+            normalized,
+            normalized["playstyles"],
+        )
+        normalized["matchedMaxStats"] = [
+            {"label": STAT_CODE_LABELS[code], "value": player[code]}
+            for code in filters["max_stats"]
+        ]
+        normalized["potentialPositions"] = _extract_potential_positions(normalized)
+        page_players.append(normalized)
+
+    page_args = [(key, value) for key, value in request.args.items(multi=True) if key != "page"]
+
+    def page_url(number):
+        args = page_args + ([("page", number)] if number > 1 else [])
+        return url_for("filtered_players") + ("?" + urlencode(args) if args else "")
+
     return render_template(
         "filtered_players_results.html",
         error=None,
-        players=filtered_list,
+        players=page_players,
+        total_count=total_count,
+        page=page,
+        page_count=page_count,
+        page_offset=offset,
+        page_url=page_url,
         filters=filters,
         sort=sort,
         robots_meta="noindex,follow",
