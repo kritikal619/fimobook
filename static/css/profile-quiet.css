@@ -1,0 +1,91 @@
+/* 프로필: 카드 상자 · 글자 아바타 · 초록 채움 · 우측 화살표를 걷어내고, 이름과 활동 수치, 작성 리뷰를 구분선으로만 나눈 화면 */
+
+body.profile-page .main-content { max-width: 960px; }
+.profile-shell { gap: 28px; }
+
+/* 상자 제거 */
+.profile-panel { border: 0; border-radius: 0; background: transparent; }
+.profile-summary { overflow: visible; }
+
+/* 이름 */
+.profile-intro { padding: 4px 0 18px; gap: 12px; }
+.profile-avatar { display: none; }
+.profile-name { font-size: 26px; font-weight: 700; letter-spacing: -.6px; }
+.profile-badges { margin-top: 6px; gap: 0 10px; }
+.profile-badge { min-height: 0; padding: 0; border: 0; border-radius: 0; background: transparent; color: var(--muted); font-size: 13px; font-weight: 400; }
+.profile-badge + .profile-badge::before { content: "·"; margin-right: 10px; }
+.profile-shell .profile-badge.verified,
+html[data-theme="dark"] .profile-shell .profile-badge.verified { background: transparent !important; color: var(--muted) !important; }
+.profile-badge .bi { display: none; }
+.profile-edit-link { min-height: 0; padding: 0; border: 0; background: transparent; color: var(--muted); font-size: 13px; font-weight: 500; text-decoration: underline; text-underline-offset: 3px; }
+.profile-edit-link:hover { border: 0; background: transparent; color: var(--ink); }
+.profile-edit-link .bi { display: none; }
+
+/* 활동 수치: 4칸 상자 대신 위아래 선 사이의 한 줄 */
+.profile-summary .profile-activity { border: 0; border-top: 2px solid var(--ink); border-bottom: 1px solid var(--line); background: transparent; }
+.profile-activity-item { margin: 14px 0; padding: 0 16px 0 0; }
+.profile-activity-item + .profile-activity-item { border-left: 0; padding-left: 0; }
+.profile-activity dt { font-size: 12px; }
+.profile-activity dd { margin-top: 4px; font-size: 21px; font-weight: 700; }
+
+/* 작성한 리뷰 */
+.profile-section-head { padding: 0 0 12px; border-bottom: 1px solid var(--line); }
+.profile-section-title { font-size: 17px; font-weight: 700; }
+.profile-count { padding: 0; border-radius: 0; background: transparent; font-size: 13px; }
+.profile-review { grid-template-columns: 56px minmax(0, 1fr); padding: 16px 0; gap: 14px; align-items: start; }
+.profile-review:hover { background: transparent; }
+.profile-review:hover .profile-review-title { color: var(--brand-dark); }
+.profile-review-art { width: 56px; height: 74px; border-radius: 4px; }
+.profile-review-arrow { display: none; }
+.profile-review-title { font-weight: 600; }
+.profile-review-score { color: var(--ink); font-weight: 600; }
+.profile-review-score i { display: none; }
+.profile-review-score::before { content: "★"; margin-right: 2px; color: var(--profile-rating); font-size: 11px; }
+.profile-empty { padding: 40px 0; text-align: left; }
+.profile-empty > i { display: none; }
+.profile-empty h3 { margin-top: 0; }
+
+/* 사이드: 포인트 · 계정 */
+.profile-side-section { padding: 14px 0 0; border-top: 2px solid var(--ink); }
+.profile-side-title { margin-bottom: 12px; font-size: 15px; font-weight: 700; }
+.profile-points-current { padding: 0; border-radius: 0; background: transparent; color: var(--ink); gap: 4px; }
+.profile-points-current > span { color: var(--muted); }
+.profile-points-current strong { font-size: 26px; }
+.profile-points-current small { font-weight: 400; color: var(--muted); }
+.profile-point-row { min-height: 40px; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--line); }
+.profile-side-link { margin-top: 6px; padding-top: 10px; border-top: 1px solid var(--line); color: var(--brand-dark); font-weight: 600; }
+.profile-side-link i { display: none; }
+.profile-side-link::after { content: "→"; }
+.profile-editor { border: 0; border-top: 1px solid var(--line); border-radius: 0; margin-bottom: 0; }
+.profile-editor[open] { background: transparent; }
+.profile-editor summary { padding: 0; min-height: 44px; font-weight: 600; }
+.profile-editor summary > i { display: none; }
+.profile-form { padding: 0 0 14px; }
+.profile-form .form-control { border-radius: 6px; }
+.profile-form .form-control:focus { border-color: #4b5563; box-shadow: none; }
+.profile-account-link { padding: 0; border-top: 1px solid var(--line); font-weight: 500; }
+.profile-account-link > i { display: none; }
+.profile-account-danger { border-top: 1px solid var(--line); }
+
+/* 버튼 */
+.profile-button { border-radius: 6px; font-weight: 700; }
+.profile-shell .profile-button-primary { background: #075f46; }
+.profile-shell .profile-button-primary:hover { background: #064e3b; }
+.profile-button-primary:disabled:hover { background: #075f46; }
+.profile-button-secondary:hover { border-color: var(--ink); background: transparent; color: var(--ink); }
+.profile-button .bi { display: none; }
+
+@media (max-width: 760px) {
+  .profile-layout { grid-template-columns: minmax(0, 1fr); gap: 28px; }
+  .profile-summary .profile-activity { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .profile-name { font-size: 23px; }
+}
+
+/* 다크 모드 */
+html[data-theme="dark"] .profile-panel { background: transparent !important; box-shadow: none !important; border-color: transparent !important; }
+html[data-theme="dark"] .profile-summary .profile-activity { border-top-color: #475569 !important; border-bottom-color: var(--dark-line) !important; }
+html[data-theme="dark"] .profile-side-section { border-top-color: #475569 !important; }
+html[data-theme="dark"] .profile-points-current { background: transparent !important; color: #e7ecf2 !important; }
+html[data-theme="dark"] .profile-count { background: transparent !important; }
+html[data-theme="dark"] .profile-side-link { color: #6ee7b7; }
+html[data-theme="dark"] .profile-shell .profile-button-primary { background: #0f766e; }

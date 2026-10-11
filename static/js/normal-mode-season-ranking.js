@@ -24,7 +24,7 @@
     clear.hidden = !input.value;
     empty.hidden = count > 0;
     status.classList.toggle('srank-status--match', exact.length > 0);
-    status.textContent = !query ? `상위 ${rows.length}명 · FC 챔피언`
+    status.textContent = !query ? `상위 ${rows.length}명`
       : exact.length ? exact.map(row => `${row.nickname} · ${row.rank}위`).join(' ') + (count > exact.length ? ` · 관련 검색 결과 ${count}명` : '')
       : count ? `검색 결과 ${count}명` : '검색 결과가 없습니다.';
   }

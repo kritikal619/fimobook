@@ -38,3 +38,6 @@ html[data-theme="dark"] .srank-page{--srank-ink:#edf0f4;--srank-muted:#a0a8b4;--
  .srank-stars{font-weight:600}
  .srank-note{font-size:11px;margin-top:14px}
 }
+/* The division tier column was removed (every row was the same value). */
+.srank-table thead th:last-child{width:90px;text-align:right}
+@media(max-width:620px){.srank-table thead th:last-child{width:58px}}
