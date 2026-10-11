@@ -155,7 +155,7 @@
     if (infoTitle && infoSub) {
       if (!player) {
         infoTitle.textContent = '진화할 선수를 선택하세요';
-        infoSub.textContent = '현재 진화 단계를 고르고 재료 선수를 넣어 성공률을 올립니다.';
+        infoSub.textContent = '';
       } else {
         infoTitle.textContent = `${player.playerKor} · ${player.className || ''} OVR ${player.ovr + (enhanceTotals[state.level] || 0)}`.replace(' ·  OVR', ' · OVR');
         infoSub.textContent = step

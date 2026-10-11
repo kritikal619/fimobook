@@ -27,7 +27,7 @@
 } | tojson }}
 </script>
 <link rel="preload" as="image" href="{{ url_for('static', filename='evolution-sim/menu.webp') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/evolution-simulator.css', v='20261011-9') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/evolution-simulator.css', v='20261011-10') }}">
 {% endblock %}
 {% block content %}
 {% set coin = url_for('static', filename='pack-opener/images/mp-token-transparent.png') %}
@@ -176,7 +176,7 @@
   <div class="evo-info" aria-live="polite">
     <div>
       <strong data-info-title>진화할 선수를 선택하세요</strong>
-      <p data-info-sub>현재 진화 단계를 고르고 재료 선수를 넣어 성공률을 올립니다.</p>
+      <p data-info-sub></p>
     </div>
     <button type="button" data-open-info>진화 확률표</button>
   </div>
@@ -262,4 +262,4 @@
 
 <script type="application/json" id="evo-data">{{ {'steps': evolution_data.steps, 'materials': evolution_materials, 'enhanceSteps': enhance_steps}|tojson }}</script>
 {% endblock %}
-{% block extra_scripts %}<script src="{{ url_for('static', filename='js/evolution-simulator.js', v='20261011-9') }}" defer></script>{% endblock %}
+{% block extra_scripts %}<script src="{{ url_for('static', filename='js/evolution-simulator.js', v='20261011-10') }}" defer></script>{% endblock %}
