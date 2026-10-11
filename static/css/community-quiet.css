@@ -19,7 +19,10 @@
 .review-filter-control span, .review-filter-control select, .review-filter-reset { font-weight: 600; }
 
 /* 글 목록: 초록 점과 게시판 이름 라벨을 없애고 제목 중심으로 */
-.community-post { grid-template-columns: minmax(0, 1fr) auto; gap: 14px; padding: 15px 0; }
+.community-post { grid-template-columns: minmax(0, 1fr); gap: 14px; padding: 15px 0; }
+.post-summary { display: flex; align-items: center; gap: 16px; min-width: 0; }
+.post-body { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.post-side { margin-top: 8px; flex-wrap: wrap; white-space: normal; }
 .post-dot { display: none; }
 .post-badge:not(.is-pinned) { display: none; }
 .post-badge.is-pinned { height: auto; padding: 0; margin-right: 6px; border-radius: 0; background: transparent; color: var(--brand-dark); font-size: 12.5px; font-weight: 800; }
@@ -27,9 +30,17 @@
 .comment-count { font-weight: 700; }
 .post-preview { margin-top: 4px; font-size: 13.5px; }
 .post-extra-badge { font-weight: 600; }
-.post-thumb { border-radius: 6px; }
+.post-image-link { display: block; flex: 0 0 72px; width: 72px; height: 72px; border-radius: 6px; overflow: hidden; }
+.post-image-link .post-thumb { display: block; width: 100%; height: 100%; border: 0; border-radius: 0; object-fit: cover; }
 .author-link { font-weight: 600; }
 .profile-arrow { display: none; }
+
+/* 리뷰게시판: 카드 대신 다른 게시판과 같은 구분선 목록 */
+.review-board-list { gap: 0; padding-top: 0; border-top: 1px solid var(--line); }
+.review-board-item { padding: 16px 0; border: 0; border-bottom: 1px solid var(--line); border-radius: 0; background: transparent; box-shadow: none; transition: none; }
+.review-board-item:hover { border-color: var(--line); box-shadow: none; transform: none; }
+.review-board-item:hover .review-board-title { color: var(--brand-dark); }
+.review-board-art { border-radius: 4px; }
 
 /* 리뷰 점수 랭킹 상자: 카드 대신 구분선 */
 .community-shell .ranking-panel { border: 0; border-top: 2px solid var(--ink); border-radius: 0; background: transparent; box-shadow: none; padding: 14px 2px 0; }
@@ -50,11 +61,27 @@
 
 /* 모바일 */
 @media (max-width: 640px) {
-  .community-mobile-tabs, .ranking-tabs { gap: 2px 18px; border-bottom: 1px solid var(--line); padding-bottom: 0; }
-  .community-mobile-tab, .ranking-tab { min-height: 38px; padding: 0 2px; border: 0; border-bottom: 2px solid transparent; border-radius: 0; margin-bottom: -1px; background: transparent; color: var(--muted); font-size: 14px; font-weight: 600; }
+  .community-tabs, .community-mobile-tabs, .ranking-tabs { gap: 2px 18px; border-bottom: 1px solid var(--line); padding-bottom: 0; }
+  .community-tab, .community-mobile-tab, .ranking-tab { min-height: 38px; padding: 0 2px; border: 0; border-bottom: 2px solid transparent; border-radius: 0; margin-bottom: -1px; background: transparent; color: var(--muted); font-size: 14px; font-weight: 600; }
   .community-mobile-tab.active, .ranking-tab.active { background: transparent; border-color: var(--brand-dark); color: var(--ink); font-weight: 800; }
   .ranking-panel-head { border: 0; border-radius: 0; background: transparent; box-shadow: none; padding: 12px 0 10px; border-bottom: 1px solid var(--line); }
-  .community-post { padding: 13px 0; }
+  .post-list { gap: 0; border-top: 1px solid var(--line); }
+  .community-post {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+    padding: 14px 0;
+    border: 0;
+    border-bottom: 1px solid var(--line);
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+  .post-side { grid-column: 1; min-width: 0; gap: 7px 12px; }
+  .post-summary { gap: 12px; }
+  .post-image-link { flex-basis: 64px; width: 64px; height: 64px; }
+  .review-board-list { gap: 0; }
+  .review-board-item { padding: 14px 0; border-radius: 0; }
+  .review-board-side { padding-top: 0; border-top: 0; justify-content: flex-start; grid-column: 2; }
 }
 
 /* 다크 모드 */
@@ -65,4 +92,5 @@ html[data-theme="dark"] .community-tab:hover, html[data-theme="dark"] .ranking-t
 html[data-theme="dark"] .community-shell .ranking-panel { background: transparent !important; border-top-color: #475569; box-shadow: none; }
 html[data-theme="dark"] .community-shell .rank-points, html[data-theme="dark"] .rank-points { color: #e7ecf2; }
 html[data-theme="dark"] .post-badge.is-pinned { color: #6ee7b7; background: transparent !important; }
+html[data-theme="dark"] .review-board-item, html[data-theme="dark"] .review-board-item:hover { background: transparent !important; box-shadow: none !important; }
 html[data-theme="dark"] .community-shell .ranking-more { background: transparent !important; color: #6ee7b7; }

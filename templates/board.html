@@ -783,7 +783,7 @@
     }
   }
 </style>
-<link rel="stylesheet" href="{{ url_for('static', filename='css/community-quiet.css', v='20261011-1') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/community-quiet.css', v='20261011-4') }}">
 {% endblock %}
 
 {% block content %}
@@ -933,27 +933,33 @@
         {% for post in posts %}
           <article class="community-post">
             <span class="post-dot" aria-hidden="true"></span>
-            <div class="post-body">
-              <div>
-                <span class="post-badge{% if post.is_pinned %} is-pinned{% endif %}">{% if post.is_pinned %}<i class="bi bi-pin-angle-fill" aria-hidden="true"></i> {% endif %}{{ boards[post.board_type if post.board_type in boards else active].label }}</span>
-                <a href="{{ url_for('post_detail', post_id=post.id) }}" class="post-title-link">{{ post.title }}</a>
-                {% if post.poll_question %}<span class="post-extra-badge"><i class="bi bi-bar-chart-fill" aria-hidden="true"></i> 투표</span>{% endif %}
-                {% if post.comments|length %}<span class="comment-count">({{ post.comments|length }})</span>{% endif %}
+            <div class="post-summary">
+              <div class="post-body">
+                <div>
+                  <span class="post-badge{% if post.is_pinned %} is-pinned{% endif %}">{% if post.is_pinned %}<i class="bi bi-pin-angle-fill" aria-hidden="true"></i> {% endif %}{{ boards[post.board_type if post.board_type in boards else active].label }}</span>
+                  <a href="{{ url_for('post_detail', post_id=post.id) }}" class="post-title-link">{{ post.title }}</a>
+                  {% if post.poll_question %}<span class="post-extra-badge"><i class="bi bi-bar-chart-fill" aria-hidden="true"></i> 투표</span>{% endif %}
+                  {% if post.comments|length %}<span class="comment-count">({{ post.comments|length }})</span>{% endif %}
+                </div>
+                <p class="post-preview">{{ post.content }}</p>
+                <div class="post-side">
+                  <span>
+                    {% if post.author %}
+                      <a href="{{ url_for('public_profile', user_id=post.author.id) }}" class="author-link">{{ post.author.username }}<span class="profile-arrow">&gt;</span></a>
+                    {% else %}
+                      익명
+                    {% endif %}
+                  </span>
+                  <span>{{ post.created_at|kst_datetime('%m.%d') }}</span>
+                  <span><i class="bi bi-eye" aria-hidden="true"></i> {{ post.views or 0 }}</span>
+                  <span><i class="bi bi-hand-thumbs-up" aria-hidden="true"></i> {{ post.likes }}</span>
+                </div>
               </div>
-              <p class="post-preview">{{ post.content }}</p>
-            </div>
-            <div class="post-side">
-              {% if post.image_filename %}<img src="{{ url_for('static', filename='uploads/' ~ post.image_filename) }}" class="post-thumb" alt="">{% endif %}
-              <span>
-                {% if post.author %}
-                  <a href="{{ url_for('public_profile', user_id=post.author.id) }}" class="author-link">{{ post.author.username }}<span class="profile-arrow">&gt;</span></a>
-                {% else %}
-                  익명
-                {% endif %}
-              </span>
-              <span>{{ post.created_at|kst_datetime('%m.%d') }}</span>
-              <span><i class="bi bi-eye" aria-hidden="true"></i> {{ post.views or 0 }}</span>
-              <span><i class="bi bi-hand-thumbs-up" aria-hidden="true"></i> {{ post.likes }}</span>
+              {% if post.image_filename %}
+                <a href="{{ url_for('post_detail', post_id=post.id) }}" class="post-image-link" aria-label="{{ post.title }} 첨부사진 보기">
+                  <img src="{{ url_for('static', filename='uploads/' ~ post.image_filename) }}" class="post-thumb" alt="" loading="lazy">
+                </a>
+              {% endif %}
             </div>
           </article>
         {% else %}
