@@ -23,6 +23,7 @@ and browser storage keys.
 | Squad per-player growth editor | `static/js/squad-maker.js` (existing) |
 | Player statistics PNG renderer and shared summary helpers | `player_stats_card.py` |
 | Detail-search query parsing, validation and result ordering | `player_search.py` |
+| Game rule tables (positions, enhance/training, skill boosts, review form constants) and position/work-rate/trait readers | `player_rules.py` |
 | Search predicates, catalog access and response rendering | `app.py` (`filtered_players`) |
 | Isolated local regression runner | `scripts/run_local_tests.py` |
 | Test browser session with a real page token | `tests/browser_session.py` |
