@@ -1,6 +1,7 @@
 import unittest
 
 import app as app_module
+from tests.browser_session import page_client
 
 
 class PositionFilterTest(unittest.TestCase):
@@ -64,7 +65,7 @@ class PositionFilterTest(unittest.TestCase):
             self._player(103, "ST", potential="", postion3=["CAM"]),
         ]
         app_module._TEAM_FILTER_CONTEXT_CACHE.clear()
-        client = app_module.app.test_client()
+        client = page_client(app_module.app)
 
         detail_response = client.get(
             "/filtered_players?min_ovr=0&max_ovr=200"

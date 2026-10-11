@@ -45,7 +45,7 @@ from google.cloud.firestore_v1 import FieldFilter
 from sqlalchemy import func, or_, update, select
 from sqlalchemy.dialects.sqlite import insert as sqlite_insert
 from sqlalchemy.exc import IntegrityError
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image
 from price_history import load_player_price_history, load_market_price_changes
 from evolution_materials import build_evolution_material_trends
 from derived_cache import shared_derived_cache
@@ -53,7 +53,23 @@ from renewal import renewal_occurrences, renewal_reminder, renewal_is_quiet
 from renewal_webpush import public_key as renewal_public_key, validate_subscription, send_push as send_renewal_push
 from pack_opener import get_catalog as get_pack_catalog
 from player_card_art import card_art_metadata
+from player_stats_card import (
+    STATS_CARD_SUMMARY_WEIGHTS,
+    _max_level_stat_value,
+    _stats_card_numeric,
+    _stats_card_summary_value,
+    render_player_stats_card,
+)
 from scraping_protection import install_scraping_protection
+from player_search import (
+    _clean_filter_values,
+    _filter_arg_values,
+    _filter_int_arg,
+    _normalize_filter_text,
+    parse_detail_search_query,
+    price_enhance_arg,
+    sort_detail_search_players,
+)
 
 app = Flask(__name__)
 install_scraping_protection(app)
@@ -227,507 +243,6 @@ BOARD_IMAGE_FORMATS = {
 BOARD_POST_IMAGE_NAME_RE = re.compile(
     r"board_[0-9a-f]{32}\.(?:png|jpg|jpeg|gif|webp)\Z"
 )
-
-
-# ---------------------------
-# Player statistics PNG card
-# ---------------------------
-STATS_CARD_CANVAS_SIZE = (1280, 1280)
-STATS_CARD_BG = "#080d19"
-STATS_CARD_PANEL = "#111827"
-STATS_CARD_PANEL_SOFT = "#151e2e"
-STATS_CARD_BORDER = "#263247"
-STATS_CARD_TEXT = "#f8fafc"
-STATS_CARD_MUTED = "#93a4b8"
-STATS_CARD_ACCENT = "#22d3a6"
-STATS_CARD_ACCENT_DARK = "#0e7b66"
-STATS_CARD_TRAINING = "#fbbf24"
-STATS_CARD_MAX = "#fb7185"
-
-STATS_CARD_SUMMARY_WEIGHTS = {
-    "페이스": (("ACC", 50), ("SPD", 50)),
-    "슈팅": (("FIN", 35), ("LSA", 20), ("SHO", 20), ("POS", 15), ("VOL", 5), ("PEN", 5)),
-    "패스": (("SPA", 30), ("LPA", 20), ("VIS", 25), ("CRO", 15), ("CUR", 5), ("FRK", 5)),
-    "드리블": (("DRI", 25), ("BAC", 25), ("AGI", 25), ("REA", 15), ("BAL", 10)),
-    "수비": (("MRK", 25), ("STT", 20), ("SLT", 20), ("AWR", 20), ("HEA", 15)),
-    "피지컬": (("STR", 45), ("AGG", 30), ("JMP", 25)),
-}
-
-STATS_CARD_DETAIL_STATS = {
-    "페이스": (("ACC", "가속"), ("SPD", "질주 속도")),
-    "슈팅": (
-        ("FIN", "결정력"), ("LSA", "중거리 슛"), ("SHO", "슈팅력"),
-        ("POS", "위치선정"), ("VOL", "발리 슛"), ("PEN", "페널티 킥"),
-    ),
-    "패스": (
-        ("SPA", "짧은 패스"), ("LPA", "긴 패스"), ("VIS", "시야"),
-        ("CRO", "크로스"), ("CUR", "감아차기"), ("FRK", "프리킥"),
-    ),
-    "드리블": (
-        ("DRI", "드리블"), ("BAC", "볼 컨트롤"), ("AGI", "민첩성"),
-        ("REA", "반응도"), ("BAL", "밸런스"),
-    ),
-    "수비": (
-        ("MRK", "마크"), ("STT", "태클"), ("SLT", "슬라이딩 태클"),
-        ("AWR", "가로채기"), ("HEA", "헤딩"),
-    ),
-    "피지컬": (("STR", "힘"), ("AGG", "공격성"), ("JMP", "점프"), ("STA", "스태미나")),
-}
-
-STATS_CARD_GK_SUMMARY_WEIGHTS = {
-    "다이빙": (("GKD", 100),),
-    "핸들링": (("HAN", 100),),
-    "킥": (("GKK", 100),),
-    "반사 신경": (("REF", 100),),
-    "위치선정": (("GKP", 100),),
-    "피지컬": (("REA", 45), ("JMP", 25), ("STR", 20), ("AGI", 10)),
-}
-
-STATS_CARD_GK_DETAIL_STATS = {
-    "다이빙": (("GKD", "GK 다이빙"), ("AGI", "민첩성"), ("REA", "반응도")),
-    "핸들링": (("HAN", "핸들링"), ("BAC", "볼 컨트롤"), ("STR", "힘")),
-    "킥": (("GKK", "GK 킥"), ("LPA", "긴 패스"), ("SPA", "짧은 패스")),
-    "반사 신경": (("REF", "반사 신경"), ("REA", "반응도"), ("AGI", "민첩성")),
-    "위치선정": (("GKP", "GK 위치선정"), ("POS", "위치선정"), ("AWR", "가로채기")),
-    "피지컬": (("STR", "힘"), ("JMP", "점프"), ("AGG", "공격성"), ("STA", "스태미나")),
-}
-
-
-def _stats_card_font(font_path, size):
-    return ImageFont.truetype(font_path, size=size)
-
-
-def _stats_card_asset_image(source, root_path):
-    if not source:
-        return None
-    try:
-        if source.startswith("/static/"):
-            path = os.path.join(root_path, source.lstrip("/"))
-            return Image.open(path).convert("RGBA")
-        if source.startswith("http://") or source.startswith("https://"):
-            response = requests.get(
-                source,
-                timeout=(3, 8),
-                headers={"User-Agent": "FimoBook/1.0"},
-            )
-            response.raise_for_status()
-            return Image.open(BytesIO(response.content)).convert("RGBA")
-        if os.path.isfile(source):
-            return Image.open(source).convert("RGBA")
-    except Exception:
-        return None
-    return None
-
-
-def _stats_card_contain(image, box, scale=1.0):
-    width, height = box
-    ratio = min(width / image.width, height / image.height) * scale
-    size = (max(1, int(image.width * ratio)), max(1, int(image.height * ratio)))
-    return image.resize(size, Image.Resampling.LANCZOS)
-
-
-def _stats_card_paste_center(canvas, image, bounds):
-    left, top, right, bottom = bounds
-    x = left + (right - left - image.width) // 2
-    y = top + (bottom - top - image.height) // 2
-    canvas.alpha_composite(image, (x, y))
-
-
-def _stats_card_fit_text(draw, text, font_path, max_size, min_size, max_width):
-    for size in range(max_size, min_size - 1, -2):
-        candidate = _stats_card_font(font_path, size)
-        if draw.textbbox((0, 0), text, font=candidate)[2] <= max_width:
-            return candidate
-    return _stats_card_font(font_path, min_size)
-
-
-def _stats_card_pill(
-    draw,
-    xy,
-    text,
-    font,
-    *,
-    fill=STATS_CARD_PANEL_SOFT,
-    outline=STATS_CARD_BORDER,
-    text_fill=STATS_CARD_TEXT,
-):
-    x, y = xy
-    bounds = draw.textbbox((0, 0), text, font=font)
-    width = bounds[2] - bounds[0] + 32
-    draw.rounded_rectangle(
-        (x, y, x + width, y + 42),
-        radius=21,
-        fill=fill,
-        outline=outline,
-        width=2,
-    )
-    draw.text((x + 16, y + 8), text, font=font, fill=text_fill)
-    return width
-
-
-def _stats_card_numeric(player, key):
-    value = player.get(key)
-    return float(value) if isinstance(value, (int, float)) else 0.0
-
-
-def _max_level_stat_value(base_ovr):
-    """Return the stat ceiling determined only by the player's 0-rank OVR."""
-    try:
-        numeric_ovr = int(base_ovr)
-    except (TypeError, ValueError):
-        return None
-    if numeric_ovr < 118:
-        return None
-    return 210 + (2 * (numeric_ovr - 118))
-
-
-def _stats_card_summary_value(stat_values, weights):
-    total_weight = sum(weight for _, weight in weights)
-    if not total_weight:
-        return 0
-    value = sum(float(stat_values.get(key) or 0) * weight for key, weight in weights)
-    return int(value / total_weight)
-
-
-def _draw_stats_card_panel(
-    draw,
-    player,
-    bounds,
-    label,
-    rows,
-    summary,
-    stat_values,
-    training_bonuses,
-    max_stat_codes,
-    fonts,
-):
-    left, top, right, bottom = bounds
-    draw.rounded_rectangle(
-        bounds,
-        radius=18,
-        fill=STATS_CARD_PANEL,
-        outline=STATS_CARD_BORDER,
-        width=2,
-    )
-    draw.text((left + 22, top + 18), label, font=fonts["panel_title"], fill=STATS_CARD_TEXT)
-    draw.text(
-        (right - 22, top + 13),
-        str(summary),
-        font=fonts["panel_value"],
-        fill=STATS_CARD_ACCENT,
-        anchor="ra",
-    )
-    gauge_top = top + 62
-    draw.rounded_rectangle(
-        (left + 22, gauge_top, right - 22, gauge_top + 8),
-        radius=4,
-        fill="#203247",
-    )
-    ratio = min(max(summary / 180, 0.08), 1.0)
-    draw.rounded_rectangle(
-        (left + 22, gauge_top, left + 22 + int((right - left - 44) * ratio), gauge_top + 8),
-        radius=4,
-        fill=STATS_CARD_ACCENT,
-    )
-    available_rows = [row for row in rows if player.get(row[0]) is not None]
-    selected_rows = available_rows[:6]
-    boosted_rows = [
-        row
-        for row in available_rows
-        if int(training_bonuses.get(row[0]) or 0) > 0 and row not in selected_rows
-    ]
-    for boosted_row in boosted_rows:
-        replace_at = next(
-            (
-                index
-                for index in range(len(selected_rows) - 1, -1, -1)
-                if int(training_bonuses.get(selected_rows[index][0]) or 0) == 0
-            ),
-            None,
-        )
-        if replace_at is not None:
-            selected_rows[replace_at] = boosted_row
-
-    y = top + 83
-    for key, row_label in selected_rows:
-        value = int(float(stat_values.get(key) or 0))
-        row_label_fill = STATS_CARD_MAX if key in max_stat_codes else STATS_CARD_MUTED
-        draw.text((left + 22, y), row_label, font=fonts["row"], fill=row_label_fill)
-        training_bonus = int(training_bonuses.get(key) or 0)
-        if training_bonus > 0:
-            draw.text(
-                (right - 72, y),
-                f"+{training_bonus}",
-                font=fonts["row_bold"],
-                fill=STATS_CARD_TRAINING,
-                anchor="ra",
-            )
-        draw.text(
-            (right - 22, y),
-            str(value),
-            font=fonts["row_bold"],
-            fill=STATS_CARD_ACCENT,
-            anchor="ra",
-        )
-        y += 26
-
-
-def render_player_stats_card(
-    player,
-    *,
-    root_path,
-    enhance_level=0,
-    enhance_bonus=0,
-    training_level=0,
-    training_bonuses=None,
-    skill_bonuses=None,
-    skill_config_labels=None,
-    tier=None,
-    variant="current",
-):
-    """Render a square, share-ready PNG containing the player's key statistics."""
-    canvas = Image.new("RGBA", STATS_CARD_CANVAS_SIZE, STATS_CARD_BG)
-    draw = ImageDraw.Draw(canvas)
-    font_path = os.path.join(root_path, "static", "fonts", "NAME.ttf")
-    fonts = {
-        "brand": _stats_card_font(font_path, 25),
-        "name": _stats_card_fit_text(
-            draw,
-            str(player.get("playerKor") or "-"),
-            font_path,
-            56,
-            34,
-            610,
-        ),
-        "class": _stats_card_font(font_path, 23),
-        "meta_label": _stats_card_font(font_path, 20),
-        "meta_value": _stats_card_font(font_path, 25),
-        "pill": _stats_card_font(font_path, 19),
-        "panel_title": _stats_card_font(font_path, 22),
-        "panel_value": _stats_card_font(font_path, 34),
-        "row": _stats_card_font(font_path, 18),
-        "row_bold": _stats_card_font(font_path, 19),
-        "footer": _stats_card_font(font_path, 18),
-    }
-
-    draw.ellipse((820, -280, 1440, 340), fill="#112d31")
-    draw.ellipse((-420, 850, 340, 1580), fill="#121f38")
-    draw.rectangle((0, 0, 24, 1280), fill=STATS_CARD_ACCENT)
-    draw.text((34, 31), "피모북", font=fonts["brand"], fill=STATS_CARD_TEXT)
-
-    card_bounds = (70, 112, 430, 590)
-    draw.rounded_rectangle(
-        card_bounds,
-        radius=28,
-        fill="#0d1422",
-        outline=STATS_CARD_BORDER,
-        width=2,
-    )
-    card_bg = _stats_card_asset_image(str(player.get("bimage") or ""), root_path)
-    face = _stats_card_asset_image(str(player.get("pimage") or ""), root_path)
-    if card_bg:
-        _stats_card_paste_center(
-            canvas,
-            _stats_card_contain(card_bg, (330, 438)),
-            (85, 126, 415, 564),
-        )
-    if face:
-        _stats_card_paste_center(
-            canvas,
-            _stats_card_contain(face, (330, 438)),
-            (85, 126, 415, 564),
-        )
-    if not card_bg and not face:
-        draw.text(
-            (250, 338),
-            "선수 이미지",
-            font=fonts["class"],
-            fill=STATS_CARD_MUTED,
-            anchor="mm",
-        )
-
-    ovr = int(_stats_card_numeric(player, "ovr") + enhance_bonus)
-    draw.rounded_rectangle((82, 128, 158, 204), radius=18, fill="#08111ccc")
-    draw.text(
-        (120, 139),
-        str(ovr),
-        font=_stats_card_font(font_path, 34),
-        fill=STATS_CARD_TEXT,
-        anchor="ma",
-    )
-    draw.text(
-        (120, 178),
-        str(player.get("position") or "-"),
-        font=_stats_card_font(font_path, 18),
-        fill=STATS_CARD_ACCENT,
-        anchor="ma",
-    )
-
-    name = str(player.get("playerKor") or "-")
-    draw.text((474, 118), name, font=fonts["name"], fill=STATS_CARD_TEXT)
-    class_name = str(player.get("className") or "").strip()
-    if class_name:
-        draw.text(
-            (476, 184),
-            class_name,
-            font=fonts["class"],
-            fill=STATS_CARD_MUTED,
-        )
-
-    pill_x = 476
-    config_label = (
-        "기본"
-        if variant == "base" or enhance_level == 0
-        else f"{enhance_level}진화"
-    )
-    pill_x += _stats_card_pill(
-        draw,
-        (pill_x, 232),
-        config_label,
-        fonts["pill"],
-        fill="#0d2f2b",
-        outline=STATS_CARD_ACCENT_DARK,
-        text_fill=STATS_CARD_ACCENT,
-    ) + 10
-    if training_level > 0:
-        pill_x += _stats_card_pill(
-            draw,
-            (pill_x, 232),
-            f"훈련 {training_level}단계",
-            fonts["pill"],
-            fill="#302711",
-            outline="#8a6b13",
-            text_fill=STATS_CARD_TRAINING,
-        ) + 10
-    if tier and pill_x < 1060:
-        _stats_card_pill(
-            draw,
-            (pill_x, 232),
-            f"투표 {tier}티어",
-            fonts["pill"],
-            fill="#2b1f2d",
-            outline="#6c4d72",
-            text_fill="#f6a6ff",
-        )
-
-    meta = [
-        ("포지션", str(player.get("position") or "-")),
-        (
-            "주발",
-            "오른발"
-            if player.get("mainFoot") == 1
-            else ("왼발" if player.get("mainFoot") == 2 else "-"),
-        ),
-        ("신체", f"{player.get('height') or '-'}cm · {player.get('weight') or '-'}kg"),
-        (
-            "개인기",
-            f"{int(player.get('skillMovesLevel') or player.get('skillMoves') or 0) + 1}성",
-        ),
-    ]
-    for index, (label, value) in enumerate(meta):
-        column = index % 2
-        row = index // 2
-        x = 476 + column * 310
-        y = 310 + row * 88
-        draw.text((x, y), label, font=fonts["meta_label"], fill=STATS_CARD_MUTED)
-        draw.text((x, y + 32), value, font=fonts["meta_value"], fill=STATS_CARD_TEXT)
-
-    skill_names = []
-    skill_display = (
-        player.get("skillDisplay")
-        if isinstance(player.get("skillDisplay"), dict)
-        else {}
-    )
-    for item in skill_display.get("items") or []:
-        if isinstance(item, dict) and item.get("name") and item["name"] not in skill_names:
-            skill_names.append(str(item["name"]))
-    if not skill_names:
-        skill_names = [str(value) for value in (player.get("skillLabels") or []) if value]
-    display_skill_names = [
-        str(value) for value in (skill_config_labels or []) if str(value).strip()
-    ] or skill_names
-    x = 476
-    y = 505
-    for skill in display_skill_names[:4]:
-        estimated_width = draw.textbbox((0, 0), skill, font=fonts["pill"])[2] + 32
-        if x > 476 and x + estimated_width > 1210:
-            x = 476
-            y += 51
-        width = _stats_card_pill(draw, (x, y), skill, fonts["pill"])
-        x += width + 9
-
-    is_gk = str(player.get("position") or "").upper() == "GK"
-    weights = (
-        STATS_CARD_GK_SUMMARY_WEIGHTS
-        if is_gk
-        else STATS_CARD_SUMMARY_WEIGHTS
-    )
-    details = STATS_CARD_GK_DETAIL_STATS if is_gk else STATS_CARD_DETAIL_STATS
-    training_bonuses = training_bonuses or {}
-    skill_bonuses = skill_bonuses or {}
-    stat_values = {}
-    all_stat_codes = {
-        code
-        for rows in details.values()
-        for code, _ in rows
-    } | {
-        code
-        for rows in weights.values()
-        for code, _ in rows
-    }
-    for code in all_stat_codes:
-        stat_values[code] = (
-            _stats_card_numeric(player, code)
-            + enhance_bonus
-            + int(skill_bonuses.get(code) or 0)
-            + int(training_bonuses.get(code) or 0)
-        )
-    max_stat_value = _max_level_stat_value(player.get("ovr"))
-    max_stat_codes = {
-        code
-        for code in all_stat_codes
-        if max_stat_value is not None
-        and player.get(code) is not None
-        and _stats_card_numeric(player, code) >= max_stat_value
-    }
-    panel_width = 362
-    panel_height = 237
-    start_x = 70
-    start_y = 650
-    for index, label in enumerate(weights):
-        column = index % 3
-        row = index // 3
-        left = start_x + column * (panel_width + 26)
-        top = start_y + row * (panel_height + 24)
-        summary = _stats_card_summary_value(stat_values, weights[label])
-        _draw_stats_card_panel(
-            draw,
-            player,
-            (left, top, left + panel_width, top + panel_height),
-            label,
-            details[label],
-            summary,
-            stat_values,
-            training_bonuses,
-            max_stat_codes,
-            fonts,
-        )
-
-    footer_y = 1228
-    draw.text((70, footer_y), "fcbook.info", font=fonts["footer"], fill=STATS_CARD_ACCENT)
-    if enhance_level == 0 and max_stat_value is not None:
-        draw.text(
-            (1210, footer_y),
-            f"0진 만렙스탯 {max_stat_value}",
-            font=fonts["footer"],
-            fill=STATS_CARD_MAX,
-            anchor="ra",
-        )
-
-    output = BytesIO()
-    canvas.convert("RGB").save(output, format="PNG", optimize=True)
-    output.seek(0)
-    return output
 
 
 class NoVarySessionInterface(SecureCookieSessionInterface):
@@ -8035,44 +7550,12 @@ def _get_skill_or_boost_filter_options():
         return options
 
 
-def _clean_filter_values(values, uppercase=False):
-    cleaned = []
-    for raw in values:
-        for token in str(raw or "").split(","):
-            value = token.strip()
-            if not value:
-                continue
-            if uppercase:
-                value = value.upper()
-            if value not in cleaned:
-                cleaned.append(value)
-    return cleaned
-
-
 def _get_filter_values(name, uppercase=False):
     return _clean_filter_values(request.args.getlist(name), uppercase=uppercase)
 
 
-def _filter_arg_values(args, name, uppercase=False):
-    return _clean_filter_values(args.getlist(name), uppercase=uppercase)
-
-
-def _filter_int_arg(args, name, default=None, minimum=None):
-    raw_value = str(args.get(name, "") or "").strip().replace(",", "")
-    if not raw_value:
-        return default
-    try:
-        value = int(raw_value)
-    except (TypeError, ValueError):
-        return default
-    if minimum is not None:
-        value = max(minimum, value)
-    return value
-
-
 def _price_enhance_arg(args):
-    level = _filter_int_arg(args, "price_enhance", default=0, minimum=0)
-    return level if level is not None and level <= MAX_ENHANCE_LEVEL else 0
+    return price_enhance_arg(args, max_enhance_level=MAX_ENHANCE_LEVEL)
 
 
 def _extract_price_at_enhance(player, level=0):
@@ -8238,10 +7721,6 @@ def _player_matches_advanced_filter(player, filter_spec):
     if filter_spec.get("weak_foot_min") and _get_weak_foot_value(player) < filter_spec["weak_foot_min"]:
         return False
     return True
-
-
-def _normalize_filter_text(value):
-    return re.sub(r"\s+", "", str(value or "").strip()).lower()
 
 
 _ADVANCED_FILTER_OPTIONS_CACHE = {}
@@ -13038,193 +12517,22 @@ def traits_selection():
 # 선수 세부검색 결과 페이지 (로컬 데이터 사용)
 @app.route("/filtered_players", methods=["GET"])
 def filtered_players():
-    name_query = request.args.get("name", "").strip()
-    skill_or_boost_options = _get_skill_or_boost_filter_options()
-    normalized_skill_option_names = {
-        _normalize_filter_text(option["name"])
-        for option in skill_or_boost_options
-        if option["kind"] == "skill"
-    }
-    normalized_boost_option_names = {
-        _normalize_filter_text(option["name"])
-        for option in skill_or_boost_options
-        if option["kind"] == "boost"
-    }
-    selected_skill_names = []
-    selected_boost_names = []
-    for value in _get_filter_values("skill_or_boost"):
-        normalized = _normalize_filter_text(value)
-        target = (
-            selected_boost_names
-            if normalized in normalized_boost_option_names
-            and normalized not in normalized_skill_option_names
-            else selected_skill_names
-        )
-        if value not in target:
-            target.append(value)
-    for value in _get_filter_values("skill_boost"):
-        if value not in selected_boost_names:
-            selected_boost_names.append(value)
-    skill_or_boosts = selected_skill_names + [
-        value for value in selected_boost_names if value not in selected_skill_names
-    ]
-    positions = _get_filter_values("position", uppercase=True)
-    include_sub_position = str(request.args.get("include_sub_position", "")).strip().lower() in {"1", "true", "yes", "on"}
-    skill_moves = _get_filter_values("skill_move")
-    skill_levels = _clean_filter_values(request.args.getlist("skill_level"))
-    raised_stats = _clean_filter_values(request.args.getlist("raised_stat"), uppercase=True)
-    selected_work_rates = [
-        value
-        for value in _clean_filter_values(request.args.getlist("work_rate"))
-        if value in WORK_RATE_OPTION_MAP
-    ]
-    traits = _get_filter_values("trait")
-    playstyles = _get_filter_values("playstyle")
-    empty_playstyle_slot = str(request.args.get("empty_playstyle_slot", "")).strip().lower() in {"1", "true", "yes", "on"}
-    max_stats = _clean_filter_values(request.args.getlist("max_stat"), uppercase=True)
-    selected_max_stats = [code for code in max_stats if code in MAX_LEVEL_STAT_CODES]
-    max_stat_gap_raw = request.args.get("max_stat_gap", "0").strip()
-    max_stat_gap = int(max_stat_gap_raw) if max_stat_gap_raw.isdigit() and len(max_stat_gap_raw) <= 2 else -1
-    player_classes = _get_filter_values("player_class")
-    height_group = request.args.get("height_group", "").strip()
-    min_height_str = request.args.get("min_height", "").strip()
-    max_height_str = request.args.get("max_height", "").strip()
-    price_enhance = _price_enhance_arg(request.args)
-    min_price_str = request.args.get("min_price", "").strip().replace(",", "")
-    max_price_str = request.args.get("max_price", "").strip().replace(",", "")
-    weak_foot_min_str = request.args.get("weak_foot_min", "").strip()
-    selected_league = request.args.get("league", "").strip()
-    selected_team = request.args.get("team", "").strip()
-    all_career = str(request.args.get("all_career", "")).strip().lower() in {"1", "true", "yes", "on"}
-    min_ovr_str = request.args.get("min_ovr", "").strip()
-    max_ovr_str = request.args.get("max_ovr", "").strip()
-    sort = request.args.get("sort", "ovr_desc").strip() or "ovr_desc"
-
-    min_ovr = int(min_ovr_str) if min_ovr_str.isdigit() else DETAIL_SEARCH_DEFAULT_MIN_OVR
-    max_ovr = int(max_ovr_str) if max_ovr_str.isdigit() else DETAIL_SEARCH_DEFAULT_MAX_OVR
-    min_height = int(min_height_str) if min_height_str.isdigit() else None
-    max_height = int(max_height_str) if max_height_str.isdigit() else None
-    min_price = int(min_price_str) if min_price_str.isdigit() else None
-    max_price = int(max_price_str) if max_price_str.isdigit() else None
-    weak_foot_min = int(weak_foot_min_str) if weak_foot_min_str in {"1", "2", "3", "4", "5"} else 0
-    normalized_skill_or_boosts = {_normalize_filter_text(value) for value in skill_or_boosts}
-    normalized_selected_skills = {
-        _normalize_filter_text(value) for value in selected_skill_names
-    }
-    normalized_selected_boosts = {
-        _normalize_filter_text(value) for value in selected_boost_names
-    }
-    normalized_skill_moves = {_normalize_filter_text(value) for value in skill_moves}
-    normalized_traits = {_normalize_filter_text(value) for value in traits}
-    normalized_playstyles = {_normalize_filter_text(value) for value in playstyles}
-    normalized_player_classes = {_normalize_filter_text(value) for value in player_classes}
-    selected_skill_levels = {int(value) for value in skill_levels if str(value).isdigit()}
-    valid_stat_codes = {item["code"] for item in RAISED_STAT_OPTIONS}
-    selected_raised_stat_codes = [code for code in raised_stats if code in valid_stat_codes][:5]
-    career_index = _extend_career_index_with_external_data(_build_player_career_index()) if all_career else {}
-    current_team_index = _build_player_current_team_index()
-    filters = {
-        "name": name_query,
-        "skill_or_boosts": skill_or_boosts,
-        "positions": positions,
-        "include_sub_position": include_sub_position,
-        "skill_moves": skill_moves,
-        "skill_levels": sorted(selected_skill_levels),
-        "raised_stats": selected_raised_stat_codes,
-        "raised_stat_labels": [STAT_CODE_LABELS.get(code, code) for code in selected_raised_stat_codes],
-        "work_rates": selected_work_rates,
-        "work_rate_labels": _work_rate_labels(selected_work_rates),
-        "traits": traits,
-        "playstyles": playstyles,
-        "empty_playstyle_slot": empty_playstyle_slot,
-        "max_stats": selected_max_stats,
-        "max_stat_labels": [STAT_CODE_LABELS[code] for code in selected_max_stats],
-        "max_stat_gap": max_stat_gap,
-        "player_classes": player_classes,
-        "height_group": height_group,
-        "min_height": min_height,
-        "max_height": max_height,
-        "min_price": min_price,
-        "max_price": max_price,
-        "price_enhance": price_enhance,
-        "weak_foot_min": weak_foot_min,
-        "league": selected_league,
-        "team": selected_team,
-        "all_career": all_career,
-        "min_ovr": min_ovr,
-        "max_ovr": max_ovr,
-    }
-
-    if max_stats and (len(selected_max_stats) != len(max_stats) or not 0 <= max_stat_gap <= 30):
+    query = parse_detail_search_query(
+        request.args,
+        skill_or_boost_options=_get_skill_or_boost_filter_options(),
+        work_rate_options=WORK_RATE_OPTION_MAP,
+        raised_stat_options=RAISED_STAT_OPTIONS,
+        max_level_stat_codes=MAX_LEVEL_STAT_CODES,
+        stat_labels=STAT_CODE_LABELS,
+        default_min_ovr=DETAIL_SEARCH_DEFAULT_MIN_OVR,
+        default_max_ovr=DETAIL_SEARCH_DEFAULT_MAX_OVR,
+        max_enhance_level=MAX_ENHANCE_LEVEL,
+    )
+    filters, sort = query.filters, query.sort
+    if query.error:
         return render_template(
-            "filtered_players_results.html", error="만렙 기준 스탯과 허용 차이(0~30)를 확인해 주세요.",
+            "filtered_players_results.html", error=query.error,
             players=[], filters=filters, sort=sort, robots_meta="noindex,follow",
-        )
-
-    if min_ovr > max_ovr:
-        return render_template(
-            "filtered_players_results.html", error="최소 OVR은 최대 OVR보다 클 수 없습니다.",
-            players=[], filters=filters, sort=sort, robots_meta="noindex,follow",
-        )
-
-    if min_height is not None and max_height is not None and min_height > max_height:
-        return render_template(
-            "filtered_players_results.html",
-            error="최소 키는 최대 키보다 클 수 없습니다.",
-            players=[],
-            filters=filters,
-            sort=sort,
-            robots_meta="noindex,follow",
-        )
-
-    if min_price is not None and max_price is not None and min_price > max_price:
-        return render_template(
-            "filtered_players_results.html",
-            error="최소 가격은 최대 가격보다 클 수 없습니다.",
-            players=[],
-            filters=filters,
-            sort=sort,
-            robots_meta="noindex,follow",
-        )
-
-    if len(raised_stats) > 5:
-        return render_template(
-            "filtered_players_results.html",
-            error="상승 스탯은 최대 5개까지만 선택할 수 있습니다.",
-            players=[],
-            filters=filters,
-            sort=sort,
-            robots_meta="noindex,follow",
-        )
-
-    if len(selected_skill_names) > 2:
-        return render_template(
-            "filtered_players_results.html",
-            error="스킬은 최대 2개까지 선택할 수 있습니다.",
-            players=[],
-            filters=filters,
-            sort=sort,
-            robots_meta="noindex,follow",
-        )
-
-    if len(selected_boost_names) > 1:
-        return render_template(
-            "filtered_players_results.html",
-            error="스킬부스트는 한 번에 하나만 선택할 수 있습니다.",
-            players=[],
-            filters=filters,
-            sort=sort,
-            robots_meta="noindex,follow",
-        )
-
-    if selected_raised_stat_codes and normalized_skill_or_boosts:
-        return render_template(
-            "filtered_players_results.html",
-            error="상승 스탯 필터는 스킬/스킬부스트 필터와 함께 사용할 수 없습니다.",
-            players=[],
-            filters=filters,
-            sort=sort,
-            robots_meta="noindex,follow",
         )
 
     if not PLAYER_DATA:
@@ -13237,14 +12545,19 @@ def filtered_players():
             robots_meta="noindex,follow",
         )
 
-    normalized_name_query = _normalize_name_for_match(name_query)
+    career_index = (
+        _extend_career_index_with_external_data(_build_player_career_index())
+        if filters["all_career"] else {}
+    )
+    current_team_index = _build_player_current_team_index()
+    normalized_name_query = _normalize_name_for_match(filters["name"])
     filtered_list = []
     for player in PLAYER_DATA:
         player_ovr = int(player.get("ovr") or 0)
-        if not (min_ovr <= player_ovr <= max_ovr):
+        if not (filters["min_ovr"] <= player_ovr <= filters["max_ovr"]):
             continue
 
-        if not _player_matches_max_level_stats(player, selected_max_stats, max_stat_gap):
+        if not _player_matches_max_level_stats(player, filters["max_stats"], filters["max_stat_gap"]):
             continue
 
         player_name = _normalize_name_for_match(player.get("playerKor"))
@@ -13258,14 +12571,14 @@ def filtered_players():
         normalized_player_boosts = {
             _normalize_filter_text(value) for value in player_boost_names
         }
-        if normalized_selected_skills and not normalized_selected_skills.issubset(normalized_player_skills):
+        if query.skills and not query.skills.issubset(normalized_player_skills):
             continue
-        if normalized_selected_boosts and normalized_selected_boosts.isdisjoint(normalized_player_boosts):
+        if query.boosts and query.boosts.isdisjoint(normalized_player_boosts):
             continue
 
-        if selected_raised_stat_codes:
+        if filters["raised_stats"]:
             player_raised_stats = _extract_player_raised_stat_codes(player)
-            if not set(selected_raised_stat_codes).issubset(player_raised_stats):
+            if not set(filters["raised_stats"]).issubset(player_raised_stats):
                 continue
 
         player_height = player.get("height")
@@ -13273,69 +12586,69 @@ def filtered_players():
             player_height = int(player_height)
         except (TypeError, ValueError):
             player_height = None
-        if height_group == "tall" and (player_height is None or player_height < 185):
+        if filters["height_group"] == "tall" and (player_height is None or player_height < 185):
             continue
-        if height_group == "short" and (player_height is None or player_height >= 185):
+        if filters["height_group"] == "short" and (player_height is None or player_height >= 185):
             continue
-        if min_height is not None and (player_height is None or player_height < min_height):
+        if filters["min_height"] is not None and (player_height is None or player_height < filters["min_height"]):
             continue
-        if max_height is not None and (player_height is None or player_height > max_height):
+        if filters["max_height"] is not None and (player_height is None or player_height > filters["max_height"]):
             continue
 
-        player_price = _extract_price_at_enhance(player, price_enhance)
-        if min_price is not None and (player_price is None or int(player_price) < min_price):
+        player_price = _extract_price_at_enhance(player, filters["price_enhance"])
+        if filters["min_price"] is not None and (player_price is None or int(player_price) < filters["min_price"]):
             continue
-        if max_price is not None and (player_price is None or int(player_price) > max_price):
+        if filters["max_price"] is not None and (player_price is None or int(player_price) > filters["max_price"]):
             continue
 
         player_class = _normalize_filter_text(player.get("className"))
-        if normalized_player_classes and player_class not in normalized_player_classes:
+        if query.player_classes and player_class not in query.player_classes:
             continue
 
-        if weak_foot_min and _get_weak_foot_value(player) < weak_foot_min:
+        if filters["weak_foot_min"] and _get_weak_foot_value(player) < filters["weak_foot_min"]:
             continue
 
         if not _player_matches_position_filter(
             player,
-            positions,
-            include_sub_position=include_sub_position,
+            filters["positions"],
+            include_sub_position=filters["include_sub_position"],
         ):
             continue
 
         player_skill_move = _normalize_filter_text(player.get("skillMovesName"))
-        if normalized_skill_moves and player_skill_move not in normalized_skill_moves:
+        if query.skill_moves and player_skill_move not in query.skill_moves:
             continue
 
         player_traits = {_normalize_filter_text(value) for value in _extract_player_traits(player)}
-        if normalized_traits and player_traits.isdisjoint(normalized_traits):
+        if query.traits and player_traits.isdisjoint(query.traits):
             continue
 
         player_playstyles = _extract_player_playstyle_filter_values(player)
-        if normalized_playstyles and player_playstyles.isdisjoint(normalized_playstyles):
+        if query.playstyles and player_playstyles.isdisjoint(query.playstyles):
             continue
 
-        if empty_playstyle_slot and not any(slot["isEmpty"] for slot in _build_player_playstyle_slots(player)):
+        if filters["empty_playstyle_slot"] and not any(slot["isEmpty"] for slot in _build_player_playstyle_slots(player)):
             continue
 
         player_skill_level = player.get("skillMovesLevel")
-        if selected_skill_levels and player_skill_level not in selected_skill_levels:
+        if query.skill_levels and player_skill_level not in query.skill_levels:
             continue
 
-        if selected_work_rates and _player_work_rate_key(player) not in selected_work_rates:
+        if filters["work_rates"] and _player_work_rate_key(player) not in filters["work_rates"]:
             continue
 
         if not _player_matches_team_filter(
             player,
-            selected_league,
-            selected_team,
-            all_career,
+            filters["league"],
+            filters["team"],
+            filters["all_career"],
             career_index,
             current_team_index,
         ):
             continue
 
         normalized = _apply_local_assets(_normalize_player_record(player.copy()))
-        normalized["price"] = _extract_price_at_enhance(normalized, price_enhance)
+        normalized["price"] = _extract_price_at_enhance(normalized, filters["price_enhance"])
         normalized["skillLabels"] = _extract_player_skills(normalized)
         normalized["playstyles"] = _extract_player_playstyles(normalized)
         normalized["playstyleSlots"] = _build_player_playstyle_slots(
@@ -13344,35 +12657,12 @@ def filtered_players():
         )
         normalized["matchedMaxStats"] = [
             {"label": STAT_CODE_LABELS[code], "value": player[code]}
-            for code in selected_max_stats
+            for code in filters["max_stats"]
         ]
         normalized["potentialPositions"] = _extract_potential_positions(normalized)
         filtered_list.append(normalized)
 
-    if sort == "ovr_asc":
-        filtered_list.sort(key=lambda p: (p.get("ovr") or 0, p.get("playerKor") or ""))
-    elif sort == "name_asc":
-        filtered_list.sort(key=lambda p: (p.get("playerKor") or "", -(p.get("ovr") or 0)))
-    elif sort == "price_desc":
-        filtered_list.sort(
-            key=lambda p: (
-                p.get("price") is None,
-                -(p.get("price") or 0),
-                -(p.get("ovr") or 0),
-                p.get("playerKor") or "",
-            )
-        )
-    elif sort == "price_asc":
-        filtered_list.sort(
-            key=lambda p: (
-                p.get("price") is None,
-                p.get("price") or 0,
-                -(p.get("ovr") or 0),
-                p.get("playerKor") or "",
-            )
-        )
-    else:
-        filtered_list.sort(key=lambda p: (-(p.get("ovr") or 0), p.get("playerKor") or ""))
+    sort_detail_search_players(filtered_list, sort)
 
     if not filtered_list:
         error_msg = "조건에 맞는 선수를 찾을 수 없습니다. 필터를 조금 완화해 보세요."

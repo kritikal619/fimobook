@@ -1,0 +1,22 @@
+<script>
+    (function () {
+      const lazyBackgrounds = document.querySelectorAll('[data-player-bg]');
+      const loadBackground = (element) => {
+        if (!element.dataset.playerBg) return;
+        element.style.backgroundImage = `url("${element.dataset.playerBg}")`;
+        delete element.dataset.playerBg;
+      };
+      if (!('IntersectionObserver' in window)) {
+        lazyBackgrounds.forEach(loadBackground);
+        return;
+      }
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
+          loadBackground(entry.target);
+          observer.unobserve(entry.target);
+        });
+      }, { rootMargin: '300px 0px' });
+      lazyBackgrounds.forEach((element) => observer.observe(element));
+    })();
+  </script>

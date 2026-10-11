@@ -1,0 +1,159 @@
+<script>
+    (function () {
+      const dialog = document.querySelector('[data-stats-export-dialog]');
+      const openButton = document.querySelector('[data-open-stats-export]');
+      const closeButton = document.querySelector('[data-close-stats-export]');
+      const preview = document.querySelector('[data-stats-export-preview]');
+      const download = document.querySelector('[data-stats-export-download]');
+      const enhanceSelect = document.getElementById('detail-enhance');
+      const trainingSelect = document.getElementById('detail-training');
+      const skillLevelSelects = Array.from(document.querySelectorAll('[data-skill-level-select]'));
+      const currentLabel = document.querySelector('[data-current-enhance-label]');
+      const modeButtons = Array.from(document.querySelectorAll('[data-export-variant]'));
+      const statsCardUrl = {{ url_for('player_stats_card', cid=player.review_cid or player.cid)|tojson }};
+      let exportVariant = 'current';
+
+      function exportUrl(downloadImage) {
+        const url = new URL(statsCardUrl, window.location.origin);
+        const enhance = exportVariant === 'base' ? 0 : Number(enhanceSelect?.value || 0);
+        const training = exportVariant === 'base' ? 0 : Number(trainingSelect?.value || 0);
+        const skillLevels = exportVariant === 'base'
+          ? skillLevelSelects.map(() => 0)
+          : skillLevelSelects.map(select => Number(select.value || 0));
+        url.searchParams.set('variant', exportVariant);
+        url.searchParams.set('enhance', String(enhance));
+        url.searchParams.set('training', String(training));
+        url.searchParams.set('skill_levels', skillLevels.join(','));
+        if (downloadImage) url.searchParams.set('download', '1');
+        return url.toString();
+      }
+
+      function refreshExport() {
+        const enhance = Number(enhanceSelect?.value || 0);
+        const training = Number(trainingSelect?.value || 0);
+        if (currentLabel) currentLabel.textContent = `${enhance}진화 · 훈련 ${training}단계`;
+        if (preview) {
+          preview.style.opacity = '.45';
+          preview.src = exportUrl(false);
+        }
+        if (download) download.href = exportUrl(true);
+      }
+
+      preview?.addEventListener('load', function () {
+        preview.style.opacity = '1';
+      });
+      openButton?.addEventListener('click', function () {
+        refreshExport();
+        if (typeof dialog?.showModal === 'function') dialog.showModal();
+        else dialog?.setAttribute('open', '');
+      });
+      closeButton?.addEventListener('click', function () { dialog?.close(); });
+      dialog?.addEventListener('click', function (event) {
+        if (event.target === dialog) dialog.close();
+      });
+      modeButtons.forEach(function (button) {
+        button.addEventListener('click', function () {
+          exportVariant = button.dataset.exportVariant || 'current';
+          modeButtons.forEach(function (candidate) {
+            candidate.classList.toggle('is-selected', candidate === button);
+          });
+          refreshExport();
+        });
+      });
+      enhanceSelect?.addEventListener('change', function () {
+        if (exportVariant === 'current') refreshExport();
+      });
+
+      const tierSection = document.querySelector('[data-tier-section]');
+      if (!tierSection) return;
+      const tierButtons = Array.from(tierSection.querySelectorAll('[data-tier-vote]'));
+      const tierCancel = tierSection.querySelector('[data-tier-cancel]');
+      const tierHelp = tierSection.querySelector('[data-tier-help]');
+      const tierEndpoint = {{ url_for('player_tier_vote', cid=player.review_cid or player.cid)|tojson }};
+      const csrfToken = {{ csrf_token|tojson }};
+
+      function renderTierSummary(summary) {
+        const consensus = tierSection.querySelector('[data-tier-consensus]');
+        const total = tierSection.querySelector('[data-tier-total]');
+        if (consensus) consensus.textContent = summary.dominant_tier || '-';
+        if (total) total.textContent = `${summary.total || 0}표`;
+        (summary.tiers || []).forEach(function (tier) {
+          const percent = Number(summary.percentages?.[tier] || 0);
+          const percentElement = tierSection.querySelector(`[data-tier-percent="${tier}"]`);
+          const bar = tierSection.querySelector(`[data-tier-bar="${tier}"]`);
+          if (percentElement) percentElement.textContent = `${percent}%`;
+          if (bar) bar.style.setProperty('--tier-pct', String(percent));
+        });
+        tierButtons.forEach(function (button) {
+          const selected = button.dataset.tierVote === summary.my_vote;
+          button.classList.toggle('is-selected', selected);
+          button.setAttribute('aria-pressed', selected ? 'true' : 'false');
+        });
+        if (tierCancel) tierCancel.hidden = !summary.my_vote;
+      }
+
+      function setTierBusy(busy) {
+        tierButtons.forEach(function (button) { button.disabled = busy; });
+        if (tierCancel) tierCancel.disabled = busy;
+      }
+
+      tierButtons.forEach(function (button) {
+        button.addEventListener('click', async function () {
+          if (button.disabled) return;
+          setTierBusy(true);
+          if (tierHelp) tierHelp.textContent = '투표를 반영하고 있습니다...';
+          try {
+            const response = await fetch(tierEndpoint, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken,
+                'Accept': 'application/json'
+              },
+              body: JSON.stringify({ tier: button.dataset.tierVote })
+            });
+            const payload = await response.json();
+            if (!response.ok || !payload.ok) throw new Error(payload.error || '투표에 실패했습니다.');
+            renderTierSummary(payload.summary);
+            window.fimoAnalytics?.track?.('tier_vote_submit', {
+              content_id: {{ (player.review_cid or player.cid)|tojson }},
+              tier: button.dataset.tierVote,
+            });
+            if (tierHelp) tierHelp.textContent = '';
+          } catch (error) {
+            if (tierHelp) tierHelp.textContent = error.message || '잠시 후 다시 시도해주세요.';
+          } finally {
+            setTierBusy(false);
+          }
+        });
+      });
+
+      tierCancel?.addEventListener('click', async function () {
+        if (tierCancel.disabled) return;
+        setTierBusy(true);
+        if (tierHelp) tierHelp.textContent = '투표를 취소하고 있습니다...';
+        try {
+          const response = await fetch(tierEndpoint, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRFToken': csrfToken,
+              'Accept': 'application/json'
+            },
+            body: JSON.stringify({ action: 'cancel' })
+          });
+          const payload = await response.json();
+          if (!response.ok || !payload.ok) throw new Error(payload.error || '투표 취소에 실패했습니다.');
+          renderTierSummary(payload.summary);
+          window.fimoAnalytics?.track?.('tier_vote_cancel', {
+            content_id: {{ (player.review_cid or player.cid)|tojson }},
+          });
+          if (tierHelp) tierHelp.textContent = '';
+        } catch (error) {
+          if (tierHelp) tierHelp.textContent = error.message || '잠시 후 다시 시도해주세요.';
+        } finally {
+          setTierBusy(false);
+        }
+      });
+    })();
+  </script>

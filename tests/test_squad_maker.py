@@ -6,6 +6,7 @@ from unittest.mock import patch
 from PIL import Image
 
 import app as app_module
+from tests.browser_session import page_client
 
 
 class SquadMakerTest(unittest.TestCase):
@@ -38,7 +39,7 @@ class SquadMakerTest(unittest.TestCase):
             self._player(101, 1, "이전 팀", 2024, 139),
             self._player(102, 1, "현재 팀", 2026, 145),
         ]
-        client = app_module.app.test_client()
+        client = page_client(app_module.app)
 
         current_response = client.get(
             "/api/squad_players?slot=ST&league=테스트+리그&team=이전+팀"
@@ -151,7 +152,7 @@ class SquadMakerTest(unittest.TestCase):
             "_find_local_asset_path",
             return_value="/tmp/existing.png",
         ):
-            response = app_module.app.test_client().get("/api/player_prices?cids=301")
+            response = page_client(app_module.app).get("/api/player_prices?cids=301")
 
         self.assertEqual(response.status_code, 200)
         payload = response.get_json()["artwork"]["301"]
@@ -235,7 +236,7 @@ class SquadMakerTest(unittest.TestCase):
             ),
         ]
         app_module._TEAM_FILTER_CONTEXT_CACHE.clear()
-        client = app_module.app.test_client()
+        client = page_client(app_module.app)
 
         response = client.get(
             "/api/squad_players?slot=ST&min_ovr=142&max_ovr=146"
@@ -269,7 +270,7 @@ class SquadMakerTest(unittest.TestCase):
                 n8Price0=2_000,
             ),
         ]
-        client = app_module.app.test_client()
+        client = page_client(app_module.app)
 
         english_response = client.get("/api/squad_players?q=alpha")
         cid_response = client.get("/api/squad_players?q=212")
@@ -284,7 +285,7 @@ class SquadMakerTest(unittest.TestCase):
             self._player(221, 21, "팀", 2026, ovr=140, height=180, n8Price0=5_000),
             self._player(222, 22, "팀", 2026, ovr=150, height=190, n8Price0=15_000),
         ]
-        client = app_module.app.test_client()
+        client = page_client(app_module.app)
 
         response = client.get(
             "/api/squad_players?min_ovr=145&max_ovr=135"
@@ -305,12 +306,18 @@ class SquadMakerTest(unittest.TestCase):
             return players
 
         with patch.object(app_module, "populate_live_prices", side_effect=apply_test_live_price):
-            response = app_module.app.test_client().get("/api/player_prices?cids=231")
+            response = page_client(app_module.app).get("/api/player_prices?cids=231")
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
             response.get_json()["prices"]["231"],
-            {"price": 9_900, "source": "live", "checked_at": 123456},
+            {
+                "price": 9_900,
+                "source": "live",
+                "checked_at": 123456,
+                "pending": False,
+                "priceByEnhance": {"0": 1_000},
+            },
         )
 
     def test_squad_page_uses_latest_price_copy(self):
@@ -319,7 +326,7 @@ class SquadMakerTest(unittest.TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertNotIn("4/18일 기준", html)
-        self.assertIn("최신 0진 시세 자동 반영", html)
+        self.assertIn('id="squad-price-status">최신 시세 자동 반영', html)
         self.assertIn("refreshSquadMarketPrices", html)
 
     def test_detail_search_supports_class_height_and_price_ranges(self):

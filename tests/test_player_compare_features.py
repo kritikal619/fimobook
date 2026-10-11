@@ -2,6 +2,7 @@ import unittest
 from pathlib import Path
 
 import app as app_module
+from tests.browser_session import page_client
 
 
 class PlayerCompareFeaturesTest(unittest.TestCase):
@@ -57,7 +58,7 @@ class PlayerCompareFeaturesTest(unittest.TestCase):
             }
         ]
 
-        response = app_module.app.test_client().get("/api/squad_players?q=얼티밋")
+        response = page_client(app_module.app).get("/api/squad_players?q=얼티밋")
 
         self.assertEqual(response.status_code, 200)
         payload = response.get_json()

@@ -1,6 +1,17 @@
 import unittest
+from html.parser import HTMLParser
 
 import app as app_module
+
+
+class _ImageSources(HTMLParser):
+    def __init__(self):
+        super().__init__()
+        self.sources = []
+
+    def handle_starttag(self, tag, attrs):
+        if tag == "img":
+            self.sources.append(dict(attrs).get("src", ""))
 
 
 class ResultPlaystyleDisplayTests(unittest.TestCase):
@@ -56,7 +67,9 @@ class ResultPlaystyleDisplayTests(unittest.TestCase):
 
     def _assert_result_ui(self, html, advanced=False):
         self.assertEqual(4, html.count('class="playstyle-pill is-icon-only"'))
-        self.assertEqual(3, html.count("PLAYSTYLE_EMPTY_SLOT.png"))
+        images = _ImageSources()
+        images.feed(html)
+        self.assertEqual(3, sum("PLAYSTYLE_EMPTY_SLOT.png" in src for src in images.sources))
         self.assertEqual(1, html.count("<span>빈 슬롯</span>"))
         self.assertNotIn("<span>투플레이 A</span>", html)
         self.assertNotIn("<span>투플레이 B</span>", html)

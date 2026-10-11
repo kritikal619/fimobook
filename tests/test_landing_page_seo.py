@@ -25,10 +25,10 @@ class LandingPageSeoTests(unittest.TestCase):
 
         html = response.data.decode("utf-8")
         self.assertEqual(response.status_code, 200)
-        self.assertIn("<title>피모북 - FC모바일 선수 검색</title>", html)
+        self.assertIn("<title>피모북 | FC모바일 선수검색·갱신시간·팀경력·쿠폰</title>", html)
         self.assertIn('<h1 class="seo-page-title">FC모바일 선수 검색</h1>', html)
         self.assertIn("clip-path:inset(50%)", html)
-        self.assertNotIn('<span class="tool-name">선수 비교</span>', html)
+        self.assertIn('<span class="tool-name">선수 비교</span>', html)
         self.assertIn('<span class="tool-name">쿠폰</span>', html)
 
         blocks = re.findall(
@@ -45,10 +45,10 @@ class LandingPageSeoTests(unittest.TestCase):
         html = response.data.decode("utf-8")
 
         self.assertEqual(response.status_code, 200)
-        self.assertIn("<title>FC모바일 선수 비교 - 능력치·진화·스킬 | 피모북</title>", html)
-        self.assertIn("<h1>FC모바일 선수 비교</h1>", html)
+        self.assertIn("<title>FC모바일 선수 비교 - 능력치와 진화, 스킬 | 피모북</title>", html)
+        self.assertIn("<h1>선수 비교</h1>", html)
         self.assertIn("FC모바일 선수 비교 방법", html)
-        self.assertIn(': "FC모바일 선수 비교 - 능력치·진화·스킬 | 피모북";', html)
+        self.assertIn(': "FC모바일 선수 비교 - 능력치와 진화, 스킬 | 피모북";', html)
         self.assertIn('<link rel="canonical" href="https://fcbook.info/player_compare">', html)
 
     def test_coupon_page_has_code_reward_and_registration_content(self):
@@ -67,7 +67,7 @@ class LandingPageSeoTests(unittest.TestCase):
         html = response.data.decode("utf-8")
 
         self.assertEqual(response.status_code, 200)
-        self.assertIn("<title>FC모바일 쿠폰 코드·보상·등록 방법 | 피모북</title>", html)
+        self.assertIn("<title>FC모바일 쿠폰 코드와 보상, 등록 방법 | 피모북</title>", html)
         self.assertIn('<h1 class="coupon-title">FC모바일 쿠폰</h1>', html)
         self.assertIn("FC모바일 쿠폰 등록 방법", html)
         self.assertIn("게임 내 또는 FC모바일 공식 사이트", html)
@@ -85,7 +85,12 @@ class LandingPageSeoTests(unittest.TestCase):
         self.assertIn(b"https://fcbook.info/player_compare", response.data)
 
     def test_renewal_times_has_server_rendered_search_content(self):
-        response = self.client.get("/times", base_url="https://fcbook.info")
+        cards = [{
+            "name": "테스트 클래스", "image": "./test-card.png",
+            "available": True, "eo": 1, "min": 32, "sec": 0,
+        }]
+        with patch.object(app_module, "_load_renewal_cards", return_value=cards):
+            response = self.client.get("/times", base_url="https://fcbook.info")
         html = response.data.decode("utf-8")
 
         self.assertEqual(response.status_code, 200)
@@ -96,11 +101,11 @@ class LandingPageSeoTests(unittest.TestCase):
         self.assertIn('<h1 class="times-title">FC모바일 갱신시간</h1>', html)
         self.assertIn('meta name="description" content="FC모바일 클래스별 갱신시간', html)
         self.assertIn('data-server-rendered="true"', html)
-        self.assertIn("일반 아이콘", html)
+        self.assertIn("테스트 클래스", html)
         self.assertIn("홀수시 32분", html)
-        self.assertIn("FC모바일 갱신시간 확인 방법", html)
+        self.assertIn("FC모바일 클래스별 갱신시간", html)
         self.assertIn('<details class="times-guide">', html)
-        self.assertIn("<summary>이용 안내</summary>", html)
+        self.assertIn("<summary>갱신시간 안내</summary>", html)
         self.assertIn('class="times-guide-content"', html)
         self.assertIn('<link rel="canonical" href="https://fcbook.info/times">', html)
 
@@ -110,10 +115,10 @@ class LandingPageSeoTests(unittest.TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertIn(
-            "<title>FC모바일 선수 세부검색 - 특성·스킬·경력 필터 | 피모북</title>",
+            "<title>FC모바일 선수 세부검색 - 스탯과 특성, 스킬 필터 | 피모북</title>",
             html,
         )
-        self.assertIn("<h1>FC모바일 선수 세부검색</h1>", html)
+        self.assertIn("<h1>선수 세부검색</h1>", html)
         self.assertIn('meta name="description" content="FC모바일 선수를 이름, OVR, 가격', html)
         self.assertIn("FC모바일 선수 세부검색 사용 방법", html)
         self.assertIn("현재 소속팀 또는 전체 팀 경력", html)
@@ -137,7 +142,9 @@ class LandingPageSeoTests(unittest.TestCase):
             self.assertIn(selector, css)
         self.assertIn("background: var(--dark-panel) !important", css)
         self.assertIn("color: var(--dark-muted) !important", css)
-        self.assertIn("20260901-detail-guide-compact", theme_head)
+        match = re.search(r"filename='css/theme\.css', v='([^']+)'", theme_head)
+        self.assertIsNotNone(match, "Shared theme CSS must have a cache version")
+        self.assertTrue(match.group(1).strip())
 
 
 if __name__ == "__main__":

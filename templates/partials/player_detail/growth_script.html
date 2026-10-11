@@ -1,0 +1,391 @@
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('from') === 'squad_maker') {
+            const backButtons = document.querySelectorAll('.back-button');
+            backButtons.forEach(button => {
+                button.classList.add('hidden-by-query');
+            });
+        }
+        {% if player %}
+        const enhanceTotals = {{ enhance_totals|tojson }};
+        const skillBoostValues = {{ skill_boost_values|tojson }};
+        const priceByEnhance = {{ player.priceByEnhance|tojson }};
+        const priceUnit = {{ price_unit|tojson }};
+        const statLabels = {{ stat_labels|tojson }};
+        const trainingLevelBonuses = {{ training_level_bonuses|tojson }};
+        const enhanceSelect = document.getElementById('detail-enhance');
+        const trainingSelect = document.getElementById('detail-training');
+        if (urlParams.get('from') === 'squad_maker') {
+            const squadEnhance = Number(urlParams.get('enhance'));
+            const squadTraining = Number(urlParams.get('training'));
+            if (urlParams.has('enhance') && Number.isInteger(squadEnhance) && squadEnhance >= 0 && squadEnhance < enhanceTotals.length) enhanceSelect.value = String(squadEnhance);
+            if (urlParams.has('training') && Number.isInteger(squadTraining) && squadTraining >= 0 && squadTraining <= {{ max_training_level }}) trainingSelect.value = String(squadTraining);
+        }
+        const priceReadout = document.getElementById('detail-selected-price');
+        const maxLevelStat = document.querySelector('[data-max-level-stat]');
+        const skillSummary = document.getElementById('detail-skill-summary');
+        const statValues = Array.from(document.querySelectorAll('[data-stat-value]'));
+        const ovrValues = Array.from(document.querySelectorAll('[data-ovr-value]'));
+        const summaryValues = Array.from(document.querySelectorAll('[data-summary-value]'));
+        const summaryGauges = Array.from(document.querySelectorAll('[data-summary-gauge]'));
+        const priceRows = Array.from(document.querySelectorAll('[data-price-row]'));
+        const skillCards = Array.from(document.querySelectorAll('[data-skill-card]'));
+        const playstyleButtons = Array.from(document.querySelectorAll('[data-playstyle-button]'));
+        const playstylePopup = document.querySelector('[data-playstyle-popup]');
+        const playstylePopupName = document.querySelector('[data-playstyle-popup-name]');
+        const playstylePopupDescription = document.querySelector('[data-playstyle-popup-description]');
+        const playstylePopupImage = document.querySelector('[data-playstyle-popup-image]');
+        const playstylePopupClose = document.querySelector('[data-playstyle-popup-close]');
+        const skillStatButtons = Array.from(document.querySelectorAll('[data-skill-stat-button]'));
+        const skillStatPopup = document.querySelector('[data-skill-stat-popup]');
+        const skillStatPopupName = document.querySelector('[data-skill-stat-popup-name]');
+        const skillStatPopupImage = document.querySelector('[data-skill-stat-popup-image]');
+        const skillStatPopupList = document.querySelector('[data-skill-stat-popup-list]');
+        const skillStatPopupClose = document.querySelector('[data-skill-stat-popup-close]');
+        const mobilePlaystyleQuery = window.matchMedia('(max-width: 620px)');
+        const skillType = {{ (player.skillDisplay['type'] if player.skillDisplay else '')|tojson }};
+        const skillPointSteps = {
+            base: { normal: [4, 6], gk: [5, 7] },
+            ultimate: { normal: [6, 5, 5, 4], gk: [7, 6, 6, 5] },
+        };
+        const enhanceStatBonusPerOvr = 1;
+
+        function openPlaystylePopup(button) {
+            if (!playstylePopup || !mobilePlaystyleQuery.matches) return;
+            const name = button.dataset.name || "";
+            const description = button.dataset.description || "";
+            const image = button.dataset.image || "";
+            if (playstylePopupName) playstylePopupName.textContent = name;
+            if (playstylePopupDescription) playstylePopupDescription.textContent = description || "설명 정보가 없습니다.";
+            if (playstylePopupImage) {
+                playstylePopupImage.src = image;
+                playstylePopupImage.alt = name ? `${name} 아이콘` : "";
+            }
+            playstylePopup.classList.add("is-open");
+            playstylePopup.setAttribute("aria-hidden", "false");
+            playstylePopupClose?.focus();
+        }
+
+        function closePlaystylePopup() {
+            if (!playstylePopup) return;
+            playstylePopup.classList.remove("is-open");
+            playstylePopup.setAttribute("aria-hidden", "true");
+        }
+
+        function openSkillStatPopup(button) {
+            if (!skillStatPopup || !mobilePlaystyleQuery.matches) return;
+            const card = button.closest('[data-skill-card]');
+            if (!card) return;
+            const skillName = card.querySelector('.skill-name')?.textContent?.trim() || "상승 스탯";
+            const skillImage = card.querySelector('img')?.getAttribute('src') || "";
+            const chipTexts = Array.from(card.querySelectorAll('[data-skill-stat-chip]'))
+                .map(chip => chip.textContent.trim())
+                .filter(Boolean);
+            if (skillStatPopupName) skillStatPopupName.textContent = skillName;
+            if (skillStatPopupImage) {
+                skillStatPopupImage.src = skillImage;
+                skillStatPopupImage.alt = skillName ? `${skillName} 아이콘` : "";
+            }
+            if (skillStatPopupList) {
+                skillStatPopupList.innerHTML = chipTexts.length
+                    ? chipTexts.map(text => `<span class="skill-stat-popup-chip">${text}</span>`).join("")
+                    : `<span class="skill-stat-popup-chip">상승 스탯 없음</span>`;
+            }
+            skillStatPopup.classList.add("is-open");
+            skillStatPopup.setAttribute("aria-hidden", "false");
+            skillStatPopupClose?.focus();
+        }
+
+        function closeSkillStatPopup() {
+            if (!skillStatPopup) return;
+            skillStatPopup.classList.remove("is-open");
+            skillStatPopup.setAttribute("aria-hidden", "true");
+        }
+
+        playstyleButtons.forEach(button => {
+            button.addEventListener("click", () => openPlaystylePopup(button));
+        });
+        playstylePopupClose?.addEventListener("click", closePlaystylePopup);
+        playstylePopup?.addEventListener("click", event => {
+            if (event.target === playstylePopup) closePlaystylePopup();
+        });
+        document.addEventListener("keydown", event => {
+            if (event.key === "Escape") closePlaystylePopup();
+        });
+        skillStatButtons.forEach(button => {
+            button.addEventListener("click", () => openSkillStatPopup(button));
+        });
+        skillStatPopupClose?.addEventListener("click", closeSkillStatPopup);
+        skillStatPopup?.addEventListener("click", event => {
+            if (event.target === skillStatPopup) closeSkillStatPopup();
+        });
+        document.addEventListener("keydown", event => {
+            if (event.key === "Escape") closeSkillStatPopup();
+        });
+
+        function numberWithUnit(value) {
+            const numeric = Number(value);
+            if (!Number.isFinite(numeric) || numeric <= 0) return '-';
+            return `${numeric.toLocaleString()} ${priceUnit}`;
+        }
+
+        function maxLevelStatForOvr(ovr) {
+            const numeric = Number(ovr);
+            if (!Number.isFinite(numeric) || numeric < 118) return null;
+            return 210 + (2 * (numeric - 118));
+        }
+
+        function isGoalkeeper() {
+            return {{ (player.position == 'GK')|tojson }};
+        }
+
+        function skillKindForCard(card) {
+            return String(card.dataset.skillKind || "").toUpperCase();
+        }
+
+        function maxPointsForCard(card) {
+            if (skillType === 'boost') return Number(enhanceSelect?.value || 0);
+            const kind = skillKindForCard(card);
+            if (kind === "BASE") return 2;
+            if (kind === "ULTIMATE") return 4;
+            return (card.dataset.skillType === "boost") ? Number(enhanceSelect?.value || 0) : 2;
+        }
+
+        function baseSlotForUltimate(slot) {
+            const normalized = String(slot || "").toUpperCase();
+            if (normalized === "U1") return "B1";
+            if (normalized === "U2") return "B2";
+            if (normalized === "U3") return "B1";
+            if (normalized === "U4") return "B2";
+            return "";
+        }
+
+        function pointsForSlot(slot) {
+            const card = skillCards.find(item => String(item.dataset.skillSlot || "").toUpperCase() === String(slot || "").toUpperCase());
+            const select = card?.querySelector('[data-skill-level-select]');
+            return Number(select?.value || 0);
+        }
+
+        function isSkillUnlocked(card) {
+            if (skillType !== "skill") return true;
+            if (skillKindForCard(card) !== "ULTIMATE") return true;
+            const requiredBase = card.dataset.requiredBase || baseSlotForUltimate(card.dataset.skillSlot);
+            return !requiredBase || pointsForSlot(requiredBase) >= 2;
+        }
+
+        function pointValueForCard(card, points) {
+            const value = Math.max(0, Number(points || 0));
+            if (skillType === 'boost') {
+                return Number(skillBoostValues[value] || 0);
+            }
+            const kind = skillKindForCard(card) === "ULTIMATE" ? "ultimate" : "base";
+            const table = skillPointSteps[kind][isGoalkeeper() ? "gk" : "normal"];
+            return table.slice(0, value).reduce((sum, next) => sum + next, 0);
+        }
+
+        function selectedSkillPoints() {
+            return skillCards.reduce((sum, card) => {
+                const select = card.querySelector('[data-skill-level-select]');
+                return sum + Number(select?.value || 0);
+            }, 0);
+        }
+
+        function normalizeSkillSelections(changedCard) {
+            if (skillType !== 'skill') return;
+            const enhance = Number(enhanceSelect?.value || 0);
+
+            // Clear selections that are no longer unlocked and cap each card at
+            // its own limit before applying the shared enhancement-point budget.
+            skillCards.forEach(card => {
+                const select = card.querySelector('[data-skill-level-select]');
+                if (!select) return;
+                const unlocked = isSkillUnlocked(card);
+                const current = Math.max(0, Number(select.value || 0));
+                select.value = String(unlocked ? Math.min(current, maxPointsForCard(card)) : 0);
+            });
+
+            let spent = selectedSkillPoints();
+            if (spent <= enhance) return;
+
+            // When a skill select caused the overflow, trim that new choice only.
+            // Previously the DOM-order calculation reduced a different skill.
+            if (changedCard && skillCards.includes(changedCard)) {
+                const changedSelect = changedCard.querySelector('[data-skill-level-select]');
+                if (changedSelect) {
+                    const changedPoints = Number(changedSelect.value || 0);
+                    const otherSpent = spent - changedPoints;
+                    changedSelect.value = String(Math.min(changedPoints, Math.max(0, enhance - otherSpent)));
+                    spent = selectedSkillPoints();
+                }
+            }
+
+            // Enhancement can also be lowered directly. Reconcile that case in
+            // a stable order so the final selection always fits the new budget.
+            if (spent > enhance) {
+                let remaining = enhance;
+                skillCards.forEach(card => {
+                    const select = card.querySelector('[data-skill-level-select]');
+                    if (!select) return;
+                    const points = Math.min(Number(select.value || 0), Math.max(0, remaining));
+                    select.value = String(points);
+                    remaining -= points;
+                });
+            }
+        }
+
+        function buildSkillSelectors(changedCard = null) {
+            const enhance = Number(enhanceSelect?.value || 0);
+            normalizeSkillSelections(changedCard);
+            const selectedTotal = selectedSkillPoints();
+            skillCards.forEach(card => {
+                const select = card.querySelector('[data-skill-level-select]');
+                if (!select) return;
+                const current = Number(select.value || 0);
+                const unlocked = isSkillUnlocked(card);
+                const otherSpent = Math.max(0, selectedTotal - current);
+                const remainingForCard = Math.max(0, enhance - otherSpent);
+                const max = unlocked
+                    ? (skillType === 'boost' ? enhance : Math.min(maxPointsForCard(card), remainingForCard))
+                    : 0;
+                select.innerHTML = Array.from({ length: max + 1 }, (_, level) => {
+                    const label = skillType === 'boost' ? `${level}레벨 (+${Number(skillBoostValues[level] || 0)})` : `${level}pt (+${pointValueForCard(card, level)})`;
+                    return `<option value="${level}">${label}</option>`;
+                }).join('');
+                select.value = String(Math.min(current, max));
+                select.disabled = enhance === 0 || !unlocked;
+                card.classList.toggle("is-locked", !unlocked);
+            });
+        }
+
+        function getSkillBonuses() {
+            const enhance = Number(enhanceSelect?.value || 0);
+            const bonuses = {};
+            let spent = 0;
+
+            skillCards.forEach(card => {
+                const select = card.querySelector('[data-skill-level-select]');
+                let points = Number(select?.value || 0);
+                if (skillType !== 'boost') {
+                    if (!isSkillUnlocked(card)) {
+                        points = 0;
+                        if (select) select.value = "0";
+                    }
+                    const remaining = Math.max(0, enhance - spent);
+                    const max = Math.min(maxPointsForCard(card), remaining);
+                    if (points > max) {
+                        points = max;
+                        if (select) select.value = String(points);
+                    }
+                    spent += points;
+                }
+                const amount = pointValueForCard(card, points);
+                const codes = (card.dataset.statCodes || '').split(',').map(code => code.trim()).filter(Boolean);
+                codes.forEach(code => {
+                    bonuses[code] = (bonuses[code] || 0) + amount;
+                });
+                card.querySelectorAll('[data-skill-stat-chip]').forEach(chip => {
+                    const code = chip.dataset.skillStatChip;
+                    chip.textContent = `${statLabels[code] || code} +${amount}`;
+                });
+            });
+
+            if (skillSummary) {
+                if (skillType === 'skill') {
+                    skillSummary.textContent = `스킬 포인트 ${spent} / ${enhance}`;
+                } else if (skillType === 'boost') {
+                    const level = Number(skillCards[0]?.querySelector('[data-skill-level-select]')?.value || 0);
+                    skillSummary.textContent = `스킬부스트 ${level}레벨`;
+                }
+            }
+            return bonuses;
+        }
+
+        function getTrainingBonuses() {
+            const level = Math.max(0, Math.min(Number(trainingSelect?.value || 0), {{ max_training_level }}));
+            return trainingLevelBonuses[level] || {};
+        }
+
+        const summaryWeights = {
+            pace: [["ACC", 50], ["SPD", 50]],
+            shooting: [["FIN", 35], ["LSA", 20], ["SHO", 20], ["POS", 15], ["VOL", 5], ["PEN", 5]],
+            passing: [["SPA", 30], ["LPA", 20], ["VIS", 25], ["CRO", 15], ["CUR", 5], ["FRK", 5]],
+            agility: [["DRI", 25], ["BAC", 25], ["AGI", 25], ["REA", 15], ["BAL", 10]],
+            defense: [["MRK", 25], ["STT", 20], ["SLT", 20], ["AWR", 20], ["HEA", 15]],
+            physical: [["STR", 45], ["AGG", 30], ["JMP", 25]],
+        };
+
+        function readStat(code) {
+            const el = statValues.find(item => item.dataset.statCode === code);
+            const value = Number(el?.textContent || 0);
+            return Number.isFinite(value) ? value : 0;
+        }
+
+        function calculateSummary(group) {
+            const weights = summaryWeights[group] || [];
+            const total = weights.reduce((sum, [code, weight]) => sum + (readStat(code) * weight), 0);
+            return Math.floor(total / 100);
+        }
+
+        function updateSummaryStats() {
+            const values = {};
+            Object.keys(summaryWeights).forEach(group => {
+                values[group] = calculateSummary(group);
+            });
+            const maxValue = Math.max(...Object.values(values), 0);
+            summaryValues.forEach(el => {
+                const group = el.dataset.summaryValue;
+                el.textContent = values[group] ?? 0;
+            });
+            summaryGauges.forEach(el => {
+                const group = el.dataset.summaryGauge;
+                const value = values[group] || 0;
+                const percent = maxValue > 0 ? Math.floor(value / maxValue * 100) : 0;
+                el.style.setProperty("--p", String(percent));
+            });
+        }
+
+        function updateDetailConfig(changedSkillCard = null) {
+            const enhance = Number(enhanceSelect?.value || 0);
+            const enhanceOvrBonus = Number(enhanceTotals[enhance] || 0);
+            const enhanceStatBonus = enhanceOvrBonus * enhanceStatBonusPerOvr;
+            buildSkillSelectors(changedSkillCard);
+            const skillBonuses = getSkillBonuses();
+            const trainingBonuses = getTrainingBonuses();
+
+            statValues.forEach(el => {
+                const base = Number(el.dataset.base || 0);
+                const code = el.dataset.statCode;
+                const skillBonus = Number(skillBonuses[code] || 0);
+                const trainingBonus = Number(trainingBonuses[code] || 0);
+                el.textContent = Number.isFinite(base) ? base + enhanceStatBonus + skillBonus + trainingBonus : '-';
+            });
+            ovrValues.forEach(el => {
+                const base = Number(el.dataset.base || 0);
+                el.textContent = Number.isFinite(base) ? base + enhanceOvrBonus : '-';
+            });
+            if (maxLevelStat) {
+                const baseOvr = Number(ovrValues[0]?.dataset.base || 0);
+                const maxStat = maxLevelStatForOvr(baseOvr);
+                maxLevelStat.textContent = `만렙스탯: ${maxStat ?? '-'}`;
+                maxLevelStat.hidden = enhance !== 0 || maxStat === null;
+            }
+            updateSummaryStats();
+            if (priceReadout) {
+                const priceText = numberWithUnit(priceByEnhance[String(enhance)]);
+                priceReadout.textContent = priceText;
+            }
+            priceRows.forEach(row => {
+                row.classList.toggle('is-selected-price', Number(row.dataset.priceRow) === enhance);
+            });
+        }
+
+        enhanceSelect?.addEventListener('change', () => updateDetailConfig());
+        trainingSelect?.addEventListener('change', () => updateDetailConfig());
+        skillCards.forEach(card => {
+            card.querySelector('[data-skill-level-select]')?.addEventListener('change', () => updateDetailConfig(card));
+        });
+        updateDetailConfig();
+        {% endif %}
+    });
+  </script>

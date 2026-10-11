@@ -1,0 +1,40 @@
+<script>
+    (function () {
+      var toggle = document.querySelector('.detail-nav-toggle');
+      var nav = document.querySelector('.detail-mobile-nav');
+      var overlay = document.querySelector('.detail-nav-overlay');
+      var icon = toggle && toggle.querySelector('i');
+      if (!toggle || !nav) return;
+
+      function setMenuState(open) {
+        nav.classList.toggle('is-open', open);
+        if (overlay) {
+          overlay.classList.toggle('is-open', open);
+          overlay.setAttribute('aria-hidden', open ? 'false' : 'true');
+        }
+        document.body.classList.toggle('detail-menu-open', open);
+        toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+        toggle.setAttribute('aria-label', open ? '메뉴 닫기' : '메뉴 열기');
+        if (icon) {
+          icon.classList.toggle('bi-list', !open);
+          icon.classList.toggle('bi-x-lg', open);
+        }
+      }
+
+      function closeMenu() { setMenuState(false); }
+      toggle.addEventListener('click', function () {
+        setMenuState(!nav.classList.contains('is-open'));
+      });
+      if (overlay) overlay.addEventListener('click', closeMenu);
+      nav.querySelectorAll('a').forEach(function (link) { link.addEventListener('click', closeMenu); });
+      document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape' && nav.classList.contains('is-open')) {
+          closeMenu();
+          toggle.focus();
+        }
+      });
+      window.addEventListener('resize', function () {
+        if (window.innerWidth > 550 && nav.classList.contains('is-open')) closeMenu();
+      });
+    })();
+  </script>
