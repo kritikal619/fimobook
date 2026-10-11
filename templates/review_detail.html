@@ -262,7 +262,7 @@
   }
   .comment-form textarea {
     width: 100%;
-    min-height: 86px;
+    min-height: 72px;
     padding: 11px 12px;
     border: 1px solid #dbe3ec;
     border-radius: 10px;
@@ -271,7 +271,8 @@
     font: inherit;
     font-size: 13px;
     line-height: 1.55;
-    resize: vertical;
+    resize: none;
+    overflow-y: hidden;
     box-sizing: border-box;
   }
   .comment-submit {
@@ -604,6 +605,7 @@
 </div>
 
 <script src="{{ url_for('static', filename='js/same-page-forms.js', v='20261011-2') }}" defer></script>
+<script src="{{ url_for('static', filename='js/textarea-autogrow.js', v='20261011-1') }}" defer></script>
 <script>
   document.querySelectorAll('[data-reply-toggle]').forEach(function (button) {
     button.addEventListener('click', function () {

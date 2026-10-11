@@ -332,9 +332,10 @@
   }
   .comment-textarea {
     width: 100%;
-    min-height: 86px;
+    min-height: 72px;
     box-sizing: border-box;
-    resize: vertical;
+    resize: none;
+    overflow-y: hidden;
     border: 1px solid #d8e2dd;
     border-radius: 10px;
     padding: 11px 12px;
@@ -626,6 +627,7 @@
 </article>
 
 <script src="{{ url_for('static', filename='js/same-page-forms.js', v='20261011-2') }}" defer></script>
+<script src="{{ url_for('static', filename='js/textarea-autogrow.js', v='20261011-1') }}" defer></script>
 <script>
   (() => {
     document.querySelectorAll(".reply-toggle").forEach((button) => {
