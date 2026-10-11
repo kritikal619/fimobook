@@ -29,5 +29,5 @@ html[data-theme] body .fimo-card-art{background-color:transparent!important}
 .fimo-card-art [data-fimo-ink="dark"]{text-shadow:none!important;filter:none!important;-webkit-text-stroke:0!important}
 
 /* Official squad maker: left 4%, top 6%, vertical 13% slots. */
-.fimo-card-art .fimo-card-playstyles{position:absolute!important;left:4%!important;top:6%!important;display:flex!important;flex-direction:column!important;gap:1cqw!important;z-index:8!important;pointer-events:none}
+.fimo-card-art .fimo-card-playstyles{position:absolute!important;left:calc(4% - 1cqw)!important;top:calc(6% - 1.4cqw)!important;box-sizing:content-box!important;padding:1.4cqw 1cqw!important;border-radius:2.2cqw!important;background:rgba(10,18,20,.62)!important;display:flex!important;flex-direction:column!important;gap:1cqw!important;z-index:8!important;pointer-events:none}
 .fimo-card-art .fimo-card-playstyles img{position:static!important;width:13cqw!important;height:13cqw!important;object-fit:contain!important;transform:none!important;margin:0!important;border:0!important;background:none!important;filter:none!important}
