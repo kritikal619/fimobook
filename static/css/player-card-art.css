@@ -12,6 +12,10 @@
 .fimo-card-art .fimo-card-symbols{position:absolute!important;bottom:16.1%!important;left:0!important;right:0!important;height:8.333333%!important;display:flex!important;align-items:center!important;justify-content:center!important;gap:9.75cqw;z-index:3!important;pointer-events:none}
 .fimo-card-art .fimo-card-symbols[data-count="3"]{gap:7.3cqw}
 .fimo-card-art .fimo-card-symbols img{position:static!important;display:block!important;inset:auto!important;width:auto!important;height:100%!important;max-width:none!important;object-fit:contain!important;transform:none!important;border:0!important;border-radius:0!important;background:none!important;box-shadow:none!important;filter:none!important;flex:none}
+/* 넥슨 스쿼드메이커 기준: OVR은 가운데가 카드 폭의 28.8%, 포지션(3글자)은 30.6%에 놓인다.
+   게임 폰트보다 글자 폭이 넓어 왼쪽 기준선(left)만 맞추면 오른쪽으로 쏠리므로 자기 폭의 일정 비율만큼 당긴다. */
+.fimo-card-art .fimo-card-rating{transform:translateX(-6.8%)!important}
+.fimo-card-art .fimo-card-position{transform:translateX(-7.5%)!important}
 .fimo-card-art[data-fimo-layout="offset"] .fimo-card-name{bottom:22%!important;left:24.5%!important}
 .fimo-card-art[data-fimo-layout="offset"] .fimo-card-symbols{bottom:14%!important;padding-left:5.5%;gap:10cqw}
 .fimo-card-art>.fimo-card-evolution{position:absolute!important;top:34%!important;left:20.9%!important;width:auto!important;height:14.166667%!important;object-fit:contain!important;z-index:3!important}
