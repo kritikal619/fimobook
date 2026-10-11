@@ -408,7 +408,7 @@
       {% for item in prime_rows[:20] %}
         <a class="prime-result-row" href="{{ url_for('player_detail', cid=item.cid) }}">
           <span class="prime-rank">{{ loop.index }}</span>
-          <span class="prime-player-art" data-fimo-player-card='{{ player_card_meta(item.player_cid)|tojson }}' {% if item.player_bimage %}style="background-image:url('{{ item.player_bimage }}');"{% endif %}>
+          <span class="prime-player-art" data-fimo-player-card='{{ player_card_meta(item.cid)|tojson }}' {% if item.player_bimage %}style="background-image:url('{{ item.player_bimage }}');"{% endif %}>
             {% if item.player_pimage %}<img src="{{ item.player_pimage }}" alt="" loading="lazy">{% endif %}
           </span>
           <span class="prime-player-info">
@@ -491,7 +491,7 @@
           return `
             <a class="prime-result-row" href="/player/${cid}">
               <span class="prime-rank">${index + 1}</span>
-              <span class="prime-player-art" data-fimo-card-cid="${Number(row.player_cid)}"${artStyle}>${art}</span>
+              <span class="prime-player-art" data-fimo-card-cid="${cid}"${artStyle}>${art}</span>
               <span class="prime-player-info">
                 <span class="prime-player-name">${escapeHtml(row.player_name || "선수")}</span>
                 <span class="prime-player-sub">${escapeHtml(playerSub)}</span>
