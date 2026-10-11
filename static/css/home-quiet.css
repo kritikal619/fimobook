@@ -53,3 +53,17 @@ html[data-theme="dark"] .weekly-player-meta { color:#94a3b8; }
 .latest-review-author { font-weight:700; }
 html[data-theme="dark"] .latest-review-kind.summary { background:transparent !important; color:#94a3b8 !important; }
 html[data-theme="dark"] .latest-review-kind { background:transparent !important; color:#94a3b8 !important; padding:0; }
+
+/* 최근 쿠폰: 왼쪽 초록 줄, 아이콘 상자, 화살표, 테두리 버튼을 걷어내고 최신 리뷰 목록과 같은 문법으로 */
+.coupon-title { font-size:17px; font-weight:800; letter-spacing:-.3px; }
+.coupon-header { align-items:baseline; margin-bottom:10px; }
+.ghost-btn { min-height:0; padding:0; border:0; background:transparent; border-radius:0; font-size:12px; font-weight:700; }
+.ghost-btn:hover { text-decoration:underline; }
+.coupon-card { grid-template-columns:minmax(0, 1fr); gap:0; min-height:0; padding:11px 13px; border:1px solid var(--line); border-left-width:1px; border-radius:8px; background:#fff; transition:border-color .12s ease; }
+.coupon-link:hover { border-color:#94a3b8; background:#fff; }
+.coupon-card-icon, .coupon-card-arrow { display:none; }
+.coupon-badge { font-size:11px; font-weight:600; }
+.coupon-card .code-chip { margin-top:2px; font-size:14px; font-weight:800; letter-spacing:0; }
+html[data-theme="dark"] .coupon-card { background:#172033; border-color:#334155; }
+html[data-theme="dark"] .coupon-card .code-chip { color:#e7ecf2; }
+html[data-theme="dark"] .ghost-btn { background:transparent; border:0; }
