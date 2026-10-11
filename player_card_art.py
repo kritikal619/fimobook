@@ -42,7 +42,7 @@ def card_art_metadata(root, player):
                        'imageUrl': icon, 'isEmpty': False})
     slot_levels = player.get('playStyleSlotMaxLevels') or []
     styles.extend({'isEmpty': True, 'name': '빈 플레이스타일 슬롯',
-                   'imageUrl': '/static/playstyles/PLAYSTYLE_EMPTY_SLOT.png'}
+                   'imageUrl': '/static/playstyles/PLAYSTYLE_EMPTY_SLOT_CARD.svg'}
                   for _ in range(max(0, len(slot_levels) - len(styles))))
 
     def badge(kind, prefix, identifier):

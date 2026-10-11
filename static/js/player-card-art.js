@@ -83,7 +83,7 @@ window.FimoCardArt = (() => {
     if (styles && styles.dataset.signature !== JSON.stringify(slots)) {
       styles.dataset.signature = JSON.stringify(slots);
       styles.replaceChildren(...slots.map(slot => {
-        const icon = image(slot.isEmpty ? '/static/playstyles/PLAYSTYLE_EMPTY_SLOT.png' : slot.imageUrl, '', slot.name || '빈 플레이스타일 슬롯');
+        const icon = image(slot.isEmpty ? '/static/playstyles/PLAYSTYLE_EMPTY_SLOT_CARD.svg' : slot.imageUrl, '', slot.name || '빈 플레이스타일 슬롯');
         icon.title = slot.name || '빈 플레이스타일 슬롯';
         return icon;
       }));
