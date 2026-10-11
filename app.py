@@ -2516,7 +2516,6 @@ COMMUNITY_BOARDS = {
     "notice": {"label": "공지사항", "title": "공지사항"},
     "free": {"label": "자유게시판", "title": "자유게시판"},
     "review": {"label": "리뷰게시판", "title": "선수 리뷰"},
-    "squad": {"label": "스쿼드게시판", "title": "스쿼드게시판"},
 }
 REVIEW_POINT_VALUE = 100
 KST = timezone(timedelta(hours=9))

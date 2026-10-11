@@ -1,0 +1,68 @@
+/* 커뮤니티(공지·자유·리뷰 게시판, 리뷰랭킹): 알약 탭, 그라데이션 버튼, 초록 점, 라벨 배지, 카드 그림자를 걷어낸 담백한 목록 */
+
+/* 탭: 채워진 알약 대신 밑줄 */
+.community-tabs, .ranking-tabs { gap: 2px 22px; margin-bottom: 14px; border-bottom: 1px solid var(--line); }
+.community-tab, .ranking-tab {
+  min-height: 42px; padding: 0 2px; border: 0; border-bottom: 2px solid transparent; border-radius: 0; margin-bottom: -1px;
+  background: transparent; color: var(--muted); font-size: 15px; font-weight: 600;
+}
+.community-tab:hover, .ranking-tab:hover { background: transparent; border-color: transparent; color: var(--ink); }
+.community-tab.active, .ranking-tab.active { background: transparent; border-color: var(--brand-dark); color: var(--ink); font-weight: 800; }
+
+/* 검색 · 글쓰기 */
+.community-search { border-width: 1px; border-radius: 6px; background: #fff; }
+.community-search input { height: 42px; }
+.community-search-button { height: 30px; border-radius: 5px; font-weight: 700; }
+.write-button { height: 44px; border-radius: 6px; background: var(--brand-dark); font-weight: 800; }
+.write-button:hover { background: #0c5f41; }
+.review-filter-control, .review-filter-reset { border-radius: 6px; }
+.review-filter-control span, .review-filter-control select, .review-filter-reset { font-weight: 600; }
+
+/* 글 목록: 초록 점과 게시판 이름 라벨을 없애고 제목 중심으로 */
+.community-post { grid-template-columns: minmax(0, 1fr) auto; gap: 14px; padding: 15px 0; }
+.post-dot { display: none; }
+.post-badge:not(.is-pinned) { display: none; }
+.post-badge.is-pinned { height: auto; padding: 0; margin-right: 6px; border-radius: 0; background: transparent; color: var(--brand-dark); font-size: 12.5px; font-weight: 800; }
+.post-title-link { font-weight: 700; }
+.comment-count { font-weight: 700; }
+.post-preview { margin-top: 4px; font-size: 13.5px; }
+.post-extra-badge { font-weight: 600; }
+.post-thumb { border-radius: 6px; }
+.author-link { font-weight: 600; }
+.profile-arrow { display: none; }
+
+/* 리뷰 점수 랭킹 상자: 카드 대신 구분선 */
+.community-shell .ranking-panel { border: 0; border-top: 2px solid var(--ink); border-radius: 0; background: transparent; box-shadow: none; padding: 14px 2px 0; }
+.community-shell .ranking-title { font-size: 15px; font-weight: 800; }
+.community-shell .ranking-title .bi { display: none; }
+.community-shell .rank-index { font-weight: 600; }
+.community-shell .rank-user { font-weight: 600; }
+.community-shell .rank-points { color: var(--ink); font-weight: 700; }
+.community-shell .ranking-more { height: auto; justify-content: flex-start; padding: 4px 0; border-radius: 0; background: transparent; color: var(--brand-dark); font-weight: 700; }
+
+/* 리뷰랭킹 페이지 */
+.ranking-panel-head { padding-top: 14px; }
+.ranking-panel-title { font-weight: 800; }
+.rank-index { width: auto; min-width: 28px; height: auto; border-radius: 0; background: transparent; color: var(--muted); font-weight: 600; justify-content: flex-start; }
+.ranking-row:nth-child(-n+3) .rank-index { background: transparent; color: var(--ink); font-weight: 800; }
+.rank-user { font-weight: 600; }
+.rank-points { color: var(--ink); font-weight: 700; }
+
+/* 모바일 */
+@media (max-width: 640px) {
+  .community-mobile-tabs, .ranking-tabs { gap: 2px 18px; border-bottom: 1px solid var(--line); padding-bottom: 0; }
+  .community-mobile-tab, .ranking-tab { min-height: 38px; padding: 0 2px; border: 0; border-bottom: 2px solid transparent; border-radius: 0; margin-bottom: -1px; background: transparent; color: var(--muted); font-size: 14px; font-weight: 600; }
+  .community-mobile-tab.active, .ranking-tab.active { background: transparent; border-color: var(--brand-dark); color: var(--ink); font-weight: 800; }
+  .ranking-panel-head { border: 0; border-radius: 0; background: transparent; box-shadow: none; padding: 12px 0 10px; border-bottom: 1px solid var(--line); }
+  .community-post { padding: 13px 0; }
+}
+
+/* 다크 모드 */
+html[data-theme="dark"] .community-search { background: #172033; }
+html[data-theme="dark"] .community-tab.active, html[data-theme="dark"] .ranking-tab.active,
+html[data-theme="dark"] .community-mobile-tab.active { color: #e7ecf2; }
+html[data-theme="dark"] .community-tab:hover, html[data-theme="dark"] .ranking-tab:hover { color: #e7ecf2; }
+html[data-theme="dark"] .community-shell .ranking-panel { background: transparent !important; border-top-color: #475569; box-shadow: none; }
+html[data-theme="dark"] .community-shell .rank-points, html[data-theme="dark"] .rank-points { color: #e7ecf2; }
+html[data-theme="dark"] .post-badge.is-pinned { color: #6ee7b7; background: transparent !important; }
+html[data-theme="dark"] .community-shell .ranking-more { background: transparent !important; color: #6ee7b7; }
