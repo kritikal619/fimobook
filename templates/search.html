@@ -972,7 +972,7 @@
   }
   @media (min-width: 641px){
     .quick-links{
-      grid-template-columns: repeat(7, minmax(0, 1fr));
+      grid-template-columns: repeat(8, minmax(0, 1fr));
     }
     .quick-card{
       height:auto;
@@ -991,8 +991,9 @@
       font-size:20px;
     }
     .tool-name{
-      font-size:14px;
-      white-space:normal;
+      font-size:13px;
+      letter-spacing:-0.4px;
+      white-space:nowrap;
     }
   }
   @media (max-width: 640px){
@@ -1630,6 +1631,10 @@
         <a href="{{ url_for('evolution_simulator_page') }}" class="quick-card tool-squad">
           <span class="tool-glyph" aria-hidden="true"><i class="bi bi-arrow-up-square"></i></span>
           <span class="tool-name">진화 시뮬</span>
+        </a>
+        <a href="{{ url_for('normal_mode_power_ranking') }}" class="quick-card tool-squad">
+          <span class="tool-glyph" aria-hidden="true"><i class="bi bi-bar-chart-line"></i></span>
+          <span class="tool-name">일반모드 랭킹</span>
         </a>
         <a href="{{ url_for('player_compare_page') }}" class="quick-card tool-squad">
           <span class="tool-glyph" aria-hidden="true"><i class="bi bi-people"></i></span>
