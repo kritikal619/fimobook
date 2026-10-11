@@ -281,22 +281,24 @@
     return [combined, ...rewards.filter(reward => !parts.includes(reward))];
   }
   function orderedRewards(rewards) {
-    const tokenGroups = new Map();
+    // Every non-player reward (MP, FV, tokens, batons, bats, moons...) is shown once
+    // per name with the summed count; the per-draw lines stay in `components`.
+    const itemGroups = new Map();
     const combined = [];
     mergeMPRewards(rewards).forEach(reward => {
-      if (reward.kind !== 'item' || !/진화\s*재료.*토큰/.test(reward.name)) {
+      if (reward.kind !== 'item' || reward.components) {
         combined.push(reward); return;
       }
-      const group = tokenGroups.get(reward.name);
+      const group = itemGroups.get(reward.name);
       if (group) {
         group.count += Number(reward.count);
         group.components.push(reward);
       } else {
-        const token = {...reward, count: Number(reward.count), components: [reward]};
-        tokenGroups.set(reward.name, token); combined.push(token);
+        const item = {...reward, count: Number(reward.count), components: [reward]};
+        itemGroups.set(reward.name, item); combined.push(item);
       }
     });
-    tokenGroups.forEach(token => { if (token.components.length === 1) delete token.components; });
+    itemGroups.forEach(item => { if (item.components.length === 1) delete item.components; });
     const players = combined.filter(reward => reward.kind === 'player').sort((a, b) =>
       b.ovr - a.ovr ||
       a.playerKor.normalize('NFKC').trim().localeCompare(b.playerKor.normalize('NFKC').trim(), 'ko') ||
