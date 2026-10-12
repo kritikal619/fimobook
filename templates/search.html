@@ -183,7 +183,7 @@
                 <span class="latest-review-name">{% if item.player_position %}{{ item.player_position }} · {% endif %}OVR {{ item.player_ovr or '-' }} · {{ item.player_name }}</span>
               </div>
               <div class="latest-review-post-title">{{ item.title }}</div>
-              <div class="latest-review-excerpt">{{ item.excerpt or '새로운 선수 분석 콘텐츠를 확인해보세요.' }}</div>
+              <div class="latest-review-excerpt">{{ item.excerpt or '본문 미리보기가 없는 글입니다.' }}</div>
             </div>
             <div class="latest-review-side">
               {% if item.average_rating %}<span class="latest-review-score">★ {{ item.average_rating }}</span>{% endif %}

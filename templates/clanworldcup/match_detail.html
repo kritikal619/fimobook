@@ -429,8 +429,8 @@
     const targetMatchId = e.target.getAttribute("data-match") || matchId;
     const code = getStoredCode();
     if (!code) {
-      alert("멤버인증이 해야지 삭제/업로드를 할 수 있습니다.");
-      setStatus("멤버인증이 해야지 삭제/업로드를 할 수 있습니다.", true);
+      alert("멤버 인증 후 삭제/업로드할 수 있습니다.");
+      setStatus("멤버 인증 후 삭제/업로드할 수 있습니다.", true);
       return;
     }
     const input = document.querySelector(`.cw-file[data-match='${targetMatchId}'][data-slot='${slot}']`);
@@ -443,8 +443,8 @@
     const targetMatchId = e.target.getAttribute("data-match") || matchId;
     const code = getStoredCode();
     if (!code) {
-      alert("멤버인증이 해야지 삭제/업로드를 할 수 있습니다.");
-      setStatus("멤버인증이 해야지 삭제/업로드를 할 수 있습니다.", true);
+      alert("멤버 인증 후 삭제/업로드할 수 있습니다.");
+      setStatus("멤버 인증 후 삭제/업로드할 수 있습니다.", true);
       return;
     }
     if (!confirm("정말로 삭제하시겠습니다?")) return;

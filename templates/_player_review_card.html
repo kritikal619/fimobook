@@ -10,7 +10,7 @@
       </div>
       {% if review.average_rating %}<span class="fimo-review-card-score">★ {{ review.average_rating }}</span>{% endif %}
     </div>
-    <p class="fimo-review-card-copy">{{ review.excerpt or review.review_text or '작성자가 남긴 상세 리뷰를 확인해보세요.' }}</p>
+    <p class="fimo-review-card-copy">{{ review.excerpt or review.review_text or '본문 미리보기가 없는 리뷰입니다.' }}</p>
     <div class="fimo-review-card-chips">
       <span class="fimo-review-card-chip">{{ review.formation or '포메이션 미입력' }}</span>
       <span class="fimo-review-card-chip">{{ review.used_position or '포지션 미입력' }}</span>

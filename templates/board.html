@@ -70,7 +70,7 @@
   }
   .community-tab.active {
     border-color: var(--brand-dark);
-    background: linear-gradient(90deg, var(--brand-dark) 0%, var(--brand) 100%);
+    background: var(--brand-dark);
     color: #fff;
   }
   .mobile-ranking-tab {
@@ -193,14 +193,14 @@
     height: 46px;
     padding: 0 18px;
     border-radius: 10px;
-    background: linear-gradient(90deg, var(--brand-dark) 0%, var(--brand) 100%);
+    background: var(--brand-dark);
     color: #fff;
     text-decoration: none;
     font-weight: 900;
     white-space: nowrap;
   }
   .write-button:hover {
-    background: linear-gradient(90deg, #0c5f41 0%, var(--brand-dark) 100%);
+    background: #0c5f41;
     color: #fff;
     text-decoration: none;
   }
@@ -869,7 +869,7 @@
                 <span class="review-board-player">{% if review.player_position %}{{ review.player_position }} · {% endif %}OVR {{ review.player_ovr or '-' }} · {{ review.player_name }}</span>
               </div>
               {% if review.player_class %}<div class="review-board-class">{{ review.player_class }}</div>{% endif %}
-              <p class="review-board-excerpt">{{ review.excerpt or '작성자가 남긴 선수 사용 리뷰를 확인해보세요.' }}</p>
+              <p class="review-board-excerpt">{{ review.excerpt or '본문 미리보기가 없는 리뷰입니다.' }}</p>
               <div class="review-board-scoreline">
                 {% if review.average_rating %}<span class="review-board-score">★ {{ review.average_rating }}</span>{% endif %}
                 {% if review.kind == 'summary' %}

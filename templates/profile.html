@@ -86,7 +86,7 @@
           <div class="profile-empty">
             <i class="bi bi-chat-square-text" aria-hidden="true"></i>
             <h3>아직 작성한 선수 리뷰가 없습니다</h3>
-            <p>{{ '사용해 본 선수의 후기를 남겨보세요.' if own_profile else '새로운 리뷰가 등록되면 여기에 표시됩니다.' }}</p>
+            <p>{{ '작성한 리뷰가 없습니다.' if own_profile else '등록된 리뷰가 없습니다.' }}</p>
             <a class="profile-button profile-button-primary" href="{{ url_for('index') }}">선수를 찾아 리뷰 남기기<i class="bi bi-arrow-right" aria-hidden="true"></i></a>
           </div>
         {% endfor %}
