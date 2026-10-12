@@ -27,7 +27,6 @@ MAX_TOKEN_LENGTH = 1200
 IMAGE_SIZE = (1200, 630)
 
 TEXT = "#f8fafc"
-MUTED = "#c9d6e3"
 DEFAULT_ANIMATION = "DEFAULT26"
 
 _IMAGE_CACHE = {}
@@ -244,15 +243,6 @@ def render_share_image(token, summary, players, root_path):
 
     canvas = _share_background(root_path, summary.get("a"))
     width, height = IMAGE_SIZE
-    font_path = os.path.join(root_path, "static", "fonts", "NAME.ttf")
-
-    shade = Image.new("RGBA", IMAGE_SIZE, (0, 0, 0, 0))
-    shade_draw = ImageDraw.Draw(shade)
-    for y in range(height):
-        edge = max(0.0, 1 - y / 120) if y < 120 else max(0.0, (y - (height - 150)) / 150)
-        if edge:
-            shade_draw.line((0, y, width, y), fill=(0, 0, 0, int(170 * edge)))
-    canvas.alpha_composite(shade)
 
     if players:
         size = 400
@@ -260,16 +250,6 @@ def render_share_image(token, summary, players, root_path):
         seed = int(hashlib.sha256(token.encode("utf-8")).hexdigest()[:8], 16)
         _draw_burst(canvas, center, size * 0.62, seed)
         _draw_card(canvas, players[0], root_path, (center[0] - size // 2, center[1] - size // 2), size)
-
-    pack_name = summary.get("p") or "선수팩"
-    draw = ImageDraw.Draw(canvas)
-    _shadowed_text(canvas, (36, 28), pack_name, _stats_card_fit_text(draw, pack_name, font_path, 32, 20, 820), TEXT)
-    facts = f"{summary.get('q', 1):,}팩 · 선수 {summary.get('n', 0):,}명"
-    total = int(summary.get("v") or 0) + int(summary.get("m") or 0)
-    if total:
-        facts += f" · {format_mp(total)} MP"
-    _shadowed_text(canvas, (36, height - 30), facts, _stats_card_font(font_path, 26), TEXT, anchor="ls")
-    _shadowed_text(canvas, (width - 36, height - 30), "fcbook.info", _stats_card_font(font_path, 22), MUTED, anchor="rs")
 
     output = BytesIO()
     canvas.convert("RGB").save(output, format="PNG", optimize=True)
