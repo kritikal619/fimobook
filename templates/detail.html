@@ -36,7 +36,7 @@
   white-space: nowrap !important;
 }
 </style>
-<link rel="stylesheet" href="{{ url_for('static', filename='css/player-detail.css', v='20261011-1') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/player-detail.css', v='20261012-alt-2') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/player-reviews.css', v='20261010-3') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/player-price-history.css', v='20260823-1') }}">
 {% endblock %}
@@ -688,6 +688,38 @@
             </a>
           {% endfor %}
         </div>
+      {% endif %}
+
+      {% if alternative_cards %}
+        <section class="alt-cards" aria-labelledby="alt-cards-title">
+          <h2 class="detail-section-title" id="alt-cards-title">대체 카드</h2>
+          <p class="alt-cards-note">{{ player.position }} 역할의 핵심 능력치가 비슷한 다른 선수입니다. 싼 카드부터 보여 줍니다.</p>
+          <ul class="alt-card-list">
+            {% for alt in alternative_cards %}
+              {% set ap = alt.player %}
+              <li class="alt-card">
+                <a class="alt-card-main" href="{{ url_for('player_detail', cid=ap.cid) }}" aria-label="FC모바일 {{ ap.className }} {{ ap.playerKor }} OVR {{ ap.ovr }} 선수 정보">
+                  <img class="alt-card-face" src="{{ player_thumbnail_url('faceon', ap.cid, 96) or ap.pimage or url_for('static', filename='favicon.ico') }}" alt="" loading="lazy" decoding="async" width="48" height="48">
+                  <span class="alt-card-id">
+                    <strong>{{ ap.playerKor }}</strong>
+                    <span>{{ ap.className }} · {{ ap.position }} · OVR {{ ap.ovr }}</span>
+                  </span>
+                  <span class="alt-card-price">
+                    <strong>{{ alt.price_label }}</strong>
+                    {% if alt.is_cheaper %}<span class="alt-card-saving">{{ alt.cheaper_percent }}% 저렴</span>{% endif %}
+                  </span>
+                </a>
+                <div class="alt-card-facts">
+                  <span class="alt-card-match">{% if alt.similarity >= 85 %}매우 비슷{% elif alt.similarity >= 78 %}비슷{% else %}일부 비슷{% endif %}</span>
+                  <span>핵심 능력치 {{ "%+d"|format(alt.core_delta) if alt.core_delta else "동일" }}</span>
+                  {% if alt.weakness %}<span class="is-down">{{ alt.weakness.label }} {{ alt.weakness.delta }}</span>{% endif %}
+                  {% if alt.strength %}<span class="is-up">{{ alt.strength.label }} +{{ alt.strength.delta }}</span>{% endif %}
+                  <a class="alt-card-compare" href="{{ url_for('player_compare_page', left=player.cid, right=ap.cid) }}">비교</a>
+                </div>
+              </li>
+            {% endfor %}
+          </ul>
+        </section>
       {% endif %}
 
       {% if player.traits %}

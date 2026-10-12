@@ -150,6 +150,7 @@ from prime_exchange import (
     _ensure_prime_exchange_live_prices,
     _get_prime_exchange_efficiency,
 )
+from player_alternatives import find_alternatives
 import player_teams
 from player_teams import (
     _TEAM_FILTER_CONTEXT_CACHE,
@@ -7754,6 +7755,17 @@ def player_detail(cid):
             robots_meta="noindex,follow",
         ), 404
 
+    # Snapshot prices on both sides, before the live lookup replaces this card's.
+    alternative_cards = []
+    for item in find_alternatives(
+        selected_player,
+        PLAYER_DATA,
+        lambda player: _extract_price_at_enhance(player, 0) or 0,
+    ):
+        alternative = dict(item)
+        alternative["player"] = _apply_local_assets(_normalize_player_record(item["player"].copy()))
+        alternative_cards.append(alternative)
+
     selected_player = apply_live_price_fields(selected_player)
     selected_player = _merge_fcplayer_skill_data(selected_player)
     selected_player["review_cid"] = detail_cid
@@ -7925,6 +7937,7 @@ def player_detail(cid):
         player_structured_data=player_structured_data,
         breadcrumb_structured_data=breadcrumb_structured_data,
         other_classes=other_classes,
+        alternative_cards=alternative_cards,
         enhance_totals=ENHANCE_LEVEL_TOTALS,
         skill_boost_values=SKILL_BOOST_LEVEL_VALUES,
         stat_labels=STAT_CODE_LABELS,
