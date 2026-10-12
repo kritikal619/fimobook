@@ -6073,6 +6073,12 @@ def _fetch_fcplayer_card_match(player):
     target_skill_system = _player_skill_system(player)
     target_boost_name = _normalize_filter_text(_local_skill_boost_name(player))
     target_summary = _local_fcplayer_summary(player)
+    target_skill_names = set()
+    if target_skill_system == "skill":
+        target_skill_names = {
+            _normalize_filter_text(_get_skill_name(skill_id)) for skill_id in _player_skill_ids(player)
+        }
+        target_skill_names.discard("")
     cache_key = (
         player.get("cid"),
         name,
@@ -6117,6 +6123,14 @@ def _fetch_fcplayer_card_match(player):
         card_skill_system = _fcplayer_card_skill_system(card)
         if target_skill_system and card_skill_system and target_skill_system != card_skill_system:
             return -1
+        card_skills = card.get("skills")
+        if target_skill_names and isinstance(card_skills, list) and card_skills:
+            card_skill_names = {
+                _normalize_filter_text(item.get("name")) for item in card_skills if isinstance(item, dict)
+            }
+            # Same name and OVR can still be a different card; its skills must agree with ours.
+            if len(target_skill_names & card_skill_names) < 3:
+                return -1
 
         value = 100
         if card_ovr_matches:
@@ -6167,23 +6181,10 @@ def _merge_fcplayer_skill_data(player):
     if not fcplayer_card:
         return player
 
+    # Skills and boost names come from the official local data; the matched card is
+    # only used for its id (review lookups are keyed by it).
     player["fcplayerCardId"] = fcplayer_card.get("id")
     player["fcplayerMatchedClass"] = fcplayer_card.get("className")
-    card_skill_system = _fcplayer_card_skill_system(fcplayer_card)
-    if (
-        isinstance(fcplayer_card.get("skills"), list)
-        and fcplayer_card.get("skills")
-        and local_skill_system in {"", "skill"}
-        and card_skill_system == "skill"
-    ):
-        player["skills"] = fcplayer_card.get("skills")
-    if (
-        fcplayer_card.get("skillBoost")
-        and not player.get("skillBoostName")
-        and local_skill_system in {"", "boost"}
-        and card_skill_system == "boost"
-    ):
-        player["skillBoostName"] = fcplayer_card.get("skillBoost")
     return player
 
 
@@ -8154,7 +8155,10 @@ def _prepare_review_skill_display(player):
         if inferred:
             item["_required_base_slot"] = inferred[2]
         elif str(item["_review_kind"]).upper() == "ULTIMATE":
-            item["_required_base_slot"] = "B1" if idx % 2 == 0 else "B2"
+            slot_number = re.match(r"U(\d+)", str(item["_review_slot"]).upper())
+            item["_required_base_slot"] = (
+                f"B{slot_number.group(1)}" if slot_number else ("B1" if idx % 2 == 0 else "B2")
+            )
         else:
             item["_required_base_slot"] = ""
     skill_display = dict(skill_display)
