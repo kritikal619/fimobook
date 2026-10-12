@@ -7,7 +7,7 @@
 <meta property="og:site_name" content="피모북">
 <meta property="og:locale" content="ko_KR">
 <meta property="og:title" content="머니리그 | 피모북">
-<meta property="og:description" content="FC모바일 클랜 대항전 머니리그 경기 일정, 브라켓, 매치 정보를 확인하세요.">
+<meta property="og:description" content="FC모바일 클랜 대항전 머니리그 경기 일정, 브라켓, 매치 정보.">
 <meta property="og:url" content="{{ url_for('clanworldcup_home', _external=True) }}">
 <meta property="og:image" content="{{ url_for('static', filename='images/clanworldcup-logo.jpg', _external=True) }}">
 <meta property="og:image:alt" content="머니리그 대회 로고">
@@ -25,28 +25,28 @@
     --cw-radius:16px;
   }
 
-  /* ✅ 모바일 가로 튀어나옴 “안전장치” */
+  /* 모바일 가로 튀어나옴 “안전장치” */
   html, body { overflow-x: hidden; }
-  *, *::before, *::after { box-sizing: border-box; } /* 🔥 튀어나옴 방지 핵심 */
+  *, *::before, *::after { box-sizing: border-box; } /* 튀어나옴 방지 핵심 */
 
   .cw-page{
     width:100%;
     max-width: 100%;
     display:flex;
     justify-content:center;
-    padding: 18px 0; /* ✅ PC 그대로 */
-    overflow-x: hidden; /* 🔥 */
+    padding: 18px 0; /* PC 그대로 */
+    overflow-x: hidden; /* */
   }
 
   .cw-container{
     width:100%;
-    max-width: 980px;   /* ✅ PC 그대로 */
+    max-width: 980px;   /* PC 그대로 */
     margin: 0 auto;
-    padding: 0 14px;    /* ✅ PC 그대로 */
+    padding: 0 14px;    /* PC 그대로 */
     display:flex;
     flex-direction:column;
     gap:14px;
-    min-width: 0;       /* 🔥 flex/grid 내부 오버플로우 방지 */
+    min-width: 0;       /* flex/grid 내부 오버플로우 방지 */
   }
 
   .cw-hero{
@@ -329,7 +329,7 @@
     font-size: 14px;
   }
 
-  /* ✅ 모바일에서만: 상단은 base.html에서 처리했고, 여기선 “오른쪽 튀어나옴” 확실히 차단 */
+  /* 모바일에서만: 상단은 base.html에서 처리했고, 여기선 “오른쪽 튀어나옴” 확실히 차단 */
   @media (max-width: 640px){
     .cw-page{
       padding: 10px 0;
@@ -339,7 +339,7 @@
 
     .cw-container{
       padding: 0 8px;
-      max-width: min(980px, 100vw); /* 🔥 뷰포트 초과 방지 */
+      max-width: min(980px, 100vw); /* 뷰포트 초과 방지 */
       width: 100%;
       overflow-x: hidden;
     }
@@ -351,7 +351,7 @@
     .cw-actions{ width:100%; }
     .cw-link{ flex: 1 1 auto; justify-content:center; }
 
-    /* 🔥 인풋/셀렉트가 min-width로 튀는 것 완전 차단 */
+    /* 인풋/셀렉트가 min-width로 튀는 것 완전 차단 */
     .cw-input, .cw-select{ min-width: 0; width:100%; }
 
     .cw-row{ flex-direction: column; align-items: stretch; }

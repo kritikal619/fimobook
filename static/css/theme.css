@@ -966,14 +966,12 @@ html[data-theme="dark"] .other-classes::-webkit-scrollbar-thumb {
 /* Home carousel: the light career banner needs a true dark counterpart. */
 html[data-theme="dark"] .career-home-banner {
   border-color: #2f8065 !important;
-  background:
-    radial-gradient(circle at 84% 22%, rgba(52, 211, 153, .18), transparent 32%),
-    linear-gradient(118deg, #12251f 0%, #153329 55%, #173743 100%) !important;
+  background: #153329 !important;
   color: var(--dark-text) !important;
 }
 
 html[data-theme="dark"] .career-home-banner::before {
-  background: repeating-linear-gradient(135deg, transparent 0 24px, rgba(110, 231, 183, .04) 24px 25px) !important;
+  background: none !important;
 }
 
 html[data-theme="dark"] :is(.career-home-banner .prime-home-title, .career-home-banner .prime-home-kicker) {

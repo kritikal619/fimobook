@@ -18,7 +18,7 @@
   <meta property="og:site_name" content="피모북">
   <meta property="og:locale" content="ko_KR">
   <meta property="og:title" content="{{ og_title or '피모북 | FC모바일 선수 검색' }}">
-  <meta property="og:description" content="{{ og_description or 'FC모바일 선수 검색, 비교, 스쿼드 메이커, 쿠폰과 갱신시간 정보를 확인하세요.' }}">
+  <meta property="og:description" content="{{ og_description or 'FC모바일 선수 검색, 비교, 스쿼드 메이커, 쿠폰, 갱신시간.' }}">
   <meta property="og:url" content="{{ canonical_url or request.base_url }}">
   <meta property="og:image" content="{{ og_image_url or url_for('static', filename='images/fimobook-og.png', _external=True) }}">
   {% if not og_image_url %}
@@ -57,7 +57,7 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 20px 15px; /* ✅ PC 그대로 */
+      padding: 20px 15px; /* PC 그대로 */
       box-sizing: border-box;
     }
 
@@ -186,12 +186,12 @@
 
     .main-content {
       width: 100%;
-      max-width: 800px; /* ✅ PC 그대로 */
+      max-width: 800px; /* PC 그대로 */
       background: var(--panel);
       border-radius: 18px;
       box-shadow: 0 10px 24px rgba(15, 23, 42, 0.04);
       border: 1px solid var(--line);
-      padding: 30px 40px; /* ✅ PC 그대로 */
+      padding: 30px 40px; /* PC 그대로 */
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -458,10 +458,10 @@
       }
     }
 
-    /* ✅ 모바일: 상단바(피모북) 위 여백 추가 + 좌우 여백은 타이트 */
+    /* 모바일: 상단바(피모북) 위 여백 추가 + 좌우 여백은 타이트 */
     @media (max-width: 550px) {
       body {
-        padding: 18px 8px 10px; /* 🔥 상단 18px로 위 여백 추가 */
+        padding: 18px 8px 10px; /* 상단 18px로 위 여백 추가 */
         /* (상단바는 건드리지 않고 body padding으로만 처리) */
       }
 

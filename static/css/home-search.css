@@ -81,7 +81,7 @@
   max-width:620px;
 }
 
-/* ✅ 검색바: 넓게 + 슬림 + 버튼 정렬 */
+/* 검색바: 넓게 + 슬림 + 버튼 정렬 */
 .input-area input[type="text"]{
   width:100%;
   font-size:18px;
@@ -636,10 +636,7 @@
   align-items:center;
   border:1px solid rgba(128,236,224,.34);
   border-radius:17px;
-  background:
-    radial-gradient(circle at 83% 23%, rgba(225,111,230,.35), transparent 27%),
-    radial-gradient(circle at 68% 115%, rgba(61,210,200,.27), transparent 41%),
-    linear-gradient(118deg, #12182c 0%, #1a1940 56%, #302063 100%);
+  background:#1a1940;
   box-shadow:none;
   color:#fff;
   text-decoration:none;
@@ -651,9 +648,6 @@
   position:absolute;
   inset:0;
   z-index:-1;
-  background:
-    linear-gradient(115deg, transparent 0 51%, rgba(255,255,255,.07) 51.2% 51.8%, transparent 52%),
-    repeating-linear-gradient(135deg, transparent 0 22px, rgba(255,255,255,.025) 22px 23px);
   content:"";
 }
 .prime-home-content{
@@ -721,8 +715,6 @@
   width:92px;
   height:92px;
   border-radius:50%;
-  background:radial-gradient(circle, rgba(169,255,244,.25), rgba(191,91,226,.13) 52%, transparent 70%);
-  filter:blur(2px);
   content:"";
 }
 .prime-home-logo{
@@ -743,13 +735,11 @@
 @media(max-width:740px){.pack-home-banner .prime-home-kicker{font-size:9px}.pack-home-banner .pack-home-graphic{height:78px}.pack-home-moon{left:0;bottom:7px;width:31px;height:33px}}
 .career-home-banner{
   border-color:#86efac;
-  background:
-    radial-gradient(circle at 84% 22%, rgba(52,211,153,.16), transparent 31%),
-    linear-gradient(118deg, #f0fdf4 0%, #ecfdf5 55%, #ecfeff 100%);
+  background:#ecfdf5;
   color:#16352c;
 }
 .career-home-banner::before{
-  background:repeating-linear-gradient(135deg, transparent 0 24px, rgba(5,150,105,.035) 24px 25px);
+  background:none;
 }
 .career-home-banner .prime-home-kicker{ color:#047857; }
 .career-home-banner .prime-home-kicker::before{ background:#10b981; }
@@ -776,14 +766,10 @@
 }
 .power-ranking-home-banner{
   border-color:#8db7ff;
-  background:
-    radial-gradient(circle at 85% 24%, rgba(85,156,255,.34), transparent 28%),
-    linear-gradient(118deg, #10254a 0%, #163b70 56%, #1d5793 100%);
+  background:#163b70;
 }
 .power-ranking-home-banner::before{
-  background:
-    linear-gradient(115deg, transparent 0 51%, rgba(255,255,255,.08) 51.2% 51.8%, transparent 52%),
-    repeating-linear-gradient(135deg, transparent 0 24px, rgba(255,255,255,.045) 24px 25px);
+  background:none;
 }
 .power-ranking-home-banner .prime-home-kicker{ color:#bfdbfe; }
 .power-ranking-home-banner .prime-home-kicker::before{ background:#93c5fd; }
@@ -795,7 +781,6 @@
 .power-ranking-home-visual::before{
   width:94px;
   height:94px;
-  background:radial-gradient(circle, rgba(191,219,254,.33), rgba(59,130,246,.16) 52%, transparent 70%);
 }
 .power-ranking-home-board{
   position:relative;
@@ -806,7 +791,6 @@
   border:1px solid rgba(219,234,254,.45);
   border-radius:8px;
   background:rgba(10,31,62,.36);
-  box-shadow:0 8px 18px rgba(5,20,42,.18);
   transform:rotate(3deg);
 }
 .power-ranking-home-board span{

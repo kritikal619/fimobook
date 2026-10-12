@@ -3978,9 +3978,9 @@ def community():
             sidebar=_community_sidebar_context(),
             canonical_url=_canonical("/player-reviews"),
             robots_meta="noindex,follow" if review_is_filtered else "index,follow",
-            meta_description="FC모바일 선수리뷰를 포지션과 별점으로 검색하고, 실제 이용자들의 사용 후기와 평가를 확인하세요.",
+            meta_description="FC모바일 선수리뷰를 포지션과 별점으로 검색. 이용자 사용 후기와 평가.",
             og_title="FC모바일 선수리뷰, 사용 후기 | 피모북",
-            og_description="FC모바일 선수리뷰, 실제 사용 후기, 평점과 장단점을 확인하세요.",
+            og_description="FC모바일 선수리뷰, 사용 후기, 평점과 장단점.",
         )
 
     post_query = Post.query.filter(Post.board_type == active_board)
@@ -10021,7 +10021,7 @@ def index():
         robots_meta="index,follow",
         canonical_url=_canonical("/"),
         og_title="피모북 | FC모바일 선수검색·갱신시간·팀경력·쿠폰",
-        og_description="FC모바일 선수 이름, 시즌, 포지션, OVR을 검색하고 능력치와 시세를 확인하세요.",
+        og_description="FC모바일 선수 이름, 시즌, 포지션, OVR 검색. 능력치와 시세.",
         weekly_players=_get_weekly_players(),
         market_trends=_get_market_trends(),
         evolution_material_trends=_get_evolution_material_trends(),
@@ -10173,7 +10173,7 @@ def normal_mode_power_ranking():
         robots_meta="index,follow",
         canonical_url=_canonical("/normal-mode-power-ranking"),
         og_title="FC모바일 일반모드 파워랭킹 | 피모북",
-        og_description="FC모바일 일반모드 상위 랭커의 선수 사용 현황을 포지션별 랭킹과 시각화로 확인하세요.",
+        og_description="FC모바일 일반모드 상위 랭커의 선수 사용 현황. 포지션별 랭킹과 시각화.",
     )
 
 
@@ -10320,9 +10320,9 @@ def players_hub():
         total=total,
         canonical_url=canonical_url,
         robots_meta="index,follow",
-        meta_description="FC모바일 전체 선수 목록에서 선수 이름, 클래스, 포지션과 OVR 정보를 확인하고 상세 능력치를 살펴보세요.",
+        meta_description="FC모바일 전체 선수 목록. 이름, 클래스, 포지션, OVR과 상세 능력치.",
         og_title="FC모바일 전체 선수 목록과 정보 | 피모북",
-        og_description="FC모바일 선수 이름, 클래스, 포지션, OVR과 상세 정보를 확인하세요.",
+        og_description="FC모바일 선수 이름, 클래스, 포지션, OVR과 상세 정보.",
     )
 
 
@@ -10331,7 +10331,7 @@ def pack_opener_page():
     return render_template(
         "pack_opener.html",
         canonical_url=_canonical("/pack-opener"),
-        meta_description="FC모바일 공식 상점 확률표로 즐기는 무료 팩 오프너. 시즌별 연출과 선수 카드 뽑기를 체험하세요.",
+        meta_description="FC모바일 공식 상점 확률표를 그대로 쓴 무료 팩 오프너. 시즌별 팩 연출과 선수 카드 뽑기.",
         og_title="FC모바일 팩 오프너 | 피모북",
     )
 
@@ -10407,7 +10407,7 @@ def evolution_simulator_page():
     return render_template(
         "evolution_simulator.html",
         canonical_url=_canonical("/evolution-simulator"),
-        meta_description="FC모바일 선수 진화 시뮬레이터. 넥슨 공식 진화 확률표로 진화 성공률을 계산하고 실제와 같은 연출로 진화를 체험하세요.",
+        meta_description="FC모바일 선수 진화 시뮬레이터. 넥슨 공식 진화 확률표 기준으로 진화 성공률을 계산합니다.",
         og_title="FC모바일 진화 시뮬레이터 | 피모북",
         evolution_data=_evolution_probability_data(),
         evolution_materials=_evolution_materials(),
@@ -10576,7 +10576,7 @@ def player_detail(cid):
     ]
     player_summary = " · ".join(part for part in player_summary_parts if part)
     seo_description = (
-        f"{player_summary} 선수의 능력치, 특성, 스킬부스트, 진화별 시세와 사용자 리뷰를 피모북에서 확인하세요."
+        f"{player_summary} 선수의 능력치, 특성, 스킬부스트, 진화별 시세와 사용자 리뷰."
     )
     canonical_url = _canonical(f"/player/{detail_cid}")
     local_player_image = (
@@ -11584,7 +11584,7 @@ def traits_selection():
         max_player_height=max(player_heights) if player_heights else 210,
         canonical_url=_canonical("/traits_selection"),
         robots_meta="index,follow",
-        meta_description="FC모바일 선수를 이름, OVR, 가격, 포지션, 클래스, 키, 약발, 특성, 스킬, 플레이스타일, 활동량과 팀 경력으로 세부검색하세요.",
+        meta_description="FC모바일 선수를 이름, OVR, 가격, 포지션, 클래스, 키, 약발, 특성, 스킬, 플레이스타일, 활동량과 팀 경력으로 세부검색.",
         og_title="FC모바일 선수 세부검색 - 스탯과 특성, 스킬 필터 | 피모북",
         og_description="FC모바일 선수를 능력치, 클래스, 특성, 스킬, 플레이스타일과 팀 경력 조건으로 세부검색하세요.",
     )
@@ -11887,9 +11887,9 @@ def times():
         renewal_cards=_load_renewal_cards(),
         canonical_url=_canonical("/times"),
         robots_meta="index,follow",
-        meta_description="FC모바일 클래스별 갱신시간과 다음 갱신까지 남은 시간을 확인하세요. 클래스명, 시즌명과 통용 별칭으로 빠르게 검색할 수 있습니다.",
+        meta_description="FC모바일 클래스별 갱신시간과 다음 갱신까지 남은 시간. 클래스명, 시즌명, 통용 별칭으로 검색.",
         og_title="FC모바일 갱신시간 - 클래스별 다음 갱신 시간 | 피모북",
-        og_description="FC모바일 클래스별 갱신시간과 다음 갱신까지 남은 시간을 클래스명과 시즌명으로 검색해 확인하세요.",
+        og_description="FC모바일 클래스별 갱신시간과 다음 갱신까지 남은 시간. 클래스명, 시즌명으로 검색.",
     )
 
 

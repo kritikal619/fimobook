@@ -5,7 +5,7 @@
 {% for coupon in recent_coupons %}
   {% set coupon_seo.codes = coupon_seo.codes + [coupon.code] %}
 {% endfor %}
-{% set coupon_description = 'FC모바일 최신 등록 쿠폰: ' ~ (coupon_seo.codes | join(', ')) ~ '. 쿠폰별 보상과 만료 상태, 코드 복사 및 공식 등록 방법을 확인하세요.' if coupon_seo.codes else 'FC모바일 쿠폰 코드와 보상, 만료 상태 및 공식 쿠폰 등록 방법을 확인하세요.' %}
+{% set coupon_description = 'FC모바일 최신 등록 쿠폰: ' ~ (coupon_seo.codes | join(', ')) ~ '. 쿠폰별 보상, 만료 상태, 코드 복사, 공식 등록 방법.' if coupon_seo.codes else 'FC모바일 쿠폰 코드, 보상, 만료 상태, 공식 쿠폰 등록 방법.' %}
 {% set og_description = coupon_description %}
 
 {% block body_class %}coupon-page-body{% endblock %}

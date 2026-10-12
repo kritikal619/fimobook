@@ -7,18 +7,18 @@
 <meta property="og:site_name" content="피모북">
 <meta property="og:locale" content="ko_KR">
 <meta property="og:title" content="머니리그 브라켓 | 피모북">
-<meta property="og:description" content="머니리그 토너먼트 브라켓과 경기 진행 현황을 확인하세요.">
+<meta property="og:description" content="머니리그 토너먼트 브라켓과 경기 진행 현황.">
 <meta property="og:url" content="{{ url_for('clanworldcup_bracket', _external=True) }}">
 <meta property="og:image" content="{{ url_for('static', filename='images/clanworldcup-logo.jpg', _external=True) }}">
 <meta property="og:image:alt" content="머니리그 대회 로고">
 <style>
-  /* ✅ 페이지 전체 가로 overflow 방지 */
+  /* 페이지 전체 가로 overflow 방지 */
   html, body { overflow-x: hidden; }
 
-  /* ✅ 이 페이지 내부 box model 안정화 */
+  /* 이 페이지 내부 box model 안정화 */
   .cw-page, .cw-page * { box-sizing: border-box; }
 
-  /* ✅ base.html 영향 줄이고 중앙정렬 */
+  /* base.html 영향 줄이고 중앙정렬 */
   .cw-page{
     width:100%;
     display:flex;
@@ -97,7 +97,7 @@
     box-shadow: 0 10px 22px rgba(15,23,42,0.2);
   }
 
-  /* ✅ 브라켓 영역만 가로 스크롤 (페이지는 절대 안 튀어나오게) */
+  /* 브라켓 영역만 가로 스크롤 (페이지는 절대 안 튀어나오게) */
   .bracket{
     width:100%;
     max-width:100%;
@@ -108,7 +108,7 @@
     -webkit-overflow-scrolling: touch;
   }
 
-  /* ✅ grid가 컨테이너 밖으로 밀지 않도록 min-width:0 */
+  /* grid가 컨테이너 밖으로 밀지 않도록 min-width:0 */
   .bracket-inner{
     display:grid;
     grid-auto-flow: column;
@@ -116,7 +116,7 @@
     grid-auto-columns: clamp(220px, 26vw, 360px);
     gap:12px;
     min-width:0;
-    width:max-content; /* ✅ 내부는 길어져도, 스크롤은 bracket 안에서만 */
+    width:max-content; /* 내부는 길어져도, 스크롤은 bracket 안에서만 */
   }
 
   .round{
@@ -130,7 +130,7 @@
 
     min-width:0;
     max-width:100%;
-    overflow:hidden; /* ✅ 내부 요소가 삐져나오면 컷 */
+    overflow:hidden; /* 내부 요소가 삐져나오면 컷 */
   }
 
   .round h4{
@@ -174,7 +174,7 @@
     min-width:0;
     overflow:hidden;
     text-overflow:ellipsis;
-    white-space:nowrap; /* ✅ 긴 클랜명도 삐져나오지 않게 */
+    white-space:nowrap; /* 긴 클랜명도 삐져나오지 않게 */
   }
   .team .score{
     font-weight:800;
@@ -228,14 +228,14 @@
     min-width:0;
   }
 
-  /* ✅ 테이블이 부모 폭을 넘지 않게 */
+  /* 테이블이 부모 폭을 넘지 않게 */
   .group-table{
     width:100%;
     max-width:100%;
     border-collapse:collapse;
     font-size:13px;
     color:#1f2937;
-    table-layout:fixed; /* ✅ 셀 폭 고정해서 overflow 방지 */
+    table-layout:fixed; /* 셀 폭 고정해서 overflow 방지 */
   }
   .group-table th, .group-table td{
     padding:8px 6px;
@@ -253,7 +253,7 @@
   .group-team{ font-weight:700; }
   .group-sub{ color:#6b7280; font-size:12px; font-weight:600; }
 
-  /* ✅ 데스크탑: 굳이 스크롤 없이 꽉 차게 보이고 싶으면(선택) */
+  /* 데스크탑: 굳이 스크롤 없이 꽉 차게 보이고 싶으면(선택) */
   @media (min-width: 980px){
     /* 스크롤 유지해도 되고, 아래처럼 풀어도 됨 */
     /* .bracket { overflow-x: auto; } */

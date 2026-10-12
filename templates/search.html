@@ -5,7 +5,7 @@
 {% block title %}피모북 | FC모바일 선수검색·갱신시간·팀경력·쿠폰{% endblock %}
 
 {% block extra_head %}
-<meta name="description" content="FC모바일 선수 이름, 시즌, 포지션, OVR을 빠르게 검색하세요. 선수 능력치와 시세를 확인하고 선수 비교, 세부검색, 쿠폰 정보도 이용할 수 있습니다.">
+<meta name="description" content="FC모바일 선수 이름, 시즌, 포지션, OVR 검색. 능력치와 시세, 선수 비교, 세부검색, 쿠폰 정보.">
 <meta name="keywords" content="FC모바일, 쿠폰, 갱신시간, 스탯, 이적시장, 가격, 피모, 미페, 선수검색, 피모북, 데이터베이스, 세부검색, 능력치, 넥슨">
 <meta name="author" content="피모북">
 <meta name="robots" content="index, follow">
@@ -14,7 +14,7 @@
 <meta property="og:site_name" content="피모북 - FC모바일">
 <meta property="og:locale" content="ko_KR">
 <meta property="og:title" content="피모북 | FC모바일 선수검색·갱신시간·팀경력·쿠폰">
-<meta property="og:description" content="FC모바일 선수 이름, 시즌, 포지션, OVR을 검색하고 능력치와 시세를 확인하세요.">
+<meta property="og:description" content="FC모바일 선수 이름, 시즌, 포지션, OVR 검색. 능력치와 시세.">
 <meta property="og:url" content="{{ url_for('index', _external=True) }}">
 <meta property="og:image" content="{{ url_for('static', filename='images/fimobook-og.png', _external=True) }}">
 <meta property="og:image:width" content="1200">
@@ -23,7 +23,7 @@
 
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="피모북 | FC모바일 선수검색·갱신시간·팀경력·쿠폰">
-<meta name="twitter:description" content="FC모바일 선수를 빠르게 검색하고 비교하세요. 19,000명 이상의 선수 데이터와 세부검색 기능을 제공합니다.">
+<meta name="twitter:description" content="FC모바일 선수 검색과 비교, 세부검색.">
 <meta name="twitter:image" content="{{ url_for('static', filename='images/fimobook-og.png', _external=True) }}">
 
 <script type="application/ld+json">
@@ -34,7 +34,7 @@
   "alternateName": "FIMOBOOK",
   "url": "{{ url_for('index', _external=True) }}",
   "inLanguage": "ko-KR",
-  "description": "FC모바일 선수 검색, 능력치와 시세 확인, 선수 비교와 쿠폰 정보를 제공하는 데이터베이스"
+  "description": "FC모바일 선수 검색, 능력치와 시세, 선수 비교, 쿠폰 정보 데이터베이스"
 }
 </script>
 
@@ -57,7 +57,7 @@
   border:0;
 }
 </style>
-<link rel="stylesheet" href="{{ url_for('static', filename='css/home-search.css', v='20261011-2') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/home-search.css', v='20261012-flat-1') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/home-mobile-shortcuts.css') }}?v=20261010">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/home-quiet.css') }}?v=20261011-1">
 {% endblock %}
@@ -224,7 +224,7 @@
         <a class="prime-home-banner career-home-banner" href="{{ url_for('traits_selection') }}" aria-label="전체경력을 포함해 선수 세부검색하기">
           <span class="prime-home-content">
             <strong class="prime-home-title">전체경력으로 선수검색</strong>
-            <span class="prime-home-desc">현재 팀뿐 아니라 이전 소속팀 경력까지 포함해서 찾아보세요.</span>
+            <span class="prime-home-desc">현재 팀과 이전 소속팀 경력까지 검색합니다.</span>
             <span class="prime-home-cta">선수 세부검색 열기 <i class="bi bi-arrow-right" aria-hidden="true"></i></span>
           </span>
           <span class="prime-home-visual career-home-visual" aria-hidden="true">
