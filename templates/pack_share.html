@@ -3,7 +3,7 @@
 {% block body_class %}pack-share-page{% endblock %}
 {% block extra_head %}
 <meta name="description" content="{{ meta_description }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/pack-share.css', v='20261012-4') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/pack-share.css', v='20261012-6') }}">
 {% endblock %}
 {% block content %}
 <section class="pack-share">
@@ -14,9 +14,9 @@
     </header>
 
     {% if players %}
-      <div class="share-cards" data-count="{{ players|length }}">
+      <div class="share-cards">
         {% for p in players %}
-          <a class="share-card{{ ' is-best' if loop.first }}" href="{{ url_for('player_detail', cid=p.cid) }}" aria-label="{{ p.className }} {{ p.playerKor }} OVR {{ p.ovr }}{% if p.enhance %} {{ p.enhance }}진화{% endif %}">
+          <a class="share-card" href="{{ url_for('player_detail', cid=p.cid) }}" aria-label="{{ p.className }} {{ p.playerKor }} OVR {{ p.ovr }}{% if p.enhance %} {{ p.enhance }}진화{% endif %}">
             <span class="share-card-art" data-fimo-player-card='{{ player_card_meta(p.cid)|tojson }}' data-fimo-card-ovr="{{ p.ovr }}" data-fimo-card-enhance="{{ p.enhance }}">
               <img class="card-background" src="{{ player_thumbnail_url('card', p.cid, 256) or url_for('static', filename='images/card-background-placeholder.svg') }}" alt="" decoding="async">
               <img class="card-face" src="{{ player_thumbnail_url('faceon', p.cid, 256) or url_for('static', filename='apple-touch-icon.png') }}" alt="" decoding="async">
@@ -32,6 +32,6 @@
     {% endif %}
   </div>
 
-  <a class="share-open" href="{{ url_for('pack_opener_page') }}">팩 열기 <span aria-hidden="true">→</span></a>
+  <a class="share-open" href="{{ url_for('pack_opener_page') }}">나도 팩 열기 <span aria-hidden="true">→</span></a>
 </section>
 {% endblock %}

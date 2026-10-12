@@ -42,15 +42,15 @@ body.pack-share-page .main-content {
 }
 
 .share-cards {
-  display: grid;
-  grid-template-columns: 1.6fr repeat(4, 1fr);
-  align-items: end;
-  gap: 14px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 16px;
   margin: 26px 0 10px;
 }
-.share-cards[data-count="1"] { grid-template-columns: minmax(0, 260px); justify-content: center; }
 .share-card {
   display: block;
+  flex: 0 0 calc((100% - 64px) / 5);
   min-width: 0;
   color: inherit;
   text-align: center;
@@ -73,7 +73,6 @@ body.pack-share-page .main-content {
   white-space: nowrap;
   text-overflow: ellipsis;
 }
-.share-card.is-best .share-card-class { color: #ccff00; font-size: 12px; }
 
 .share-stage-value {
   margin: 8px 0 0;
@@ -97,13 +96,13 @@ body.pack-share-page .main-content {
   margin: 16px 0 0 auto;
   padding: 9px 28px;
   border-radius: 5px;
-  background: #cfff00;
-  color: #13200b;
+  background: var(--brand-dark);
+  color: #ffffff;
   font-size: 15px;
   font-weight: 800;
   text-decoration: none;
 }
-.share-open:hover { background: #bfe800; color: #13200b; text-decoration: none; }
+.share-open:hover { background: var(--brand-dark); color: #ffffff; filter: brightness(.92); text-decoration: none; }
 .share-open span { margin-left: 16px; }
 
 @media (max-width: 640px) {
@@ -112,10 +111,9 @@ body.pack-share-page .main-content {
   .share-stage-top { flex-direction: column; gap: 2px; }
   .share-stage-top h1 { font-size: 15px; }
   .share-stage-top span { font-size: 12px; }
-  .share-cards { grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 16px; }
-  .share-card.is-best { grid-column: 1 / -1; justify-self: center; width: 54%; }
-  .share-card:not(.is-best) .share-card-class { display: none; }
-  .share-cards[data-count="1"] { grid-template-columns: 1fr; }
+  .share-cards { gap: 10px; margin-top: 16px; }
+  .share-card { flex-basis: calc((100% - 20px) / 3); }
+  .share-card-class { display: none; }
   .share-stage-value { font-size: 17px; }
   .share-open { width: 100%; box-sizing: border-box; }
 }
