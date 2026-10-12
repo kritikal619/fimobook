@@ -39,3 +39,8 @@ __pycache__/
 # Local work logs and deployment snapshots (contain production paths and source copies)
 /artifacts/
 /reports/
+
+# Local operating notes (production host details); kept on disk, not published
+/CLAUDE.md
+/AGENTS.md
+/docs/claude-deployment.md
