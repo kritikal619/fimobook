@@ -20,10 +20,12 @@ class MarketFeeCalculatorTest(unittest.TestCase):
     def test_formula_is_applied_in_template(self):
         template = Path("templates/market_fee_calculator.html").read_text(encoding="utf-8")
 
-        self.assertIn("var baseFee = salePrice * 0.3;", template)
-        self.assertIn("var paybackAmount = baseFee * (paybackRate / 100);", template)
-        self.assertIn("var netAmount = salePrice - actualFee;", template)
-        self.assertIn('rateFormatter.format(effectiveRate) + "%"', template)
+        self.assertIn("var FEE = 0.3;", template)
+        self.assertIn("var baseFee = price * FEE;", template)
+        self.assertIn("var payback = baseFee * (rate / 100);", template)
+        self.assertIn("var actualFee = baseFee - payback;", template)
+        self.assertIn("net: price - actualFee", template)
+        self.assertIn('rateFormatter.format(current.effective) + "%"', template)
 
 
 if __name__ == "__main__":

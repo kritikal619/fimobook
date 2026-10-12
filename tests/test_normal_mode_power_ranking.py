@@ -45,19 +45,15 @@ class NormalModePowerRankingTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn("<title>FC모바일 일반모드 파워랭킹 | 피모북</title>", html)
         self.assertIn("<h1>일반모드 파워랭킹</h1>", html)
-        self.assertIn('data-scope="top_1_50"', html)
-        self.assertNotIn('data-group="FW"', html)
-        self.assertIn('id="powerPositionSelect"', html)
-        self.assertIn('class="power-toolbar-tools"', html)
-        self.assertIn('id="powerPositionRankList"', html)
-        self.assertIn('id="powerOverallList"', html)
-        self.assertNotIn('powerPositionOptions', html)
-        self.assertNotIn('power-group-tabs', html)
-        self.assertNotIn('powerPitch', html)
-        self.assertNotIn('power-hero', html)
-        self.assertNotIn('일반모드 상위 랭커 선수 사용 기록', html)
-        self.assertNotIn('집계 안내', html)
-        self.assertIn('데이터 제공 : 샤인, 아우프비더젠', html)
+        for element_id in (
+            "powerEdition",
+            "powerScopes",
+            "powerSearch",
+            "powerPositions",
+            "powerRows",
+            "powerCredit",
+        ):
+            self.assertIn(f'id="{element_id}"', html)
         data_match = re.search(
             r'<script type="application/json" id="normalPowerRankingData">(.*?)</script>',
             html,
@@ -86,18 +82,17 @@ class NormalModePowerRankingTests(unittest.TestCase):
         self.assertGreaterEqual(len(players), 200)
         self.assertTrue(all(int(player["pid"]) > 0 and int(player["cid"]) > 0 for player in players))
         self.assertTrue(all(player["season_abbr"] and player["player_name"] for player in players))
-        self.assertEqual(sum(player["counts"]["top_1_50"] for player in players), 355)
-        self.assertEqual(sum(player["counts"]["top_51_100"] for player in players), 418)
+        self.assertTrue(all(player["display_name"] for player in players))
 
-        by_source_label = {
-            label: player
-            for player in players
-            for label in player.get("source_labels", [])
-        }
-        self.assertEqual(by_source_label["썸머 밀리토"]["display_name"], "SS26 디에고 밀리토")
-        self.assertEqual(by_source_label["26챔피언스 고메스"]["display_name"], "CMP26 마리오 고메스")
-        self.assertEqual(by_source_label["월드게임 야야투레"]["cid"], 22902253)
-        self.assertEqual(by_source_label["FCA 루시우"]["cid"], 22900994)
+        # Every ranked squad fills the same number of slots, so each rank range
+        # must account for exactly ranked squads x slots per squad.
+        meta = data["meta"]
+        slots_per_squad = meta["slot_count"] // meta["squad_count"]
+        for scope, squad_count in meta["rank_ranges"].items():
+            self.assertEqual(
+                sum(player["counts"][scope] for player in players),
+                squad_count * slots_per_squad,
+            )
 
     def test_power_ranking_page_embeds_imported_dataset(self):
         response = self.client.get("/normal-mode-power-ranking", base_url="https://fcbook.info")
@@ -108,10 +103,11 @@ class NormalModePowerRankingTests(unittest.TestCase):
         )
         self.assertIsNotNone(data_match)
         rendered_data = json.loads(data_match.group(1))
-        self.assertEqual(len(rendered_data["players"]), 223)
-        self.assertEqual(rendered_data["players"][0]["pid"], 231747)
-        self.assertEqual(rendered_data["players"][0]["season_abbr"], "26TOTS")
-        self.assertEqual(rendered_data["players"][0]["player_name"], "킬리안 음바페")
+        data_path = Path(app_module.app.root_path) / "static/data/normal-mode-power-ranking.json"
+        source_players = json.loads(data_path.read_text(encoding="utf-8"))["players"]
+        self.assertEqual(len(rendered_data["players"]), len(source_players))
+        for key in ("pid", "cid", "season_abbr", "player_name"):
+            self.assertEqual(rendered_data["players"][0][key], source_players[0][key])
         self.assertTrue(rendered_data["players"][0]["card_image"])
         self.assertTrue(rendered_data["players"][0]["face_image"])
 

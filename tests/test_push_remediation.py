@@ -1,3 +1,4 @@
+import os
 import unittest
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
@@ -7,9 +8,18 @@ from unittest import mock
 import app as app_module
 import jobs.coupon_push_job as coupon_push_job
 
+# setUp empties the push tables, so never run against the local development DB.
+_LOCAL_DEVELOPMENT_DB = os.path.join(app_module.app.root_path, "instance", "board.db")
+
+
+def _skip_on_local_development_db(test_case):
+    if os.path.abspath(app_module.db_path) == os.path.abspath(_LOCAL_DEVELOPMENT_DB):
+        test_case.skipTest("Run with an isolated database, e.g. scripts/run_local_tests.py")
+
 
 class PushRegistrationTests(unittest.TestCase):
     def setUp(self):
+        _skip_on_local_development_db(self)
         app_module.app.config.update(
             TESTING=True,
             WTF_CSRF_ENABLED=False,
@@ -141,6 +151,7 @@ class PushRegistrationTests(unittest.TestCase):
 
 class CouponPushJobTests(unittest.TestCase):
     def setUp(self):
+        _skip_on_local_development_db(self)
         with app_module.app.app_context():
             app_module.db.session.remove()
             app_module.PushToken.query.delete()

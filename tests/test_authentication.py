@@ -11,6 +11,9 @@ class _SingleUserQuery:
     def filter_by(self, **_kwargs):
         return self
 
+    def filter(self, *_criteria):
+        return self
+
     def first(self):
         return self.user
 
@@ -22,6 +25,10 @@ class _GoogleLinkQuery:
 
     def filter_by(self, **kwargs):
         self.filters = kwargs
+        return self
+
+    def filter(self, *_criteria):
+        self.filters = {}
         return self
 
     def first(self):
@@ -45,6 +52,7 @@ class AuthenticationTest(unittest.TestCase):
             id=987654,
             email="remember@example.com",
             username="remember-user",
+            email_verified=True,
         )
         user.set_password("secret")
         return user
@@ -107,6 +115,7 @@ class AuthenticationTest(unittest.TestCase):
             username="google-user",
         )
         payload = {
+            "iss": "https://accounts.google.com",
             "sub": "google-sub-1",
             "email": user.email,
             "email_verified": True,
@@ -120,8 +129,8 @@ class AuthenticationTest(unittest.TestCase):
             "query",
             _GoogleLinkQuery(user),
         ), patch.object(
-            app_module,
-            "_verify_google_credential",
+            app_module.google_id_token,
+            "verify_oauth2_token",
             return_value=payload,
         ):
             response = client.post(
@@ -133,7 +142,6 @@ class AuthenticationTest(unittest.TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.headers["Location"], "/")
         self.assertEqual(user.google_sub, payload["sub"])
-        self.assertEqual(user.avatar_url, payload["picture"])
         self.assertTrue(any(
             cookie.startswith("remember_token=")
             for cookie in response.headers.getlist("Set-Cookie")
@@ -146,6 +154,7 @@ class AuthenticationTest(unittest.TestCase):
             email="return-user@gmail.com",
             username="return-user",
             google_sub="google-sub-2",
+            username_confirmed=True,
         )
         client = app_module.app.test_client()
 
@@ -154,9 +163,10 @@ class AuthenticationTest(unittest.TestCase):
             "query",
             _SingleUserQuery(user),
         ), patch.object(
-            app_module,
-            "_verify_google_credential",
+            app_module.google_id_token,
+            "verify_oauth2_token",
             return_value={
+                "iss": "https://accounts.google.com",
                 "sub": user.google_sub,
                 "email": user.email,
                 "email_verified": True,

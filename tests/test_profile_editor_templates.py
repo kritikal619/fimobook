@@ -60,7 +60,7 @@ class ProfileEditorTemplateTest(unittest.TestCase):
             'html[data-theme="dark"] .post-editor-page .post-editor-submit',
             theme_css,
         )
-        self.assertIn("post-editor-dark-20260907", html)
+        self.assertIn("css/theme.css?v=", html)
 
 
 if __name__ == "__main__":
