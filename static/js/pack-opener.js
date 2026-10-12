@@ -468,24 +468,32 @@
     $('open-pack').hidden = false; $('show-results').hidden = true;
     $('stage-status').textContent = ''; updateQuantityCost();
     $('reward-flow').hidden = true;
-    if (!state.result?.shareUrl) $('share-result').hidden = true;
+  }
+  // The last finished result stays shareable until another pack is opened or selected.
+  function setShare(result) {
+    const best = result && visibleRewards(result).find(reward => reward.kind === 'player');
+    state.share = result?.shareUrl ? {
+      url: new URL(result.shareUrl, location.origin).href,
+      text: best ? `${best.season} ${best.playerKor} OVR ${best.ovr} · ${result.packName}` : result.packName,
+    } : null;
+    const button = $('share-result'); button.hidden = !state.share; button.textContent = '결과 공유';
   }
   async function shareResult() {
-    if (!state.result?.shareUrl) return;
-    const url = new URL(state.result.shareUrl, location.origin).href;
-    const best = visibleRewards(state.result).find(reward => reward.kind === 'player');
-    const text = best ? `${state.result.packName}에서 ${best.season} ${best.playerKor} OVR ${best.ovr} 획득!` : `${state.result.packName} 개봉 결과`;
-    const notice = message => { $('reward-flow').hidden ? error(message) : ($('reward-flow-status').textContent = message); };
+    if (!state.share) return;
+    const {url, text} = state.share, button = $('share-result');
     if (navigator.share) {
       try { await navigator.share({title: '피모북 팩 오프너', text, url}); return; }
       catch (shareError) { if (shareError?.name === 'AbortError') return; }
     }
-    try { await navigator.clipboard.writeText(url); notice('공유 링크를 복사했어요'); }
-    catch (_) { window.prompt('아래 링크를 복사해 공유하세요', url); }
+    try {
+      await navigator.clipboard.writeText(url);
+      button.textContent = '복사됨';
+      setTimeout(() => { button.textContent = '결과 공유'; }, 1500);
+    } catch (_) { window.prompt('공유 링크', url); }
   }
   function selectPack(pack) {
     if (state.busy) return;
-    state.selected = pack; state.result = null; error(''); resetStage();
+    state.selected = pack; state.result = null; error(''); resetStage(); setShare(null);
     $('pack-results').hidden = true; $('stage-pack-name').textContent = pack.name;
     $('selected-pack-name').textContent = pack.name;
     $('selected-pack-price').replaceChildren(shopPrice(pack));
@@ -675,7 +683,7 @@
   }
   function showRewardStep() {
     phase('reward-step'); $('reward-step').hidden = false; $('reward-summary').hidden = true;
-    $('reveal-all').hidden = false; $('reward-next').hidden = true; $('flow-replay').hidden = true; $('flow-share').hidden = true;
+    $('reveal-all').hidden = false; $('reward-next').hidden = true; $('flow-replay').hidden = true;
     const reward = state.flowRewards[state.flowIndex], remaining = state.flowRewards.length - state.flowIndex - 1;
     const current = $('reward-current'); current.replaceChildren(rewardCard(reward));
     current.dataset.kind = reward.kind;
@@ -708,7 +716,7 @@
     setBusy(false);
     $('reward-step').hidden = true; $('reward-summary').hidden = false;
     $('reveal-all').hidden = true; $('reward-next').hidden = false; $('flow-replay').hidden = false;
-    $('flow-share').hidden = $('share-result').hidden = !state.result.shareUrl;
+    setShare(state.result);
     renderSummaryRewards();
     flash();
   }
@@ -747,7 +755,7 @@
     if (!Number.isInteger(quantity) || quantity < 1 || quantity > 100) {
       error('열 팩 수량은 1~100개로 입력해주세요.'); $('pack-quantity').focus(); return;
     }
-    state.result = null; resetStage();
+    state.result = null; resetStage(); setShare(null);
     setBusy(true); phase('loading'); error(''); $('stage-status').textContent = '';
     try {
       state.result = await request('/api/pack-opener/draw', {method: 'POST', headers: {'Content-Type': 'application/json',
@@ -818,7 +826,6 @@
   $('show-results').addEventListener('click', () => showResults('', true));
   $('replay-opening').addEventListener('click', () => { if (!state.busy) replayOpening(); });
   $('flow-replay').addEventListener('click', replayOpening);
-  $('flow-share').addEventListener('click', shareResult);
   $('share-result').addEventListener('click', shareResult);
   $('reward-pack').addEventListener('click', advanceReward);
   $('reward-current').addEventListener('click', advanceReward);

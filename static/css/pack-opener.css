@@ -265,5 +265,5 @@ html.pack-fullscreen{overflow:hidden}
 @keyframes gentle-opening-glow{0%{opacity:0}35%{opacity:.28}100%{opacity:0}}
 @keyframes gentle-card-reveal{from{opacity:0;transform:translateY(-2%)}to{opacity:1;transform:translateY(-2%)}}
 @keyframes gentle-opening-hint{from{opacity:0}to{opacity:1}}
-.reward-flow-actions .flow-share{background:#cfff00;color:#13200b}
+.selected-pack-actions{display:flex;gap:6px;flex-shrink:0}
 .history-best{padding-top:14px}.history-subtitle{margin:0;font-size:13px;color:var(--pack-muted)}.history-best .history-list{padding-top:8px}#history-recent-title{margin-top:12px}#history-recent-title:not([hidden])+.history-list{padding-top:8px}

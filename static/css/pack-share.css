@@ -77,11 +77,6 @@
   text-decoration: none;
 }
 .pack-share-cta:hover { background: #047857; color: #ffffff; text-decoration: none; }
-.pack-share-note {
-  margin: 14px 0 0;
-  color: #94a3b8;
-  font-size: 12px;
-}
 html[data-theme="dark"] .pack-share h1,
 html[data-theme="dark"] :is(.pack-share-ovr, .pack-share-name strong) { color: #f8fafc; }
 html[data-theme="dark"] .pack-share-list a { border-color: #334155; background: #111a2b; }

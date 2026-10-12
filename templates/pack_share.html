@@ -3,7 +3,7 @@
 {% block body_class %}pack-share-page{% endblock %}
 {% block extra_head %}
 <meta name="description" content="{{ meta_description }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/pack-share.css', v='20261012-1') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/pack-share.css', v='20261012-2') }}">
 {% endblock %}
 {% block content %}
 <section class="pack-share">
@@ -26,6 +26,5 @@
   {% endif %}
 
   <a class="pack-share-cta" href="{{ url_for('pack_opener_page') }}">나도 팩 열어보기</a>
-  <p class="pack-share-note">넥슨 공식 상점 확률표 기준 체험 기능입니다. 결과는 실제 게임 계정에 지급되지 않습니다.</p>
 </section>
 {% endblock %}
