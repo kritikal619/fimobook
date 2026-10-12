@@ -1,86 +1,121 @@
-.pack-share {
+body.pack-share-page .main-content {
   width: 100%;
-  max-width: 560px;
-  margin: 24px auto 40px;
-  padding: 0 16px;
+  max-width: 980px;
+  padding: 12px 20px 36px !important;
   box-sizing: border-box;
-  text-align: center;
 }
-.pack-share-kicker {
-  margin: 0 0 6px;
-  color: #059669;
-  font-size: 13px;
-  font-weight: 800;
+.pack-share { width: 100%; }
+
+.share-stage {
+  position: relative;
+  padding: 22px 26px 20px;
+  border-radius: 9px;
+  overflow: hidden;
+  isolation: isolate;
+  color: #fff;
+  background: #04070d url('/static/pack-opener/images/background.png') center / cover;
 }
-.pack-share h1 {
+.share-stage::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(#0000 55%, #000a);
+}
+.share-stage-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+.share-stage-top h1 {
   margin: 0;
-  color: #17202a;
-  font-size: 24px;
-  letter-spacing: -0.5px;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.5;
+  text-shadow: 0 2px 8px #0008;
 }
-.pack-share-meta {
-  margin: 8px 0 20px;
-  color: #64748b;
-  font-size: 14px;
+.share-stage-top span {
+  flex-shrink: 0;
+  color: #b4d1c6;
+  font-size: 13px;
 }
-.pack-share-list {
+
+.share-cards {
   display: grid;
-  gap: 8px;
-  margin: 0 0 20px;
-  padding: 0;
-  list-style: none;
-  text-align: left;
+  grid-template-columns: 1.6fr repeat(4, 1fr);
+  align-items: end;
+  gap: 14px;
+  margin: 26px 0 10px;
 }
-.pack-share-list li { display: block; }
-.pack-share-list a {
-  display: grid;
-  grid-template-columns: 48px 44px minmax(0, 1fr);
-  gap: 10px;
-  align-items: center;
-  padding: 8px 12px;
-  border: 1px solid #dde5ee;
-  border-radius: 12px;
-  background: #ffffff;
+.share-cards[data-count="1"] { grid-template-columns: minmax(0, 260px); justify-content: center; }
+.share-card {
+  display: block;
+  min-width: 0;
   color: inherit;
+  text-align: center;
   text-decoration: none;
 }
-.pack-share-list .is-best a { border-color: #fbbf24; background: #fffbeb; }
-.pack-share-list img {
-  width: 48px;
-  height: 48px;
-  border-radius: 10px;
-  background: #f1f5f9;
-  object-fit: cover;
+.share-card:hover { text-decoration: none; }
+.share-card:hover .share-card-art { transform: translateY(-3px); }
+.share-card-art {
+  display: block;
+  width: 100%;
+  transition: transform .15s;
+  filter: drop-shadow(0 10px 16px #0008);
 }
-.pack-share-ovr {
-  color: #17202a;
-  font-size: 20px;
-  font-weight: 800;
-  text-align: center;
-}
-.pack-share-name { display: grid; min-width: 0; }
-.pack-share-name strong,
-.pack-share-name small {
+.share-card-class {
+  display: block;
+  margin-top: 4px;
   overflow: hidden;
+  color: #b4d1c6;
+  font-size: 11px;
   white-space: nowrap;
   text-overflow: ellipsis;
 }
-.pack-share-name strong { color: #17202a; font-size: 15px; }
-.pack-share-name small { color: #64748b; font-size: 12px; }
-.pack-share-cta {
-  display: inline-block;
-  padding: 12px 28px;
-  border-radius: 999px;
-  background: #059669;
-  color: #ffffff;
+.share-card.is-best .share-card-class { color: #ccff00; font-size: 12px; }
+
+.share-stage-value {
+  margin: 8px 0 0;
+  font-size: 20px;
+  font-weight: 800;
+  text-shadow: 0 2px 8px #0008;
+}
+.share-stage-value span {
+  margin-right: 6px;
+  color: #b4d1c6;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.share-open {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: fit-content;
+  min-height: 44px;
+  margin: 16px 0 0 auto;
+  padding: 9px 28px;
+  border-radius: 5px;
+  background: #cfff00;
+  color: #13200b;
+  font-size: 15px;
   font-weight: 800;
   text-decoration: none;
 }
-.pack-share-cta:hover { background: #047857; color: #ffffff; text-decoration: none; }
-html[data-theme="dark"] .pack-share h1,
-html[data-theme="dark"] :is(.pack-share-ovr, .pack-share-name strong) { color: #f8fafc; }
-html[data-theme="dark"] .pack-share-list a { border-color: #334155; background: #111a2b; }
-html[data-theme="dark"] .pack-share-list .is-best a { border-color: #b45309; background: #2a1f0b; }
-html[data-theme="dark"] .pack-share-list img { background: #1e293b; }
-html[data-theme="dark"] :is(.pack-share-meta, .pack-share-name small) { color: #94a3b8; }
-html[data-theme="dark"] .pack-share-kicker { color: #34d399; }
+.share-open:hover { background: #bfe800; color: #13200b; text-decoration: none; }
+.share-open span { margin-left: 16px; }
+
+@media (max-width: 640px) {
+  body.pack-share-page .main-content { padding: 8px 14px 28px !important; }
+  .share-stage { padding: 16px 14px 14px; }
+  .share-stage-top { flex-direction: column; gap: 2px; }
+  .share-stage-top h1 { font-size: 15px; }
+  .share-stage-top span { font-size: 12px; }
+  .share-cards { grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 16px; }
+  .share-card.is-best { grid-column: 1 / -1; justify-self: center; width: 54%; }
+  .share-card:not(.is-best) .share-card-class { display: none; }
+  .share-cards[data-count="1"] { grid-template-columns: 1fr; }
+  .share-stage-value { font-size: 17px; }
+  .share-open { width: 100%; box-sizing: border-box; }
+}
