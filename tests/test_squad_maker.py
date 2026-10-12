@@ -6,6 +6,7 @@ from unittest.mock import patch
 from PIL import Image
 
 import app as app_module
+import player_teams
 from tests.browser_session import page_client
 
 
@@ -48,7 +49,7 @@ class SquadMakerTest(unittest.TestCase):
         self.assertEqual(current_response.get_json(), [])
 
         with patch.object(
-            app_module,
+            player_teams,
             "_extend_career_index_with_external_data",
             side_effect=lambda career_index: career_index,
         ):

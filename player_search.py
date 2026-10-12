@@ -57,6 +57,10 @@ def _normalize_filter_text(value):
     return re.sub(r"\s+", "", str(value or "").strip()).lower()
 
 
+def _normalize_name_for_match(value):
+    return re.sub(r"\s+", "", (value or "")).lower()
+
+
 def price_enhance_arg(args, *, max_enhance_level):
     level = _filter_int_arg(args, "price_enhance", default=0, minimum=0)
     return level if level is not None and level <= max_enhance_level else 0
