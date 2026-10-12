@@ -9,6 +9,7 @@ from unittest.mock import patch
 from PIL import Image
 
 import app as app_module
+import moneyleague
 
 
 class _Snapshot:
@@ -75,14 +76,14 @@ class MoneyLeagueUploadLimitsTest(unittest.TestCase):
         mismatched_signature = app_module._validated_moneyleague_screenshot(
             _UploadedFile("clan.jpg", _png_bytes())
         )
-        old_pixel_limit = app_module.MONEYLEAGUE_MAX_IMAGE_PIXELS
-        app_module.MONEYLEAGUE_MAX_IMAGE_PIXELS = 64
+        old_pixel_limit = moneyleague.MONEYLEAGUE_MAX_IMAGE_PIXELS
+        moneyleague.MONEYLEAGUE_MAX_IMAGE_PIXELS = 64
         try:
             excessive_dimensions = app_module._validated_moneyleague_screenshot(
                 _UploadedFile("clan.png", _png_bytes((9, 9)))
             )
         finally:
-            app_module.MONEYLEAGUE_MAX_IMAGE_PIXELS = old_pixel_limit
+            moneyleague.MONEYLEAGUE_MAX_IMAGE_PIXELS = old_pixel_limit
 
         self.assertIsNotNone(valid)
         self.assertIsNone(mismatched_signature)
@@ -138,8 +139,8 @@ class MoneyLeagueUploadLimitsTest(unittest.TestCase):
             "daily_clients": {},
         }
         fake_firestore = _FakeFirestore(quota)
-        old_total_limit = app_module.MONEYLEAGUE_MAX_TOTAL_COMMENT_WRITES
-        app_module.MONEYLEAGUE_MAX_TOTAL_COMMENT_WRITES = 1
+        old_total_limit = moneyleague.MONEYLEAGUE_MAX_TOTAL_COMMENT_WRITES
+        moneyleague.MONEYLEAGUE_MAX_TOTAL_COMMENT_WRITES = 1
         try:
             with patch.object(app_module, "fs", fake_firestore), patch.object(
                 app_module.firestore, "transactional", lambda callback: callback
@@ -155,7 +156,7 @@ class MoneyLeagueUploadLimitsTest(unittest.TestCase):
                     "comment", 600, "d" * 64
                 )
         finally:
-            app_module.MONEYLEAGUE_MAX_TOTAL_COMMENT_WRITES = old_total_limit
+            moneyleague.MONEYLEAGUE_MAX_TOTAL_COMMENT_WRITES = old_total_limit
 
         self.assertEqual(fake_firestore.quota_reference.data["active_comments"], 0)
         self.assertEqual(fake_firestore.quota_reference.data["active_comment_bytes"], 0)
@@ -197,8 +198,8 @@ class MoneyLeagueUploadLimitsTest(unittest.TestCase):
             "daily_clients": {},
         }
         fake_firestore = _FakeFirestore(quota)
-        old_client_limit = app_module.MONEYLEAGUE_MAX_DAILY_CLIENT_WRITES
-        app_module.MONEYLEAGUE_MAX_DAILY_CLIENT_WRITES = 1
+        old_client_limit = moneyleague.MONEYLEAGUE_MAX_DAILY_CLIENT_WRITES
+        moneyleague.MONEYLEAGUE_MAX_DAILY_CLIENT_WRITES = 1
         try:
             with patch.object(app_module, "fs", fake_firestore), patch.object(
                 app_module.firestore, "transactional", lambda callback: callback
@@ -210,7 +211,7 @@ class MoneyLeagueUploadLimitsTest(unittest.TestCase):
                     "registration", 10, "a" * 64, new_registration=True
                 )
         finally:
-            app_module.MONEYLEAGUE_MAX_DAILY_CLIENT_WRITES = old_client_limit
+            moneyleague.MONEYLEAGUE_MAX_DAILY_CLIENT_WRITES = old_client_limit
 
         self.assertEqual(first, "ok")
         self.assertEqual(second, "client_limit")
