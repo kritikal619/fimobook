@@ -1,6 +1,6 @@
 """Cheaper alternative cards for the player detail page.
 
-Candidates play a compatible position at a nearby OVR. Similarity is the
+Candidates play a compatible position at a nearby OVR and height. Similarity is the
 position-weighted gap across detailed stats, using the in-game training
 importance tiers for that position, so a striker is judged mostly on
 shooting/heading/positioning and a centre-back on marking/heading/aggression.
@@ -18,8 +18,9 @@ OVR_BELOW = 6
 OVR_ABOVE = 2
 # A weighted average gap of this many stat points scores 0.
 STAT_GAP_FOR_ZERO = 40
-HEIGHT_FREE_CM = 4
-HEIGHT_PENALTY_PER_CM = 0.6
+HEIGHT_RANGE_CM = 5
+# Tall target men: any candidate in this band is a fair heading alternative.
+TALL_HEIGHT_BAND = (190, 200)
 WEAK_FOOT_PENALTY = 2.0
 SKILL_MOVE_PENALTY = 1.5
 MIN_SIMILARITY = 70
@@ -50,6 +51,17 @@ def _weak_foot(player):
     return min(feet) if feet else None
 
 
+def _height_fits(target_height, candidate_height):
+    if target_height is None:
+        return True
+    if candidate_height is None:
+        return False
+    low, high = TALL_HEIGHT_BAND
+    if low <= target_height <= high:
+        return low <= candidate_height <= high
+    return abs(candidate_height - target_height) <= HEIGHT_RANGE_CM
+
+
 def _compatible(target_position, candidate):
     candidate_position = _extract_primary_player_position(candidate)
     if (target_position == "GK") != (candidate_position == "GK"):
@@ -72,9 +84,6 @@ def _compare(target, candidate, weights):
         return None, gaps
     score = 100 * max(0.0, 1 - (weighted_gap / total_weight) / STAT_GAP_FOR_ZERO)
 
-    target_height, candidate_height = _number(target.get("height")), _number(candidate.get("height"))
-    if target_height and candidate_height:
-        score -= max(0.0, abs(candidate_height - target_height) - HEIGHT_FREE_CM) * HEIGHT_PENALTY_PER_CM
     target_foot, candidate_foot = _weak_foot(target), _weak_foot(candidate)
     if target_foot is not None and candidate_foot is not None:
         score -= abs(candidate_foot - target_foot) * WEAK_FOOT_PENALTY
@@ -134,6 +143,7 @@ def find_alternatives(target, players, price_of, limit=MAX_ALTERNATIVES):
         return cached[:limit]
 
     target_price = price_of(target) or 0
+    target_height = _number(target.get("height")) or None
     best_by_player = {}
     for candidate in players:
         if not isinstance(candidate, dict) or candidate.get("cid") == target.get("cid"):
@@ -144,6 +154,8 @@ def find_alternatives(target, players, price_of, limit=MAX_ALTERNATIVES):
         if candidate_ovr is None or not (target_ovr - OVR_BELOW <= candidate_ovr <= target_ovr + OVR_ABOVE):
             continue
         if not _compatible(target_position, candidate):
+            continue
+        if not _height_fits(target_height, _number(candidate.get("height")) or None):
             continue
         price = price_of(candidate) or 0
         if not price:

@@ -36,7 +36,7 @@
   white-space: nowrap !important;
 }
 </style>
-<link rel="stylesheet" href="{{ url_for('static', filename='css/player-detail.css', v='20261012-alt-2') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/player-detail.css', v='20261012-alt-3') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/player-reviews.css', v='20261010-3') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/player-price-history.css', v='20260823-1') }}">
 {% endblock %}
@@ -693,7 +693,6 @@
       {% if alternative_cards %}
         <section class="alt-cards" aria-labelledby="alt-cards-title">
           <h2 class="detail-section-title" id="alt-cards-title">대체 카드</h2>
-          <p class="alt-cards-note">{{ player.position }} 역할의 핵심 능력치가 비슷한 다른 선수입니다. 싼 카드부터 보여 줍니다.</p>
           <ul class="alt-card-list">
             {% for alt in alternative_cards %}
               {% set ap = alt.player %}

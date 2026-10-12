@@ -2145,12 +2145,6 @@ body.player-detail-page .main-content {
 .alt-cards {
   width: 100%;
 }
-.alt-cards-note {
-  margin: -12px 0 12px;
-  color: #64748b;
-  font-size: 13px;
-  text-align: center;
-}
 .alt-card-list {
   display: grid;
   gap: 8px;
@@ -2247,7 +2241,7 @@ body.player-detail-page .main-content {
 html[data-theme="dark"] .alt-card { border-color: #334155; background: #111a2b; }
 html[data-theme="dark"] .alt-card-facts { border-color: #1f2a3d; color: #aeb9c9; }
 html[data-theme="dark"] :is(.alt-card-id strong, .alt-card-price strong, .alt-card-match) { color: #f8fafc; }
-html[data-theme="dark"] :is(.alt-card-id span, .alt-cards-note) { color: #94a3b8; }
+html[data-theme="dark"] .alt-card-id span { color: #94a3b8; }
 html[data-theme="dark"] .alt-card-face { background: #1e293b; }
 html[data-theme="dark"] .alt-card-saving { background: #064e3b; color: #6ee7b7; }
 html[data-theme="dark"] .alt-card-facts .is-down { color: #fb7185; }
