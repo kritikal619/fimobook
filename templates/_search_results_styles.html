@@ -56,11 +56,12 @@
     color: #b42318;
     background: #fef3f2;
     border: 1px solid #f0b5ac;
-    border-radius: 14px;
-    padding: 17px;
+    border-radius: 8px;
+    padding: 14px 16px;
     text-align: center;
-    font-weight: 700;
-    font-size: 16px;
+    font-weight: 600;
+    font-size: 15px;
+    line-height: 1.5;
     width: 100%;
     box-sizing: border-box;
   }
@@ -310,21 +311,28 @@
   .back {
     display: block;
     width: fit-content;
-    margin: 10px auto 0;
-    padding: 13px 34px;
-    background: linear-gradient(90deg, var(--brand-dark) 0%, var(--brand) 100%);
+    margin: 14px auto 0;
+    padding: 11px 22px;
+    background: var(--brand-dark);
     color: #fff;
     text-decoration: none;
-    border: none;
-    border-radius: 11px;
-    font-size: 16px;
+    border: 1px solid var(--brand-dark);
+    border-radius: 8px;
+    font-size: 15px;
     font-weight: 600;
     cursor: pointer;
-    letter-spacing: 0.2px;
-    transition: background 0.15s;
   }
   .back:hover {
-    background: var(--brand-dark);
+    filter: brightness(0.92);
+  }
+  .back:focus-visible {
+    outline: 2px solid var(--brand-dark);
+    outline-offset: 2px;
+  }
+  html[data-theme="dark"] .error {
+    color: #fecaca;
+    background: #3a1c1f;
+    border-color: #7a3a40;
   }
   @media (max-width: 1400px) {
     .results-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
@@ -348,8 +356,8 @@
     .player-name { font-size: 13px; }
   }
   @media (max-width: 560px) {
-    .error { font-size: 15px; padding: 12px; margin-bottom: 12px; }
-    .back { padding: 10px 25px; font-size: 14px; border-radius: 9px; }
+    .error { font-size: 14px; padding: 12px; margin-bottom: 12px; }
+    .back { padding: 10px 20px; font-size: 14px; }
   }
   @media (max-width: 560px) {
     .sort-form { padding: 5px 8px; gap: 6px; }
