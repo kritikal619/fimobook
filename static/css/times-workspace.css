@@ -159,3 +159,7 @@ html[data-theme="dark"] .quiet-time-fields input{background:#1e293b;color:#e2e8f
  .push-toggle #push-toggle-label{display:none}
  .push-toggle{width:38px;padding:0}
 }
+
+.push-notice{margin:8px 0 0;padding:9px 11px;border:1px solid #cfd8e3;border-radius:6px;background:#f8fafc;color:#334155;font-size:12px;line-height:1.55}
+.push-notice[hidden]{display:none}
+html[data-theme="dark"] .push-notice{border-color:#475569;background:#1c273a;color:#e2e8f0}

@@ -115,6 +115,7 @@
   function pushState() {
     const state=window.fimoRenewal?.push||{enabled:false},button=document.getElementById('push-toggle');if (!button) return;
     document.getElementById('push-state').textContent=state.busy?'연결 중':state.enabled?'갱신 알림 켜짐':'갱신 알림 꺼짐';
+    const notice=document.getElementById('push-notice');if(notice)notice.hidden=Boolean(state.enabled||!window.fimoRenewal?.loaded);
     document.getElementById('push-detail').textContent=state.error||state.help||'';
     button.disabled=Boolean(state.busy||!window.fimoRenewal?.loaded);document.getElementById('push-toggle-label').textContent=state.busy?'연결 중':state.enabled?'알림 켜짐':'알림 켜기';button.setAttribute('aria-pressed',String(Boolean(state.enabled)));button.querySelector('i').className=state.enabled?'bi bi-bell-fill':'bi bi-bell';button.title=state.enabled?'눌러서 갱신 알림 끄기':'갱신 알림 켜기';button.setAttribute('aria-label',button.title);
     const test=document.getElementById('push-test');test.hidden=!state.enabled;test.disabled=Boolean(state.busy);

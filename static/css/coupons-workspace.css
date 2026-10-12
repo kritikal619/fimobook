@@ -48,3 +48,7 @@ html[data-theme="dark"] .coupon-card.is-copied{border-color:#409475!important}ht
  .coupon-admin-form select{min-height:36px;padding:2px 7px;font-size:16px}
  .coupon-guide{margin-top:6px}
 }
+
+.coupon-push-notice{flex-basis:100%;margin:6px 0 0;padding:9px 11px;border:1px solid #cfd8e3;border-radius:6px;background:#f8fafc;color:#334155;font-size:12px;line-height:1.55}
+.coupon-push-notice[hidden]{display:none}
+html[data-theme="dark"] .coupon-push-notice{border-color:#475569;background:#1c273a;color:#e2e8f0}

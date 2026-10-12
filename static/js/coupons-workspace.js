@@ -54,6 +54,7 @@
     const enabled=Boolean(state?.couponsEnabled);
     document.getElementById('coupon-push-state').textContent=state?.busy?'연결 중':enabled?'켜짐':'꺼짐';
     button.textContent=enabled?'끄기':'알림 켜기';
+    const notice=document.getElementById('coupon-push-notice');if(notice)notice.hidden=Boolean(enabled||!window.fimoRenewal?.loaded);
     const test=document.getElementById('coupon-push-test');test.hidden=!enabled;test.disabled=Boolean(state?.busy);
     document.getElementById('coupon-push-error').textContent=state?.error||state?.help||'';
   }
