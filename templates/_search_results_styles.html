@@ -313,10 +313,10 @@
     width: fit-content;
     margin: 14px auto 0;
     padding: 11px 22px;
-    background: var(--brand-dark);
+    background: #334155;
     color: #fff;
     text-decoration: none;
-    border: 1px solid var(--brand-dark);
+    border: 1px solid #334155;
     border-radius: 8px;
     font-size: 15px;
     font-weight: 600;
@@ -326,8 +326,15 @@
     filter: brightness(0.92);
   }
   .back:focus-visible {
-    outline: 2px solid var(--brand-dark);
+    outline: 2px solid #334155;
     outline-offset: 2px;
+  }
+  html[data-theme="dark"] .back {
+    background: #475569;
+    border-color: #64748b;
+  }
+  html[data-theme="dark"] .back:focus-visible {
+    outline-color: #94a3b8;
   }
   html[data-theme="dark"] .error {
     color: #fecaca;
