@@ -2,6 +2,7 @@ import unittest
 from unittest.mock import patch
 
 import app as app_module
+import clanworldcup
 
 
 class FakeSnapshot:
@@ -200,10 +201,10 @@ class ClanWorldCupGameSlotTest(unittest.TestCase):
             awayScore=0,
             screenshotUrl="/static/uploads/cwc.png",
         )
-        with patch.object(app_module, "_ensure_clan_groups", return_value={}), \
-                patch.object(app_module, "_ensure_group_matches", return_value={}), \
-                patch.object(app_module, "_ensure_group_standings", return_value={}), \
-                patch.object(app_module, "_ensure_bracket_matches", return_value={}):
+        with patch.object(clanworldcup, "_ensure_clan_groups", return_value={}), \
+                patch.object(clanworldcup, "_ensure_group_matches", return_value={}), \
+                patch.object(clanworldcup, "_ensure_group_standings", return_value={}), \
+                patch.object(clanworldcup, "_ensure_bracket_matches", return_value={}):
             app_module._seed_schedule(self.base)
 
         games = self.match_ref.collection("games")
