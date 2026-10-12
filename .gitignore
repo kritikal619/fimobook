@@ -26,3 +26,16 @@ __pycache__/
 
 # Local Claude Code session state
 /.claude/
+
+# Downloaded or generated game assets. Production keeps its own copies; restore
+# with scripts/ensure_player_images.py, scripts/sync_fctimes_assets.py and the
+# other sync/build scripts instead of committing them (already tracked files stay).
+/static/card/
+/static/faceon/
+/static/pack-opener/
+/static/ranking/
+/static/times/
+
+# Local work logs and deployment snapshots (contain production paths and source copies)
+/artifacts/
+/reports/
