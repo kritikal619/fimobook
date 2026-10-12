@@ -64,7 +64,12 @@
   async function save(name, enabled, button) {
     if (!signedIn) { location.href='/login?next=/times';return; }
     button.disabled=true;footer('저장 중');
-    try { await window.fimoRenewal.save(name,enabled); footer(enabled?'관심에 저장했습니다':'관심을 해제했습니다'); }
+    try {
+      await window.fimoRenewal.save(name,enabled);
+      if (!enabled) footer('관심을 해제했습니다');
+      else if (window.fimoRenewal.push?.enabled) footer('관심에 저장했습니다');
+      else footer('관심에 저장했습니다. 휴대폰 알림을 받으려면 위의 알림 켜기를 눌러주세요');
+    }
     catch(error) { button.disabled=false;footer(error.message||'저장하지 못했습니다',true); }
   }
   function renderRows() {

@@ -133,15 +133,19 @@ def refresh(check_only):
             changes = {PLAYER_FILE: candidate.read_bytes(), CLASS_FILE: class_candidate.read_bytes(), **changes}
             if publish(changes, stage):
                 run("sudo", "-n", "/usr/bin/systemctl", "restart", "fimobook.service", timeout=90)
-            run("/usr/bin/systemctl", "is-active", "--quiet", "fimobook.service", timeout=15)
-            with urllib.request.urlopen("https://fcbook.info", timeout=30) as response:
-                if response.status != 200:
-                    raise RuntimeError(f"Public site HTTP {response.status}")
             try:
                 run(PYTHON, "-u", ROOT / "scripts/sync_fcplayer_cards.py", timeout=15 * 60)
             except Exception as error:
                 # The app falls back to the previous snapshot, so this never blocks a refresh.
                 print(f"WARNING: fcplayer snapshot sync failed: {error}", flush=True)
+            run("/usr/bin/systemctl", "is-active", "--quiet", "fimobook.service", timeout=15)
+            # The site's bot protection rejects urllib's default User-Agent with 403.
+            check = urllib.request.Request("https://fcbook.info", headers={
+                "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
+                              "(KHTML, like Gecko) Chrome/124.0 Safari/537.36"})
+            with urllib.request.urlopen(check, timeout=30) as response:
+                if response.status != 200:
+                    raise RuntimeError(f"Public site HTTP {response.status}")
             print("SUCCESS: service active, public HTTP 200", flush=True)
     except Exception:
         print(f"FAILED: workspace and any backups retained at {stage}; no automatic rollback", flush=True)
