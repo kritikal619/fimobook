@@ -5892,6 +5892,29 @@ def load_player_data_for_traits():
 
 _FCPLAYER_CARD_CACHE = {}
 _FCPLAYER_CARD_CACHE_TTL = 6 * 60 * 60
+_FCPLAYER_SNAPSHOT = {"mtime": None, "by_name": {}}
+
+
+def _fcplayer_snapshot_cards(name):
+    """Cards from the synced fcplayer.org snapshot, or None when it is unavailable."""
+    path = os.path.join(app.instance_path, "fcplayer_cards.json")
+    try:
+        mtime = os.path.getmtime(path)
+    except OSError:
+        return None
+    if _FCPLAYER_SNAPSHOT["mtime"] != mtime:
+        try:
+            with open(path, "r", encoding="utf-8") as snapshot_file:
+                cards = json.load(snapshot_file).get("cards") or []
+        except (OSError, ValueError) as error:
+            print(f"fcplayer snapshot read failed: {error}")
+            return None
+        by_name = {}
+        for card in cards:
+            if isinstance(card, dict) and card.get("name"):
+                by_name.setdefault(str(card["name"]).strip(), []).append(card)
+        _FCPLAYER_SNAPSHOT.update(mtime=mtime, by_name=by_name)
+    return _FCPLAYER_SNAPSHOT["by_name"].get(name, [])
 
 
 def _normalize_player_record(player):
@@ -6064,19 +6087,21 @@ def _fetch_fcplayer_card_match(player):
     if cached and now - cached[1] < _FCPLAYER_CARD_CACHE_TTL:
         return cached[0]
 
-    try:
-        response = requests.get(
-            "https://fcplayer.org/api/cards",
-            params={"search": name, "limit": 50},
-            headers={"User-Agent": "Mozilla/5.0", "Accept": "application/json"},
-            timeout=4,
-        )
-        response.raise_for_status()
-        cards = response.json().get("cards") or []
-    except Exception as e:
-        print(f"fcplayer card lookup error for {name}: {e}")
-        _FCPLAYER_CARD_CACHE[cache_key] = (None, now)
-        return None
+    cards = _fcplayer_snapshot_cards(name)
+    if cards is None:
+        try:
+            response = requests.get(
+                "https://fcplayer.org/api/cards",
+                params={"search": name, "limit": 50},
+                headers={"User-Agent": "Mozilla/5.0", "Accept": "application/json"},
+                timeout=4,
+            )
+            response.raise_for_status()
+            cards = response.json().get("cards") or []
+        except Exception as e:
+            print(f"fcplayer card lookup error for {name}: {e}")
+            _FCPLAYER_CARD_CACHE[cache_key] = (None, now)
+            return None
 
     target_ovr = int(player.get("ovr") or 0)
     target_position = str(player.get("position") or "").upper()

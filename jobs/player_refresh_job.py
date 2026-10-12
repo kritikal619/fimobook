@@ -137,6 +137,11 @@ def refresh(check_only):
             with urllib.request.urlopen("https://fcbook.info", timeout=30) as response:
                 if response.status != 200:
                     raise RuntimeError(f"Public site HTTP {response.status}")
+            try:
+                run(PYTHON, "-u", ROOT / "scripts/sync_fcplayer_cards.py", timeout=15 * 60)
+            except Exception as error:
+                # The app falls back to the previous snapshot, so this never blocks a refresh.
+                print(f"WARNING: fcplayer snapshot sync failed: {error}", flush=True)
             print("SUCCESS: service active, public HTTP 200", flush=True)
     except Exception:
         print(f"FAILED: workspace and any backups retained at {stage}; no automatic rollback", flush=True)
