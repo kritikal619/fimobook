@@ -19,8 +19,8 @@ OVR_ABOVE = 2
 # A weighted average gap of this many stat points scores 0.
 STAT_GAP_FOR_ZERO = 40
 HEIGHT_RANGE_CM = 5
-# Tall target men: any candidate in this band is a fair heading alternative.
-TALL_HEIGHT_BAND = (190, 200)
+# Tall target men: no 5cm limit, any other 191cm+ player qualifies.
+TALL_HEIGHT_MIN = 191
 WEAK_FOOT_PENALTY = 2.0
 SKILL_MOVE_PENALTY = 1.5
 MIN_SIMILARITY = 70
@@ -56,9 +56,8 @@ def _height_fits(target_height, candidate_height):
         return True
     if candidate_height is None:
         return False
-    low, high = TALL_HEIGHT_BAND
-    if low <= target_height <= high:
-        return low <= candidate_height <= high
+    if target_height >= TALL_HEIGHT_MIN:
+        return candidate_height >= TALL_HEIGHT_MIN
     return abs(candidate_height - target_height) <= HEIGHT_RANGE_CM
 
 
