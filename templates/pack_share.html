@@ -3,35 +3,36 @@
 {% block body_class %}pack-share-page{% endblock %}
 {% block extra_head %}
 <meta name="description" content="{{ meta_description }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/pack-share.css', v='20261012-6') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/pack-share.css', v='20261012-7') }}">
 {% endblock %}
 {% block content %}
 <section class="pack-share">
-  <div class="share-stage">
-    <header class="share-stage-top">
-      <h1>{{ summary.p or '선수팩' }}</h1>
-      <span>{{ "{:,}".format(summary.q or 1) }}팩 · 선수 {{ "{:,}".format(summary.n or 0) }}명</span>
-    </header>
+  <h1 class="ps-title">{{ summary.p or '선수팩' }}</h1>
 
-    {% if players %}
-      <div class="share-cards">
-        {% for p in players %}
-          <a class="share-card" href="{{ url_for('player_detail', cid=p.cid) }}" aria-label="{{ p.className }} {{ p.playerKor }} OVR {{ p.ovr }}{% if p.enhance %} {{ p.enhance }}진화{% endif %}">
-            <span class="share-card-art" data-fimo-player-card='{{ player_card_meta(p.cid)|tojson }}' data-fimo-card-ovr="{{ p.ovr }}" data-fimo-card-enhance="{{ p.enhance }}">
+  <dl class="ps-stats">
+    <div><dt>오픈</dt><dd>{{ "{:,}".format(summary.q or 1) }}<small>팩</small></dd></div>
+    <div><dt>획득 선수</dt><dd>{{ "{:,}".format(summary.n or 0) }}<small>명</small></dd></div>
+    {% if summary.v or summary.m %}
+      <div><dt>획득 가치</dt><dd>{{ total_value }}<small>MP</small></dd></div>
+    {% endif %}
+  </dl>
+
+  {% if players %}
+    <ol class="ps-cards">
+      {% for p in players %}
+        <li>
+          <a class="ps-card" href="{{ url_for('player_detail', cid=p.cid) }}" aria-label="{{ p.className }} {{ p.playerKor }} OVR {{ p.ovr }}{% if p.enhance %} {{ p.enhance }}진화{% endif %}">
+            <span class="ps-card-art" data-fimo-player-card='{{ player_card_meta(p.cid)|tojson }}' data-fimo-card-ovr="{{ p.ovr }}" data-fimo-card-enhance="{{ p.enhance }}">
               <img class="card-background" src="{{ player_thumbnail_url('card', p.cid, 256) or url_for('static', filename='images/card-background-placeholder.svg') }}" alt="" decoding="async">
               <img class="card-face" src="{{ player_thumbnail_url('faceon', p.cid, 256) or url_for('static', filename='apple-touch-icon.png') }}" alt="" decoding="async">
             </span>
-            <span class="share-card-class">{{ p.className }}</span>
+            <span class="ps-card-meta"><b>{{ loop.index }}</b>{{ p.className }}</span>
           </a>
-        {% endfor %}
-      </div>
-    {% endif %}
+        </li>
+      {% endfor %}
+    </ol>
+  {% endif %}
 
-    {% if summary.v or summary.m %}
-      <p class="share-stage-value"><span>획득 가치</span> {{ total_value }} MP</p>
-    {% endif %}
-  </div>
-
-  <a class="share-open" href="{{ url_for('pack_opener_page') }}">나도 팩 열기 <span aria-hidden="true">→</span></a>
+  <a class="ps-open" href="{{ url_for('pack_opener_page') }}">나도 팩 열기 <span aria-hidden="true">→</span></a>
 </section>
 {% endblock %}

@@ -7748,7 +7748,10 @@ def pack_share_image(token):
     summary = read_share_token(token, app.secret_key)
     if not summary:
         abort(404)
-    image = render_share_image(token, summary, _pack_share_players(summary), app.root_path)
+    players = _pack_share_players(summary)
+    if players:
+        players[0]["meta"] = _player_card_meta(players[0]["cid"])
+    image = render_share_image(token, summary, players, app.root_path)
     response = send_file(image, mimetype="image/png", max_age=86400)
     response.headers["X-Content-Type-Options"] = "nosniff"
     return response
