@@ -151,6 +151,7 @@ from prime_exchange import (
     _get_prime_exchange_efficiency,
 )
 from player_alternatives import find_alternatives
+from pack_share import SHARE_TOP_PLAYERS, build_share_token, format_mp, read_share_token, render_share_image
 import player_teams
 from player_teams import (
     _TEAM_FILTER_CONTEXT_CACHE,
@@ -7681,8 +7682,75 @@ def pack_opener_draw_api():
                       if isinstance(product.get('price', price), int) else None)
     except KeyError:
         return jsonify({"error": "팩을 찾을 수 없습니다."}), 404
+    share_token = build_share_token(result, app.secret_key)
+    if share_token:
+        result["shareUrl"] = url_for("pack_share_page", token=share_token)
     response = jsonify(result)
     response.headers["Cache-Control"] = "no-store"
+    return response
+
+
+def _pack_share_players(summary):
+    players = []
+    for entry in summary["t"][:SHARE_TOP_PLAYERS]:
+        if not (isinstance(entry, list) and len(entry) == 2):
+            continue
+        cid, enhance = entry
+        if type(cid) is not int or type(enhance) is not int or not 0 <= enhance <= MAX_ENHANCE_LEVEL:
+            continue
+        player = _get_local_player_by_cid(cid)
+        if not player:
+            continue
+        players.append({
+            "cid": cid,
+            "enhance": enhance,
+            "ovr": int(player.get("ovr") or 0) + int(ENHANCE_LEVEL_TOTALS[enhance] or 0),
+            "playerKor": player.get("playerKor") or "",
+            "className": player.get("className") or "",
+            "position": player.get("position") or "",
+        })
+    return players
+
+
+@app.route("/pack-opener/share/<token>")
+def pack_share_page(token):
+    summary = read_share_token(token, app.secret_key)
+    if not summary:
+        abort(404)
+    players = _pack_share_players(summary)
+    best = players[0] if players else None
+    title = (
+        f"{best['className']} {best['playerKor']} OVR {best['ovr']} 획득 | 피모북 팩 오프너"
+        if best else "팩 오프너 결과 | 피모북"
+    )
+    description = (
+        f"{summary.get('p') or '선수팩'} {summary.get('q', 1):,}팩 개봉 결과. "
+        "넥슨 공식 확률표 기준 FC모바일 팩 오프너에서 직접 열어보세요."
+    )
+    return render_template(
+        "pack_share.html",
+        summary=summary,
+        players=players,
+        total_value=format_mp(int(summary.get("v") or 0) + int(summary.get("m") or 0)),
+        robots_meta="noindex,follow",
+        canonical_url=_canonical(url_for("pack_share_page", token=token)),
+        seo_title=title,
+        og_title=title,
+        og_description=description,
+        meta_description=description,
+        og_image_url=_absolute_public_url(url_for("pack_share_image", token=token)),
+        og_image_alt="팩 오프너 획득 결과",
+    )
+
+
+@app.route("/pack-opener/share/<token>/card.png")
+def pack_share_image(token):
+    summary = read_share_token(token, app.secret_key)
+    if not summary:
+        abort(404)
+    image = render_share_image(token, summary, _pack_share_players(summary), app.root_path)
+    response = send_file(image, mimetype="image/png", max_age=86400)
+    response.headers["X-Content-Type-Options"] = "nosniff"
     return response
 
 

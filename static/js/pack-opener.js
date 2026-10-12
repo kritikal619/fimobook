@@ -24,12 +24,22 @@
   const eventMultiplierScale = 10;
   const emptyTotals = () => ({opened:0, fv:0, mp:0, players:0, unknownFV:0, unknownPlayers:0,
     eventMP:0, eventPlayers:0, moonSpent:0, eventUnknownCost:0});
-  const emptyHistory = () => ({opened:0, rewards:[], totals:emptyTotals(), priceTotalsVersion:1});
+  const emptyHistory = () => ({opened:0, rewards:[], best:[], totals:emptyTotals(), priceTotalsVersion:1});
+  const BEST_LIMIT = 3;
+  const isPricedPlayer = r => r && r.kind === 'player' && typeof r.name === 'string' && Number(r.accountedPrice) > 0;
+  // Highest-value cards ever opened; kept apart from the 100-item recent list so they never scroll away.
+  function bestPulls(...groups) {
+    return groups.flat().filter(isPricedPlayer)
+      .sort((a, b) => Number(b.accountedPrice) - Number(a.accountedPrice) || b.ovr - a.ovr)
+      .slice(0, BEST_LIMIT);
+  }
   let history = emptyHistory(), historyBackup = null, historyRenderPending = false;
   try {
     const saved = JSON.parse(localStorage.getItem(storageKey));
     if (saved && Number.isSafeInteger(saved.opened) && saved.opened >= 0 && Array.isArray(saved.rewards)) {
       history = {priceTotalsVersion:saved.priceTotalsVersion, totals: {...emptyTotals(), ...(saved.totals || {})}, opened: saved.opened, rewards: saved.rewards.filter(r => r && ['player', 'item'].includes(r.kind) && typeof r.name === 'string').slice(0, 100)};
+      // Older saves have no best list yet; seed it once from the recent rewards.
+      history.best = bestPulls(Array.isArray(saved.best) ? saved.best : history.rewards);
     }
     historyBackup = JSON.parse(localStorage.getItem(storageKey + '.backup'));
   } catch (_) { /* Storage may be unavailable in private browsing. */ }
@@ -344,6 +354,13 @@
     $('history-value-note').textContent = notes.join(' · ');
     $('history-undo').hidden = !historyBackup;
     $('history-reset').disabled = state.busy || !history.opened;
+    const best = history.best || [], bestList = $('history-best-list');
+    $('history-best').hidden = $('history-recent-title').hidden = !best.length; bestList.replaceChildren();
+    best.forEach(reward => {
+      const item = el('div', 'history-item'); item.append(rewardCard(reward));
+      item.append(el('small', '', `${number(reward.accountedPrice)} MP`));
+      bestList.append(item);
+    });
     const list = $('history-list'); list.replaceChildren();
     if (!history.rewards.length) { list.append(el('p', 'history-empty', '팩을 열면 이곳에 획득 기록이 쌓여요.')); return; }
     history.rewards.slice(0, 20).forEach(reward => {
@@ -380,6 +397,7 @@
       return reward;
     });
     history.rewards = [...savedRewards, ...history.rewards].slice(0, 100);
+    history.best = bestPulls(history.best || [], savedRewards);
     try { localStorage.setItem(storageKey, JSON.stringify(history)); } catch (_) { /* Continue without saving. */ }
     renderHistory();
   }
@@ -450,6 +468,20 @@
     $('open-pack').hidden = false; $('show-results').hidden = true;
     $('stage-status').textContent = ''; updateQuantityCost();
     $('reward-flow').hidden = true;
+    if (!state.result?.shareUrl) $('share-result').hidden = true;
+  }
+  async function shareResult() {
+    if (!state.result?.shareUrl) return;
+    const url = new URL(state.result.shareUrl, location.origin).href;
+    const best = visibleRewards(state.result).find(reward => reward.kind === 'player');
+    const text = best ? `${state.result.packName}에서 ${best.season} ${best.playerKor} OVR ${best.ovr} 획득!` : `${state.result.packName} 개봉 결과`;
+    const notice = message => { $('reward-flow').hidden ? error(message) : ($('reward-flow-status').textContent = message); };
+    if (navigator.share) {
+      try { await navigator.share({title: '피모북 팩 오프너', text, url}); return; }
+      catch (shareError) { if (shareError?.name === 'AbortError') return; }
+    }
+    try { await navigator.clipboard.writeText(url); notice('공유 링크를 복사했어요'); }
+    catch (_) { window.prompt('아래 링크를 복사해 공유하세요', url); }
   }
   function selectPack(pack) {
     if (state.busy) return;
@@ -643,7 +675,7 @@
   }
   function showRewardStep() {
     phase('reward-step'); $('reward-step').hidden = false; $('reward-summary').hidden = true;
-    $('reveal-all').hidden = false; $('reward-next').hidden = true; $('flow-replay').hidden = true;
+    $('reveal-all').hidden = false; $('reward-next').hidden = true; $('flow-replay').hidden = true; $('flow-share').hidden = true;
     const reward = state.flowRewards[state.flowIndex], remaining = state.flowRewards.length - state.flowIndex - 1;
     const current = $('reward-current'); current.replaceChildren(rewardCard(reward));
     current.dataset.kind = reward.kind;
@@ -676,6 +708,7 @@
     setBusy(false);
     $('reward-step').hidden = true; $('reward-summary').hidden = false;
     $('reveal-all').hidden = true; $('reward-next').hidden = false; $('flow-replay').hidden = false;
+    $('flow-share').hidden = $('share-result').hidden = !state.result.shareUrl;
     renderSummaryRewards();
     flash();
   }
@@ -776,6 +809,7 @@
     // Keep openings made after clearing rather than replacing them on undo.
     history.opened += historyBackup.opened;
     history.rewards = [...history.rewards, ...historyBackup.rewards].slice(0,100);
+    history.best = bestPulls(history.best || [], Array.isArray(historyBackup.best) ? historyBackup.best : historyBackup.rewards);
     Object.keys(emptyTotals()).forEach(key => { history.totals[key] += historyBackup.totals?.[key] || 0; });
     historyBackup = null;
     try { localStorage.setItem(storageKey, JSON.stringify(history)); localStorage.removeItem(storageKey + '.backup'); } catch (_) {}
@@ -784,6 +818,8 @@
   $('show-results').addEventListener('click', () => showResults('', true));
   $('replay-opening').addEventListener('click', () => { if (!state.busy) replayOpening(); });
   $('flow-replay').addEventListener('click', replayOpening);
+  $('flow-share').addEventListener('click', shareResult);
+  $('share-result').addEventListener('click', shareResult);
   $('reward-pack').addEventListener('click', advanceReward);
   $('reward-current').addEventListener('click', advanceReward);
   $('reveal-all').addEventListener('click', showRewardSummary);
