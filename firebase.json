@@ -1,3 +1,10 @@
 {
-  "emulators": { "firestore": { "port": 8080 } }
+  "emulators": {
+    "firestore": {
+      "port": 8080
+    }
+  },
+  "firestore": {
+    "indexes": "firestore.indexes.json"
+  }
 }
