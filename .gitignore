@@ -14,3 +14,15 @@
 /android/*.jks
 /android/app-release-*.apk
 /android/app-release-*.aab
+
+# Python bytecode and macOS metadata
+__pycache__/
+*.pyc
+.DS_Store
+
+# Generated local caches
+/instance/player_thumbnails/
+/instance/derived_statistics/
+
+# Local Claude Code session state
+/.claude/
