@@ -1300,7 +1300,7 @@
 }
 
 @media (max-width: 520px){
-  .main-content{ padding:22px 14px; }
+  .main-content{ padding:6px 14px 28px; }
   .home-wrap{ gap:22px; padding:0; }
   .search-section{ padding:0; border-radius:0; }
   .search-title{ font-size:26px; }
@@ -1363,3 +1363,7 @@
   .code-chip{ font-size:13px; }
 
 }
+
+/* The home page starts at the same height as every other page (base.html: 12px, 6px on phones). */
+body.home-page .main-content{ padding-top:12px; }
+@media (max-width:550px){ body.home-page .main-content{ padding-top:6px; } }
