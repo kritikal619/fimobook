@@ -1,0 +1,266 @@
+{% extends "base.html" %}
+
+{% block body_class %}win-rate-page{% endblock %}
+{% block title %}FC모바일 승률 계산기 | 별·승리 수로 일반모드 승률 계산 | 피모북{% endblock %}
+
+{% block extra_head %}
+<meta name="description" content="FC모바일 일반모드 승률 계산기. 프로필의 별 수와 총 승리 수, 무승부 빈도만 넣으면 패배 수, 전체 경기 수, 승률과 승점 반영 승률, 목표 별까지 필요한 경기 수를 계산합니다.">
+<meta name="keywords" content="FC모바일 승률 계산기, FC모바일 승률, 일반모드 승률, FC모바일 별, FC챔피언 별, 승률 계산">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "FC모바일 승률 계산기",
+  "url": "https://fcbook.info/win-rate-calculator",
+  "description": "FC모바일 일반모드 별 수와 총 승리 수로 패배 수와 승률을 계산하는 도구",
+  "applicationCategory": "UtilitiesApplication",
+  "operatingSystem": "Any",
+  "inLanguage": "ko",
+  "isAccessibleForFree": true,
+  "publisher": { "@type": "Organization", "name": "피모북", "url": "https://fcbook.info" }
+}
+</script>
+<style>
+  body.win-rate-page .main-content {
+    width: 100%;
+    max-width: 860px;
+    padding: 8px 28px 28px !important;
+    box-sizing: border-box;
+  }
+  .wr-page { width: 100%; margin: 0 auto; padding: 0 0 18px; box-sizing: border-box; }
+  .wr-heading { margin-bottom: 14px; text-align: left; }
+  .wr-title { margin: 0; color: #17202a; font-size: 26px; font-weight: 900; letter-spacing: -.6px; }
+  .wr-description { margin: 5px 0 0; color: #64748b; font-size: 13px; line-height: 1.5; }
+  .wr-layout { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; align-items: start; }
+  .wr-stack { display: grid; gap: 12px; min-width: 0; }
+  .wr-card { min-width: 0; padding: 16px; border: 1px solid #dbe3ec; border-radius: 8px; background: #fff; box-sizing: border-box; }
+  .wr-card-title { margin: 0 0 12px; color: #17202a; font-size: 14px; font-weight: 800; }
+
+  .wr-field + .wr-field { margin-top: 12px; }
+  .wr-label { display: block; margin-bottom: 5px; color: #334155; font-size: 12px; font-weight: 700; }
+  .wr-input-line { display: flex; align-items: center; gap: 8px; }
+  .wr-input-line .wr-unit { flex: 0 0 auto; color: #64748b; font-size: 13px; font-weight: 600; }
+  .wr-input {
+    flex: 1 1 auto; min-width: 0; width: 100%; height: 42px; padding: 0 12px;
+    border: 1px solid #cbd5e1; border-radius: 6px; background: #fff; color: #0f172a;
+    font: inherit; font-size: 16px; font-weight: 700; box-sizing: border-box; outline: none;
+  }
+  .wr-input:focus { border-color: #059669; }
+  .wr-error { min-height: 18px; margin: 10px 0 0; color: #b91c1c; font-size: 12px; font-weight: 700; }
+
+  .wr-note { margin: 12px 0 0; color: #64748b; font-size: 12px; line-height: 1.6; }
+
+  .wr-rate { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding-bottom: 12px; border-bottom: 1px solid #e5e7eb; }
+  .wr-rate-label { color: #475569; font-size: 13px; font-weight: 700; }
+  .wr-rate-value { color: #17202a; font-size: 30px; font-weight: 900; letter-spacing: -.5px; font-family: 'FCOVR', 'IBM Plex Sans KR', sans-serif; }
+  .wr-rows { margin: 0; }
+  .wr-row { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding: 9px 0; border-bottom: 1px solid #f1f5f9; }
+  .wr-row:last-child { border-bottom: 0; }
+  .wr-row dt { color: #64748b; font-size: 13px; font-weight: 600; }
+  .wr-row dd { margin: 0; color: #17202a; font-size: 14px; font-weight: 700; text-align: right; }
+
+  .wr-target-result { margin: 12px 0 0; color: #334155; font-size: 13px; font-weight: 600; line-height: 1.6; }
+
+  html[data-theme="dark"] .wr-card { border-color: #334155; background: #172033; }
+  html[data-theme="dark"] .wr-title,
+  html[data-theme="dark"] .wr-card-title,
+  html[data-theme="dark"] .wr-rate-value,
+  html[data-theme="dark"] .wr-row dd { color: #f8fafc; }
+  html[data-theme="dark"] .wr-description,
+  html[data-theme="dark"] .wr-note,
+  html[data-theme="dark"] .wr-row dt,
+  html[data-theme="dark"] .wr-input-line .wr-unit { color: #aeb9c9; }
+  html[data-theme="dark"] .wr-label,
+  html[data-theme="dark"] .wr-rate-label,
+  html[data-theme="dark"] .wr-target-result { color: #e4eaf2; }
+  html[data-theme="dark"] .wr-input { border-color: #475569; background: #111a2b; color: #f8fafc; }
+  html[data-theme="dark"] .wr-input:focus { border-color: #34d399; }
+  html[data-theme="dark"] .wr-rate,
+  html[data-theme="dark"] .wr-row { border-color: #334155; }
+  html[data-theme="dark"] .wr-error { color: #fca5a5; }
+
+  @media (max-width: 700px) {
+    body.win-rate-page .main-content { padding: 4px 12px 22px !important; }
+    .wr-layout { grid-template-columns: 1fr; }
+    .wr-title { font-size: 23px; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="wr-page" aria-labelledby="wr-title">
+  <header class="wr-heading">
+    <h1 class="wr-title" id="wr-title">FC모바일 승률 계산기</h1>
+    <p class="wr-description">프로필의 별 수와 일반모드 총 승리 수로 승률을 계산합니다.</p>
+  </header>
+
+  <div class="wr-layout">
+    <section class="wr-card" aria-labelledby="wr-input-title">
+      <h2 class="wr-card-title" id="wr-input-title">입력</h2>
+
+      <div class="wr-field">
+        <label class="wr-label" for="wr-stars">현재 별</label>
+        <div class="wr-input-line">
+          <input class="wr-input" id="wr-stars" type="text" inputmode="numeric" autocomplete="off" value="20">
+          <span class="wr-unit">개</span>
+        </div>
+      </div>
+      <div class="wr-field">
+        <label class="wr-label" for="wr-wins">일반모드 총 승리 수</label>
+        <div class="wr-input-line">
+          <input class="wr-input" id="wr-wins" type="text" inputmode="numeric" autocomplete="off" value="100">
+          <span class="wr-unit">승</span>
+        </div>
+      </div>
+      <div class="wr-field">
+        <label class="wr-label" for="wr-every">무승부 빈도</label>
+        <div class="wr-input-line">
+          <input class="wr-input" id="wr-every" type="text" inputmode="numeric" autocomplete="off" value="10">
+          <span class="wr-unit">경기당 1번</span>
+        </div>
+      </div>
+
+      <p class="wr-error" id="wr-error" role="alert"></p>
+
+      <p class="wr-note">승리 +1별, 패배 −1별, 무승부는 그대로, 0별 아래로는 내려가지 않습니다.</p>
+    </section>
+
+    <div class="wr-stack">
+      <section class="wr-card" aria-labelledby="wr-result-title">
+        <h2 class="wr-card-title" id="wr-result-title">결과</h2>
+        <div class="wr-rate" aria-live="polite">
+          <span class="wr-rate-label">승률</span>
+          <strong class="wr-rate-value" id="wr-rate">-</strong>
+        </div>
+        <dl class="wr-rows">
+          <div class="wr-row"><dt>패배</dt><dd id="wr-losses">-</dd></div>
+          <div class="wr-row"><dt>무승부</dt><dd id="wr-drawn">-</dd></div>
+          <div class="wr-row"><dt>전체 경기</dt><dd id="wr-games">-</dd></div>
+          <div class="wr-row"><dt>승점 반영 승률</dt><dd id="wr-point-rate">-</dd></div>
+        </dl>
+        <p class="wr-note" id="wr-caveat">0별에서 진 경기는 별에 남지 않아 실제 승률은 이보다 낮을 수 있습니다.</p>
+      </section>
+
+      <section class="wr-card" aria-labelledby="wr-target-title">
+        <h2 class="wr-card-title" id="wr-target-title">목표 별까지</h2>
+        <div class="wr-field">
+          <label class="wr-label" for="wr-goal">목표 별</label>
+          <div class="wr-input-line">
+            <input class="wr-input" id="wr-goal" type="text" inputmode="numeric" autocomplete="off" value="30">
+            <span class="wr-unit">개</span>
+          </div>
+        </div>
+        <div class="wr-field">
+          <label class="wr-label" for="wr-expect">예상 승률 (무승부 제외)</label>
+          <div class="wr-input-line">
+            <input class="wr-input" id="wr-expect" type="text" inputmode="decimal" autocomplete="off" value="60">
+            <span class="wr-unit">%</span>
+          </div>
+        </div>
+        <p class="wr-target-result" id="wr-target-result" aria-live="polite">-</p>
+      </section>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  (function () {
+    "use strict";
+
+    var LIMIT = 1000000;
+    var STORE = "fimo-win-rate-v5";
+    var nf = new Intl.NumberFormat("ko-KR", { maximumFractionDigits: 0 });
+    var ids = ["stars", "wins", "every", "goal", "expect"];
+    var el = {};
+    ids.forEach(function (id) { el[id] = document.getElementById("wr-" + id); });
+    ["error", "rate", "losses", "drawn", "games", "point-rate", "target-result"].forEach(function (id) {
+      el[id] = document.getElementById("wr-" + id);
+    });
+
+    function readInt(input) {
+      var digits = String(input.value || "").replace(/[^\d]/g, "");
+      return digits ? Math.min(parseInt(digits, 10), LIMIT) : 0;
+    }
+
+    function percent(value) { return value.toFixed(2) + "%"; }
+
+    function reset(message) {
+      el.error.textContent = message || "";
+      ["rate", "losses", "drawn", "games", "point-rate", "target-result"].forEach(function (id) {
+        el[id].textContent = "-";
+      });
+    }
+
+    function calculate() {
+      var stars = readInt(el.stars);
+      var wins = readInt(el.wins);
+      var every = readInt(el.every);
+
+      if (wins <= 0) { reset("총 승리 수를 입력해 주세요."); return; }
+      if (stars > wins) { reset("별 수가 총 승리 수보다 많을 수 없습니다."); return; }
+      if (every === 1) { reset("무승부 빈도는 2경기당 1번 이상으로 넣어 주세요."); return; }
+
+      el.error.textContent = "";
+      var losses = wins - stars;
+      var draws = 0;
+      if (every >= 2) {
+        // 전체 경기 G 중 1/every 이 무승부: G = (승 + 패) / (1 - 1/every)
+        draws = Math.round((wins + losses) / (every - 1));
+      }
+      var games = wins + losses + draws;
+
+      el.rate.textContent = percent(wins / games * 100);
+      el.losses.textContent = nf.format(losses) + "패";
+      el.drawn.textContent = nf.format(draws) + "무";
+      el.games.textContent = nf.format(games) + "경기";
+      el["point-rate"].textContent = percent((wins + draws * 0.5) / games * 100);
+
+      var goal = readInt(el.goal);
+      var expect = parseFloat(String(el.expect.value || "").replace(/[^\d.]/g, ""));
+      var gain = goal - stars;
+      if (goal <= 0) {
+        el["target-result"].textContent = "목표 별을 입력해 주세요.";
+      } else if (gain <= 0) {
+        el["target-result"].textContent = "이미 목표 별 이상입니다.";
+      } else if (!isFinite(expect) || expect <= 0 || expect > 100) {
+        el["target-result"].textContent = "예상 승률을 입력해 주세요.";
+      } else if (expect <= 50) {
+        el["target-result"].textContent = "승률이 50% 이하면 별이 평균적으로 늘지 않습니다. 최소 " + nf.format(gain) + "연승이 필요합니다.";
+      } else {
+        var p = expect / 100;
+        var expected = Math.ceil(gain / (2 * p - 1) - 1e-9);
+        var withDraws = every >= 2 ? Math.round(expected * every / (every - 1)) : expected;
+        el["target-result"].textContent = "별 " + nf.format(gain) + "개 올리는 데 평균 약 " + nf.format(withDraws) +
+          "경기, 전승이면 " + nf.format(gain) + "경기입니다.";
+      }
+    }
+
+    function save() {
+      try {
+        var data = {};
+        ids.forEach(function (id) { data[id] = el[id].value; });
+        localStorage.setItem(STORE, JSON.stringify(data));
+      } catch (error) { /* 저장할 수 없는 환경에서는 건너뜁니다. */ }
+    }
+
+    function restore() {
+      try {
+        var saved = JSON.parse(localStorage.getItem(STORE) || "null");
+        if (!saved) return;
+        ids.forEach(function (id) {
+          if (typeof saved[id] === "string") el[id].value = saved[id];
+        });
+      } catch (error) { /* 읽을 수 없으면 기본값을 씁니다. */ }
+    }
+
+    ids.forEach(function (id) {
+      el[id].addEventListener("input", function () { save(); calculate(); });
+    });
+
+    restore();
+    calculate();
+  })();
+</script>
+{% endblock %}

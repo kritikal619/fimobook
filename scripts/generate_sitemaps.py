@@ -62,6 +62,7 @@ def main() -> None:
         _abs("/normal-mode-power-ranking"),
         _abs("/coupons/"),
         _abs("/times"),
+        _abs("/win-rate-calculator"),
     ]
     pages_path = sitemaps_dir / "sitemap_pages.xml"
     _write_urlset(pages_path, pages_urls)
