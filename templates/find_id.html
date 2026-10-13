@@ -7,14 +7,14 @@
 {% block content %}
 <div class="auth-container">
   <h1 class="page-title">아이디 찾기</h1>
-  <p class="auth-description">피모북의 로그인 아이디는 이메일 주소입니다.<br>가입할 때 설정한 감독명으로 이메일을 확인하세요.</p>
+  <p class="auth-description">피모북의 로그인 아이디는 이메일 주소입니다.<br>가입할 때 설정한 닉네임으로 이메일을 확인하세요.</p>
   {% include "_recaptcha_widget.html" %}
   <form method="POST" action="{{ url_for('find_id') }}" class="auth-form" onsubmit="return window.fimobookRequireRecaptcha();">
     <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
     <input type="hidden" name="g-recaptcha-response" data-recaptcha-token>
     <div class="form-group">
-      <label for="username">감독명</label>
-      <input type="text" class="form-control" id="username" name="username" maxlength="100" value="{{ request.form.get('username', '') }}" placeholder="가입할 때 설정한 감독명" required>
+      <label for="username">닉네임</label>
+      <input type="text" class="form-control" id="username" name="username" maxlength="100" value="{{ request.form.get('username', '') }}" placeholder="가입할 때 설정한 닉네임" required>
     </div>
     <button type="submit" class="btn-primary btn-block">가입 이메일 확인</button>
   </form>

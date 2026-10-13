@@ -3,7 +3,7 @@
 {% block title %}{{ profile_user.username }} 프로필 | 피모북{% endblock %}
 
 {% block extra_head %}
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/profile-page.css', v='20261010-1') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/profile-page.css', v='20261013-flat') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/profile-quiet.css', v='20261011-1') }}">
 {% endblock %}
 
@@ -115,10 +115,10 @@
             <div><dt>로그인 방식</dt><dd>{% if profile_user.google_sub and profile_user.password_hash %}Google · 이메일{% elif profile_user.google_sub %}Google{% elif profile_user.password_hash %}이메일{% else %}—{% endif %}</dd></div>
           </dl>
           <details class="profile-editor" id="profile-name-editor">
-          <summary><i class="bi bi-pencil" aria-hidden="true"></i>감독명 변경<i class="bi bi-chevron-down" aria-hidden="true"></i></summary>
+          <summary><i class="bi bi-pencil" aria-hidden="true"></i>닉네임 변경<i class="bi bi-chevron-down" aria-hidden="true"></i></summary>
           <form method="POST" action="{{ url_for('profile') }}" class="profile-form" data-profile-form>
             <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-            <label class="profile-label" for="profile-username">새 감독명</label>
+            <label class="profile-label" for="profile-username">새 닉네임</label>
             <input id="profile-username" type="text" name="username" class="form-control" value="{{ profile_user.username }}" maxlength="100" required aria-describedby="profile-name-help">
             <p class="profile-form-help" id="profile-name-help">리뷰와 커뮤니티에 표시되는 이름입니다.</p>
             <div class="profile-actions">
@@ -155,7 +155,7 @@
     function update() {
       var changed = input.value.trim() !== initial.trim();
       save.disabled = !changed || !input.value.trim();
-      status.textContent = changed ? '변경 저장을 누르면 새 감독명이 적용됩니다.' : '';
+      status.textContent = changed ? '변경 저장을 누르면 새 닉네임이 적용됩니다.' : '';
     }
     cancel.hidden = false;
     input.addEventListener('input', update);

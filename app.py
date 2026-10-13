@@ -569,6 +569,7 @@ def sitemap():
         urljoin(request.url_root, "/times"),
         urljoin(request.url_root, "/prime-exchange"),
         urljoin(request.url_root, "/market-fee-calculator"),
+        urljoin(request.url_root, "/win-rate-calculator"),
         urljoin(request.url_root, "/normal-mode-power-ranking"),
     ]
 
@@ -655,6 +656,7 @@ ANALYTICS_PAGE_CONTEXTS = {
     "squad_maker": ("squad_maker", "decision_tools"),
     "prime_exchange_page": ("prime_exchange", "utility"),
     "market_fee_calculator": ("market_fee_calculator", "utility"),
+    "win_rate_calculator": ("win_rate_calculator", "utility"),
     "times": ("renewal_times", "utility"),
     "coupons_page": ("coupons", "utility"),
     "community": ("community_feed", "community"),
@@ -3558,7 +3560,7 @@ def find_id():
     if request.method == 'POST':
         username = (request.form.get('username') or '').strip()
         if not username or len(username) > 100:
-            flash('가입할 때 설정한 감독명을 입력해주세요.', 'danger')
+            flash('가입할 때 설정한 닉네임을 입력해주세요.', 'danger')
             return _account_recovery_page('find_id.html'), 400
         if not _allow_account_recovery('id', username):
             return _account_recovery_page('find_id.html'), 429
@@ -3573,7 +3575,7 @@ def find_id():
             # Never expose the full address, including addresses with a short local part.
             masked_email = (local[:1] if len(local) > 1 else '') + '*****@' + domain
         else:
-            flash('일치하는 계정을 찾지 못했습니다. 감독명을 다시 확인해주세요.', 'info')
+            flash('일치하는 계정을 찾지 못했습니다. 닉네임을 다시 확인해주세요.', 'info')
     return _account_recovery_page('find_id.html', masked_email=masked_email)
 
 
@@ -3989,7 +3991,7 @@ def complete_google_signup():
     if request.method == 'POST':
         username = (request.form.get('username') or "").strip()
         if not username or len(username) > 100:
-            flash('감독명은 1자 이상 100자 이하로 입력해주세요.', 'danger')
+            flash('닉네임은 1자 이상 100자 이하로 입력해주세요.', 'danger')
             return render_template(
                 'complete_google_signup.html',
                 pending=pending,
@@ -4018,7 +4020,7 @@ def complete_google_signup():
         if user:
             username_query = username_query.filter(User.id != user.id)
         if username_query.first():
-            flash('이미 사용 중인 감독명입니다.', 'danger')
+            flash('이미 사용 중인 닉네임입니다.', 'danger')
             return render_template(
                 'complete_google_signup.html',
                 pending=pending,
@@ -4063,7 +4065,7 @@ def complete_google_signup():
             db.session.commit()
         except IntegrityError:
             db.session.rollback()
-            flash('이미 사용 중인 감독명입니다. 다른 이름을 선택해주세요.', 'danger')
+            flash('이미 사용 중인 닉네임입니다. 다른 이름을 선택해주세요.', 'danger')
             return render_template(
                 'complete_google_signup.html',
                 pending=pending,
@@ -4076,7 +4078,7 @@ def complete_google_signup():
             remember=True,
             duration=app.config["REMEMBER_COOKIE_DURATION"],
         )
-        flash(f'{user.username} 감독님, 가입이 완료되었습니다!', 'success')
+        flash(f'{user.username}님, 가입이 완료되었습니다!', 'success')
         return redirect(next_url or url_for('index'))
 
     return render_template(
@@ -4100,7 +4102,7 @@ def register():
             flash('올바른 이메일 주소를 입력해주세요.', 'danger')
             return render_template('register.html')
         if not username or len(username) > 100:
-            flash('감독명은 1자 이상 100자 이하로 입력해주세요.', 'danger')
+            flash('닉네임은 1자 이상 100자 이하로 입력해주세요.', 'danger')
             return render_template('register.html')
         if len(password) < 8:
             flash('비밀번호는 8자 이상으로 설정해주세요.', 'danger')
@@ -4115,7 +4117,7 @@ def register():
             func.lower(User.username) == username.lower()
         ).first()
         if user_by_name:
-            flash('이미 사용 중인 감독명입니다.', 'danger')
+            flash('이미 사용 중인 닉네임입니다.', 'danger')
             return render_template('register.html')
 
         new_user = User(
@@ -4130,7 +4132,7 @@ def register():
             db.session.commit()
         except IntegrityError:
             db.session.rollback()
-            flash('이미 사용 중인 이메일 또는 감독명입니다.', 'danger')
+            flash('이미 사용 중인 이메일 또는 닉네임입니다.', 'danger')
             return render_template('register.html')
 
         try:
@@ -7306,6 +7308,17 @@ def market_fee_calculator():
     return render_template(
         "market_fee_calculator.html",
         robots_meta="index,follow",
+    )
+
+
+@app.route("/win-rate-calculator")
+def win_rate_calculator():
+    return render_template(
+        "win_rate_calculator.html",
+        robots_meta="index,follow",
+        canonical_url=_canonical("/win-rate-calculator"),
+        og_title="FC모바일 승률 계산기 | 피모북",
+        og_description="별 수와 총 승리 수, 무승부 빈도로 FC모바일 일반모드 승률과 전체 경기 수를 계산합니다.",
     )
 
 
