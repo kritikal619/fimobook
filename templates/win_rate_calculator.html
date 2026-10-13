@@ -4,7 +4,7 @@
 {% block title %}FC모바일 승률 계산기 | 별·승리 수로 일반모드 승률 계산 | 피모북{% endblock %}
 
 {% block extra_head %}
-<meta name="description" content="FC모바일 일반모드 승률 계산기. 프로필의 별 수와 총 승리 수, 무승부 빈도만 넣으면 패배 수, 전체 경기 수, 승률과 승점 반영 승률, 목표 별까지 필요한 경기 수를 계산합니다.">
+<meta name="description" content="FC모바일 일반모드 승률 계산기. 프로필의 별 수와 총 승리 수, 무승부 빈도만 넣으면 패배 수, 전체 경기 수, 승률, 목표 별까지 필요한 경기 수를 계산합니다.">
 <meta name="keywords" content="FC모바일 승률 계산기, FC모바일 승률, 일반모드 승률, FC모바일 별, FC챔피언 별, 승률 계산">
 <script type="application/ld+json">
 {
@@ -136,7 +136,6 @@
           <div class="wr-row"><dt>패배</dt><dd id="wr-losses">-</dd></div>
           <div class="wr-row"><dt>무승부</dt><dd id="wr-drawn">-</dd></div>
           <div class="wr-row"><dt>전체 경기</dt><dd id="wr-games">-</dd></div>
-          <div class="wr-row"><dt>승점 반영 승률</dt><dd id="wr-point-rate">-</dd></div>
         </dl>
         <p class="wr-note" id="wr-caveat">0별에서 진 경기는 별에 남지 않아 실제 승률은 이보다 낮을 수 있습니다.</p>
       </section>
@@ -175,7 +174,7 @@
     var ids = ["stars", "wins", "every", "goal", "expect"];
     var el = {};
     ids.forEach(function (id) { el[id] = document.getElementById("wr-" + id); });
-    ["error", "rate", "losses", "drawn", "games", "point-rate", "target-result"].forEach(function (id) {
+    ["error", "rate", "losses", "drawn", "games", "target-result"].forEach(function (id) {
       el[id] = document.getElementById("wr-" + id);
     });
 
@@ -188,7 +187,7 @@
 
     function reset(message) {
       el.error.textContent = message || "";
-      ["rate", "losses", "drawn", "games", "point-rate", "target-result"].forEach(function (id) {
+      ["rate", "losses", "drawn", "games", "target-result"].forEach(function (id) {
         el[id].textContent = "-";
       });
     }
@@ -215,7 +214,6 @@
       el.losses.textContent = nf.format(losses) + "패";
       el.drawn.textContent = nf.format(draws) + "무";
       el.games.textContent = nf.format(games) + "경기";
-      el["point-rate"].textContent = percent((wins + draws * 0.5) / games * 100);
 
       var goal = readInt(el.goal);
       var expect = parseFloat(String(el.expect.value || "").replace(/[^\d.]/g, ""));
