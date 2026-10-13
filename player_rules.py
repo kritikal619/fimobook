@@ -608,7 +608,6 @@ PLAYER_REVIEW_DEFENDER_RATING_FIELDS = [
     {"key": "speed", "field": "rating_speed", "note_field": "note_speed", "label": "속도"},
     {"key": "pass", "field": "rating_pass", "note_field": "note_pass", "label": "패스"},
     {"key": "positioning", "field": "rating_positioning", "note_field": "note_positioning", "label": "위치선정"},
-    {"key": "feel", "field": "rating_feel", "note_field": "note_feel", "label": "체감"},
     {"key": "duel", "field": "rating_duel", "note_field": "note_duel", "label": "경합"},
     {"key": "defense", "field": "rating_defense", "note_field": "note_defense", "label": "수비"},
 ]
