@@ -91,7 +91,6 @@
   align-items: center;
   padding: 14px 15px;
   border: 1px solid #b9dfcb;
-  border-left: 4px solid var(--analysis-accent);
   border-radius: 10px;
   background: #f8fcfa;
 }
@@ -341,7 +340,6 @@ html[data-theme="dark"] .player-analysis__config span {
 
 html[data-theme="dark"] .analysis-primary-role {
   border-color: #2f6a58;
-  border-left-color: var(--analysis-accent);
   background: #142b2b;
 }
 
