@@ -481,6 +481,13 @@
             <span class="rating-note">{{ review.rating_notes.get(field.key) or '별도 평가 없음' }}</span>
           </div>
         {% endfor %}
+        {% if review.ratings.get('shot') is not none and review.ratings.get('shot') != '' and not (review_rating_fields | selectattr('key', 'equalto', 'shot') | list) %}
+          <div class="review-rating-card">
+            <span class="rating-label">슛</span>
+            <span class="rating-score">{{ review.ratings.get('shot') }}/10</span>
+            <span class="rating-note">{{ review.rating_notes.get('shot') or '별도 평가 없음' }}</span>
+          </div>
+        {% endif %}
         {% for item in review.skill_move_ratings or [] %}
           <div class="review-rating-card">
             <span class="rating-label">{{ item.label }}</span>
