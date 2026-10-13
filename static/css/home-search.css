@@ -16,7 +16,7 @@
 }
 
 .main-content{
-  max-width:860px;
+  max-width:960px;
   background:var(--card);
   box-shadow:var(--shadow);
   border:1px solid var(--line);
@@ -38,7 +38,7 @@
 /* ===== 상단 검색 ===== */
 .search-section{
   width:100%;
-  max-width: 800px;
+  max-width:100%;
   display:flex;
   flex-direction:column;
   align-items:center;
@@ -97,6 +97,7 @@
   font-weight:800;
   color:var(--text);
   box-shadow:none;
+  transition:none;
 }
 .input-area input[type="text"]::placeholder{ color:#90a09a; font-weight:700; }
 .input-area input[type="text"]:focus{
@@ -555,7 +556,7 @@
 }
 .latest-review-empty{
   padding:20px;
-  border:1px dashed var(--line);
+  border:1px solid var(--line);
   border-radius:12px;
   background:#f8fafc;
   color:#94a3b8;
@@ -1135,7 +1136,7 @@
 .home-notice-empty {
   margin-top:12px;
   padding:10px 12px;
-  border:1px dashed var(--line);
+  border:1px solid var(--line);
   border-radius:12px;
   color:var(--muted);
   font-size:12px;
@@ -1270,7 +1271,7 @@
   color:#94a3b8;
   padding:18px 0;
   width:100%;
-  border:1px dashed #d6dee8;
+  border:1px solid #d6dee8;
   border-radius:12px;
   background:#f8fafc;
   font-weight:900;

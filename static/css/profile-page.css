@@ -47,10 +47,10 @@ html[data-theme="dark"] .profile-shell .profile-badge.verified { color: var(--pr
 .profile-button:hover { text-decoration: none; }
 .profile-button-secondary { border-color: var(--line); background: var(--panel); color: var(--ink); }
 .profile-button-secondary:hover { border-color: var(--brand); color: var(--brand-dark); background: var(--profile-soft); }
-.profile-shell .profile-button-primary { background: linear-gradient(90deg, #059669, #10b981); color: #fff; }
+.profile-shell .profile-button-primary { background: #059669; color: #fff; }
 .profile-shell .profile-button-primary:hover { background: #047857; color: #fff !important; }
 .profile-button:disabled { opacity: .45; cursor: default; }
-.profile-button-primary:disabled:hover { background: linear-gradient(90deg, #059669, #10b981); }
+.profile-button-primary:disabled:hover { background: #059669; }
 .profile-edit-link { flex-shrink: 0; }
 .profile-notification-count { min-width: 16px; padding: 0 4px; border-radius: 5px; background: var(--profile-green-soft); color: var(--profile-green-ink); text-align: center; font-size: 11px; }
 

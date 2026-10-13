@@ -309,7 +309,7 @@
   .fee-ledger-head .fee-card-title { gap: 6px; margin: 0; }
   .fee-ledger-clear { border: 0; background: none; color: #94a3b8; font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; padding: 10px 4px; }
   .fee-ledger-clear:hover { color: #e11d48; }
-  .fee-ledger-empty { margin: 0; padding: 14px; border: 1px dashed #d7e1ea; border-radius: 9px; color: #94a3b8; font-size: 12px; font-weight: 650; text-align: center; }
+  .fee-ledger-empty { margin: 0; padding: 14px; border: 1px solid #d7e1ea; border-radius: 9px; color: #94a3b8; font-size: 12px; font-weight: 650; text-align: center; }
   .fee-ledger-list { display: grid; gap: 0; margin: 0; padding: 0; list-style: none; }
   .fee-ledger-item { display: grid; grid-template-columns: 24px minmax(0, 1fr) auto 36px; align-items: center; gap: 10px; padding: 9px 0; border-top: 1px solid #eef2f6; font-size: 12px; }
   .fee-ledger-item:first-child { border-top: 0; }
@@ -347,6 +347,51 @@
     .fee-quick-button.is-clear { grid-column: 1 / -1; height: 36px; }
     .fee-result-card { position: static; }
   }
+
+  /* 단순화: 장식 줄이기 */
+  .fee-title { font-size: 26px; letter-spacing: -.6px; }
+  .fee-card { border-color: #dbe3ec; border-radius: 8px; }
+  .fee-card-title { font-weight: 800; }
+  .fee-input,
+  .fee-holding input { border: 1px solid #cbd5e1; border-radius: 6px; font-weight: 700; }
+  .fee-input { height: 42px; }
+  .fee-input:focus,
+  .fee-holding input:focus { border-color: #059669; box-shadow: none; }
+  .fee-step { width: 42px; height: 42px; border: 1px solid #cbd5e1; border-radius: 6px; }
+  .fee-step:hover { border-color: #94a3b8; color: #17202a; }
+  .fee-quick-button { border-color: #cbd5e1; border-radius: 6px; color: #475569; font-weight: 700; }
+  .fee-quick-button:hover { border-color: #94a3b8; background: #f1f5f9; color: #17202a; }
+  .fee-price-reading { color: #64748b; font-weight: 700; }
+  .fee-formula { margin: 18px 0 0; padding: 12px 0 0; border: 0; border-top: 1px solid #e5e7eb; border-radius: 0; background: none; color: #64748b; font-size: 12px; font-weight: 600; }
+  .fee-result-main { border: 1px solid #e2e8f0; border-radius: 6px; background: #f8fafc; }
+  .fee-result-value { font-weight: 800; }
+  .fee-breakdown-row + .fee-breakdown-row { border-top-color: #eef2f6; }
+  .fee-breakdown-row.is-payback strong { color: #17202a; }
+  .fee-effective { margin-top: 10px; padding: 12px 0 0; border: 0; border-top: 1px solid #e5e7eb; border-radius: 0; background: none; color: #475569; font-weight: 700; }
+  .fee-effective strong { color: #17202a; }
+  .fee-profit { border: 1px solid #e2e8f0; border-radius: 6px; }
+  .fee-profit.is-gain .is-main strong { color: #17202a; }
+  .fee-action { height: 42px; border-color: #cbd5e1; border-radius: 6px; }
+  .fee-action.is-primary { border-color: #263640; background: #263640; }
+  .fee-action.is-primary:hover { background: #0f1c23; }
+  .fee-action:not(.is-primary):hover { border-color: #94a3b8; color: #17202a; }
+  .fee-ledger-empty { border-style: solid; border-color: #e2e8f0; border-radius: 6px; }
+  .fee-ledger-total { border-radius: 6px; }
+  .fee-grand { border-top-color: #e5e7eb; color: #17202a; }
+  .fee-toast { border-radius: 6px; }
+  .fee-help { font-size: 12px; }
+
+  html[data-theme="dark"] .fee-card { border-color: #334155; }
+  html[data-theme="dark"] :is(.fee-input, .fee-holding input) { border-color: #475569; }
+  html[data-theme="dark"] .fee-quick-button:hover { background: #1e293b; color: #f8fafc; }
+  html[data-theme="dark"] .fee-formula { border-top-color: #334155; color: #aeb9c9; }
+  html[data-theme="dark"] .fee-effective { border-top-color: #334155; background: none; color: #cbd5e1; }
+  html[data-theme="dark"] .fee-effective strong,
+  html[data-theme="dark"] .fee-grand { color: #f8fafc; }
+  html[data-theme="dark"] .fee-breakdown-row.is-payback strong { color: #f8fafc; }
+  html[data-theme="dark"] .fee-action.is-primary { border-color: #e2e8f0; background: #e2e8f0; color: #0f172a; }
+  html[data-theme="dark"] .fee-action.is-primary:hover { background: #f8fafc; }
+  html[data-theme="dark"] :is(.fee-profit, .fee-result-main) { border-color: #334155; }
 </style>
 {% endblock %}
 
@@ -354,7 +399,7 @@
 <section class="fee-page" aria-labelledby="fee-page-title">
   <header class="fee-heading">
     <h1 class="fee-title" id="fee-page-title">수수료 계산기</h1>
-    <p class="fee-description">판매 금액과 페이백률을 넣으면 바로 계산됩니다. 결과를 담아 여러 건을 합산할 수 있어요.</p>
+    <p class="fee-description">판매 금액과 수수료 페이백률로 최종 수령액을 계산합니다.</p>
   </header>
 
   <div class="fee-layout">
@@ -364,7 +409,6 @@
       <div class="fee-field">
         <div class="fee-label-row">
           <label class="fee-label" for="sale-price">판매 금액</label>
-          <span class="fee-fixed-badge">예: 3억5천만</span>
         </div>
         <div class="fee-input-wrap">
           <input class="fee-input" id="sale-price" type="text" value="1,000,000,000" inputmode="numeric" autocomplete="off" aria-describedby="sale-price-reading">
@@ -383,7 +427,6 @@
       <div class="fee-field">
         <div class="fee-label-row">
           <label class="fee-label" for="payback-rate">수수료 페이백률</label>
-          <span class="fee-fixed-badge">기본 수수료 30%</span>
         </div>
         <div class="fee-rate-row">
           <div class="fee-input-wrap">
@@ -400,7 +443,6 @@
       <div class="fee-field">
         <div class="fee-label-row">
           <label class="fee-label" for="buy-price">구매 금액 <span class="fee-optional">선택</span></label>
-          <span class="fee-fixed-badge">입력하면 순이익 계산</span>
         </div>
         <div class="fee-input-wrap">
           <input class="fee-input" id="buy-price" type="text" inputmode="numeric" autocomplete="off" placeholder="산 가격" aria-describedby="buy-price-reading">
@@ -409,10 +451,7 @@
         <p class="fee-price-reading" id="buy-price-reading" aria-live="polite"></p>
       </div>
 
-      <div class="fee-formula">
-        <strong>계산식</strong><br>
-        판매 금액 × 70% + 판매 금액 × 30% × 페이백률
-      </div>
+      <p class="fee-formula">수령액 = 판매 금액 × 70% + 판매 금액 × 30% × 페이백률</p>
     </section>
 
     <section class="fee-card fee-result-card" aria-labelledby="fee-result-title">
@@ -475,7 +514,7 @@
   </section>
 
   <aside class="fee-help">
-    <span>페이백은 판매 금액이 아니라 <strong>기본 수수료 30%</strong>에 적용됩니다. 담은 목록과 보유 MP는 이 기기에만 저장됩니다.</span>
+    <span>페이백은 기본 수수료 30%에 적용됩니다. 담은 목록과 보유 MP는 이 기기에만 저장됩니다.</span>
   </aside>
   <div class="fee-toast" id="fee-toast" role="status" aria-live="polite"></div>
 </section>

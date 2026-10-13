@@ -36,8 +36,8 @@
   white-space: nowrap !important;
 }
 </style>
-<link rel="stylesheet" href="{{ url_for('static', filename='css/player-detail.css', v='20261012-alt-3') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/player-reviews.css', v='20261010-3') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/player-detail.css', v='20261013-spec4') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/player-reviews.css', v='20261013-flat') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/player-price-history.css', v='20260823-1') }}">
 {% endblock %}
 
@@ -279,53 +279,35 @@
             <div class="gauge-label">피지컬</div>
           </div>
         </div>
-        <div class="stat-pill-row">
-          <div class="stat-pill">
-            {% set potential_positions = player.potentialPositions if player.potentialPositions is defined else [] %}
-            {% if potential_positions %}
-              <span>부포지션 <span class="accent">{{ potential_positions|join(', ') }}</span></span>
-            {% elif player.potentialPosition %}
-              <span>부포지션 <span class="accent">{{ player.potentialPosition }}</span></span>
-            {% endif %}
-            {% if player.jerseyNumber is defined and player.jerseyNumber is not none %}
-              <span>등번호 <span class="accent">{{ player.jerseyNumber }}</span></span>
-            {% endif %}
-            {% set left_foot = player.footL|int if player.footL is not none else 0 %}
-            {% set right_foot = player.footR|int if player.footR is not none else 0 %}
-            {% set main_foot = player.mainFoot|int if player.mainFoot is not none else 0 %}
-            {% set is_left_main = main_foot == 2 %}
-            {% set is_right_main = main_foot == 1 %}
-            <span>발: <span class="foot-pair"><span class="{{ 'main-foot' if is_left_main else '' }}">{{ left_foot }}</span><span>/</span><span class="{{ 'main-foot' if is_right_main else '' }}">{{ right_foot }}</span></span></span>
-            {% set sm_level = player.skillMovesLevel if player.skillMovesLevel is not none else player.skillMoves %}
-            {% if sm_level is not none %}
-              <span class="accent">{{ (sm_level | int) + 1 }}성</span>
-            {% endif %}
-            <span>{{ player.skillMovesName or '-' }}</span>
-          </div>
-          <div class="stat-pill">
-            {% set work_rate_map = {0: "보통", 1: "낮음", 2: "높음"} %}
-            {% if player.attWorkRate is not none and player.defWorkRate is not none %}
-              {% set att_wr = work_rate_map[player.attWorkRate] %}
-              {% set def_wr = work_rate_map[player.defWorkRate] %}
-              <span>활동량 <span class="accent">{{ att_wr }}</span> / {{ def_wr }}</span>
-            {% else %}
-              <span>활동량 <span class="accent">-</span></span>
-            {% endif %}
-            {% if player.height is not none %}<span>{{ player.height }}cm</span>{% endif %}
-            {% if player.weight is not none %}<span>{{ player.weight }}kg</span>{% endif %}
-            {% if player.STA is not none %}
-              {% set stamina_blocks = (((player.STA / 10) | round(0, 'floor')) | int) + 1 %}
-              {% set stamina_full = stamina_blocks // 2 %}
-              {% set stamina_half = stamina_blocks % 2 %}
-              <span>체력 <span class="accent">{{ "★" * stamina_full }}{% if stamina_half %}<span class="half-star">★</span>{% endif %}{{ "☆" * (5 - stamina_full - stamina_half) if (5 - stamina_full - stamina_half) > 0 else "" }}</span></span>
-            {% endif %}
-          </div>
-          {% if player.position == 'GK' %}
-          <div class="stat-pill">
-            <span>피지컬(GK) <span class="accent">{{ gk_val }}</span></span>
-          </div>
+        {% set work_rate_map = {0: "보통", 1: "낮음", 2: "높음"} %}
+        {% set left_foot = player.footL|int if player.footL is not none else 0 %}
+        {% set right_foot = player.footR|int if player.footR is not none else 0 %}
+        {% set main_foot = player.mainFoot|int if player.mainFoot is not none else 0 %}
+        {% set sm_level = player.skillMovesLevel if player.skillMovesLevel is not none else player.skillMoves %}
+        {% set potential_positions = player.potentialPositions if player.potentialPositions is defined else [] %}
+        <dl class="stat-spec">
+          <div><dt>개인기</dt><dd>{% if sm_level is not none %}{{ (sm_level | int) + 1 }}성{% endif %}{% if sm_level is not none and player.skillMovesName %} {% endif %}{{ player.skillMovesName or ('' if sm_level is not none else '-') }}</dd></div>
+          <div><dt>발 (왼 / 오른)</dt><dd class="foot-pair"><span class="{{ 'main-foot' if main_foot == 2 else '' }}">{{ left_foot }}</span> / <span class="{{ 'main-foot' if main_foot == 1 else '' }}">{{ right_foot }}</span></dd></div>
+          {% if player.height is not none or player.weight is not none %}
+            <div><dt>신장 / 체중</dt><dd>{{ player.height ~ 'cm' if player.height is not none else '-' }} / {{ player.weight ~ 'kg' if player.weight is not none else '-' }}</dd></div>
           {% endif %}
-        </div>
+          <div><dt>활동량 (공격 / 수비)</dt><dd>{% if player.attWorkRate is not none and player.defWorkRate is not none %}{{ work_rate_map[player.attWorkRate] }} / {{ work_rate_map[player.defWorkRate] }}{% else %}-{% endif %}</dd></div>
+          {% if player.STA is not none %}
+            {% set stamina_blocks = (((player.STA / 10) | round(0, 'floor')) | int) + 1 %}
+            {% set stamina_full = stamina_blocks // 2 %}
+            {% set stamina_half = stamina_blocks % 2 %}
+            <div><dt>체력</dt><dd class="stamina-stars" aria-label="5점 만점에 {{ stamina_blocks / 2 }}점">{{ "★" * stamina_full }}{% if stamina_half %}<span class="half-star">★</span>{% endif %}{{ "☆" * (5 - stamina_full - stamina_half) if (5 - stamina_full - stamina_half) > 0 else "" }}</dd></div>
+          {% endif %}
+          {% if player.jerseyNumber is defined and player.jerseyNumber is not none %}
+            <div><dt>등번호</dt><dd>{{ player.jerseyNumber }}</dd></div>
+          {% endif %}
+          {% if potential_positions or player.potentialPosition %}
+            <div><dt>부포지션</dt><dd>{{ potential_positions|join(', ') if potential_positions else player.potentialPosition }}</dd></div>
+          {% endif %}
+          {% if player.position == 'GK' %}
+            <div><dt>GK 피지컬</dt><dd>{{ gk_val }}</dd></div>
+          {% endif %}
+        </dl>
         {% if player.playstyleSlots %}
           <div class="summary-playstyles">
             <div class="summary-playstyles-title">플레이스타일</div>
@@ -672,24 +654,6 @@
       </section>
       {% endif %}
 
-      {% if other_classes %}
-        <h2 class="detail-section-title">다른 클래스</h2>
-        <div class="other-classes">
-          {% for oc in other_classes %}
-            <a class="other-class-card" href="{{ url_for('player_detail', cid=oc.cid) }}" aria-label="FC모바일 {{ oc.className }} {{ oc.playerKor }} OVR {{ oc.ovr }} 선수 정보">
-              {% set other_card_thumb = player_thumbnail_url('card', oc.cid, 160) %}
-              {% set other_face_thumb = player_thumbnail_url('faceon', oc.cid, 160) %}
-              <div class="other-class-image" data-fimo-player-card='{{ player_card_meta(oc)|tojson }}' data-player-bg="{{ other_card_thumb or oc.bimage or url_for('static', filename='favicon.ico') }}">
-                <img src="{{ other_face_thumb or oc.pimage or url_for('static', filename='favicon.ico') }}" alt="FC모바일 {{ oc.className }} {{ oc.playerKor }} 선수 카드" loading="lazy" decoding="async">
-                <div class="other-rating">{{ oc.ovr or '-' }}</div>
-                <div class="other-position">{{ oc.position or '-' }}</div>
-                <div class="other-name">{{ oc.playerKor or '-' }}</div>
-              </div>
-            </a>
-          {% endfor %}
-        </div>
-      {% endif %}
-
       {% if alternative_cards %}
         <section class="alt-cards" aria-labelledby="alt-cards-title">
           <h2 class="detail-section-title" id="alt-cards-title">대체 카드</h2>
@@ -698,7 +662,14 @@
               {% set ap = alt.player %}
               <li class="alt-card">
                 <a class="alt-card-main" href="{{ url_for('player_detail', cid=ap.cid) }}" aria-label="FC모바일 {{ ap.className }} {{ ap.playerKor }} OVR {{ ap.ovr }} 선수 정보">
-                  <img class="alt-card-face" src="{{ player_thumbnail_url('faceon', ap.cid, 96) or ap.pimage or url_for('static', filename='favicon.ico') }}" alt="" loading="lazy" decoding="async" width="48" height="48">
+                  {% set alt_card_thumb = player_thumbnail_url('card', ap.cid, 160) %}
+                  {% set alt_face_thumb = player_thumbnail_url('faceon', ap.cid, 160) %}
+                  <div class="alt-card-art other-class-image" data-fimo-player-card='{{ player_card_meta(ap)|tojson }}' data-player-bg="{{ alt_card_thumb or ap.bimage or url_for('static', filename='favicon.ico') }}">
+                    <img src="{{ alt_face_thumb or ap.pimage or url_for('static', filename='favicon.ico') }}" alt="" loading="lazy" decoding="async">
+                    <div class="other-rating">{{ ap.ovr or '-' }}</div>
+                    <div class="other-position">{{ ap.position or '-' }}</div>
+                    <div class="other-name">{{ ap.playerKor or '-' }}</div>
+                  </div>
                   <span class="alt-card-id">
                     <strong>{{ ap.playerKor }}</strong>
                     <span>{{ ap.className }} · {{ ap.position }} · OVR {{ ap.ovr }}</span>
@@ -719,6 +690,24 @@
             {% endfor %}
           </ul>
         </section>
+      {% endif %}
+
+      {% if other_classes %}
+        <h2 class="detail-section-title">다른 클래스</h2>
+        <div class="other-classes">
+          {% for oc in other_classes %}
+            <a class="other-class-card" href="{{ url_for('player_detail', cid=oc.cid) }}" aria-label="FC모바일 {{ oc.className }} {{ oc.playerKor }} OVR {{ oc.ovr }} 선수 정보">
+              {% set other_card_thumb = player_thumbnail_url('card', oc.cid, 160) %}
+              {% set other_face_thumb = player_thumbnail_url('faceon', oc.cid, 160) %}
+              <div class="other-class-image" data-fimo-player-card='{{ player_card_meta(oc)|tojson }}' data-player-bg="{{ other_card_thumb or oc.bimage or url_for('static', filename='favicon.ico') }}">
+                <img src="{{ other_face_thumb or oc.pimage or url_for('static', filename='favicon.ico') }}" alt="FC모바일 {{ oc.className }} {{ oc.playerKor }} 선수 카드" loading="lazy" decoding="async">
+                <div class="other-rating">{{ oc.ovr or '-' }}</div>
+                <div class="other-position">{{ oc.position or '-' }}</div>
+                <div class="other-name">{{ oc.playerKor or '-' }}</div>
+              </div>
+            </a>
+          {% endfor %}
+        </div>
       {% endif %}
 
       {% if player.traits %}

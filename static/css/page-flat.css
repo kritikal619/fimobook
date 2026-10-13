@@ -3,8 +3,8 @@
 
 body.detail-search-page:not(.home-page) .main-content,
 body.compare-page-body:not(.home-page) .main-content {
-  max-width: 1180px;
-  padding: 8px 20px 28px;
+  max-width: 960px;
+  padding: 12px 40px 36px;
 }
 
 /* 세부검색: 패널 상자 제거 (섹션 구분선은 그대로 둔다) */
@@ -27,11 +27,13 @@ body.compare-page-body:not(.home-page) .main-content {
 }
 .compare-page-body .compare-page .stats-panel { padding-top: 14px; border-top: 2px solid var(--ink, #1f2937); }
 
-@media (max-width: 640px) {
+@media (max-width: 520px) {
   body.detail-search-page:not(.home-page) .main-content,
   body.compare-page-body:not(.home-page) .main-content {
-    padding: 4px 6px 24px;
+    padding: 6px 14px 28px;
   }
+}
+@media (max-width: 640px) {
   .detail-search-page .detail-search-wrap .panel { padding: 0; }
   .compare-page-body .compare-page .player-panel { padding: 0; }
 }

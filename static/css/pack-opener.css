@@ -155,7 +155,7 @@ html[data-theme=dark] .pack-workspace{--pack-border:#2e383e;--pack-muted:#899a9f
 /* Token rewards share the MP slot proportions in the complete overview. */
 .reward-summary-grid[data-items-only=false] .item-icon:not(.mp-icon){display:grid;place-items:center;font-size:3cqw;box-sizing:border-box}
 .pack-workspace .reward-summary-grid[data-items-only=true] .item-icon{width:14cqw;height:14cqw;flex:none;font-size:5cqw}
-.history-pending{display:flex;align-items:center;gap:9px;margin:14px 0;color:var(--pack-muted);font-size:12px}.history-pending>span{display:grid;place-items:center;width:38px;height:44px;border:1px dashed var(--pack-border);border-radius:4px;font-size:25px;color:inherit}.history-pending[hidden]{display:none}
+.history-pending{display:flex;align-items:center;gap:9px;margin:14px 0;color:var(--pack-muted);font-size:12px}.history-pending>span{display:grid;place-items:center;width:38px;height:44px;border:1px solid var(--pack-border);border-radius:4px;font-size:25px;color:inherit}.history-pending[hidden]{display:none}
 
 /* Start long reward lists at the first row inside the expanded scroll area. */
 .reward-summary{inset:14% 5% 12%;display:block;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;touch-action:pan-y;scrollbar-width:thin}

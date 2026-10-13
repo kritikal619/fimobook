@@ -3,7 +3,7 @@
 {% block title %}FC모바일 일반모드 파워랭킹 | 피모북{% endblock %}
 {% block extra_head %}
 <meta name="description" content="FC모바일 상위 랭커가 쓰는 카드와 사용 인원, 랭커별 스쿼드.">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/normal-mode-power-ranking.css', v='20261005-12') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/normal-mode-power-ranking.css', v='20261013-line') }}">
 {% endblock %}
 {% block content %}
 <section class="power-page" id="normalPowerRanking">
@@ -34,4 +34,4 @@
 </section>
 <script type="application/json" id="normalPowerRankingData">{{ ranking_data | tojson }}</script>
 {% endblock %}
-{% block extra_scripts %}<script src="{{ url_for('static', filename='js/normal-mode-power-ranking.js', v='20261005-12') }}" defer></script>{% endblock %}
+{% block extra_scripts %}<script src="{{ url_for('static', filename='js/normal-mode-power-ranking.js', v='20261013-line') }}" defer></script>{% endblock %}

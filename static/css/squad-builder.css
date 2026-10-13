@@ -134,15 +134,15 @@ select {
 }
 
 .primary-btn {
-    background: linear-gradient(90deg, var(--brand-dark) 0%, var(--brand) 100%);
+    background: var(--brand-dark);
 }
 
 .secondary-btn {
-    background: linear-gradient(90deg, #0f172a 0%, #334155 100%);
+    background: #0f172a;
 }
 
 .danger-btn {
-    background: linear-gradient(90deg, #dc2626 0%, #ef4444 100%);
+    background: #dc2626;
 }
 
 .primary-btn:disabled,
@@ -1040,7 +1040,7 @@ body:not(.mobile-layout) #search-modal .modal-filter-shell {
     padding: 0 16px;
     border: none;
     border-radius: 14px;
-    background: linear-gradient(90deg, var(--brand-dark) 0%, var(--brand) 100%);
+    background: var(--brand-dark);
     color: #fff;
     font-weight: 800;
     cursor: pointer;
@@ -1071,7 +1071,7 @@ body:not(.mobile-layout) #search-modal .modal-filter-shell {
     padding: 42px 16px;
     border-radius: 18px;
     background: #f8fafc;
-    border: 1px dashed #dbe3ec;
+    border: 1px solid #dbe3ec;
     color: var(--sub);
     text-align: center;
     font-weight: 700;
@@ -1855,15 +1855,15 @@ body.mobile-layout #mobile-overlay-compare-btn {
 }
 
 body.mobile-layout #mobile-overlay-reset-btn {
-    background: linear-gradient(90deg, #f97316 0%, #fb7185 100%);
+    background: #f97316;
 }
 
 body.mobile-layout #mobile-overlay-detail-btn {
-    background: linear-gradient(90deg, #2563eb 0%, #38bdf8 100%);
+    background: #2563eb;
 }
 
 body.mobile-layout #mobile-overlay-compare-btn {
-    background: linear-gradient(90deg, #0f766e 0%, #14b8a6 100%);
+    background: #0f766e;
 }
 
 

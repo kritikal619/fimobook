@@ -293,9 +293,8 @@
             if (skillSummary) {
                 if (skillType === 'skill') {
                     skillSummary.textContent = `스킬 포인트 ${spent} / ${enhance}`;
-                } else if (skillType === 'boost') {
-                    const level = Number(skillCards[0]?.querySelector('[data-skill-level-select]')?.value || 0);
-                    skillSummary.textContent = `스킬부스트 ${level}레벨`;
+                } else {
+                    skillSummary.textContent = '';
                 }
             }
             return bonuses;

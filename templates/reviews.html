@@ -6,7 +6,7 @@
 {% if player %}
   {% include "_adsense_head.html" %}
 {% endif %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/player-reviews.css', v='20261010-3') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/player-reviews.css', v='20261013-flat') }}">
 <style>
   .main-content {
     max-width: 980px;
@@ -41,7 +41,7 @@
     padding: 17px 18px;
     border: 1px solid #dbe3ec;
     border-radius: 16px;
-    background: linear-gradient(135deg, #f5fdf9 0%, #fff 62%);
+    background: #fff;
   }
   .player-reviews-art {
     width: 82px;
@@ -75,7 +75,7 @@
   .player-reviews-position {
     min-height: 24px;
     padding: 0 8px;
-    border-radius: 999px;
+    border-radius: 5px;
     background: #d1fae5;
     color: #047857;
     display: inline-flex;
@@ -112,7 +112,7 @@
   }
   .player-reviews-error {
     padding: 40px 18px;
-    border: 1px dashed #cbd5e1;
+    border: 1px solid #dbe3ec;
     border-radius: 14px;
     color: #64748b;
     font-size: 14px;
@@ -189,7 +189,6 @@
     <section aria-labelledby="allPlayerReviewsTitle">
       <div class="review-content-heading">
         <div class="review-content-heading-main">
-          <span class="review-content-kicker">ALL REVIEWS</span>
           <div class="review-content-title-row">
             <h2 class="review-content-title" id="allPlayerReviewsTitle">전체 리뷰</h2>
             <span class="review-content-count">{{ reviews|length }}개</span>

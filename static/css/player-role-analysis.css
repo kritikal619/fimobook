@@ -7,8 +7,8 @@
   box-sizing: border-box;
   margin: 14px 0;
   padding: 17px 18px;
-  border: 1px solid #dce5e0;
-  border-radius: 14px;
+  border: 1px solid #dbe3ec;
+  border-radius: 10px;
   background: #fff;
   color: var(--analysis-ink);
 }
@@ -35,13 +35,7 @@
 .player-analysis__head p {
   margin: 3px 0 0;
   color: var(--analysis-muted);
-  font-size: 11px;
-}
-
-.player-analysis__live {
-  flex: 0 0 auto;
-  color: #6b7d72;
-  font-size: 10px;
+  font-size: 12px;
 }
 
 .player-analysis__state {
@@ -71,92 +65,91 @@
 .player-analysis__config {
   display: flex;
   flex-wrap: wrap;
-  gap: 5px;
-  margin: 11px 0 8px;
+  gap: 2px 8px;
+  margin: 11px 0 10px;
 }
 
 .player-analysis__config span {
-  padding: 4px 7px;
-  border-radius: 6px;
-  background: #f1f5f3;
-  color: #64736b;
-  font-size: 9px;
-  font-weight: 700;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.player-analysis__config span + span::before {
+  content: "·";
+  margin-right: 8px;
+  color: #a8b3bf;
 }
 
 .analysis-primary-role {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 76px;
-  gap: 14px;
+  grid-template-columns: minmax(0, 1fr) 64px;
+  gap: 10px;
   align-items: center;
-  padding: 14px 15px;
-  border: 1px solid #b9dfcb;
-  border-left: 4px solid var(--analysis-accent);
-  border-radius: 10px;
-  background: #f8fcfa;
+  padding: 10px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: #f8fafc;
 }
 
 .analysis-primary-role__copy > span {
-  color: #4b7e65;
-  font-size: 9px;
-  font-weight: 800;
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 700;
 }
 
 .analysis-primary-role__copy h3 {
-  margin: 2px 0 3px;
-  color: #17251e;
-  font-size: 17px;
+  margin: 1px 0 2px;
+  color: var(--analysis-ink);
+  font-size: 16px;
   line-height: 1.25;
 }
 
 .analysis-primary-role__copy p {
   margin: 0;
-  color: #58675f;
-  font-size: 11px;
-  line-height: 1.45;
+  color: #475569;
+  font-size: 12px;
+  line-height: 1.4;
 }
 
 .analysis-primary-role__notes {
   display: flex;
   flex-wrap: wrap;
-  gap: 3px 10px;
-  margin-top: 5px;
+  gap: 2px 10px;
+  margin-top: 4px;
 }
 
 .analysis-primary-role__notes small {
-  color: #327656;
-  font-size: 9px;
-  font-weight: 700;
+  color: #475569;
+  font-size: 11px;
+  font-weight: 600;
 }
-
-.analysis-primary-role__notes .is-weakness { color: #a65d35; }
-.analysis-primary-role__notes .is-playstyle { color: #38639a; }
 
 .analysis-primary-role__score {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  padding-left: 12px;
-  border-left: 1px solid #d1e6da;
+  padding-left: 10px;
+  border-left: 1px solid #dbe3ec;
 }
 
 .analysis-primary-role__score strong {
-  color: #126c47;
+  color: var(--analysis-ink);
   font-family: 'FCOVR', 'IBM Plex Sans KR', sans-serif;
-  font-size: 31px;
+  font-size: 24px;
   line-height: 1;
 }
 
 .analysis-primary-role__score span {
-  color: #287858;
-  font-size: 9px;
-  font-weight: 800;
+  color: #475569;
+  font-size: 11px;
+  font-weight: 700;
 }
 
 .analysis-primary-role__score small {
-  margin-top: 3px;
-  color: #718078;
-  font-size: 8px;
+  margin-top: 2px;
+  color: #64748b;
+  font-size: 10px;
   white-space: nowrap;
 }
 
@@ -186,17 +179,17 @@
   place-items: center;
   border-radius: 6px;
   background: #f0f3f5;
-  color: #778493;
-  font-size: 9px;
+  color: #64748b;
+  font-size: 11px;
   font-weight: 800;
 }
 
 .analysis-role-alt > div { min-width: 0; }
-.analysis-role-alt strong { display: block; overflow: hidden; font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
-.analysis-role-alt small { display: block; overflow: hidden; margin-top: 1px; color: #7a8793; font-size: 8px; text-overflow: ellipsis; white-space: nowrap; }
+.analysis-role-alt strong { display: block; overflow: hidden; font-size: 13px; text-overflow: ellipsis; white-space: nowrap; }
+.analysis-role-alt small { display: block; overflow: hidden; margin-top: 1px; color: #64748b; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
 .analysis-role-alt__score { text-align: right; }
-.analysis-role-alt__score b { color: #296f51; font-size: 14px; }
-.analysis-role-alt__score small { font-size: 7px; }
+.analysis-role-alt__score b { color: var(--analysis-ink); font-size: 15px; }
+.analysis-role-alt__score small { font-size: 10px; }
 
 .analysis-subhead {
   display: flex;
@@ -206,8 +199,7 @@
   margin: 15px 0 7px;
 }
 
-.analysis-subhead h3 { margin: 0; font-size: 13px; }
-.analysis-subhead span { color: #829087; font-size: 9px; }
+.analysis-subhead h3 { margin: 0; font-size: 14px; }
 
 .analysis-style-grid {
   display: grid;
@@ -232,15 +224,15 @@
 
 .analysis-style-card__head strong {
   overflow: hidden;
-  font-size: 10px;
+  font-size: 12px;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .analysis-style-card__head span {
-  color: #18734d;
-  font-size: 11px;
-  font-weight: 900;
+  color: var(--analysis-ink);
+  font-size: 12px;
+  font-weight: 800;
 }
 
 .analysis-style-bar {
@@ -248,7 +240,7 @@
   margin-top: 6px;
   overflow: hidden;
   border-radius: 999px;
-  background: #edf1ef;
+  background: #e5e7eb;
 }
 
 .analysis-style-bar i {
@@ -256,42 +248,40 @@
   width: var(--analysis-score);
   height: 100%;
   border-radius: inherit;
-  background: #42b883;
+  background: var(--analysis-accent);
 }
 
 .analysis-style-card > small {
   display: block;
   margin-top: 4px;
-  color: #7b8981;
-  font-size: 8px;
+  color: #64748b;
+  font-size: 10px;
 }
-
-.analysis-style-card > small.is-playstyle { color: #38639a; font-weight: 700; }
 
 .analysis-method {
   margin-top: 9px;
-  border-top: 1px solid #edf1ef;
+  border-top: 1px solid #e5e7eb;
 }
 
 .analysis-method > summary {
   padding: 9px 1px 0;
   cursor: pointer;
-  color: #6f7d75;
-  font-size: 9px;
+  color: #64748b;
+  font-size: 11px;
   font-weight: 700;
 }
 
 .analysis-method p {
   margin: 8px 0 3px;
-  color: #64716a;
-  font-size: 9px;
+  color: #64748b;
+  font-size: 11px;
   line-height: 1.5;
 }
 
 .analysis-method > small {
   display: block;
-  color: #8a958f;
-  font-size: 8px;
+  color: #94a3b8;
+  font-size: 10px;
 }
 
 html[data-theme="dark"] .player-analysis {
@@ -314,8 +304,6 @@ html[data-theme="dark"] .analysis-style-card__head strong {
 }
 
 html[data-theme="dark"] .player-analysis__head p,
-html[data-theme="dark"] .player-analysis__live,
-html[data-theme="dark"] .analysis-subhead span,
 html[data-theme="dark"] .analysis-role-alt small,
 html[data-theme="dark"] .analysis-style-card > small,
 html[data-theme="dark"] .analysis-method p,
@@ -340,13 +328,12 @@ html[data-theme="dark"] .player-analysis__config span {
 }
 
 html[data-theme="dark"] .analysis-primary-role {
-  border-color: #2f6a58;
-  border-left-color: var(--analysis-accent);
-  background: #142b2b;
+  border-color: #475569;
+  background: #1c273a;
 }
 
 html[data-theme="dark"] .analysis-primary-role__copy > span {
-  color: #6ee7b7;
+  color: #aeb9c9;
 }
 
 html[data-theme="dark"] .analysis-primary-role__copy p {
@@ -354,28 +341,19 @@ html[data-theme="dark"] .analysis-primary-role__copy p {
 }
 
 html[data-theme="dark"] .analysis-primary-role__notes small {
-  color: #6ee7b7 !important;
-}
-
-html[data-theme="dark"] .analysis-primary-role__notes .is-weakness {
-  color: #fbbf7a !important;
-}
-
-html[data-theme="dark"] .analysis-primary-role__notes .is-playstyle,
-html[data-theme="dark"] .analysis-style-card > small.is-playstyle {
-  color: #93c5fd !important;
+  color: #cbd5e1 !important;
 }
 
 html[data-theme="dark"] .analysis-primary-role__score {
-  border-left-color: #335b52;
+  border-left-color: #334155;
 }
 
 html[data-theme="dark"] .analysis-primary-role__score strong {
-  color: #6ee7b7;
+  color: #f8fafc;
 }
 
 html[data-theme="dark"] .analysis-primary-role__score span {
-  color: #5ee0ad;
+  color: #cbd5e1;
 }
 
 html[data-theme="dark"] .analysis-primary-role__score small {
@@ -396,7 +374,7 @@ html[data-theme="dark"] .analysis-role-alt > span {
 
 html[data-theme="dark"] .analysis-role-alt__score b,
 html[data-theme="dark"] .analysis-style-card__head span {
-  color: #6ee7b7;
+  color: #f8fafc;
 }
 
 html[data-theme="dark"] .analysis-style-bar {
@@ -413,17 +391,48 @@ html[data-theme="dark"] .analysis-method {
 
 @media (max-width: 600px) {
   .player-analysis { padding: 14px; }
-  .player-analysis__live { display: none; }
   .analysis-role-alts { grid-template-columns: 1fr; }
   .analysis-style-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+  /* 추천 역할 카드: 점수를 오른쪽 위로 올려 설명이 전체 폭을 쓰게 한다 */
+  .analysis-primary-role,
+  .analysis-primary-role.analysis-primary-role {
+    position: relative;
+    display: block;
+    padding: 9px 10px;
+  }
+  .analysis-primary-role__copy > span,
+  .analysis-primary-role__copy h3 { display: inline; }
+  .analysis-primary-role__copy > span { margin-right: 6px; }
+  .analysis-primary-role__copy h3 { font-size: 16px; }
+  .analysis-primary-role__copy p { margin-top: 3px; }
+  .analysis-primary-role__notes { margin-top: 3px; }
+  .analysis-primary-role__score {
+    position: absolute;
+    top: 8px;
+    right: 10px;
+    display: grid;
+    grid-template-columns: auto auto;
+    justify-items: end;
+    align-items: baseline;
+    column-gap: 4px;
+    padding-left: 0;
+    border-left: 0;
+  }
+  .analysis-primary-role__score strong { font-size: 22px; }
+  .analysis-primary-role__score small { grid-column: 1 / -1; margin-top: 1px; }
+  .analysis-primary-role__copy p { display: block; }
+  /* 점수 칸 자리만큼 오른쪽을 비워 글이 겹치지 않게 한다 */
+  .analysis-primary-role__copy::before {
+    content: "";
+    float: right;
+    width: 84px;
+    height: 42px;
+  }
 }
 
 @media (max-width: 390px) {
-  .analysis-primary-role { grid-template-columns: minmax(0, 1fr) 62px; padding: 12px; }
-  .analysis-primary-role__copy p { font-size: 10px; }
-  .analysis-primary-role__score { padding-left: 8px; }
-  .analysis-primary-role__score strong { font-size: 27px; }
-  .analysis-subhead span { max-width: 105px; text-align: right; }
+  .analysis-primary-role__copy p { font-size: 11px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

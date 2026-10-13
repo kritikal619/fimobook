@@ -11,15 +11,6 @@
   min-width: 0;
 }
 
-.review-content-kicker {
-  display: block;
-  margin-bottom: 5px;
-  color: #059669;
-  font-size: 11px;
-  font-weight: 900;
-  letter-spacing: .08em;
-}
-
 .review-content-title-row {
   display: flex;
   align-items: center;
@@ -184,7 +175,7 @@
 .fimo-review-card-chip {
   min-height: 25px;
   padding: 0 8px;
-  border-radius: 999px;
+  border-radius: 5px;
   background: #f1f5f9;
   color: #526173;
   font-size: 11px;
@@ -268,7 +259,7 @@
 .fimo-review-empty {
   width: 100%;
   padding: 34px 18px;
-  border: 1px dashed #cbd5e1;
+  border: 1px solid #dbe3ec;
   border-radius: 14px;
   background: rgba(255, 255, 255, .58);
   color: #64748b;
