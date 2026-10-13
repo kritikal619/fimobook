@@ -136,6 +136,7 @@ body.evolution-sim-page .main-content { max-width: 1240px; padding: 12px 28px 36
 .evo-bottombar { position: absolute; left: 0; right: 0; top: calc(var(--u) * 492); height: calc(var(--u) * 62); background: linear-gradient(180deg, rgba(0, 0, 0, .25), rgba(0, 0, 0, .6)); }
 .evo-info-btn { position: absolute; left: calc(var(--u) * 79); top: calc(var(--u) * 10); height: calc(var(--u) * 40); display: flex; align-items: center; gap: calc(var(--u) * 14); padding: 0; border: 0; background: none; font-size: calc(var(--u) * 15.5); font-weight: 500; cursor: pointer; }
 .evo-info-icon { display: grid; place-items: center; width: calc(var(--u) * 31); height: calc(var(--u) * 31); box-sizing: border-box; border: calc(var(--u) * 2) solid #fff; border-radius: 50%; font: 700 calc(var(--u) * 17)/1 Georgia, serif; }
+.evo-hold-switch { right: auto; left: calc(var(--u) * 330); top: calc(var(--u) * 13); }
 .evo-rate-readout { position: absolute; right: calc(var(--u) * 322); top: calc(var(--u) * 20); font-size: calc(var(--u) * 14); color: #d4dae2; font-variant-numeric: tabular-nums; }
 .evo-rate-readout b { color: #fff; font-size: calc(var(--u) * 17); }
 .evo-blue-btn {

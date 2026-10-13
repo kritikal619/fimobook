@@ -18,7 +18,7 @@
   const pct = value => `${(Math.round(value * 100) / 100).toFixed(2)}%`;
 
   const state = {
-    player: null, level: 0, slots: [], lastMaterials: [], protect: false,
+    player: null, level: 0, slots: [], lastMaterials: [], protect: false, hold: false,
     log: {tries: 0, success: 0, fail: 0, materials: 0, protect: 0, entries: []},
   };
   const views = {menu: $('[data-view="menu"]'), picker: $('[data-view="picker"]'), scene: $('[data-view="scene"]')};
@@ -29,6 +29,7 @@
     gainOvr: $('[data-gain-ovr]'), gainStat: $('[data-gain-stat]'),
     protect: $('[data-protect]'), protectNa: $('[data-protect-na]'), protectCount: $('[data-protect-count]'),
     protectToggle: $('[data-protect-toggle]'), protectState: $('[data-protect-state]'),
+    holdToggle: $('[data-hold-toggle]'), holdState: $('[data-hold-state]'),
     go: $('[data-go]'), materialLevel: $('[data-material-level]'), materialGrid: $('[data-material-grid]'), baseOvr: $('[data-base-ovr]'),
     playerDialog: $('[data-player-dialog]'), playerSearch: $('[data-player-search]'), playerResults: $('[data-player-results]'),
     infoDialog: $('[data-info-dialog]'), infoRows: $('[data-info-rows]'), alert: $('[data-alert]'), skipAnim: $('[data-skip-anim]'),
@@ -174,6 +175,8 @@
     if (protection) els.protectCount.textContent = `[${protection.tier}] ${protection.count}개`;
     els.protectToggle.checked = state.protect;
     els.protectState.textContent = state.protect ? 'ON' : 'OFF';
+    els.holdToggle.checked = state.hold;
+    els.holdState.textContent = state.hold ? 'ON' : 'OFF';
 
     renderGauges(step);
     renderSlots(step);
@@ -308,7 +311,8 @@
     const success = Math.random() * 100 < rate;
     const protectedFail = !success && state.protect && !!step.protection;
     const from = state.level;
-    const to = success ? from + 1 : (protectedFail || from === 0 ? from : from - 1);
+    // '성공해도 등급 유지'를 켜면 성공해도 단계가 오르지 않는다(실패 규칙은 그대로).
+    const to = success ? (state.hold ? from : from + 1) : (protectedFail || from === 0 ? from : from - 1);
     state.lastMaterials = state.slots.map(material => ({...material}));
     const log = state.log;
     log.tries += 1; log[success ? 'success' : 'fail'] += 1; log.materials += state.slots.length;
@@ -649,6 +653,7 @@
   $('[data-autofill]').addEventListener('click', autofill);
   $$('[data-picker-done]').forEach(button => button.addEventListener('click', () => { showView('menu'); render(); }));
   els.protectToggle.addEventListener('change', () => { state.protect = els.protectToggle.checked; render(); });
+  els.holdToggle.addEventListener('change', () => { state.hold = els.holdToggle.checked; render(); });
   els.go.addEventListener('click', startEvolution);
   $('[data-alert-ok]').addEventListener('click', run);
   $$('[data-alert-cancel]').forEach(button => button.addEventListener('click', () => { els.alert.hidden = true; els.go.focus(); }));

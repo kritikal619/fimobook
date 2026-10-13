@@ -27,7 +27,7 @@
 } | tojson }}
 </script>
 <link rel="preload" as="image" href="{{ url_for('static', filename='evolution-sim/menu.webp') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/evolution-simulator.css', v='20261011-10') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/evolution-simulator.css', v='20261013-hold') }}">
 {% endblock %}
 {% block content %}
 {% set coin = url_for('static', filename='pack-opener/images/mp-token-transparent.png') %}
@@ -92,6 +92,11 @@
 
         <div class="evo-bottombar">
           <button class="evo-info-btn" type="button" data-open-info><span class="evo-info-icon" aria-hidden="true">i</span>진화 성공률</button>
+          <label class="evo-m-switch evo-hold-switch">
+            <span class="evo-m-switch-text">성공해도 등급 유지<em data-hold-state>OFF</em></span>
+            <input type="checkbox" data-hold-toggle>
+            <span class="evo-m-switch-track" aria-hidden="true"></span>
+          </label>
           <span class="evo-rate-readout" data-rate-readout></span>
           <button class="evo-blue-btn evo-go" type="button" data-go disabled>진화</button>
         </div>
@@ -262,4 +267,4 @@
 
 <script type="application/json" id="evo-data">{{ {'steps': evolution_data.steps, 'materials': evolution_materials, 'enhanceSteps': enhance_steps}|tojson }}</script>
 {% endblock %}
-{% block extra_scripts %}<script src="{{ url_for('static', filename='js/evolution-simulator.js', v='20261011-10') }}" defer></script>{% endblock %}
+{% block extra_scripts %}<script src="{{ url_for('static', filename='js/evolution-simulator.js', v='20261013-hold') }}" defer></script>{% endblock %}
