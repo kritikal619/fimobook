@@ -473,7 +473,7 @@
         </div>
       </div>
       <div class="analysis-role-alts">${alternativeRoles}</div>
-      <div class="analysis-subhead"><h3>주요 경기 성향</h3></div>
+      <div class="analysis-subhead"><h3>주요 경기 성향</h3><span>각 항목을 따로 계산한 점수</span></div>
       <div class="analysis-style-grid">${styleCards}</div>
       <details class="analysis-method">
         <summary>분석 기준</summary>
