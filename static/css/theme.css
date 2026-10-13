@@ -1201,6 +1201,29 @@ html[data-theme="dark"] :is(.post-action-button.danger, .comment-action.danger) 
   color: #fecaca !important;
 }
 
+/* 입력칸 안내 글자: 어두운 배경에서 대비가 4.5:1에 못 미치던 값을 올린다 */
+html[data-theme="dark"] :is(input, textarea)::placeholder {
+  color: #94a3b8 !important;
+  opacity: 1;
+}
+
+/* 게시판·글 상세: 작성자 이름과 상단 이동 링크가 어두운 배경에서 거의 보이지 않던 문제 */
+html[data-theme="dark"] .author-link {
+  color: #e2e8f0 !important;
+}
+
+html[data-theme="dark"] .author-link:hover {
+  color: #6ee7b7 !important;
+}
+
+html[data-theme="dark"] .post-breadcrumb a {
+  color: #cbd5e1 !important;
+}
+
+html[data-theme="dark"] .post-breadcrumb a:hover {
+  color: #6ee7b7 !important;
+}
+
 html[data-theme="dark"] :is(.post-badge, .post-board-badge) {
   border: 1px solid #286452 !important;
   background: #123b31 !important;
@@ -1439,8 +1462,8 @@ html[data-theme="dark"] .post-editor-page :is(.post-editor-back, .poll-remove, .
 }
 
 html[data-theme="dark"] .post-editor-page .post-editor-submit {
-  border-color: #059669 !important;
-  background: #059669 !important;
+  border-color: #047857 !important;
+  background: #047857 !important;
   color: #ffffff !important;
 }
 
