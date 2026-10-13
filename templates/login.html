@@ -2,6 +2,7 @@
 {% block body_class %}auth-page{% endblock %}
 {% block title %}로그인 | 피모북{% endblock %}
 {% block extra_head %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/auth-pages.css', v='20261013-2') }}">
   {% if google_client_id %}
     <script src="https://accounts.google.com/gsi/client" async defer></script>
   {% endif %}
@@ -59,64 +60,4 @@
     </div>
 </div>
 
-<style>
-    .auth-container {
-        width: 100%;
-        max-width: 440px;
-        margin: auto;
-        background: #ffffff;
-        border: 1px solid #dbe3ec;
-        border-radius: 18px;
-        box-shadow: 0 14px 30px rgba(15,23,42,0.05);
-        padding: 28px 24px;
-        box-sizing: border-box;
-    }
-    .auth-form .form-group {
-        margin-bottom: 20px;
-    }
-    .auth-form label {
-        display: block;
-        margin-bottom: 8px;
-        font-weight: 600;
-        color: #495057;
-    }
-    .btn-block {
-        width: 100%;
-        margin-top: 10px;
-    }
-    .remember-login {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        min-height: 28px;
-        color: #475569;
-        font-size: 14px;
-        font-weight: 650;
-        cursor: pointer;
-    }
-    .remember-login input {
-        width: 17px;
-        height: 17px;
-        margin: 0;
-        accent-color: #10b981;
-    }
-    .auth-switch {
-        text-align: center;
-        margin-top: 20px;
-        font-size: 14px;
-        color: #64748b;
-    }
-    .auth-switch-secondary { margin-top: 10px; }
-    .auth-recovery-links {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        flex-wrap: wrap;
-        gap: 12px;
-        margin-top: 14px;
-        color: #94a3b8;
-        font-size: 14px;
-    }
-    .auth-recovery-links a { padding: 10px 0; }
-</style>
 {% endblock %}

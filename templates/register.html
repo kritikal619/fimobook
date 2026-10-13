@@ -2,6 +2,7 @@
 {% block body_class %}auth-page{% endblock %}
 {% block title %}회원가입 | 피모북{% endblock %}
 {% block extra_head %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/auth-pages.css', v='20261013-2') }}">
   {% if google_client_id %}
     <script src="https://accounts.google.com/gsi/client" async defer></script>
   {% endif %}
@@ -31,8 +32,8 @@
             <input type="email" class="form-control" id="email" name="email" value="{{ request.form.get('email', '') }}" placeholder="인증 가능한 이메일을 입력하세요" required>
         </div>
         <div class="form-group">
-            <label for="username">감독명</label>
-            <input type="text" class="form-control" id="username" name="username" value="{{ request.form.get('username', '') }}" placeholder="사용할 감독명을 입력하세요" required>
+            <label for="username">닉네임</label>
+            <input type="text" class="form-control" id="username" name="username" value="{{ request.form.get('username', '') }}" placeholder="사용할 닉네임을 입력하세요" required>
         </div>
         <div class="form-group">
             <label for="password">비밀번호</label>
@@ -46,41 +47,4 @@
     </div>
 </div>
 
-<style>
-    .auth-container {
-        width: 100%;
-        max-width: 440px;
-        background: #ffffff;
-        border: 1px solid #dbe3ec;
-        border-radius: 18px;
-        box-shadow: 0 14px 30px rgba(15,23,42,0.05);
-        padding: 28px 24px;
-        box-sizing: border-box;
-    }
-    .auth-form .form-group {
-        margin-bottom: 20px;
-    }
-    .auth-form label {
-        display: block;
-        margin-bottom: 8px;
-        font-weight: 600;
-        color: #495057;
-    }
-    .btn-block {
-        width: 100%;
-        margin-top: 10px;
-    }
-    .form-help {
-        display: block;
-        margin-top: 7px;
-        color: #64748b;
-        font-size: 12px;
-    }
-    .auth-switch {
-        text-align: center;
-        margin-top: 20px;
-        font-size: 14px;
-        color: #64748b;
-    }
-</style>
 {% endblock %}

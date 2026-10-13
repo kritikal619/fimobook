@@ -368,31 +368,6 @@
         transition: transform 0.2s ease, opacity 0.2s ease;
       }
 
-      .nav-user-summary {
-        margin-bottom: 8px;
-        padding: 11px 12px;
-        border-radius: 11px;
-        background: #f1f5f9;
-        color: #64748b;
-        font-size: 11px;
-        font-weight: 750;
-        display: flex;
-        align-items: center;
-        gap: 9px;
-      }
-
-      .nav-user-summary i {
-        color: #059669;
-        font-size: 20px;
-      }
-
-      .nav-user-summary strong {
-        display: block;
-        color: #263445;
-        font-size: 13px;
-        font-weight: 900;
-      }
-
       .nav-group {
         display: grid;
         gap: 3px;
@@ -515,7 +490,7 @@
     }
   </style>
   {% include "_theme_head.html" %}
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/site-header.css', v='20261012-gutter-1') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/site-header.css', v='20261013-user') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/site-notices.css', v='20261009-quiet-1') }}">
   {% if request.endpoint in ('index', 'times') %}
   <link rel="stylesheet" href="{{ url_for('static', filename='css/material-interactions.css', v='20261009-1') }}">
@@ -595,12 +570,12 @@
     </div>
 
     <nav class="navbar" id="site-navigation" aria-label="주요 메뉴">
+      {% if current_user.is_authenticated %}
       <div class="nav-user-summary">
         <i class="bi bi-person-circle" aria-hidden="true"></i>
-        <span>
-          {% if current_user.is_authenticated %}<strong>{{ current_user.username }}</strong>로그인 중{% else %}<strong>게스트</strong>로그인하면 리뷰와 커뮤니티를 이용할 수 있어요.{% endif %}
-        </span>
+        <strong>{{ current_user.username }}</strong>
       </div>
+      {% endif %}
       <div class="nav-group">
         <a href="{{ url_for('index') }}"><i class="bi bi-search nav-icon" aria-hidden="true"></i>선수 검색</a>
         <a href="{{ url_for('squad_maker') }}"><i class="bi bi-diagram-3 nav-icon" aria-hidden="true"></i>스쿼드 메이커</a>

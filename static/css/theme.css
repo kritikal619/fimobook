@@ -136,6 +136,13 @@ html[data-theme="dark"] :is(.nav-user-summary, .detail-nav-user) {
   color: var(--dark-muted) !important;
 }
 
+html[data-theme="dark"] .nav-user-summary {
+  background: none !important;
+  border-bottom-color: #334155;
+}
+
+html[data-theme="dark"] .nav-user-summary i { color: #94a3b8; }
+
 html[data-theme="dark"] :is(.nav-user-summary strong, .detail-nav-user strong) {
   color: var(--dark-heading) !important;
 }
