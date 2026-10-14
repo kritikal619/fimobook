@@ -45,7 +45,7 @@ body.evolution-sim-page .main-content { max-width: 1240px; padding: 12px 28px 36
 @keyframes evo-card-in { from { opacity: 0; } }
 .evo-m-card-empty {
   position: absolute; left: calc(var(--u) * 32); top: calc(var(--u) * 14); width: calc(var(--u) * 164); height: calc(var(--u) * 200); display: grid; place-content: center; justify-items: center; gap: calc(var(--u) * 8);
-  border: calc(var(--u) * 2) dashed rgba(70, 220, 140, .6); border-radius: calc(var(--u) * 10); background: rgba(0, 0, 0, .35); color: #fff; font-size: calc(var(--u) * 15);
+  border: calc(var(--u) * 2) solid rgba(70, 220, 140, .6); border-radius: calc(var(--u) * 10); background: rgba(0, 0, 0, .35); color: #fff; font-size: calc(var(--u) * 15);
 }
 .evo-m-card-empty i { font-size: calc(var(--u) * 34); color: #2ee07a; }
 .evo-m-card-empty[hidden] { display: none; }
