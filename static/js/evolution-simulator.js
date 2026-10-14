@@ -11,6 +11,17 @@
   const badge = level => `/static/squad/evolution/${level}.png`;
   const $ = selector => document.querySelector(selector);
   const $$ = selector => [...document.querySelectorAll(selector)];
+  const screen = $('[data-screen]');
+  function fitScreen() {
+    const width = screen.clientWidth;
+    if (width <= 0) return;
+    screen.style.setProperty('--evo-scale', width / 1200);
+    screen.classList.add('evo-fitted');
+  }
+  fitScreen();
+  // Track container changes as well as rotation and browser resizing.
+  if (typeof ResizeObserver !== 'undefined') new ResizeObserver(fitScreen).observe(screen);
+  window.addEventListener('resize', fitScreen);
   const fmt = value => {
     const number = Number(String(value ?? '').replace(/[^0-9.-]/g, ''));
     return Number.isFinite(number) && number > 0 ? Math.round(number).toLocaleString('ko-KR') : '-';

@@ -1,5 +1,5 @@
-/* FC모바일 진화 시뮬레이터: 게임 화면(가로)을 1200×554 좌표 그대로 옮긴다. 세로 화면에서는 같은 화면을 폭에 맞춰 축소한다.
-   이 파일의 길이 단위는 1200 기준 화면의 1px = var(--u) 이다. */
+/* FC모바일 진화 시뮬레이터: PC의 1200×554 화면을 먼저 그린 뒤 전체를 기기 폭에 맞춰 축소한다.
+   글자도 같은 비율로 축소해 모바일 브라우저의 최소 글꼴 크기로 인한 겹침을 막는다. */
 body.evolution-sim-page .main-content { max-width: 1240px; padding: 12px 28px 36px; }
 .evo-page { width: 100%; display: grid; gap: 14px; }
 .evo-visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
@@ -10,6 +10,11 @@ body.evolution-sim-page .main-content { max-width: 1240px; padding: 12px 28px 36
   -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent;
 }
 .evo-ui { position: absolute; inset: 0; --u: calc(100cqw / 1200); font-size: calc(var(--u) * 14); line-height: 1.25; font-weight: 600; letter-spacing: calc(var(--u) * -.2); }
+.evo-screen.evo-fitted .evo-ui {
+  inset: auto; left: 0; top: 0; width: 1200px; height: 554px; --u: 1px;
+  transform: scale(var(--evo-scale)); transform-origin: top left;
+  -webkit-text-size-adjust: none; text-size-adjust: none;
+}
 .evo-ui button, .evo-ui select { font: inherit; color: inherit; }
 .evo-ui :focus-visible { outline: calc(var(--u) * 2) solid #7dd3fc; outline-offset: calc(var(--u) * 2); }
 .evo-view { position: absolute; inset: 0; }
