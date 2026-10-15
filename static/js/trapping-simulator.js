@@ -46,6 +46,7 @@
     {count:200, reward:'[NG] 선수 144-148 x6'},
   ];
   const RANKS = [{name:'아마추어',cost:100},{name:'세미프로',cost:80},{name:'프로',cost:70}];
+  const RANK_COLORS = ['#e0a578','#dae9ff','#ffdf26'];
   const rankForBest = best => best >= 21 ? 2 : best >= 12 ? 1 : 0;
   const rankIndex = () => state.rankOverride ?? rankForBest(state.best);
   const currentRank = () => RANKS[rankIndex()];
@@ -151,6 +152,7 @@
     if (event.clientX<r.left || event.clientX>r.right || event.clientY<r.top || event.clientY>r.bottom) closeDialog();
   });
   const WON_PER_TICKET = 25000/1500;
+  const cashFor = tickets => Math.round(tickets*WON_PER_TICKET/10)*10;
   // Same convention as the pack opener's event multiplier: 5억 MP for 5만원 = 10만배.
   const MULTIPLIER_SCALE = 10;
   function formatMP(value) {
@@ -173,10 +175,12 @@
     const locked=busy || !!state.delivery;
     const boost=!!r && isSuper(points);
     $('rank-name').textContent=tier.name;
-    $('rank-badge').hidden=rankIndex()!==0;
-    $('rank-icon').hidden=rankIndex()===0;
-    $('rank-icon').style.color=rankIndex()===2?'#ffdf26':'#dae9ff';
+    // Every rank uses the same award icon; only the tint differs.
+    $('rank-badge').hidden=true;
+    $('rank-icon').hidden=false;
+    $('rank-icon').style.color=RANK_COLORS[rankIndex()];
     $('tickets').textContent=`${fmt(state.tickets)}장`;
+    $('tickets-cash').textContent=`약 ${fmt(cashFor(state.tickets))}원`;
     renderRatio();
     $('points').textContent=`${points} P`;
     $('event').classList.toggle('is-super',boost);
@@ -669,6 +673,7 @@
   }
   function addDialog() {
     showDialog('add','참가권 추가');
+    body.append(element('p',`보유 ${fmt(state.tickets)}장 · 현금 약 ${fmt(cashFor(state.tickets))}원`,'trap-add-held'));
     const label=element('label','추가할 참가권');
     const input=element('input');input.type='number';input.min='1';input.max='1000000';input.step='1';input.value='1000';input.inputMode='numeric';label.append(input);body.append(label);
     const choices=element('div',undefined,'trap-quantity-options');
@@ -676,6 +681,12 @@
     const cost=element('p',undefined,'trap-add-cost');body.append(cost);
     const error=element('p',undefined,'trap-dialog-error');error.setAttribute('role','alert');body.append(error);
     action('취소',closeDialog,true);
+    const reset=action('참가권 초기화',() => {
+      // Two-step: the first press asks for confirmation.
+      if(!reset.dataset.confirm){reset.dataset.confirm='1';reset.textContent='0장으로 초기화할까요?';return;}
+      sync();state.tickets=0;save();render();closeDialog();message('참가권을 0장으로 초기화했습니다.');
+    },true);
+    reset.disabled=state.tickets===0;
     const submit=action('추가하기',() => {
       sync();const count=Number(input.value);
       if(!Number.isSafeInteger(count) || count<1 || count>1000000 || !int(state.tickets+count)){error.textContent='수량을 확인해 주세요.';return;}
@@ -699,7 +710,7 @@
       const options=element('div',undefined,'trap-rank-options');options.setAttribute('role','radiogroup');options.setAttribute('aria-label','등급');
       RANKS.forEach((tier,index) => {
         const button=element('button');button.type='button';button.setAttribute('role','radio');button.setAttribute('aria-checked',String(rankIndex()===index));
-        const icon=element('i',undefined,'bi bi-award-fill');icon.setAttribute('aria-hidden','true');
+        const icon=element('i',undefined,'bi bi-award-fill');icon.setAttribute('aria-hidden','true');icon.style.color=RANK_COLORS[index];
         button.append(icon,element('strong',tier.name),element('span',`참가권 ${tier.cost}장`));
         button.addEventListener('click',() => {sync();state.rankOverride=index;save();render();closeDialog();});options.append(button);
       });body.append(options);return;
@@ -730,6 +741,11 @@
   $('sound').addEventListener('click',() => {sync();state.sound=!state.sound;save();render();if(state.sound)playTone(true);});
   byId('reward-next').addEventListener('click',() => {
     if(flow?.mode==='step'){flow.mode='summary';renderReceipt();} else finishReceipt();
+  });
+  const ticketBalance=$('ticket-balance');
+  ticketBalance.addEventListener('click',() => openDialog('add'));
+  ticketBalance.addEventListener('keydown',event => {
+    if(event.key==='Enter' || event.key===' '){event.preventDefault();openDialog('add');}
   });
   byId('reward-pack').addEventListener('click',advanceFlow);
   byId('reward-current').addEventListener('click',advanceFlow);
