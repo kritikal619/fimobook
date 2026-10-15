@@ -36,7 +36,7 @@
       <a href="{{ url_for('pack_opener_page') }}"><i class="bi bi-arrow-left" aria-hidden="true"></i> 팩 오프너</a>
       <div class="trap-title-row"><h1>트래핑의 신 시뮬레이터</h1><button id="trap-mailbox-button" class="trap-mailbox-button" type="button" data-dialog="mailbox"><i class="bi bi-envelope" aria-hidden="true"></i><span>우편함</span><b id="trap-mail-count" hidden>0</b></button></div>
     </div>
-    <div class="trap-page-tools"><label><input id="trap-fast" type="checkbox"> 빠른 진행</label><button id="trap-sound" type="button" aria-label="소리 켜기" aria-pressed="false"><i class="bi bi-volume-mute" aria-hidden="true"></i></button><button type="button" data-dialog="reset" aria-label="시뮬레이터 초기화"><i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i></button></div>
+    <div class="trap-page-tools"><label><input id="trap-fast" type="checkbox"> 빠른 진행</label><button type="button" data-dialog="reset" aria-label="시뮬레이터 초기화"><i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i></button></div>
   </header>
   <div id="trap-game-view">
     <div class="trap-event" id="trap-event">
@@ -106,4 +106,4 @@
 </section>
 <dialog id="trap-dialog" class="trap-dialog" aria-labelledby="trap-dialog-title"><header><h2 id="trap-dialog-title"></h2><button id="trap-dialog-close" type="button" aria-label="닫기"><i class="bi bi-x-lg" aria-hidden="true"></i></button></header><div id="trap-dialog-body" class="trap-dialog-body"></div><footer id="trap-dialog-footer"></footer></dialog>
 {% endblock %}
-{% block extra_scripts %}<script src="{{ url_for('static', filename='js/trapping-simulator.js', v='20261015-rank') }}" defer></script>{% endblock %}
+{% block extra_scripts %}<script src="{{ url_for('static', filename='js/trapping-simulator.js', v='20261015-nosound') }}" defer></script>{% endblock %}

@@ -92,7 +92,6 @@
   }
   let state = read() || fresh();
   let busy = false;
-  let soundContext;
   let storageWorking = true;
   let animationRun = 0;
   let messageTimer;
@@ -206,10 +205,6 @@
     $('total').textContent=`${fmt(state.attempts)}회`;
     $('attempts').textContent=fmt(state.attempts);
     $('fast').checked=state.fast;$('fast').disabled=locked;
-    $('sound').setAttribute('aria-pressed',String(state.sound));
-    $('sound').setAttribute('aria-label',state.sound?'소리 끄기':'소리 켜기');
-    $('sound').firstElementChild.className=state.sound?'bi bi-volume-up':'bi bi-volume-mute';
-    $('sound').disabled=locked;
     document.querySelectorAll('[data-dialog]').forEach(button => { button.disabled=locked; });
     const count=state.mailbox.length;
     $('mail-count').textContent=fmt(count);$('mail-count').hidden=count===0;
@@ -257,19 +252,6 @@
   function addMail(name,source,tickets=0) {
     // Pending mail is never truncated; only completed history has a limit.
     state.mailbox.unshift({id:uniqueId(),name,source,tickets,at:Date.now()});
-  }
-  function playTone(ok) {
-    if (!state.sound) return;
-    try {
-      soundContext ||= new (window.AudioContext || window.webkitAudioContext)();soundContext.resume().catch(() => {});
-      const now=soundContext.currentTime;
-      (ok?[523.25,659.25,783.99]:[246.94,196]).forEach((frequency,index) => {
-        const oscillator=soundContext.createOscillator(),gain=soundContext.createGain();
-        oscillator.connect(gain);gain.connect(soundContext.destination);oscillator.frequency.value=frequency;
-        gain.gain.setValueAtTime(0,now+index*.085);gain.gain.linearRampToValueAtTime(.06,now+index*.085+.01);gain.gain.exponentialRampToValueAtTime(.001,now+index*.085+.22);
-        oscillator.start(now+index*.085);oscillator.stop(now+index*.085+.24);
-      });
-    } catch { /* Sound is optional. */ }
   }
   function startRound() {
     sync();if (busy || state.delivery) return;
@@ -321,11 +303,10 @@
         button.querySelector('.trap-mode-points').textContent=`${gain}P`;
         scatterConfetti(button);button.classList.add('is-hit');
       }
-      playTone(ok);
       // The next attempt unlocks 0.5s after the press; the hit effect may finish while it plays.
       await new Promise(resolve => setTimeout(resolve,ok?340:140));
       if(run!==animationRun)return;
-    } else playTone(ok);
+    }
     if(ok && !state.fast)setTimeout(() => {if(run===animationRun)clearMotion();},260);else clearMotion();
     busy=false;render();
     $('announcement').textContent=ok?`${mode.name} 트래핑 성공. ${gain}포인트 획득, 현재 ${round.points}포인트.`:`${mode.name} 트래핑 실패. 대회가 종료되었습니다.`;
@@ -395,8 +376,7 @@
         state.delivery={id:uniqueId(),mails,at:Date.now()};save();
       });
       busy=false;closeDialog();render();
-      if(state.delivery)playTone(true);
-      else openMailbox();
+      if(!state.delivery)openMailbox();
     } catch {busy=false;render();openMailbox();}
     finally {dialog.querySelectorAll('button').forEach(button => {button.disabled=false;});}
   }
@@ -570,7 +550,6 @@
           const node=$('hero-reward');node.replaceChildren(rewardCard(hero));node.classList.add('visible');
           $('reward-flash').classList.remove('flash');void $('reward-flash').offsetWidth;$('reward-flash').classList.add('flash');
           $('cinematic-next').textContent='다음';flow.heroRevealed=true;
-          playTone(true);
         }
       }
     }
@@ -738,7 +717,6 @@
   modes.forEach(button => button.addEventListener('click',() => attempt(button.dataset.mode)));
   $('start').addEventListener('click',startRound);$('collect').addEventListener('click',() => finish(true));
   $('fast').addEventListener('change',event => {sync();state.fast=event.target.checked;save();});
-  $('sound').addEventListener('click',() => {sync();state.sound=!state.sound;save();render();if(state.sound)playTone(true);});
   byId('reward-next').addEventListener('click',() => {
     if(flow?.mode==='step'){flow.mode='summary';renderReceipt();} else finishReceipt();
   });
