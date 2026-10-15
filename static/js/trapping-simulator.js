@@ -624,7 +624,7 @@
         return slot;
       }));
       status.textContent=`총 ${fmt(rewards.length)}개 보상 획득`;
-      reveal.hidden=true;replay.hidden=true;next.hidden=false;next.textContent='다음';next.disabled=busy;
+      reveal.hidden=true;replay.hidden=true;next.hidden=false;next.textContent='확인';next.disabled=busy;
     }
     visibleReceiptId=receipt.id;fitRewardScreen();
     if(first) {
