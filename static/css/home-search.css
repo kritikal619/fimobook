@@ -1353,3 +1353,13 @@
 /* The home page starts at the same height as every other page (base.html: 12px, 6px on phones). */
 body.home-page .main-content{ padding-top:12px; }
 @media (max-width:550px){ body.home-page .main-content{ padding-top:6px; } }
+
+/* 트래핑의 신 시뮬레이터 배너: 홈 추천 배너 첫 번째(기본) 항목 */
+.trapping-home-banner{background:linear-gradient(110deg,#2a0f3d,#5a1a63 60%,#7a1d5e);border-color:#b560b0;color:#fff}
+.trapping-home-banner .prime-home-kicker{color:#ffd6f0;letter-spacing:0}
+.trapping-home-banner .prime-home-kicker::before{display:none}
+.trapping-home-banner .prime-home-title{margin-top:5px;color:#fff}
+.trapping-home-banner .prime-home-desc{color:#f1d3ec}
+.trapping-home-banner .prime-home-cta{color:#fff}
+.trapping-home-graphic{height:92px;width:auto;max-width:140px;object-fit:contain;filter:drop-shadow(0 6px 10px #0006)}
+@media(max-width:740px){.trapping-home-banner .prime-home-kicker{font-size:9px}.trapping-home-graphic{height:74px;max-width:110px}}

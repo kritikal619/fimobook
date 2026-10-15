@@ -57,7 +57,7 @@
   border:0;
 }
 </style>
-<link rel="stylesheet" href="{{ url_for('static', filename='css/home-search.css', v='20261013-width2') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/home-search.css', v='20261015-trapping') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/home-mobile-shortcuts.css') }}?v=20261010">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/home-quiet.css') }}?v=20261011-1">
 {% endblock %}
@@ -199,6 +199,15 @@
 
     <div class="home-promo-shell">
       <div class="home-promo-rail" aria-label="추천 기능" tabindex="0">
+        <a class="prime-home-banner trapping-home-banner" href="{{ url_for('trapping_simulator_page') }}" aria-label="트래핑의 신 시뮬레이터 열기">
+          <span class="prime-home-content">
+            <span class="prime-home-kicker">이벤트 추가</span>
+            <strong class="prime-home-title">트래핑의 신 시뮬레이터</strong>
+            <span class="prime-home-desc">24P 도전 · 보상 팩 오프닝 · 배율 계산</span>
+            <span class="prime-home-cta">시뮬레이터 열기 <i class="bi bi-arrow-right" aria-hidden="true"></i></span>
+          </span>
+          <span class="prime-home-visual" aria-hidden="true"><img class="trapping-home-graphic" src="{{ url_for('static', filename='trapping-sim/foot-cutout.webp') }}" alt=""></span>
+        </a>
         <a class="prime-home-banner pack-home-banner" href="{{ url_for('pack_opener_page') }}" aria-label="팩깡 시뮬레이터 · 알쏭뚝딱 방망이 조각달 교환 팩 열기">
           <span class="prime-home-content">
             <span class="prime-home-kicker">알쏭뚝딱 방망이 추가</span>
