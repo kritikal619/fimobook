@@ -36,7 +36,13 @@
     "STORE_PAID_STORE_CP_261008_RELAY_GOLD_04": 24000,
     "STORE_PAID_STORE_FV_261008_RELAY_GOLD_05": 0,
     "STORE_PAID_STORE_P_261008_RELAY_FINAL": 23000,
-    "STORE_PAID_STORE_CP_261001_FCA27_144_146_C0_C6_MONTHLY": 5900
+    "STORE_PAID_STORE_CP_261001_FCA27_144_146_C0_C6_MONTHLY": 5900,
+    "STORE_PAID_CP_STORE_136_148_GC27_C0_C3_261015": 70,
+    "STORE_PAID_CP_STORE_140_148_GC27_C0_C3_261015": 750,
+    "STORE_PAID_CPM_STORE_142_148_ALL_C0_C5_261015_SET": 5600,
+    "STORE_PAID_CPM_STORE_139_148_ALL_C0_C5_261015": 400,
+    "STORE_PAID_CPM_STORE_142_148_ALL_C0_C5_261015": 1400,
+    "STORE_PAID_CPM_STORE_144_148_ALL_C0_C5_261015": 3000
   },
   "products": {
     "STORE_PAID_PROMO_CLAIM_REWARD_260922_CPM_138_148_C0_C6": {
@@ -390,8 +396,8 @@
     "STORE_PAID_STORE_CPM_261008_ALL_136_148_C3_C6": {
       "price": 100,
       "currency": "FV",
-      "priceAsOf": "2026-10-08",
-      "priceSource": "사용자 제공 게임 상점 사진 7388·7390"
+      "priceAsOf": "2026-10-15",
+      "priceSource": "사용자 제공 게임 상점 사진 7676·7678·7680·7682"
     },
     "STORE_PAID_STORE_CPM_261008_ALL_136_148_C3_C6_SET": {
       "price": 2400,
@@ -405,8 +411,8 @@
     "STORE_PAID_STORE_CPM_261008_ALL_139_148_C3_C6": {
       "price": 320,
       "currency": "FV",
-      "priceAsOf": "2026-10-08",
-      "priceSource": "사용자 제공 게임 상점 사진 7388·7390"
+      "priceAsOf": "2026-10-15",
+      "priceSource": "사용자 제공 게임 상점 사진 7676·7678·7680·7682"
     },
     "STORE_PAID_STORE_CPM_261008_ALL_139_148_C3_C6_SET": {
       "price": 5120,
@@ -420,8 +426,8 @@
     "STORE_PAID_STORE_CPM_261008_ALL_142_148_C3_C6": {
       "price": 1250,
       "currency": "FV",
-      "priceAsOf": "2026-10-08",
-      "priceSource": "사용자 제공 게임 상점 사진 7388·7390"
+      "priceAsOf": "2026-10-15",
+      "priceSource": "사용자 제공 게임 상점 사진 7676·7678·7680·7682"
     },
     "STORE_PAID_STORE_CPM_261008_RELAY_BRONZE_01": {
       "price": 600,
@@ -622,6 +628,81 @@
       "purchaseLimit": "계정당 1회",
       "purchaseNote": "계정당 1회",
       "priceSource": "사용자 제공 게임 상점 사진 7392"
+    },
+    "STORE_PAID_CP_STORE_136_148_GC27_C0_C3_261015": {
+      "price": 70,
+      "currency": "FV",
+      "priceAsOf": "2026-10-15",
+      "priceSource": "사용자 제공 게임 상점 사진 7676·7678·7680·7682"
+    },
+    "STORE_PAID_CP_STORE_140_148_GC27_C0_C3_261015": {
+      "price": 750,
+      "currency": "FV",
+      "priceAsOf": "2026-10-15",
+      "priceSource": "사용자 제공 게임 상점 사진 7676·7678·7680·7682",
+      "purchaseLimit": "매주 10회",
+      "purchaseNote": "매주 10회"
+    },
+    "STORE_PAID_CPM_STORE_142_148_ALL_C0_C5_261015_SET": {
+      "price": 5600,
+      "currency": "FV",
+      "priceAsOf": "2026-10-15",
+      "priceSource": "사용자 제공 게임 상점 사진 7676·7678·7680·7682",
+      "purchaseLimit": "계정당 4회",
+      "purchaseNote": "5개 세트 · 계정당 4회",
+      "bundleCount": 5
+    },
+    "STORE_PAID_CPM_STORE_139_148_ALL_C0_C5_261015": {
+      "price": 400,
+      "currency": "FV",
+      "priceAsOf": "2026-10-15",
+      "priceSource": "사용자 제공 게임 상점 사진 7676·7678·7680·7682"
+    },
+    "STORE_PAID_CPM_STORE_142_148_ALL_C0_C5_261015": {
+      "price": 1400,
+      "currency": "FV",
+      "priceAsOf": "2026-10-15",
+      "priceSource": "사용자 제공 게임 상점 사진 7676·7678·7680·7682"
+    },
+    "STORE_PAID_CPM_STORE_144_148_ALL_C0_C5_261015": {
+      "price": 3000,
+      "currency": "FV",
+      "priceAsOf": "2026-10-15",
+      "priceSource": "사용자 제공 게임 상점 사진 7676·7678·7680·7682"
+    },
+    "STORE_PAID_STORE_CP_260922_FCA27_136_146_C0_C3": {
+      "price": 70,
+      "currency": "FV",
+      "priceAsOf": "2026-10-15",
+      "priceSource": "사용자 제공 게임 상점 사진 7676·7678·7680·7682"
+    },
+    "STORE_PAID_STORE_CP_260922_FCA27_140_146_C0_C3": {
+      "price": 680,
+      "currency": "FV",
+      "priceAsOf": "2026-10-15",
+      "priceSource": "사용자 제공 게임 상점 사진 7676·7678·7680·7682",
+      "purchaseLimit": "매주 20회",
+      "purchaseNote": "매주 20회"
+    },
+    "STORE_PAID_STORE_CPM_261001_ALL_136_148_C0_C6": {
+      "price": 250,
+      "currency": "FV",
+      "priceAsOf": "2026-10-15",
+      "priceSource": "사용자 제공 게임 상점 사진 7676·7678·7680·7682"
+    },
+    "STORE_PAID_STORE_CPM_261001_ALL_138_148_C0_C6": {
+      "price": 500,
+      "currency": "FV",
+      "priceAsOf": "2026-10-15",
+      "priceSource": "사용자 제공 게임 상점 사진 7676·7678·7680·7682"
+    },
+    "STORE_PAID_STORE_CPM_261001_ALL_140_148_C0_C6_26UTOTS_1PER": {
+      "price": 1750,
+      "currency": "FV",
+      "priceAsOf": "2026-10-15",
+      "priceSource": "사용자 제공 게임 상점 사진 7676·7678·7680·7682",
+      "purchaseLimit": "매주 10회",
+      "purchaseNote": "매주 10회"
     }
   },
   "tokenArt": {
