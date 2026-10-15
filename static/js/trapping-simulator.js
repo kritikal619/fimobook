@@ -673,6 +673,7 @@
     const input=element('input');input.type='number';input.min='1';input.max='1000000';input.step='1';input.value='1000';input.inputMode='numeric';label.append(input);body.append(label);
     const choices=element('div',undefined,'trap-quantity-options');
     [100,1000,10000].forEach(amount => {const button=element('button',`${fmt(amount)}장`);button.type='button';button.addEventListener('click',() => {input.value=String(amount);update();});choices.append(button);});body.append(choices);
+    const cost=element('p',undefined,'trap-add-cost');body.append(cost);
     const error=element('p',undefined,'trap-dialog-error');error.setAttribute('role','alert');body.append(error);
     action('취소',closeDialog,true);
     const submit=action('추가하기',() => {
@@ -680,8 +681,13 @@
       if(!Number.isSafeInteger(count) || count<1 || count>1000000 || !int(state.tickets+count)){error.textContent='수량을 확인해 주세요.';return;}
       state.tickets+=count;save();render();closeDialog();message(`참가권 ${fmt(count)}장 추가`);
     });
-    function update(){const n=Number(input.value);submit.disabled=!Number.isSafeInteger(n)||n<1||n>1000000;}
-    input.addEventListener('input',update);
+    function update(){
+      const n=Number(input.value),valid=Number.isSafeInteger(n) && n>=1 && n<=1000000;
+      submit.disabled=!valid;
+      // Rough cash value: 1,500 tickets = 25,000 won.
+      cost.textContent=valid?`현금 약 ${fmt(Math.round(n*WON_PER_TICKET/10)*10)}원 (1,500장 = 25,000원 기준)`:'';
+    }
+    input.addEventListener('input',update);update();
   }
   function openDialog(name) {
     sync();

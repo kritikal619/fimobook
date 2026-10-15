@@ -335,3 +335,6 @@ html[data-theme=dark] .trap-ratio-rate input{background:#1b1724;border-color:#4a
 .trap-guide-content ul{margin:0;padding-left:18px}
 .trap-guide-content li{margin:0 0 4px}
 html[data-theme=dark] .trap-guide summary,html[data-theme=dark] .trap-guide-content{color:#a8b3c2}
+
+.trap-add-cost{margin:8px 0 0;font-size:13px;color:#5a6672;text-align:right}
+html[data-theme=dark] .trap-add-cost{color:#a8b3c2}
