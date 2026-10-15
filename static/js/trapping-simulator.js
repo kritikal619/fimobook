@@ -501,15 +501,13 @@
     video.removeAttribute('src');video.dataset.source='';video.load();
     $('hero-reward').classList.remove('visible');$('hero-reward').replaceChildren();
     $('reveal-hint').dataset.kind='';$('reveal-hint').replaceChildren();
-    $('cinematic-next').hidden=true;
+    $('cinematic-next').hidden=true;$('pack-idle').style.display='none';
   }
   function endCinematic(revealed) {
     if(!flow || flow.mode!=='cinematic')return;
     cinematicRun+=1;cleanupCinematic();
-    flow.heroRevealed=revealed;flow.index=0;
-    const steps=receiptRewards(state.delivery).steps,heroIndex=steps.findIndex(reward => reward.kind==='player');
-    const remaining=steps.length-(revealed && heroIndex>=0?1:0);
-    flow.mode=remaining>0?'step':'summary';
+    // Same as the pack opener: after the opening, Next shows every reward at once.
+    flow.heroRevealed=revealed;flow.index=0;flow.mode='summary';
     renderReceipt();
   }
   async function playCinematic(receipt) {
@@ -524,6 +522,13 @@
       img.onload=img.onerror=() => {clearTimeout(timeout);resolve();};img.src=src;
     })));
     if(!current())return;
+    const flashNow=() => {$('reward-flash').classList.remove('flash');void $('reward-flash').offsetWidth;$('reward-flash').classList.add('flash');};
+    $('pack-idle').style.display='flex';$('reward-stage').dataset.phase='burst';
+    await sleep(1200);
+    if(!current())return;
+    flashNow();await sleep(350);
+    if(!current())return;
+    $('pack-idle').style.display='none';
     $('reward-stage').dataset.phase='tunnel';video.classList.add('visible');
     try { await video.play(); } catch { if(current())endCinematic(false);return; }
     let shown=false,revealed=false,lastTime=-1,lastProgress=performance.now();
@@ -532,7 +537,6 @@
       if(!revealed){endCinematic(false);return;}
       video.currentTime=SCOREBOARD_START;video.play().catch(() => {});
     };
-    $('cinematic-next').hidden=false;$('cinematic-next').textContent='건너뛰기';
     while(current()) {
       await sleep(100);
       if(!current())return;
@@ -549,7 +553,7 @@
           revealed=true;$('reward-stage').dataset.phase='hero';
           const node=$('hero-reward');node.replaceChildren(rewardCard(hero));node.classList.add('visible');
           $('reward-flash').classList.remove('flash');void $('reward-flash').offsetWidth;$('reward-flash').classList.add('flash');
-          $('cinematic-next').textContent='다음';flow.heroRevealed=true;
+          $('cinematic-next').hidden=false;flow.heroRevealed=true;
         }
       }
     }
