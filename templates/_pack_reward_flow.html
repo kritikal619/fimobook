@@ -1,0 +1,10 @@
+<section id="reward-flow" class="reward-flow" hidden aria-label="팩 보상 확인">
+  <h2 id="reward-flow-title"></h2>
+  <div id="reward-step" class="reward-step" hidden>
+    <button id="reward-pack" class="reward-pack" type="button" aria-label="다음 보상 열기"><span id="reward-remaining" class="reward-remaining"></span><img src="{{ url_for('static', filename='pack-opener/images/pack.png') }}" alt="남은 보상 팩" draggable="false"></button>
+    <button id="reward-current" class="reward-current" type="button" aria-label="다음 보상 확인"></button>
+  </div>
+  <div id="reward-summary" class="reward-summary" tabindex="0" aria-label="전체 획득 보상 스크롤 영역" hidden><div id="reward-summary-grid" class="reward-summary-grid"></div></div>
+  <p id="reward-flow-status" class="reward-flow-status" role="status" aria-live="polite"></p>
+  <div class="reward-flow-actions"><button id="flow-replay" class="flow-replay" type="button" hidden>다시 보기</button><button id="reveal-all" type="button" hidden>모두 열기</button><button id="reward-next" type="button" hidden>다음 →</button></div>
+</section>

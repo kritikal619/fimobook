@@ -440,6 +440,7 @@
                 </div>
                 <div class="club-career-club">
                   {{ career.club }}
+                  {% if career.league == '일본 J리그' %}<span class="club-career-loan">J리그</span>{% endif %}
                   {% if career.loan %}<span class="club-career-loan">임대</span>{% endif %}
                 </div>
               </div>

@@ -8,6 +8,7 @@ import threading
 import requests
 
 from player_search import _normalize_filter_text, _normalize_name_for_match
+from jleague_clubs import JLEAGUE_NAME, jleague_club, jleague_pair
 
 FCO_CAREER_DATA_FILE = None
 FCO_CAREER_DATA_URL = os.getenv(
@@ -17,6 +18,8 @@ FCO_CAREER_DATA_URL = os.getenv(
 _FCO_CAREER_ROWS = None
 FCO_CLUB_CAREER_DATA_FILE = None
 _FCO_CLUB_CAREER_DATA = None
+_FCO_CAREER_SIGNATURE = None
+_FCO_CLUB_CAREER_SIGNATURE = None
 
 _get_players = None
 
@@ -36,6 +39,7 @@ def configure(root_path, instance_path, get_players):
 
 
 def _normalize_team_for_match(value):
+    value = jleague_club(value) or value
     normalized = _normalize_filter_text(value)
     normalized = re.sub(r"\((?:임대|loan)\)", "", normalized, flags=re.IGNORECASE)
     normalized = normalized.replace("아스날", "아스널")
@@ -264,6 +268,9 @@ _CURRENT_SEASON_TOP_FLIGHT_LEAGUES = {
 def _current_season_team_pair(pair):
     if not pair:
         return pair
+    japanese_club = jleague_pair(pair.get("team"))
+    if japanese_club:
+        return japanese_club
     current_league = _CURRENT_SEASON_CLUB_LEAGUES_NORMALIZED.get(
         _normalize_team_for_match(pair.get("team"))
     )
@@ -308,8 +315,9 @@ def _parse_fco_career_text(text):
 
 
 def _load_fco_career_rows():
-    global _FCO_CAREER_ROWS
-    if _FCO_CAREER_ROWS is not None:
+    global _FCO_CAREER_ROWS, _FCO_CAREER_SIGNATURE
+    signature = _career_file_signature(FCO_CAREER_DATA_FILE)
+    if _FCO_CAREER_ROWS is not None and _FCO_CAREER_SIGNATURE == signature:
         return _FCO_CAREER_ROWS
 
     rows = []
@@ -326,12 +334,14 @@ def _load_fco_career_rows():
         rows = []
 
     _FCO_CAREER_ROWS = rows
+    _FCO_CAREER_SIGNATURE = signature
     return _FCO_CAREER_ROWS
 
 
 def _load_fco_club_career_data():
-    global _FCO_CLUB_CAREER_DATA
-    if _FCO_CLUB_CAREER_DATA is not None:
+    global _FCO_CLUB_CAREER_DATA, _FCO_CLUB_CAREER_SIGNATURE
+    signature = _career_file_signature(FCO_CLUB_CAREER_DATA_FILE)
+    if _FCO_CLUB_CAREER_DATA is not None and _FCO_CLUB_CAREER_SIGNATURE == signature:
         return _FCO_CLUB_CAREER_DATA
 
     payload = {"meta": {}, "players": {}}
@@ -346,6 +356,7 @@ def _load_fco_club_career_data():
         print(f"FC온라인 상세 클럽 경력 데이터 로드 실패: {exc}")
 
     _FCO_CLUB_CAREER_DATA = payload
+    _FCO_CLUB_CAREER_SIGNATURE = signature
     return _FCO_CLUB_CAREER_DATA
 
 
@@ -358,7 +369,10 @@ def _get_player_club_career(player):
     if not isinstance(rows, list) or not rows:
         return None
     return {
-        "rows": rows,
+        "rows": [
+            {**row, "league": JLEAGUE_NAME} if jleague_club(row.get("club")) else row
+            for row in rows
+        ],
         "updated_label": str(payload.get("meta", {}).get("updated_label") or "").strip(),
     }
 
@@ -422,7 +436,7 @@ def _extend_career_index_with_external_data(career_index):
         key = _player_identity_key(player)
         career_index.setdefault(key, [])
         for team in teams:
-            pair = {"league": "", "team": team}
+            pair = jleague_pair(team) or {"league": "", "team": team}
             if pair not in career_index[key]:
                 career_index[key].append(pair)
     return career_index
@@ -472,9 +486,21 @@ _TEAM_FILTER_CONTEXT_CACHE = {}
 _TEAM_FILTER_CONTEXT_LOCK = threading.RLock()
 
 
+def _career_file_signature(path):
+    try:
+        stat = os.stat(path)
+        return (path, stat.st_mtime_ns, stat.st_size, stat.st_ino)
+    except (OSError, TypeError):
+        return (path, None)
+
+
 def _get_team_filter_context(include_external=False):
     players = _get_players()
-    signature = (id(players), len(players))
+    signature = (
+        id(players), len(players),
+        _career_file_signature(FCO_CAREER_DATA_FILE),
+        _career_file_signature(FCO_CLUB_CAREER_DATA_FILE),
+    )
     with _TEAM_FILTER_CONTEXT_LOCK:
         if _TEAM_FILTER_CONTEXT_CACHE.get("signature") != signature:
             career_index = _build_player_career_index()
@@ -502,6 +528,10 @@ def _get_team_filter_context(include_external=False):
             }
             _TEAM_FILTER_CONTEXT_CACHE["extended_career_index"] = (
                 _extend_career_index_with_external_data(career_copy)
+            )
+            _TEAM_FILTER_CONTEXT_CACHE["all_league_teams"] = _build_league_team_map(
+                (pair for pairs in career_copy.values() for pair in pairs),
+                include_current_top_flight=True,
             )
 
         return _TEAM_FILTER_CONTEXT_CACHE
@@ -555,6 +585,9 @@ def _team_pair_matches(pair, selected_league="", selected_team=""):
     league_filter = _normalize_filter_text(selected_league)
     team_filter = _normalize_team_for_match(selected_team)
     if league_filter and league and league != league_filter:
+        return False
+    # Unclassified foreign careers must not match a J.League-only search.
+    if league_filter == _normalize_filter_text(JLEAGUE_NAME) and not league:
         return False
     if team_filter and team != team_filter:
         return False

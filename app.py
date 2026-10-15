@@ -7563,6 +7563,16 @@ def pack_opener_page():
     )
 
 
+@app.route("/trapping-simulator")
+def trapping_simulator_page():
+    return render_template(
+        "trapping_simulator.html",
+        canonical_url=_canonical("/trapping-simulator"),
+        meta_description="FC모바일 트래핑의 신 시뮬레이터. 가슴·머리·발 트래핑과 슈퍼 트래핑 확률, 1~24P 보상과 참가 횟수 보상을 무료로 체험하세요.",
+        og_title="FC모바일 트래핑의 신 시뮬레이터 | 피모북",
+    )
+
+
 EVOLUTION_SUMMARY_WEIGHTS = (
     ("pace", "속도", (("ACC", 50), ("SPD", 50))),
     ("shooting", "슈팅", (("FIN", 35), ("LSA", 20), ("SHO", 20), ("POS", 15), ("VOL", 5), ("PEN", 5))),
@@ -7703,6 +7713,41 @@ def pack_opener_draw_api():
     return response
 
 
+TRAPPING_PACK_IDS = (
+    {f"PAID_WEBG_261015_TRAPPINGGOD_REWARD_{points:02d}" for points in range(1, 25)}
+    | {"PAID_WEBG_TRAPPINGGOD_NORMAL_REWARD_261015"}
+    | {f"PAID_WEBG_NG_TRAPPINGGOD_261015_ACCREWARD_{count}" for count in (5, 10, 25, 40, 60, 100, 200)}
+)
+
+
+@app.route("/api/trapping-simulator/draw", methods=["POST"])
+def trapping_simulator_draw_api():
+    payload = request.get_json(silent=True)
+    entries = payload.get("packs") if isinstance(payload, dict) else None
+    if not isinstance(entries, list) or not 1 <= len(entries) <= 50:
+        return jsonify({"error": "팩 목록이 올바르지 않습니다."}), 400
+    quantities = {}
+    for entry in entries:
+        pack_id = entry.get("pack") if isinstance(entry, dict) else None
+        quantity = entry.get("quantity") if isinstance(entry, dict) else None
+        if pack_id not in TRAPPING_PACK_IDS or type(quantity) is not int or not 1 <= quantity <= 200:
+            return jsonify({"error": "팩 정보가 올바르지 않습니다."}), 400
+        quantities[pack_id] = quantities.get(pack_id, 0) + quantity
+    if sum(quantities.values()) > 500:
+        return jsonify({"error": "한 번에 열 수 있는 팩은 500개까지입니다."}), 400
+    try:
+        catalog = get_pack_catalog(app.root_path, PLAYER_DATA, "trapping_probabilities.json")
+        rewards = []
+        for pack_id, quantity in quantities.items():
+            for _ in range(quantity):
+                rewards.extend(catalog.draw(pack_id, ENHANCE_LEVEL_TOTALS)["rewards"])
+    except (KeyError, ValueError):
+        return jsonify({"error": "보상을 추첨하지 못했습니다."}), 500
+    response = jsonify({"rewards": rewards, "fetchedAt": catalog.payload["fetchedAt"]})
+    response.headers["Cache-Control"] = "no-store"
+    return response
+
+
 def _pack_share_players(summary):
     players = []
     for entry in summary["t"][:SHARE_TOP_PLAYERS]:
@@ -7772,7 +7817,7 @@ def pack_share_image(token):
 
 @app.route("/squad_maker")
 def squad_maker():
-    team_filter_context = _get_team_filter_context()
+    team_filter_context = _get_team_filter_context(include_external=True)
     playstyle_catalog = [
         {
             "code": code,
@@ -8862,15 +8907,9 @@ def traits_selection():
             if position
         }
     )
-    career_index = _build_player_career_index()
-    current_team_index = _build_player_current_team_index()
-    current_league_teams = _build_league_team_map(
-        current_team_index.values(), include_current_top_flight=True
-    )
-    all_league_teams = _build_league_team_map(
-        (pair for pairs in career_index.values() for pair in pairs),
-        include_current_top_flight=True,
-    )
+    team_filter_context = _get_team_filter_context(include_external=True)
+    current_league_teams = team_filter_context["current_league_teams"]
+    all_league_teams = team_filter_context["all_league_teams"]
 
     return render_template(
         "traits_selection.html",

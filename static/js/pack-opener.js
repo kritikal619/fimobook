@@ -940,7 +940,7 @@
   $('choose-bat-pack').addEventListener('click', () => {
     if (state.busy) return;
     $('pack-search').value = '';
-    document.querySelector('[data-category="KKAEBI_BAT"]').click();
+    document.querySelector('[data-category="WEBG_TRAPPING"]').click();
     if (mobileShop.matches) shopDialog.showModal();
     else {
       shop.scrollIntoView({block: 'start', behavior: 'smooth'});
@@ -964,7 +964,7 @@
       state.catalog = await request('/api/pack-opener/catalog', {cache: 'no-store'}); $('pack-list').setAttribute('aria-busy', 'false');
       const dates = state.catalog.categoryFetchedAt;
       $('source-date').textContent = dates
-        ? Object.entries(dates).map(([id, date]) => `${({STORE:'상점', KKAEBI_BAT:'방망이', FV_RELAY:'FV 릴레이'})[id] || id} ${date.slice(0, 10)}`).join(' · ') + ' 수집'
+        ? Object.entries(dates).map(([id, date]) => `${({STORE:'상점', KKAEBI_BAT:'방망이', FV_RELAY:'FV 릴레이', WEBG_TRAPPING:'트래핑의 신'})[id] || id} ${date.slice(0, 10)}`).join(' · ') + ' 수집'
         : `${state.catalog.fetchedAt.slice(0, 10)} 수집`;
       renderHistory();
       selectPack(state.catalog.packs[0]);

@@ -38,11 +38,36 @@ ANIMATIONS = {
     'GE26': 'GE26', 'GE26-S': 'GE26', 'EPL26': 'FF26',
     'FVS26': 'FV26', 'SS26': 'SS26', 'FS26': 'FS26', 'TD26': 'TD26', 'RH26': 'LNY26',
     'BLD25': 'BO25',
+    # The new GC season intentionally uses the supplied GC26 opening movies.
+    'GC27': 'GC26',
     **{f'WG26-{s}': 'TWG26' for s in 'SFMIB'},
 }
 
 def normalize_name(value):
     return re.sub(r'[\W_]+', '', str(value)).casefold()
+
+
+def _korean_mp(amount):
+    if amount >= 10 ** 8:
+        return f"{amount / 10 ** 8:g}억"
+    return f"{amount // 10 ** 4}만"
+
+
+def trapping_pack_name(pack, points):
+    """Shop-style title: [트래핑의 신 7P] followed by the pack's awarded item."""
+    parts = []
+    mp = None
+    for row in pack['tree']['List']:
+        match = re.fullmatch(r'MP x([\d,]+)', row['strName'])
+        if match:
+            mp = int(match.group(1).replace(',', ''))
+        else:
+            count = int(row['n8Count'])
+            parts.append(row['strName'] + (f' x{count}' if count > 1 else ''))
+    title = ' + '.join(parts)
+    if mp:
+        title += f' 또는 {_korean_mp(mp)} MP'
+    return f'[트래핑의 신 {points}P] {title}'
 
 
 def parse_name(value):
@@ -51,9 +76,9 @@ def parse_name(value):
 
 
 class PackCatalog:
-    def __init__(self, root, players):
+    def __init__(self, root, players, data_file='pack_probabilities.json'):
         self.root = Path(root)
-        self.path = self.root / 'static/data/pack_probabilities.json'
+        self.path = self.root / 'static/data' / data_file
         self.prices_path = self.root / 'static/data/pack_shop_prices.json'
         self.signature = (self.path.stat().st_mtime_ns, self.prices_path.stat().st_mtime_ns)
         self.players_identity = id(players)
@@ -68,6 +93,19 @@ class PackCatalog:
                       if p['strPackID'] not in hidden_products
                       and (p.get('categoryId') != 'KKAEBI_BAT'
                            or p['strPackName'].startswith('[조각달 교환]'))}
+        if data_file == 'pack_probabilities.json':
+            trapping_path = self.root / 'static/data/trapping_probabilities.json'
+            if trapping_path.is_file():
+                trapping = json.loads(trapping_path.read_text(encoding='utf-8'))
+                # Only the 1P-24P point rewards; participation/attendance packs stay simulator-only.
+                for pack in trapping['packs']:
+                    if re.fullmatch(r'PAID_WEBG_261015_TRAPPINGGOD_REWARD_\d\d', pack['strPackID']):
+                        points = int(pack['strPackID'][-2:])
+                        end = pack['strPackName'].partition('<br />')[2]
+                        pack = {**pack, 'strPackName': f"{trapping_pack_name(pack, points)}<br />{end}"}
+                        self.packs[pack['strPackID']] = pack
+                self.payload.setdefault('categoryFetchedAt', {}).update(trapping.get('categoryFetchedAt', {}))
+                self.signature += (trapping_path.stat().st_mtime_ns,)
         self.player_index = defaultdict(list)
         for player in players:
             self.player_index[(normalize_name(player.get('playerKor', '')), player.get('ovr'))].append(player)
@@ -131,6 +169,8 @@ class PackCatalog:
         for pack in self.packs.values():
             name, _, end = pack['strPackName'].partition('<br />')
             metadata = self.shop_prices.get('products', {}).get(pack['strPackID'], {})
+            if pack.get('categoryId') == 'WEBG_TRAPPING' and not metadata:
+                metadata = {'price': 0, 'currency': 'FV', 'purchaseNote': '트래핑의 신 포인트 보상'}
             price_fv = self.shop_prices['prices'].get(pack['strPackID'])
             def count_players(node):
                 return sum(count_players(r['children']) if r.get('children') else int(r.get('n4OVR') is not None) for r in node['List'])
@@ -241,15 +281,18 @@ class PackCatalog:
         return reward
 
 
-_cache = None
+_cache = {}
 _cache_lock = threading.Lock()
 
-def get_catalog(root, players):
-    global _cache
-    path = Path(root) / 'static/data/pack_probabilities.json'
+def get_catalog(root, players, data_file='pack_probabilities.json'):
+    path = Path(root) / 'static/data' / data_file
     prices_path = Path(root) / 'static/data/pack_shop_prices.json'
     with _cache_lock:
         signature = (path.stat().st_mtime_ns, prices_path.stat().st_mtime_ns)
-        if _cache is None or _cache.signature != signature or _cache.players_identity != id(players):
-            _cache = PackCatalog(root, players)
-        return _cache
+        trapping_path = Path(root) / 'static/data/trapping_probabilities.json'
+        if data_file == 'pack_probabilities.json' and trapping_path.is_file():
+            signature += (trapping_path.stat().st_mtime_ns,)
+        cached = _cache.get(data_file)
+        if cached is None or cached.signature != signature or cached.players_identity != id(players):
+            cached = _cache[data_file] = PackCatalog(root, players, data_file)
+        return cached

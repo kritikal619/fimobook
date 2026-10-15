@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% set trap_seo_title = 'FC모바일 트래핑의 신 시뮬레이터 | 피모북' %}
+{% set trap_seo_description = 'FC모바일 트래핑의 신 시뮬레이터. 가슴·머리·발 트래핑과 슈퍼 트래핑 확률, 1~24P 보상과 참가 횟수 보상을 무료로 체험하고 참가권 대비 획득 배율까지 확인하세요. 실제 게임 계정에는 보상이 지급되지 않습니다.' %}
+{% set og_title = trap_seo_title %}
+{% set og_description = trap_seo_description %}
+{% block title %}{{ trap_seo_title }}{% endblock %}
+{% block body_class %}trapping-sim-page{% endblock %}
+{% block extra_head %}
+<meta name="description" content="{{ trap_seo_description }}">
+<meta name="twitter:title" content="{{ trap_seo_title }}">
+<meta name="twitter:description" content="{{ trap_seo_description }}">
+<script type="application/ld+json">
+{{ {
+  '@context': 'https://schema.org',
+  '@type': 'WebApplication',
+  '@id': 'https://fcbook.info/trapping-simulator#app',
+  'name': 'FC모바일 트래핑의 신 시뮬레이터',
+  'alternateName': ['트래핑의 신 시뮬레이터', 'FC모바일 트신 시뮬레이터', 'FC Mobile Trapping God Simulator'],
+  'url': 'https://fcbook.info/trapping-simulator',
+  'description': trap_seo_description,
+  'inLanguage': 'ko-KR',
+  'applicationCategory': 'GameApplication',
+  'operatingSystem': 'Any',
+  'isAccessibleForFree': true,
+  'offers': {'@type': 'Offer', 'price': '0', 'priceCurrency': 'KRW'},
+  'featureList': ['가슴·머리·발 트래핑과 슈퍼 트래핑 시뮬레이션', '1~24P 보상과 참가 횟수 보상 확인', '공식 확률표 기반 보상 팩 오프닝', '참가권 대비 획득 배율 계산']
+} | tojson }}
+</script>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/pack-opener.css', v='20261015-trapping') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/trapping-simulator.css', v='20261015-seo-1') }}">
+{% endblock %}
+{% block content %}
+<section class="trap-page" aria-label="트래핑의 신 시뮬레이터">
+  <header class="trap-page-heading">
+    <div class="trap-heading-main">
+      <a href="{{ url_for('pack_opener_page') }}"><i class="bi bi-arrow-left" aria-hidden="true"></i> 팩 오프너</a>
+      <div class="trap-title-row"><h1>트래핑의 신 시뮬레이터</h1><button id="trap-mailbox-button" class="trap-mailbox-button" type="button" data-dialog="mailbox"><i class="bi bi-envelope" aria-hidden="true"></i><span>우편함</span><b id="trap-mail-count" hidden>0</b></button></div>
+    </div>
+    <div class="trap-page-tools"><label><input id="trap-fast" type="checkbox"> 빠른 진행</label><button id="trap-sound" type="button" aria-label="소리 켜기" aria-pressed="false"><i class="bi bi-volume-mute" aria-hidden="true"></i></button><button type="button" data-dialog="reset" aria-label="시뮬레이터 초기화"><i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i></button></div>
+  </header>
+  <div id="trap-game-view">
+    <div class="trap-event" id="trap-event">
+      <div class="trap-wallet">
+        <button class="trap-rank" type="button" data-dialog="rank" aria-label="등급 선택"><img id="trap-rank-badge" class="trap-rank-badge" src="{{ url_for('static', filename='trapping-sim/amateur.webp') }}" alt=""><i id="trap-rank-icon" class="bi bi-award-fill" aria-hidden="true" hidden></i><strong id="trap-rank-name">아마추어</strong><i class="bi bi-chevron-down" aria-hidden="true"></i></button>
+        <div class="trap-ticket-balance"><span class="trap-ticket-icon">TICKET</span> 보유 참가권 <strong id="trap-tickets">1,000장</strong></div>
+        <div class="trap-wallet-actions"><button class="trap-yellow" type="button" data-dialog="add">추가하기</button><button class="trap-blue" type="button" data-scroll="trap-rewards">포인트 보상 <i class="bi bi-caret-down-fill" aria-hidden="true"></i></button><button class="trap-blue" type="button" data-scroll="trap-attendance">참가 횟수 보상 <i class="bi bi-caret-down-fill" aria-hidden="true"></i></button></div>
+      </div>
+      <div class="trap-play-area">
+        <div class="trap-entry-strip"><p id="trap-entry-note">참가권 100장</p><button id="trap-start" class="trap-yellow" type="button">트래핑 대회 참가 <i class="bi bi-chevron-right" aria-hidden="true"></i></button></div>
+        <div class="trap-scoreboard"><div class="trap-score"><span>현재 포인트</span><strong id="trap-points">0 P</strong></div><button id="trap-collect" class="trap-yellow" type="button" hidden>보상 받고 종료</button></div>
+        <div class="trap-modes" id="trap-modes">
+          {% for key, label, rate, gain in [('chest', '가슴', 30, 3), ('head', '머리', 50, 2), ('foot', '발', 70, 1)] %}
+          <button class="trap-mode" type="button" data-mode="{{ key }}" disabled aria-label="{{ label }} 트래핑, 성공 확률 {{ rate }}%, 성공 시 {{ gain }}포인트">
+            <span class="trap-rate">성공 확률 <b data-rate>{{ rate }}%</b><span>/</span> 성공 시 <b>+{{ gain }}P</b></span>
+            <span class="trap-mode-body">
+              <span class="trap-mode-scene" aria-hidden="true">
+                <img class="trap-mode-art" src="{{ url_for('static', filename='trapping-sim/' ~ key ~ '.webp', v='2') }}" alt="" width="640" height="274" draggable="false">
+                <span class="trap-mode-confetti"></span><strong class="trap-mode-points"></strong>
+              </span>
+              <span class="trap-mode-flame" aria-hidden="true" hidden>🔥</span>
+              <span class="trap-mode-label"><span data-mode-label>{{ label }} 트래핑</span></span>
+            </span>
+          </button>
+          {% endfor %}
+        </div>
+        <button class="trap-super-banner" type="button" data-dialog="odds"><img src="{{ url_for('static', filename='trapping-sim/super-banner.webp') }}" width="995" height="86" alt="3, 6, 9, 12, 15, 18, 21P 달성 시마다 성공률 UP! 슈퍼 트래핑!"><span class="trap-super-mobile" aria-hidden="true">3·6·9·12·15·18·21P 달성 시<strong>성공 확률 UP! 슈퍼 트래핑</strong></span></button>
+        <div id="trap-message" class="trap-message" role="status" aria-live="polite"></div>
+        <section id="trap-rewards" class="trap-reward-section" aria-labelledby="trap-rewards-title"><div class="trap-section-heading"><h2 id="trap-rewards-title">포인트 보상</h2></div><div class="trap-table-scroll"><table class="trap-reward-table"><thead><tr><th scope="col">달성 포인트</th><th scope="col">포인트 보상 + 참가권</th><th scope="col"><span class="trap-sr-only">보상 수령</span></th></tr></thead><tbody id="trap-reward-rows"></tbody></table></div></section>
+        <section id="trap-attendance" class="trap-reward-section" aria-labelledby="trap-attendance-title"><div class="trap-section-heading"><h2 id="trap-attendance-title">참가 횟수 보상</h2><span><b id="trap-attempts">0</b>회 참가</span></div><div class="trap-table-scroll"><table class="trap-reward-table"><thead><tr><th scope="col">참가 횟수</th><th scope="col">대회 참가 횟수 보상</th><th scope="col"><span class="trap-sr-only">보상 수령</span></th></tr></thead><tbody id="trap-attendance-rows"></tbody></table></div></section>
+      </div>
+    </div>
+    <section class="trap-records"><div class="trap-records-heading"><h2>나의 트래핑 기록</h2><button type="button" data-dialog="history">참여 내역 <i class="bi bi-chevron-right" aria-hidden="true"></i></button></div><dl><div><dt>최고 포인트</dt><dd id="trap-best">0 P</dd></div><div><dt>대회 참가</dt><dd id="trap-total">0회</dd></div></dl>
+      <div class="trap-ratio"><h3>배율 계산</h3><p class="trap-ratio-note">참가권 1,500장 = 25,000원 · 5만원에 5억 MP = 10만배 기준</p>
+        <dl><div><dt>사용 참가권</dt><dd id="trap-used">0장</dd></div><div><dt>사용 금액</dt><dd id="trap-spent">0원</dd></div><div><dt>획득 MP 가치</dt><dd id="trap-gain">0 MP</dd></div><div><dt>배율</dt><dd id="trap-multiple">-</dd></div></dl></div></section>
+  </div>
+  <div id="trap-reward-screen" class="pack-workspace trap-reward-screen" hidden>
+    <div class="stage-frame" id="trap-reward-frame">
+      <div class="opening-stage" id="trap-reward-stage" data-phase="reward-summary" aria-label="획득 보상 화면">
+        <div class="stage-background"></div>
+        <video id="trap-cinematic-video" class="stage-video" muted playsinline webkit-playsinline preload="none" aria-hidden="true"></video>
+        <div class="stage-top"><div class="stage-tools"><button id="trap-reward-fullscreen" type="button" aria-label="보상 화면 전체 화면"><i class="bi bi-arrows-fullscreen" aria-hidden="true"></i></button></div></div>
+        <div class="opening-flash" id="trap-reward-flash" aria-hidden="true"></div>
+        <div class="reveal-hint" id="trap-reveal-hint" aria-hidden="true"></div>
+        <div class="hero-reward" id="trap-hero-reward"></div>
+        <div class="stage-bottom trap-cinematic-controls"><button id="trap-cinematic-next" type="button" hidden>건너뛰기</button></div>
+        {% include "_pack_reward_flow.html" %}
+      </div>
+    </div>
+  </div>
+  <details class="trap-guide">
+    <summary>이용안내</summary>
+    <div class="trap-guide-content">
+      <h2>FC모바일 트래핑의 신 시뮬레이터 이용 방법</h2>
+      <ul>
+        <li>등급(아마추어·세미프로·프로)을 고르고 "트래핑 대회 참가"를 누르면 참가권이 차감되며 대회가 시작됩니다.</li>
+        <li>가슴(+3P, 30%), 머리(+2P, 50%), 발(+1P, 70%) 중 하나를 눌러 포인트를 쌓습니다. 실패하면 대회가 종료됩니다.</li>
+        <li>3·6·9·12·15·18·21P에서는 슈퍼 트래핑으로 성공 확률이 올라갑니다(가슴 50%, 머리 65%, 발 80%).</li>
+        <li>포인트 달성 보상과 참가 횟수 보상은 우편함으로 지급되며, 받기를 누르면 팩이 열리고 선수와 MP를 확인할 수 있습니다.</li>
+        <li>참가권은 "추가하기"로 자유롭게 채울 수 있고, 기록의 배율은 참가권 1,500장 = 25,000원 기준으로 계산됩니다.</li>
+        <li>보상 팩은 넥슨 공식 확률표를 바탕으로 하며, 실제 게임 계정에는 아무것도 지급되지 않는 시뮬레이터입니다.</li>
+      </ul>
+    </div>
+  </details>
+  <noscript><p>자바스크립트를 켜 주세요.</p></noscript>
+  <div class="trap-sr-only" id="trap-announcement" role="status" aria-live="polite" aria-atomic="true"></div>
+</section>
+<dialog id="trap-dialog" class="trap-dialog" aria-labelledby="trap-dialog-title"><header><h2 id="trap-dialog-title"></h2><button id="trap-dialog-close" type="button" aria-label="닫기"><i class="bi bi-x-lg" aria-hidden="true"></i></button></header><div id="trap-dialog-body" class="trap-dialog-body"></div><footer id="trap-dialog-footer"></footer></dialog>
+{% endblock %}
+{% block extra_scripts %}<script src="{{ url_for('static', filename='js/trapping-simulator.js', v='20261015-ratio-4') }}" defer></script>{% endblock %}

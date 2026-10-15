@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import sys
 import unicodedata
 from collections import Counter, defaultdict
 from datetime import datetime, timezone
@@ -16,6 +17,11 @@ from bs4 import BeautifulSoup
 
 
 ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from jleague_clubs import JLEAGUE_NAME, jleague_club
+
 DEFAULT_SOURCE_URL = (
     "https://fco.vod.nexoncdn.co.kr/list/2025/3/"
     "club_FCO_250313_gkelks0jkf4dG_test.html"
@@ -32,6 +38,7 @@ def normalize_text(value: object) -> str:
 
 
 def normalize_team(value: object) -> str:
+    value = jleague_club(value) or value
     text = unicodedata.normalize("NFKC", str(value or "")).lower()
     text = re.sub(r"\((?:임대|loan)\)", "", text, flags=re.IGNORECASE)
     replacements = {
@@ -225,6 +232,8 @@ def compact_career(rows):
                 "loan": str(row.get("임대 여부") or "").strip() == "임대",
             }
         )
+        if jleague_club(club):
+            compact[-1]["league"] = JLEAGUE_NAME
     return compact
 
 

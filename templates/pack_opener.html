@@ -28,20 +28,21 @@
   'featureList': ['공식 상점 확률표 기반 선수팩 시뮬레이션', '시즌별 팩 오프닝 연출', '획득 기록과 가치 확인']
 } | tojson }}
 </script>
-<link rel="stylesheet" href="{{ url_for('static', filename='css/pack-opener.css', v='20261013-flat') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/pack-opener.css', v='20261015-trapping') }}">
 {% endblock %}
 {% block content %}
 <section class="pack-workspace">
   <header class="pack-heading">
     <h1>팩 오프너</h1>
-    <button id="choose-bat-pack" class="choose-bat-pack" type="button"><img src="{{ url_for('static', filename='pack-opener/images/kkaebi/moon-token.png') }}" alt="" width="30" height="30"><span>알쏭뚝딱 방망이 팩 선택</span><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
+    <div class="pack-simulator-links"><a class="trapping-simulator-link" href="{{ url_for('trapping_simulator_page') }}"><img src="{{ url_for('static', filename='trapping-sim/foot.webp') }}" alt=""><span>트래핑의 신 시뮬레이터</span><i class="bi bi-chevron-right" aria-hidden="true"></i></a>
+    <button id="choose-bat-pack" class="choose-bat-pack" type="button"><img src="{{ url_for('static', filename='trapping-sim/foot-cutout.webp') }}" alt="" width="30" height="30"><span>트래핑의 신 팩 선택</span><i class="bi bi-chevron-right" aria-hidden="true"></i></button></div>
   </header>
   <div class="pack-layout">
     <button id="choose-pack" class="choose-pack" type="button">팩 선택 <span id="mobile-pack-name"></span><i class="bi bi-chevron-down" aria-hidden="true"></i></button>
     <dialog id="pack-shop-dialog" class="pack-shop-dialog" aria-label="상점 팩 선택"><div id="mobile-shop-host"></div></dialog>
     <div id="desktop-shop-host"><aside class="pack-shop" aria-label="상점 팩 선택">
       <div class="shop-heading"><h2>상점</h2><button id="close-pack-shop" type="button" aria-label="팩 선택 닫기">×</button><span id="pack-count"></span></div>
-      <div class="shop-filters shop-categories" role="group" aria-label="팩 상품 섹션"><button type="button" data-category="all" class="active" aria-pressed="true">전체</button><button type="button" data-category="STORE" aria-pressed="false">상점</button><button type="button" data-category="FV_RELAY" aria-pressed="false">FV 릴레이</button><button type="button" data-category="KKAEBI_BAT" aria-pressed="false">알쏭뚝딱 방망이</button></div><label class="pack-search"><i class="bi bi-search" aria-hidden="true"></i><input id="pack-search" type="search" placeholder="팩 이름 검색" aria-label="팩 이름 검색"></label>
+      <div class="shop-filters shop-categories" role="group" aria-label="팩 상품 섹션"><button type="button" data-category="all" class="active" aria-pressed="true">전체</button><button type="button" data-category="STORE" aria-pressed="false">상점</button><button type="button" data-category="FV_RELAY" aria-pressed="false">FV 릴레이</button><button type="button" data-category="KKAEBI_BAT" aria-pressed="false">알쏭뚝딱 방망이</button><button type="button" data-category="WEBG_TRAPPING" aria-pressed="false">트래핑의 신</button></div><label class="pack-search"><i class="bi bi-search" aria-hidden="true"></i><input id="pack-search" type="search" placeholder="팩 이름 검색" aria-label="팩 이름 검색"></label>
       <div id="pack-type-filters" class="shop-filters" role="group" aria-label="팩 종류"><button type="button" data-filter="all" class="active" aria-pressed="true">전체</button><button type="button" data-filter="player" aria-pressed="false">선수팩</button><button type="button" data-filter="set" aria-pressed="false">세트</button></div>
       <div class="pack-list" id="pack-list" aria-busy="true"></div>
       <p class="shop-source">넥슨 공식 확률표 기준<br><span id="source-date"></span> <a href="https://fcmobile.nexon.com/ForumProbability" target="_blank" rel="noopener">원본 보기 ↗</a></p>
@@ -59,16 +60,7 @@
         <canvas id="opening-particles" aria-hidden="true"></canvas>
         <div class="reveal-hint" id="reveal-hint" aria-hidden="true"></div>
         <div id="hero-reward" class="hero-reward"></div>
-        <section id="reward-flow" class="reward-flow" hidden aria-label="팩 보상 확인">
-          <h2 id="reward-flow-title"></h2>
-          <div id="reward-step" class="reward-step" hidden>
-            <button id="reward-pack" class="reward-pack" type="button" aria-label="다음 보상 열기"><span id="reward-remaining" class="reward-remaining"></span><img src="{{ url_for('static', filename='pack-opener/images/pack.png') }}" alt="남은 보상 팩" draggable="false"></button>
-            <button id="reward-current" class="reward-current" type="button" aria-label="다음 보상 확인"></button>
-          </div>
-          <div id="reward-summary" class="reward-summary" tabindex="0" aria-label="전체 획득 보상 스크롤 영역" hidden><div id="reward-summary-grid" class="reward-summary-grid"></div></div>
-          <p id="reward-flow-status" class="reward-flow-status" role="status" aria-live="polite"></p>
-          <div class="reward-flow-actions"><button id="flow-replay" class="flow-replay" type="button" hidden>다시 보기</button><button id="reveal-all" type="button" hidden>모두 열기</button><button id="reward-next" type="button" hidden>다음 →</button></div>
-        </section>
+        {% include "_pack_reward_flow.html" %}
         <div class="stage-bottom"><span id="stage-status" role="status" aria-live="polite"></span><button id="open-pack" type="button" disabled>팩 열기 <span aria-hidden="true">→</span></button><button id="show-results" type="button" hidden>다음</button><button id="resume-opening" type="button" hidden>연출 계속하기 ▶</button></div>
       </div>
       </div>
@@ -84,4 +76,4 @@
 </section>
 <dialog id="odds-dialog" class="odds-dialog"><div class="odds-heading"><h2>공식 확률표</h2><button id="close-odds" type="button" aria-label="확률표 닫기">×</button></div><div class="odds-breadcrumb"><button id="odds-back" type="button" hidden>← 이전 표</button><strong id="odds-title"></strong></div><p class="odds-note">항목을 누르면 선수별·진화별 상세 확률을 볼 수 있어요. 100% 항목은 확정 적용되며, 나머지 항목 중 하나가 추첨됩니다. 차감 항목은 소모되는 아이템입니다.</p><div class="odds-scroll"><table><thead><tr><th>아이템명</th><th>수량</th><th>OVR</th><th>진화</th><th>확률</th></tr></thead><tbody id="odds-body"></tbody></table></div><div class="odds-footer"><button id="odds-prev" type="button">이전</button><span id="odds-page"></span><button id="odds-next" type="button">다음</button></div><a class="odds-source" href="https://fcmobile.nexon.com/ForumProbability" target="_blank" rel="noopener">넥슨 공식 확률표 ↗</a></dialog>
 {% endblock %}
-{% block extra_scripts %}<script src="{{ url_for('static', filename='js/pack-opener.js', v='20261012-share-4') }}" defer></script>{% endblock %}
+{% block extra_scripts %}<script src="{{ url_for('static', filename='js/pack-opener.js', v='20261015-trapping-select') }}" defer></script>{% endblock %}
