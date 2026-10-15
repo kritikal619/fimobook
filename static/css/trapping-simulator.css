@@ -209,8 +209,6 @@ body.trapping-sim-page .main-content{width:100%;max-width:1200px;padding:12px 28
   .trap-records{padding:17px 15px;margin-top:16px}
   .trap-records h2{font-size:16px}
   .trap-records dd{font-size:19px}
-  .trap-reward-screen .stage-tools button{width:calc(36px / var(--stage-scale,1));height:calc(36px / var(--stage-scale,1));font-size:calc(14px / var(--stage-scale,1))}
-  .trap-reward-screen .reward-flow-actions button{min-height:calc(40px / var(--stage-scale,1));min-width:calc(90px / var(--stage-scale,1));font-size:calc(12px / var(--stage-scale,1))}
   .trap-dialog>header{padding:14px 16px}
   .trap-dialog h2{font-size:18px}
   .trap-dialog-body{padding:16px;font-size:13px;max-height:59dvh}
@@ -283,8 +281,6 @@ html[data-theme=dark] .trap-dialog-body table td{border-color:var(--dark-line)}
 html[data-theme=dark] .trap-dialog-error{color:#ff9aaf}
 
 .trap-fail-note{margin:0 0 10px;font-size:15px;line-height:1.7;text-align:center}
-.trap-cinematic-controls{bottom:4%}
-.trap-reward-screen .trap-cinematic-controls{left:50%;right:auto;transform:translateX(-50%);width:max-content}
 
 .trap-ratio{margin-top:20px;padding-top:16px;border-top:1px solid #e5eaee}
 .trap-ratio h3{font-size:15px;margin:0}
@@ -320,9 +316,6 @@ html[data-theme=dark] .trap-ratio-rate input{background:#1b1724;border-color:#4a
   .trap-section-heading{padding:4px 2px 8px}
 }
 
-/* Cinematic skip/next button: centered and sized for the scaled 1024x576 stage. */
-.trap-reward-screen .opening-stage[data-phase] .trap-cinematic-controls{left:0;right:0;bottom:4%;height:auto;display:flex;justify-content:center;transform:none;width:auto}
-.trap-reward-screen .trap-cinematic-controls button{min-width:calc(110px / var(--stage-scale,1));min-height:calc(40px / var(--stage-scale,1));padding:0 calc(20px / var(--stage-scale,1));font-size:calc(14px / var(--stage-scale,1));border-radius:calc(5px / var(--stage-scale,1))}
 
 /* Usage guide (matches the other simulator pages' collapsible guide). */
 .trap-guide{margin-top:18px;text-align:left}

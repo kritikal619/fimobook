@@ -27,7 +27,7 @@
 } | tojson }}
 </script>
 <link rel="stylesheet" href="{{ url_for('static', filename='css/pack-opener.css', v='20261015-trapping') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/trapping-simulator.css', v='20261015-mailbox') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/trapping-simulator.css', v='20261015-samebtn') }}">
 {% endblock %}
 {% block content %}
 <section class="trap-page" aria-label="트래핑의 신 시뮬레이터">
@@ -83,7 +83,7 @@
         <div class="opening-flash" id="trap-reward-flash" aria-hidden="true"></div>
         <div class="reveal-hint" id="trap-reveal-hint" aria-hidden="true"></div>
         <div class="hero-reward" id="trap-hero-reward"></div>
-        <div class="stage-bottom trap-cinematic-controls"><button id="trap-cinematic-next" type="button" hidden>다음</button></div>
+        <div class="stage-bottom"><span id="stage-status" role="status" aria-live="polite"></span><button id="show-results" type="button" hidden>다음</button></div>
         {% include "_pack_reward_flow.html" %}
       </div>
     </div>
@@ -107,4 +107,4 @@
 </section>
 <dialog id="trap-dialog" class="trap-dialog" aria-labelledby="trap-dialog-title"><header><h2 id="trap-dialog-title"></h2><button id="trap-dialog-close" type="button" aria-label="닫기"><i class="bi bi-x-lg" aria-hidden="true"></i></button></header><div id="trap-dialog-body" class="trap-dialog-body"></div><footer id="trap-dialog-footer"></footer></dialog>
 {% endblock %}
-{% block extra_scripts %}<script src="{{ url_for('static', filename='js/trapping-simulator.js', v='20261015-confirm') }}" defer></script>{% endblock %}
+{% block extra_scripts %}<script src="{{ url_for('static', filename='js/trapping-simulator.js', v='20261015-samebtn') }}" defer></script>{% endblock %}

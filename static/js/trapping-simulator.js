@@ -502,7 +502,7 @@
     video.removeAttribute('src');video.dataset.source='';video.load();
     $('hero-reward').classList.remove('visible');$('hero-reward').replaceChildren();
     $('reveal-hint').dataset.kind='';$('reveal-hint').replaceChildren();
-    $('cinematic-next').hidden=true;$('pack-idle').style.display='none';
+    byId('show-results').hidden=true;$('pack-idle').style.display='none';
   }
   function endCinematic(revealed) {
     if(!flow || flow.mode!=='cinematic')return;
@@ -554,7 +554,7 @@
           revealed=true;$('reward-stage').dataset.phase='hero';
           const node=$('hero-reward');node.replaceChildren(rewardCard(hero));node.classList.add('visible');
           $('reward-flash').classList.remove('flash');void $('reward-flash').offsetWidth;$('reward-flash').classList.add('flash');
-          $('cinematic-next').hidden=false;flow.heroRevealed=true;
+          byId('show-results').hidden=false;flow.heroRevealed=true;
         }
       }
     }
@@ -610,7 +610,7 @@
       status.textContent=remaining?`팩을 눌러 다음 보상을 확인하세요 · ${remaining}개 남음`:'팩을 눌러 전체 보상을 확인하세요';
       // Same as the pack opener: a lone reward shows Next instead of Open All.
       const single=view.steps.length===1;
-      reveal.hidden=single;next.hidden=!single;next.textContent='다음';next.disabled=busy;replay.hidden=true;
+      reveal.hidden=single;next.hidden=!single;next.textContent='다음 →';next.disabled=busy;replay.hidden=true;
       if(single)status.textContent='보상을 획득했어요 · 다음을 눌러 계속하세요';
     } else {
       stage.dataset.phase='reward-summary';
@@ -624,7 +624,7 @@
         return slot;
       }));
       status.textContent=`총 ${fmt(rewards.length)}개 보상 획득`;
-      reveal.hidden=true;replay.hidden=true;next.hidden=false;next.textContent='확인';next.disabled=busy;
+      reveal.hidden=true;replay.hidden=true;next.hidden=false;next.textContent='다음 →';next.disabled=busy;
     }
     visibleReceiptId=receipt.id;fitRewardScreen();
     if(first) {
@@ -733,7 +733,7 @@
   byId('reward-current').addEventListener('click',advanceFlow);
   byId('reveal-all').addEventListener('click',() => {if(flow){flow.mode='summary';renderReceipt();}});
   byId('flow-replay').addEventListener('click',() => {if(drawFailed){drawFailed=false;renderReceipt();}});
-  $('cinematic-next').addEventListener('click',() => endCinematic(!!flow?.heroRevealed));
+  byId('show-results').addEventListener('click',() => endCinematic(!!flow?.heroRevealed));
   $('reward-stage').addEventListener('click',event => {
     if(event.target.closest('button,a,input,select,summary'))return;
     if(flow?.mode==='cinematic')endCinematic(!!flow.heroRevealed);else advanceFlow();
