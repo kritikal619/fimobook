@@ -661,10 +661,9 @@
     const error=element('p',undefined,'trap-dialog-error');error.setAttribute('role','alert');body.append(error);
     action('취소',closeDialog,true);
     const reset=action('참가권 초기화',() => {
-      // Two-step: the first press asks for confirmation.
-      if(!reset.dataset.confirm){reset.dataset.confirm='1';reset.textContent='0장으로 초기화할까요?';return;}
       sync();state.tickets=0;save();render();closeDialog();message('참가권을 0장으로 초기화했습니다.');
     },true);
+    reset.classList.add('danger');
     reset.disabled=state.tickets===0;
     const submit=action('추가하기',() => {
       sync();const count=Number(input.value);
