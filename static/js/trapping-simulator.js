@@ -208,6 +208,7 @@
     document.querySelectorAll('[data-dialog]').forEach(button => { button.disabled=locked; });
     const count=state.mailbox.length;
     $('mail-count').textContent=fmt(count);$('mail-count').hidden=count===0;
+    $('mailbox-button').classList.toggle('has-mail',count>0);
     $('mailbox-button').setAttribute('aria-label',`우편함${count?`, ${fmt(count)}개`:''}`);
     renderRewards(r);renderAttendance();
     if (state.delivery) renderReceipt();
@@ -241,7 +242,7 @@
       button.setAttribute('aria-label',`${item.count}회 참가 보상 ${claimed?'발송 완료':'받기'}`);
       button.addEventListener('click',() => {
         sync();if (busy || state.delivery || state.attempts<item.count || state.claimed.includes(item.count)) return;
-        state.claimed.push(item.count);addMail(item.reward,`${item.count}회 참가 보상`);save();render();message('우편함으로 보냈습니다.');
+        state.claimed.push(item.count);addMail(item.reward,`${item.count}회 참가 보상`);save();render();message('보상이 우편함에 도착했어요. 우편함에서 받을 수 있어요.');
       });
       const cell=element('td');cell.append(button);row.append(cell);return row;
     }));
@@ -341,12 +342,12 @@
     const points=success?r.points:0,name=rewardAt(points);
     addMail(name,success?`${points}P 달성 보상`:'참가 보상',r.points);
     state.history.unshift({points:r.points,success,cost:r.cost,moves:r.moves,reward:name,at:Date.now()});state.history=state.history.slice(0,100);
-    failedPrompt=false;state.round=null;save();closeDialog();render();message(success?'우편함으로 보냈습니다.':'트래핑 실패 · 참가 보상을 우편함으로 보냈습니다.');
+    failedPrompt=false;state.round=null;save();closeDialog();render();message(success?'보상이 우편함에 도착했어요. 우편함에서 받을 수 있어요.':'참가 보상이 우편함에 도착했어요. 우편함에서 받을 수 있어요.');
   }
   function openMailbox() {
     showDialog('mailbox','우편함');
     if(!state.mailbox.length) {body.append(element('p','도착한 우편이 없습니다.','trap-empty'));action('확인',closeDialog);return;}
-    body.append(element('p',`전체 우편 ${fmt(state.mailbox.length)}개`,'trap-mail-total'));
+    body.append(element('p',`전체 우편 ${fmt(state.mailbox.length)}개`,'trap-mail-total'),element('p','"받기"를 누르면 보상과 참가권이 지급됩니다.','trap-mail-hint'));
     state.mailbox.forEach(mail => {
       const row=element('div',undefined,'trap-mail-entry');row.append(image('/static/pack-opener/images/pack.png','',''));
       const detail=element('div');detail.append(element('strong',mail.name));

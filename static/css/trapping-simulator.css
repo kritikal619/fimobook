@@ -353,3 +353,13 @@ html[data-theme=dark] .trap-add-held{color:#a8b3c2}
 html[data-theme=dark] .trap-dialog footer>button+button{border-left-color:rgba(255,255,255,.14)}
 html[data-theme=dark] .trap-dialog footer>button.secondary.danger{background:#3b2327;color:#ff9f98}
 html[data-theme=dark] .trap-dialog footer>button.secondary.danger:disabled{background:#2b384c;color:#6f7b8c}
+
+/* Mailbox entry: larger target, highlighted while rewards are waiting. */
+.trap-mailbox-button{min-height:46px;padding:9px 16px;gap:8px;font-size:14px!important;font-weight:700!important}
+.trap-mailbox-button>.bi{font-size:20px}
+.trap-mailbox-button>b{min-width:22px;padding:2px 6px;font-size:12px}
+.trap-mailbox-button.has-mail{background:#fff3b8;border-color:#e3b800;color:#4a3800}
+.trap-mail-hint{margin:2px 0 10px;font-size:12px;color:#5a6672}
+html[data-theme=dark] .trap-mailbox-button.has-mail{background:#3d3412;border-color:#8a7420;color:#ffe9a0}
+html[data-theme=dark] .trap-mail-hint{color:#a8b3c2}
+@media(max-width:740px){.trap-mailbox-button{min-height:42px;padding:8px 12px;font-size:13px!important}.trap-mailbox-button>.bi{font-size:18px}}
