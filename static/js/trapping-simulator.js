@@ -497,13 +497,54 @@
     const src=kind==='flag'?hero.flag:hero.club,label=kind==='flag'?hero.nation:hero.team;
     if(src)node.append(image(src,'',label));else if(label)node.append(element('span',label,'hint-text'));
   }
+  function packNameFor(mail) {
+    const id=packIdFor(mail) || '';
+    let match=id.match(/REWARD_(\d\d)$/);
+    if(match)return `[트래핑의 신 ${Number(match[1])}P] ${REWARDS[Number(match[1])]}`;
+    if(id.includes('NORMAL_REWARD'))return `[트래핑의 신 참가 보상] ${REWARDS[0]}`;
+    match=id.match(/ACCREWARD_(\d+)$/);
+    if(match)return `[트래핑의 신 ${match[1]}회 참가 보상] ${ATTENDANCE.find(item => item.count===Number(match[1]))?.reward || ''}`.trim();
+    return mail.name;
+  }
+  // One pack type shows its own name; several types are shown as a package.
+  function receiptTitle(receipt) {
+    const names=new Set(receipt.mails.map(packNameFor));
+    return names.size===1?[...names][0]:'트래핑의 신 보상 패키지';
+  }
+  async function burstSequence(current) {
+    const flashNow=() => {$('reward-flash').classList.remove('flash');void $('reward-flash').offsetWidth;$('reward-flash').classList.add('flash');};
+    $('pack-idle').style.display='flex';$('reward-stage').dataset.phase='burst';
+    await sleep(1200);
+    if(!current())return false;
+    flashNow();await sleep(350);
+    if(!current())return false;
+    $('pack-idle').style.display='none';
+    return true;
+  }
+  async function playBurst(receipt) {
+    const run=++cinematicRun;
+    const current=() => run===cinematicRun && flow?.id===receipt.id && flow.mode==='burst';
+    if(!(await burstSequence(current)))return;
+    const steps=receiptRewards(receipt).steps;
+    flow.mode=steps.length>0?'step':'summary';flow.index=0;
+    renderReceipt();
+  }
+  function startOpening() {
+    if(!flow || flow.mode!=='idle' || !state.delivery?.result)return;
+    byId('open-pack').hidden=true;
+    const hasPlayer=receiptRewards(state.delivery).steps.some(reward => reward.kind==='player');
+    flow.started=true;
+    if(hasPlayer){flow.mode='cinematic';flow.started=false;}else flow.mode='burst';
+    renderReceipt();
+    if(flow.mode==='burst')playBurst(state.delivery);
+  }
   function cleanupCinematic() {
     const video=$('cinematic-video');
     video.onended=null;video.pause();video.classList.remove('visible');
     video.removeAttribute('src');video.dataset.source='';video.load();
     $('hero-reward').classList.remove('visible');$('hero-reward').replaceChildren();
     $('reveal-hint').dataset.kind='';$('reveal-hint').replaceChildren();
-    byId('show-results').hidden=true;$('pack-idle').style.display='none';
+    byId('show-results').hidden=true;byId('open-pack').hidden=true;$('pack-idle').style.display='none';
   }
   function endCinematic(revealed) {
     if(!flow || flow.mode!=='cinematic')return;
@@ -524,13 +565,7 @@
       img.onload=img.onerror=() => {clearTimeout(timeout);resolve();};img.src=src;
     })));
     if(!current())return;
-    const flashNow=() => {$('reward-flash').classList.remove('flash');void $('reward-flash').offsetWidth;$('reward-flash').classList.add('flash');};
-    $('pack-idle').style.display='flex';$('reward-stage').dataset.phase='burst';
-    await sleep(1200);
-    if(!current())return;
-    flashNow();await sleep(350);
-    if(!current())return;
-    $('pack-idle').style.display='none';
+    if(!(await burstSequence(current)))return;
     $('reward-stage').dataset.phase='tunnel';video.classList.add('visible');
     try { await video.play(); } catch { if(current())endCinematic(false);return; }
     let shown=false,revealed=false,lastTime=-1,lastProgress=performance.now();
@@ -582,14 +617,24 @@
     replay.textContent='다시 보기';
     const view=receiptRewards(receipt);
     if(!flow || flow.id!==receipt.id) {
-      const hasPlayer=view.steps.some(reward => reward.kind==='player');
-      flow={id:receipt.id,index:0,mode:hasPlayer?'cinematic':view.steps.length>0?'step':'summary',started:false,heroRevealed:false};
+      flow={id:receipt.id,index:0,mode:'idle',started:false,heroRevealed:false};
     }
     // After the opening, the featured player is not repeated in the pack-by-pack step flow.
     const heroIndex=flow.heroRevealed?view.steps.findIndex(reward => reward.kind==='player'):-1;
     view.steps=view.steps.filter((reward,index) => index!==heroIndex);
-    byId('reward-flow').hidden=flow.mode==='cinematic';
+    byId('reward-flow').hidden=['idle','burst','cinematic'].includes(flow.mode);
     byId('reward-step').hidden=flow.mode!=='step';byId('reward-summary').hidden=flow.mode!=='summary';
+    if(flow.mode==='idle') {
+      // Same opening screen as the pack opener: pack, name and "팩 열기".
+      byId('reveal-all').hidden=true;byId('reward-next').hidden=true;replay.hidden=true;
+      stage.dataset.phase='idle';$('pack-idle').style.display='flex';
+      byId('stage-pack-name').textContent=receiptTitle(receipt);
+      byId('show-results').hidden=true;byId('open-pack').hidden=false;
+      visibleReceiptId=receipt.id;fitRewardScreen();
+      if(first)$('reward-screen').scrollIntoView({block:'start',behavior:'instant'});
+      return;
+    }
+    if(flow.mode==='burst') {visibleReceiptId=receipt.id;fitRewardScreen();return;}
     if(flow.mode==='cinematic') {
       byId('reveal-all').hidden=true;byId('reward-next').hidden=true;replay.hidden=true;
       visibleReceiptId=receipt.id;fitRewardScreen();
@@ -734,10 +779,13 @@
   byId('reward-current').addEventListener('click',advanceFlow);
   byId('reveal-all').addEventListener('click',() => {if(flow){flow.mode='summary';renderReceipt();}});
   byId('flow-replay').addEventListener('click',() => {if(drawFailed){drawFailed=false;renderReceipt();}});
+  byId('open-pack').addEventListener('click',startOpening);
   byId('show-results').addEventListener('click',() => endCinematic(!!flow?.heroRevealed));
   $('reward-stage').addEventListener('click',event => {
     if(event.target.closest('button,a,input,select,summary'))return;
-    if(flow?.mode==='cinematic')endCinematic(!!flow.heroRevealed);else advanceFlow();
+    if(flow?.mode==='idle')startOpening();
+    else if(flow?.mode==='cinematic')endCinematic(!!flow.heroRevealed);
+    else if(flow?.mode!=='burst')advanceFlow();
   });
   $('reward-fullscreen').addEventListener('click',async () => {
     try {if(document.fullscreenElement===frame)await document.exitFullscreen();else await frame.requestFullscreen();}catch{/* Fullscreen is optional. */}

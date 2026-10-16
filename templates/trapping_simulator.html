@@ -78,12 +78,12 @@
       <div class="opening-stage" id="trap-reward-stage" data-phase="reward-summary" aria-label="획득 보상 화면">
         <div class="stage-background"></div>
         <video id="trap-cinematic-video" class="stage-video" muted playsinline webkit-playsinline preload="none" aria-hidden="true"></video>
-        <div class="stage-top"><div class="stage-tools"><button id="trap-reward-fullscreen" type="button" aria-label="보상 화면 전체 화면"><i class="bi bi-arrows-fullscreen" aria-hidden="true"></i></button></div></div>
-        <div class="pack-idle" id="trap-pack-idle" style="display:none" aria-hidden="true"><div class="pack-aura"></div><div class="pack-shockwave"></div><img class="opening-pack" src="{{ url_for('static', filename='pack-opener/images/pack.png') }}" alt="" draggable="false"></div>
+        <div class="stage-top"><span id="stage-pack-name"></span><div class="stage-tools"><button id="trap-reward-fullscreen" type="button" aria-label="보상 화면 전체 화면"><i class="bi bi-arrows-fullscreen" aria-hidden="true"></i></button></div></div>
+        <div class="pack-idle" id="trap-pack-idle" style="display:none" aria-hidden="true"><div class="pack-aura"></div><div class="pack-shockwave"></div><img class="opening-pack" src="{{ url_for('static', filename='pack-opener/images/pack.png') }}" alt="" draggable="false"><span class="pack-idle-caption">팩을 열어 보상을 확인하세요</span></div>
         <div class="opening-flash" id="trap-reward-flash" aria-hidden="true"></div>
         <div class="reveal-hint" id="trap-reveal-hint" aria-hidden="true"></div>
         <div class="hero-reward" id="trap-hero-reward"></div>
-        <div class="stage-bottom"><span id="stage-status" role="status" aria-live="polite"></span><button id="show-results" type="button" hidden>다음</button></div>
+        <div class="stage-bottom"><span id="stage-status" role="status" aria-live="polite"></span><button id="open-pack" type="button" hidden>팩 열기 <span aria-hidden="true">→</span></button><button id="show-results" type="button" hidden>다음</button></div>
         {% include "_pack_reward_flow.html" %}
       </div>
     </div>
@@ -107,4 +107,4 @@
 </section>
 <dialog id="trap-dialog" class="trap-dialog" aria-labelledby="trap-dialog-title"><header><h2 id="trap-dialog-title"></h2><button id="trap-dialog-close" type="button" aria-label="닫기"><i class="bi bi-x-lg" aria-hidden="true"></i></button></header><div id="trap-dialog-body" class="trap-dialog-body"></div><footer id="trap-dialog-footer"></footer></dialog>
 {% endblock %}
-{% block extra_scripts %}<script src="{{ url_for('static', filename='js/trapping-simulator.js', v='20261016-mailbox2') }}" defer></script>{% endblock %}
+{% block extra_scripts %}<script src="{{ url_for('static', filename='js/trapping-simulator.js', v='20261016-idle2') }}" defer></script>{% endblock %}
