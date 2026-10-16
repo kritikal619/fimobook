@@ -359,3 +359,8 @@ html[data-theme=dark] .trap-mail-hint{color:#a8b3c2}
 
 .trap-mail-claim{background:#ffdb00!important;color:#592e00!important;font-weight:700!important;border:0!important}
 .trap-mail-claim:disabled{background:#a7aaaa!important;color:#fff!important}
+
+/* Keep the best received cards after the mailbox receipt is closed. */
+.trap-best-pulls{margin-top:24px;padding:20px;border:1px solid var(--pack-border);border-radius:8px;background:#fff}
+.trap-best-pulls h2{margin:0;font-size:18px}
+html[data-theme=dark] .trap-best-pulls{background:var(--dark-card,#17202a)}

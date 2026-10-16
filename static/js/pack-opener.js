@@ -26,7 +26,7 @@
     eventMP:0, eventPlayers:0, moonSpent:0, eventUnknownCost:0});
   const emptyHistory = () => ({opened:0, rewards:[], best:[], totals:emptyTotals(), priceTotalsVersion:1});
   const BEST_LIMIT = 3;
-  const isPricedPlayer = r => r && r.kind === 'player' && typeof r.name === 'string' && Number(r.accountedPrice) > 0;
+  const isPricedPlayer = r => r && r.kind === 'player' && typeof r.name === 'string' && Number.isFinite(Number(r.accountedPrice)) && Number(r.accountedPrice) > 0;
   // Highest-value cards ever opened; kept apart from the 100-item recent list so they never scroll away.
   function bestPulls(...groups) {
     return groups.flat().filter(isPricedPlayer)
@@ -39,7 +39,7 @@
     if (saved && Number.isSafeInteger(saved.opened) && saved.opened >= 0 && Array.isArray(saved.rewards)) {
       history = {priceTotalsVersion:saved.priceTotalsVersion, totals: {...emptyTotals(), ...(saved.totals || {})}, opened: saved.opened, rewards: saved.rewards.filter(r => r && ['player', 'item'].includes(r.kind) && typeof r.name === 'string').slice(0, 100)};
       // Older saves have no best list yet; seed it once from the recent rewards.
-      history.best = bestPulls(Array.isArray(saved.best) ? saved.best : history.rewards);
+      history.best = Array.isArray(saved.best) ? saved.best : null;
     }
     historyBackup = JSON.parse(localStorage.getItem(storageKey + '.backup'));
   } catch (_) { /* Storage may be unavailable in private browsing. */ }
@@ -56,6 +56,7 @@
     record.priceTotalsVersion = 1;
   }
   reconcileHistoryPrices(history);
+  history.best = bestPulls(history.best ?? history.rewards);
   if (historyBackup?.totals) historyBackup.totals = {...emptyTotals(), ...historyBackup.totals};
   reconcileHistoryPrices(historyBackup);
   const el = (tag, className, text) => {
@@ -355,7 +356,8 @@
     $('history-undo').hidden = !historyBackup;
     $('history-reset').disabled = state.busy || !history.opened;
     const best = history.best || [], bestList = $('history-best-list');
-    $('history-best').hidden = $('history-recent-title').hidden = !best.length; bestList.replaceChildren();
+    $('history-recent-title').hidden = !history.rewards.length; bestList.replaceChildren();
+    if (!best.length) bestList.append(el('p', 'history-empty', '획득한 선수 중 가격이 확인된 상위 3장을 기록해요.'));
     best.forEach(reward => {
       const item = el('div', 'history-item'); item.append(rewardCard(reward));
       item.append(el('small', '', `${number(reward.accountedPrice)} MP`));

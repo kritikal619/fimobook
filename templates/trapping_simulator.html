@@ -27,7 +27,7 @@
 } | tojson }}
 </script>
 <link rel="stylesheet" href="{{ url_for('static', filename='css/pack-opener.css', v='20261015-trapping') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/trapping-simulator.css', v='20261016-mailbox2') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/trapping-simulator.css', v='20261016-best-pulls') }}">
 {% endblock %}
 {% block content %}
 <section class="trap-page" aria-label="트래핑의 신 시뮬레이터">
@@ -72,6 +72,10 @@
     <section class="trap-records"><div class="trap-records-heading"><h2>나의 트래핑 기록</h2><button type="button" data-dialog="history">참여 내역 <i class="bi bi-chevron-right" aria-hidden="true"></i></button></div><dl><div><dt>최고 포인트</dt><dd id="trap-best">0 P</dd></div><div><dt>대회 참가</dt><dd id="trap-total">0회</dd></div></dl>
       <div class="trap-ratio"><h3>배율 계산</h3><p class="trap-ratio-note">참가권 1,500장 = 25,000원 · 5만원에 5억 MP = 10만배 기준</p>
         <dl><div><dt>사용 참가권</dt><dd id="trap-used">0장</dd></div><div><dt>사용 금액</dt><dd id="trap-spent">0원</dd></div><div><dt>획득 MP 가치</dt><dd id="trap-gain">0 MP</dd></div><div><dt>배율</dt><dd id="trap-multiple">-</dd></div></dl></div></section>
+    <section class="pack-workspace trap-best-pulls" aria-labelledby="trap-best-pulls-title">
+      <h2 id="trap-best-pulls-title">베스트 획득</h2>
+      <div id="trap-best-pulls-list" class="history-list"><p class="history-empty">보상 팩에서 획득한 선수 중 가격이 확인된 상위 3장을 기록해요.</p></div>
+    </section>
   </div>
   <div id="trap-reward-screen" class="pack-workspace trap-reward-screen" hidden>
     <div class="stage-frame" id="trap-reward-frame">
@@ -107,4 +111,4 @@
 </section>
 <dialog id="trap-dialog" class="trap-dialog" aria-labelledby="trap-dialog-title"><header><h2 id="trap-dialog-title"></h2><button id="trap-dialog-close" type="button" aria-label="닫기"><i class="bi bi-x-lg" aria-hidden="true"></i></button></header><div id="trap-dialog-body" class="trap-dialog-body"></div><footer id="trap-dialog-footer"></footer></dialog>
 {% endblock %}
-{% block extra_scripts %}<script src="{{ url_for('static', filename='js/trapping-simulator.js', v='20261016-nocaption') }}" defer></script>{% endblock %}
+{% block extra_scripts %}<script src="{{ url_for('static', filename='js/trapping-simulator.js', v='20261016-best-pulls') }}" defer></script>{% endblock %}

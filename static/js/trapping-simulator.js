@@ -54,8 +54,13 @@
   const fmt = n => n.toLocaleString('ko-KR');
   const isSuper = points => points > 0 && points < 24 && points % 3 === 0;
   const int = (value, max = 1000000000) => Number.isSafeInteger(value) && value >= 0 && value <= max;
+  function bestPulls(rewards) {
+    return rewards.filter(r => r && r.kind === 'player' && typeof r.playerKor === 'string' &&
+      Number.isFinite(Number(r.price)) && Number(r.price) > 0)
+      .sort((a,b) => Number(b.price)-Number(a.price) || Number(b.ovr)-Number(a.ovr)).slice(0,3);
+  }
   const fresh = () => ({version:2,tickets:1000,best:0,attempts:0,success:0,rolls:0,usedTickets:0,gain:{mp:0,players:0,count:0},
-    rankOverride:null,claimed:[],mailbox:[],received:[],delivery:null,history:[],round:null,sound:false,fast:false,revision:0});
+    bestPulls:[],rankOverride:null,claimed:[],mailbox:[],received:[],delivery:null,history:[],round:null,sound:false,fast:false,revision:0});
   let needsMigration = false;
   function validMail(mail) {
     return mail && typeof mail.id === 'string' && typeof mail.name === 'string' &&
@@ -87,6 +92,9 @@
         data.received = s.received.filter(validMail).slice(0,200);
         if (s.delivery && typeof s.delivery.id === 'string' && Array.isArray(s.delivery.mails) && s.delivery.mails.every(validMail)) data.delivery=s.delivery;
       }
+      data.bestPulls=bestPulls(Array.isArray(s.bestPulls) ? s.bestPulls :
+        Array.isArray(data.delivery?.result?.rewards) ? data.delivery.result.rewards : []);
+      if (!Array.isArray(s.bestPulls)) needsMigration=true;
       return data;
     } catch { return null; }
   }
@@ -211,7 +219,7 @@
     $('mailbox-button').classList.toggle('has-mail',count>0);
     $('mailbox-button').querySelector('span').textContent=count>0?'보상 받기':'우편함';
     $('mailbox-button').setAttribute('aria-label',count?`우편함, 받을 보상 ${fmt(count)}개`:'우편함');
-    renderRewards(r);renderAttendance();
+    renderRewards(r);renderAttendance();renderBestPulls();
     if (state.delivery) renderReceipt();
     else {
       $('game-view').hidden=false;$('reward-screen').hidden=true;
@@ -423,6 +431,7 @@
         sync();
         if (state.delivery?.id === receipt.id && !state.delivery.result) {
           state.delivery.result = {rewards};
+          state.bestPulls=bestPulls([...state.bestPulls,...rewards]);
           // Accumulate the received value once, together with the saved reveal.
           rewards.forEach(reward => {
             if (reward.kind === 'player') {
@@ -470,6 +479,19 @@
     card.append(image(icon,reward.kind === 'mp' ? 'item-icon mp-icon' : 'item-icon'),element('strong',reward.name));
     if (reward.count > 1 || reward.kind === 'ticket') card.append(element('small',`× ${fmt(reward.count)}`));
     return card;
+  }
+  function renderBestPulls() {
+    const list=$('best-pulls-list');
+    list.replaceChildren();
+    if (!state.bestPulls.length) {
+      list.append(element('p','보상 팩에서 획득한 선수 중 가격이 확인된 상위 3장을 기록해요.','history-empty'));
+      return;
+    }
+    state.bestPulls.forEach(reward => {
+      const item=element('div',undefined,'history-item');
+      item.append(rewardCard(reward),element('small',`${fmt(Number(reward.price))} MP`));
+      list.append(item);
+    });
   }
   function priceCaption(reward) {
     const caption = element('div',undefined,'flow-reward-label reward-price'),line = element('span',undefined,'reward-price-line');
