@@ -333,7 +333,7 @@
     const won = totals.fv * 7;
     // Compare acquired MP value directly with FV spent: 100m MP / 1,000 FV = 100k.
     const ratio = totals.fv > 0 && !totals.unknownFV ? (totals.mp + totals.players - totals.eventMP - totals.eventPlayers) / totals.fv : null;
-    $('history-return').textContent = ratio == null ? '—' : ratio >= 10000
+    $('history-return').textContent = ratio == null ? '-' : ratio >= 10000
       ? `${(ratio / 10000).toLocaleString('ko-KR', {maximumFractionDigits:2})}만배`
       : `${ratio.toLocaleString('ko-KR', {maximumFractionDigits:0})}배`;
     $('history-won').textContent = won > 0 ? `약 ${number(Math.round(won))}원 기준` : '';
@@ -343,7 +343,7 @@
     $('history-event-value').textContent = `${number(totals.eventMP + totals.eventPlayers)} MP`;
     const eventRatio = eventWon > 0 && !totals.eventUnknownCost
       ? (totals.eventMP + totals.eventPlayers) / eventWon * eventMultiplierScale : null;
-    $('history-event-return').textContent = eventRatio == null ? '—' : eventRatio >= 10000
+    $('history-event-return').textContent = eventRatio == null ? '-' : eventRatio >= 10000
       ? `${(eventRatio / 10000).toLocaleString('ko-KR', {maximumFractionDigits:2})}만배`
       : `${eventRatio.toLocaleString('ko-KR', {maximumFractionDigits:0})}배`;
     $('history-event-note').textContent = '조각달 500개 = 25,000원 · 5만원에 5억 MP = 10만배 기준';
@@ -786,8 +786,8 @@
           const button = el('button', '', row.name + ' ›'); button.type = 'button';
           button.addEventListener('click', () => { state.oddsPath.push(row.index); state.oddsPage = 1; loadOdds(); }); name.append(button);
         } else name.textContent = row.name;
-        tr.append(name, el('td', '', number(row.count)), el('td', '', row.ovr == null ? '—' : String(row.ovr)),
-          el('td', '', row.enhance == null ? '—' : String(row.enhance)), el('td', '', row.probability + '%'));
+        tr.append(name, el('td', '', number(row.count)), el('td', '', row.ovr == null ? '-' : String(row.ovr)),
+          el('td', '', row.enhance == null ? '-' : String(row.enhance)), el('td', '', row.probability + '%'));
         $('odds-body').append(tr);
       });
       document.querySelector('.odds-scroll').scrollTop = 0;

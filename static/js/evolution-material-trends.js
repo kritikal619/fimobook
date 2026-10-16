@@ -25,9 +25,9 @@
     var moment = new Date(value);
     return Number.isNaN(moment.getTime()) ? value : dateFormat.format(moment);
   }
-  function priceLabel(value) { return value == null ? "—" : number.format(value); }
-  function comboLabel(item) { return item ? item.ovr + " OVR · " + item.level + "진" : "—"; }
-  function changeLabel(value) { return value == null ? "—" : (value > 0 ? "+" : "") + value.toFixed(1) + "%"; }
+  function priceLabel(value) { return value == null ? "-" : number.format(value); }
+  function comboLabel(item) { return item ? item.ovr + " OVR · " + item.level + "진" : "-"; }
+  function changeLabel(value) { return value == null ? "-" : (value > 0 ? "+" : "") + value.toFixed(1) + "%"; }
   function colorChange(element, value) {
     element.classList.toggle("is-up", value > 0);
     element.classList.toggle("is-down", value < 0);
@@ -42,7 +42,7 @@
     get("detail-title").textContent = target.ovr + " 진재 조합";
     var overview = panel.querySelector('[data-evolution-entry="' + target.ovr + '"]');
     if (overview) {
-      overview.querySelector("[data-overview-combo]").textContent = target.best ? target.best.ovr + " · " + target.best.level + "진" : "—";
+      overview.querySelector("[data-overview-combo]").textContent = target.best ? target.best.ovr + " · " + target.best.level + "진" : "-";
       overview.querySelector("[data-overview-price]").textContent = target.best ? priceLabel(target.best.price) : "산정 불가";
     }
     var rows = get("rows");

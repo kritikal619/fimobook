@@ -86,7 +86,7 @@
       star.setAttribute('aria-label',`${card.name} ${saved.has(card.name)?'관심 해제':'관심 등록'}`);star.setAttribute('aria-pressed',String(saved.has(card.name)));
       star.disabled=!card.available||!ready;star.addEventListener('click',()=>save(card.name,!saved.has(card.name),star));name.append(star);row.append(name);
       row.append(text('div',recurrence(card),'time-col time-text'));
-      const remain=text('div','','remain-col');remain.append(text('span','—','remain'));row.append(remain);fragment.append(row);
+      const remain=text('div','','remain-col');remain.append(text('span','-','remain'));row.append(remain);fragment.append(row);
     }
     body.append(fragment);updateClocks();
   }
@@ -105,7 +105,7 @@
     const stamp=now();document.getElementById('times-clock').textContent=timeLabel(stamp);
     for (const row of body.querySelectorAll('.table-row[data-name]')) {
       const value=listTiming(byName.get(row.dataset.name),stamp), remain=row.querySelector('.remain');
-      remain.textContent=value ? countdown(value) : '—';remain.classList.toggle('is-idle',!value);remain.classList.toggle('soon',Boolean(value&&value.secs<=60));remain.classList.toggle('is-updating',Boolean(value?.updating));
+      remain.textContent=value ? countdown(value) : '-';remain.classList.toggle('is-idle',!value);remain.classList.toggle('soon',Boolean(value&&value.secs<=60));remain.classList.toggle('is-updating',Boolean(value?.updating));
     }
     for (const item of watch.children) item.querySelector('time').textContent=countdown(timing(byName.get(item.dataset.name),stamp));
     const minute=Math.floor(stamp/60000);

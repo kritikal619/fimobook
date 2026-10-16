@@ -983,13 +983,13 @@
 
 .data-source{
   margin-top:4px;
-  color:#94a3b8;
+  color:#64748b;
   font-size:12px;
   text-align:right;
   width:100%;
   max-width: 860px;
-  font-weight:700;
-  letter-spacing:0.18em;
+  font-weight:600;
+  letter-spacing:0;
 }
 
 .coupon-panel{
@@ -1355,7 +1355,8 @@ body.home-page .main-content{ padding-top:12px; }
 @media (max-width:550px){ body.home-page .main-content{ padding-top:6px; } }
 
 /* 트래핑의 신 시뮬레이터 배너: 홈 추천 배너 첫 번째(기본) 항목 */
-.trapping-home-banner{background:linear-gradient(110deg,#2a0f3d,#5a1a63 60%,#7a1d5e);border-color:#b560b0;color:#fff}
+/* 단색 면: 게임 속 트래핑 화면의 자주색을 그대로 가져온 것이라 목적지와 색이 이어진다. */
+.trapping-home-banner{background:#43174f;border-color:#6a2c78;color:#fff}
 .trapping-home-banner .prime-home-kicker{color:#ffd6f0;letter-spacing:0}
 .trapping-home-banner .prime-home-kicker::before{display:none}
 .trapping-home-banner .prime-home-title{margin-top:5px;color:#fff}

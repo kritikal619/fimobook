@@ -38,10 +38,10 @@
       <h1>{{ player.playerKor }}</h1>
       {% if player.playerEng %}<p class="english-name">{{ player.playerEng }}</p>{% endif %}
       <dl class="summary-data">
-        <div><dt>OVR</dt><dd>{{ player.ovr or '—' }}</dd></div>
-        <div><dt>주발</dt><dd>{{ player.mainFootLabel or '—' }}</dd></div>
-        <div><dt>개인기</dt><dd>{{ player.skillMovesDisplay or '—' }}</dd></div>
-        <div><dt>키 / 몸무게</dt><dd>{% if player.height %}{{ player.height }}cm{% else %}—{% endif %} / {% if player.weight %}{{ player.weight }}kg{% else %}—{% endif %}</dd></div>
+        <div><dt>OVR</dt><dd>{{ player.ovr or '-' }}</dd></div>
+        <div><dt>주발</dt><dd>{{ player.mainFootLabel or '-' }}</dd></div>
+        <div><dt>개인기</dt><dd>{{ player.skillMovesDisplay or '-' }}</dd></div>
+        <div><dt>키 / 몸무게</dt><dd>{% if player.height %}{{ player.height }}cm{% else %}-{% endif %} / {% if player.weight %}{{ player.weight }}kg{% else %}-{% endif %}</dd></div>
       </dl>
       <div class="summary-affiliation">
         {% if player.team %}<span>{{ player.team }}</span>{% endif %}
@@ -68,7 +68,7 @@
                 <dl>
                   {% for code, label in group_stats.items() %}
                     {% set stat_value = player.get(code) %}
-                    <div><dt>{{ label }}</dt><dd class="{% if stat_value is number and stat_value >= 200 %}is-high{% endif %}">{{ stat_value if stat_value is not none else '—' }}</dd></div>
+                    <div><dt>{{ label }}</dt><dd class="{% if stat_value is number and stat_value >= 200 %}is-high{% endif %}">{{ stat_value if stat_value is not none else '-' }}</dd></div>
                   {% endfor %}
                 </dl>
               </section>
@@ -114,8 +114,8 @@
             {% for item in other_classes %}
               <a href="{{ url_for('v2_player_detail', cid=item.cid) }}">
                 <span class="v2-related-art" data-fimo-player-card='{{ player_card_meta(item)|tojson }}' style="background-image:url('{{ item.bimageThumbSmall or item.bimage }}')"><img src="{{ item.pimageThumbSmall or item.pimage }}" alt="" loading="lazy"></span>
-                <span><strong>{{ item.className or '클래스 미확인' }}</strong><small>{{ item.position or '—' }}</small></span>
-                <b>{{ item.ovr or '—' }}</b>
+                <span><strong>{{ item.className or '클래스 미확인' }}</strong><small>{{ item.position or '-' }}</small></span>
+                <b>{{ item.ovr or '-' }}</b>
               </a>
             {% endfor %}
           </div>

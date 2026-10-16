@@ -165,7 +165,7 @@
     $('spent').textContent=`${fmt(Math.round(spent))}원`;
     $('gain').textContent=formatMP(value);
     const ratio=spent>0?value/spent*MULTIPLIER_SCALE:null;
-    $('multiple').textContent=ratio===null?'—':ratio>=10000
+    $('multiple').textContent=ratio===null?'-':ratio>=10000
       ?`${(ratio/10000).toLocaleString('ko-KR',{maximumFractionDigits:2})}만배`
       :`${ratio.toLocaleString('ko-KR',{maximumFractionDigits:0})}배`;
   }

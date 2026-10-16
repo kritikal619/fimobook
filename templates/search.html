@@ -57,7 +57,7 @@
   border:0;
 }
 </style>
-<link rel="stylesheet" href="{{ url_for('static', filename='css/home-search.css', v='20261015-trapping') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/home-search.css', v='20261016-flat2') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/home-mobile-shortcuts.css') }}?v=20261010">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/home-quiet.css') }}?v=20261011-1">
 {% endblock %}
@@ -202,7 +202,7 @@
         <a class="prime-home-banner trapping-home-banner" href="{{ url_for('trapping_simulator_page') }}" aria-label="트래핑의 신 시뮬레이터 열기">
           <span class="prime-home-content">
             <strong class="prime-home-title">트래핑의 신 시뮬레이터</strong>
-            <span class="prime-home-cta">시뮬레이터 열기 <i class="bi bi-arrow-right" aria-hidden="true"></i></span>
+            <span class="prime-home-cta">시뮬레이터 열기</span>
           </span>
           <span class="prime-home-visual" aria-hidden="true"><img class="trapping-home-graphic" src="{{ url_for('static', filename='trapping-sim/foot-cutout.webp') }}" alt=""></span>
         </a>
@@ -210,7 +210,7 @@
           <span class="prime-home-content">
             <span class="prime-home-kicker">알쏭뚝딱 방망이 추가</span>
             <strong class="prime-home-title">팩깡 시뮬레이터</strong>
-            <span class="prime-home-cta">팩 열러 가기 <i class="bi bi-arrow-right" aria-hidden="true"></i></span>
+            <span class="prime-home-cta">팩 열러 가기</span>
           </span>
           <span class="prime-home-visual" aria-hidden="true"><img class="pack-home-graphic" src="{{ url_for('static', filename='pack-opener/images/pack.png') }}" alt=""><span class="pack-home-moon"></span></span>
         </a>
@@ -232,7 +232,7 @@
           <span class="prime-home-content">
             <strong class="prime-home-title">전체경력으로 선수검색</strong>
             <span class="prime-home-desc">현재 팀과 이전 소속팀 경력까지 검색합니다.</span>
-            <span class="prime-home-cta">선수 세부검색 열기 <i class="bi bi-arrow-right" aria-hidden="true"></i></span>
+            <span class="prime-home-cta">선수 세부검색 열기</span>
           </span>
           <span class="prime-home-visual career-home-visual" aria-hidden="true">
             <img class="career-home-graphic" src="{{ url_for('static', filename='images/detail-search-graphic.svg') }}" alt="">
@@ -245,8 +245,8 @@
     </div>
 
       <nav id="homeRankingLinks" class="home-ranking-links" aria-label="일반모드 랭킹 하위 메뉴" hidden>
-        <a href="{{ url_for('normal_mode_power_ranking') }}">파워랭킹 <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
-        <a href="{{ url_for('normal_mode_season_ranking') }}">시즌 5 일반모드 랭킹 <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
+        <a href="{{ url_for('normal_mode_power_ranking') }}">파워랭킹</a>
+        <a href="{{ url_for('normal_mode_season_ranking') }}">시즌 5 일반모드 랭킹</a>
       </nav>
 
     <div class="tools-wrap">
@@ -330,7 +330,7 @@
         <div>
           <h3 class="coupon-title">최근 쿠폰</h3>
         </div>
-        <a class="ghost-btn" href="{{ url_for('coupons_page') }}">전체 쿠폰 <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
+        <a class="ghost-btn" href="{{ url_for('coupons_page') }}">전체 쿠폰</a>
       </div>
 
       <div class="coupon-list" id="couponPreview">

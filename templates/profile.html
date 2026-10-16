@@ -112,7 +112,7 @@
           <h2 class="profile-side-title" id="profile-account-title">계정 설정</h2>
           <dl class="profile-account-details">
             <div><dt>로그인 이메일</dt><dd>{{ profile_user.email }}</dd></div>
-            <div><dt>로그인 방식</dt><dd>{% if profile_user.google_sub and profile_user.password_hash %}Google · 이메일{% elif profile_user.google_sub %}Google{% elif profile_user.password_hash %}이메일{% else %}—{% endif %}</dd></div>
+            <div><dt>로그인 방식</dt><dd>{% if profile_user.google_sub and profile_user.password_hash %}Google · 이메일{% elif profile_user.google_sub %}Google{% elif profile_user.password_hash %}이메일{% else %}-{% endif %}</dd></div>
           </dl>
           <details class="profile-editor" id="profile-name-editor">
           <summary><i class="bi bi-pencil" aria-hidden="true"></i>닉네임 변경<i class="bi bi-chevron-down" aria-hidden="true"></i></summary>

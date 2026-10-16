@@ -42,13 +42,13 @@
     return svg;
   };
 
-  function setText(element, value, fallback = '—') {
+  function setText(element, value, fallback = '-') {
     element.textContent = value === null || value === undefined || value === '' ? fallback : String(value);
   }
 
   function formatPrice(value) {
     const number = Number(value);
-    if (!Number.isFinite(number) || number <= 0) return '—';
+    if (!Number.isFinite(number) || number <= 0) return '-';
     if (number >= 100000000) return `${compactNumberFormat.format(number / 100000000)}억 MP`;
     if (number >= 10000) return `${compactNumberFormat.format(number / 10000)}만 MP`;
     return `${numberFormat.format(number)} MP`;
@@ -232,7 +232,7 @@
       loadMoreButton.hidden = players.length < resultLimit || resultLimit >= 60;
     } catch (error) {
       if (error.name === 'AbortError') return;
-      count.textContent = '—';
+      count.textContent = '-';
       showMessage('선수 정보를 불러오지 못했어요', '잠시 후 다시 시도해 주세요.', true);
     } finally {
       loading.hidden = true;

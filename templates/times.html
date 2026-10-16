@@ -100,7 +100,7 @@
           <div class="time-col time-text">
             {{ '짝수시' if card.eo == 0 else '홀수시' }} {{ card.min }}분{% if card.sec %} {{ card.sec }}초{% endif %}{% if card.endMin is defined %}~{{ card.endMin }}분{% if card.endSec %} {{ card.endSec }}초{% endif %}{% endif %}
           </div>
-          <div class="remain-col"><span class="remain">—</span></div>
+          <div class="remain-col"><span class="remain">-</span></div>
         </div>
       {% else %}
         <div class="times-empty">갱신시간 데이터를 불러오지 못했습니다.</div>
