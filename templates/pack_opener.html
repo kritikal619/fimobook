@@ -55,7 +55,7 @@
         <div class="stage-background"></div>
         <video id="cinematic-video" class="stage-video" muted playsinline webkit-playsinline preload="metadata" aria-hidden="true"></video>
         <div class="stage-top"><span id="stage-pack-name">상점 팩을 선택해주세요</span><div class="stage-tools"><button id="sound-toggle" type="button" aria-label="소리 켜기" aria-pressed="false" title="소리 켜기"><i class="bi bi-volume-mute" aria-hidden="true"></i></button><button id="fullscreen-toggle" type="button" aria-label="전체 화면" title="전체 화면"><i class="bi bi-arrows-fullscreen" aria-hidden="true"></i></button></div></div>
-        <div class="pack-idle" id="pack-idle"><div class="pack-aura"></div><div class="pack-shockwave"></div><img class="opening-pack" src="{{ url_for('static', filename='pack-opener/images/pack.png') }}" alt="FC모바일 선수팩" draggable="false"><span class="pack-idle-caption">팩을 열어 선수를 만나보세요</span></div>
+        <div class="pack-idle" id="pack-idle"><div class="pack-aura"></div><div class="pack-shockwave"></div><img class="opening-pack" src="{{ url_for('static', filename='pack-opener/images/pack.png') }}" alt="FC모바일 선수팩" draggable="false"></div>
         <div class="opening-flash" id="opening-flash" aria-hidden="true"></div>
         <canvas id="opening-particles" aria-hidden="true"></canvas>
         <div class="reveal-hint" id="reveal-hint" aria-hidden="true"></div>
@@ -76,4 +76,4 @@
 </section>
 <dialog id="odds-dialog" class="odds-dialog"><div class="odds-heading"><h2>공식 확률표</h2><button id="close-odds" type="button" aria-label="확률표 닫기">×</button></div><div class="odds-breadcrumb"><button id="odds-back" type="button" hidden>← 이전 표</button><strong id="odds-title"></strong></div><p class="odds-note">항목을 누르면 선수별·진화별 상세 확률을 볼 수 있어요. 100% 항목은 확정 적용되며, 나머지 항목 중 하나가 추첨됩니다. 차감 항목은 소모되는 아이템입니다.</p><div class="odds-scroll"><table><thead><tr><th>아이템명</th><th>수량</th><th>OVR</th><th>진화</th><th>확률</th></tr></thead><tbody id="odds-body"></tbody></table></div><div class="odds-footer"><button id="odds-prev" type="button">이전</button><span id="odds-page"></span><button id="odds-next" type="button">다음</button></div><a class="odds-source" href="https://fcmobile.nexon.com/ForumProbability" target="_blank" rel="noopener">넥슨 공식 확률표 ↗</a></dialog>
 {% endblock %}
-{% block extra_scripts %}<script src="{{ url_for('static', filename='js/pack-opener.js', v='20261015-trapping-select') }}" defer></script>{% endblock %}
+{% block extra_scripts %}<script src="{{ url_for('static', filename='js/pack-opener.js', v='20261016-nocaption') }}" defer></script>{% endblock %}
