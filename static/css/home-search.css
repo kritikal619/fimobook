@@ -1364,3 +1364,38 @@ body.home-page .main-content{ padding-top:12px; }
 .trapping-home-banner .prime-home-cta{color:#fff}
 .trapping-home-graphic{height:92px;width:auto;max-width:140px;object-fit:contain;filter:drop-shadow(0 6px 10px #0006)}
 @media(max-width:740px){.trapping-home-banner .prime-home-kicker{font-size:9px}.trapping-home-graphic{height:74px;max-width:110px}}
+
+/* Rounded search field and compact history buttons. */
+#home-search-form .input-area input#names{
+  height:56px;line-height:normal;border:1px solid #dae6df;border-radius:999px;
+  padding:0 124px 0 50px;background:#fff;color:#263c33;font-size:16px;font-weight:500;
+}
+#home-search-form .input-area input#names::placeholder{color:#65746d;font-weight:400;opacity:1}
+#home-search-form .input-area input#names:focus{border-color:#26835d;box-shadow:0 0 0 3px #26835d18}
+.home-search-leading{position:absolute;left:20px;top:50%;transform:translateY(-50%);font-size:19px;color:#40594c;pointer-events:none}
+#home-search-form .home-filter-btn{top:6px;right:76px;width:44px;height:44px;border:0;border-radius:50%;background:transparent;color:#40594c}
+#home-search-form .home-filter-btn i{font-size:20px}
+#home-search-form .home-filter-btn:hover,#home-search-form .home-filter-btn.is-active{background:#e7f4ed;color:#176442}
+#home-search-form .search-icon-btn{top:8px;right:8px;width:62px;height:40px;border:0;border-radius:999px;background:#205b43;color:#fff;font:inherit;font-size:14px;font-weight:600}
+#home-search-form .search-icon-btn:hover{background:#174832}
+#home-search-form button:focus-visible,.recent-row .recent-pill:focus-visible{outline:2px solid #26835d;outline-offset:3px}
+.recent-row{max-width:620px;gap:6px;margin-top:10px}
+.recent-row .recent-pill{display:inline-flex;align-items:center;gap:6px;min-height:30px;max-width:100%;padding:4px 11px 4px 9px;border:0;border-radius:8px;background:#eef1f4;color:#3b4650;font-family:inherit;font-size:12.5px;font-weight:500;line-height:1.4;cursor:pointer}
+.recent-row .recent-pill span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.recent-row .recent-pill:hover{background:#e1e6ea}
+html[data-theme="dark"] #home-search-form .input-area input#names{background:#1b2a24;border-color:#3a5045;color:#edf5f0}
+html[data-theme="dark"] #home-search-form .input-area input#names::placeholder{color:#a6b8ad}
+html[data-theme="dark"] .home-search-leading,html[data-theme="dark"] #home-search-form .home-filter-btn{color:#b4d0bf}
+html[data-theme="dark"] #home-search-form .home-filter-btn:hover,html[data-theme="dark"] #home-search-form .home-filter-btn.is-active{background:#2d493a;color:#c9edd8}
+html[data-theme="dark"] #home-search-form .search-icon-btn{background:#b3e5c7;color:#183e2b}
+html[data-theme="dark"] .recent-row .recent-pill{background:#2a3138!important;color:#d3dae0!important;border-color:transparent!important}
+html[data-theme="dark"] .recent-row .recent-pill:hover{background:#36404a!important}
+@media(max-width:520px){
+  #home-search-form .input-area input#names{height:52px;font-size:16px;padding:0 108px 0 40px}
+  .home-search-leading{left:15px;font-size:17px}
+  #home-search-form .home-filter-btn{top:4px;right:64px;width:40px;height:44px}
+  #home-search-form .home-filter-btn i{font-size:19px}
+  #home-search-form .search-icon-btn{top:6px;right:6px;width:54px;height:40px;font-size:13px}
+  .recent-row{gap:6px;margin-top:8px}
+  .recent-row .recent-pill{min-height:28px;gap:5px;padding:3px 10px 3px 8px;font-size:12px}
+}

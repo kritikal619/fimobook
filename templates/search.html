@@ -57,7 +57,7 @@
   border:0;
 }
 </style>
-<link rel="stylesheet" href="{{ url_for('static', filename='css/home-search.css', v='20261016-flat2') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/home-search.css', v='20261016-rounded-search2') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/home-mobile-shortcuts.css') }}?v=20261010">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/home-quiet.css') }}?v=20261011-1">
 {% endblock %}
@@ -68,13 +68,14 @@
     <h1 class="seo-page-title">FC모바일 선수 검색</h1>
     <form id="home-search-form" method="GET" action="/search" data-ga-event="search" data-ga-search-input="#names" data-ga-param-source-surface="home">
       <div class="input-area">
-        <input type="text" id="names" name="names" placeholder="벨링엄, 리오넬 메시" autocomplete="off">
+        <i class="bi bi-search home-search-leading" aria-hidden="true"></i>
+        <input type="text" id="names" name="names" placeholder="벨링엄, 리오넬 메시" autocomplete="off" aria-label="선수 이름" enterkeyhint="search">
         <button id="home-filter-btn" class="home-filter-btn" type="button" aria-label="선수 검색 필터 열기" aria-expanded="false" aria-controls="home-filter-panel">
-          <i class="bi bi-funnel" aria-hidden="true"></i>
+          <i class="bi bi-sliders2" aria-hidden="true"></i>
           <span id="home-filter-count" class="home-filter-count" aria-hidden="true">0</span>
         </button>
         <button class="search-icon-btn" type="submit" aria-label="검색">
-          <i class="bi bi-search"></i>
+          <span>검색</span>
         </button>
         <div id="autocomplete-list" class="autocomplete-box"></div>
 
@@ -157,7 +158,7 @@
       </div>
     </form>
 
-    <div id="recent-row" class="recent-row"></div>
+    <div id="recent-row" class="recent-row" role="group" aria-label="최근 검색어"></div>
 
     <section class="latest-review-section" aria-labelledby="latestReviewTitle">
       <div class="latest-review-head">
@@ -498,9 +499,12 @@
     recentRow.style.display = "flex";
     recentRow.innerHTML = "";
     saved.forEach(v => {
-      const p = document.createElement("span");
+      const p = document.createElement("button");
+      p.type = "button";
       p.className = "recent-pill";
-      p.innerText = v;
+      const label = document.createElement("span");
+      label.textContent = v;
+      p.append(label);
       p.addEventListener("click", () => {
         input.value = v;
         input.focus();
