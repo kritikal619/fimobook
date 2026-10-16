@@ -209,7 +209,8 @@
     const count=state.mailbox.length;
     $('mail-count').textContent=fmt(count);$('mail-count').hidden=count===0;
     $('mailbox-button').classList.toggle('has-mail',count>0);
-    $('mailbox-button').setAttribute('aria-label',`우편함${count?`, ${fmt(count)}개`:''}`);
+    $('mailbox-button').querySelector('span').textContent=count>0?'보상 받기':'우편함';
+    $('mailbox-button').setAttribute('aria-label',count?`우편함, 받을 보상 ${fmt(count)}개`:'우편함');
     renderRewards(r);renderAttendance();
     if (state.delivery) renderReceipt();
     else {
@@ -345,18 +346,18 @@
     failedPrompt=false;state.round=null;save();closeDialog();render();message(success?'보상이 우편함에 도착했어요. 우편함에서 받을 수 있어요.':'참가 보상이 우편함에 도착했어요. 우편함에서 받을 수 있어요.');
   }
   function openMailbox() {
-    showDialog('mailbox','우편함');
+    showDialog('mailbox','우편함 · 받을 보상');
     if(!state.mailbox.length) {body.append(element('p','도착한 우편이 없습니다.','trap-empty'));action('확인',closeDialog);return;}
-    body.append(element('p',`전체 우편 ${fmt(state.mailbox.length)}개`,'trap-mail-total'),element('p','"받기"를 누르면 보상과 참가권이 지급됩니다.','trap-mail-hint'));
+    body.append(element('p',`받을 보상 ${fmt(state.mailbox.length)}개`,'trap-mail-total'),element('p','보상은 아직 받지 않은 상태입니다. "받기"를 누르면 지급되고 팩이 열립니다.','trap-mail-hint'));
     state.mailbox.forEach(mail => {
       const row=element('div',undefined,'trap-mail-entry');row.append(image('/static/pack-opener/images/pack.png','',''));
       const detail=element('div');detail.append(element('strong',mail.name));
       if(mail.tickets)detail.append(element('p',`참가권 ${fmt(mail.tickets)}장`));
       detail.append(element('small',`${mail.source} · ${new Date(mail.at).toLocaleDateString('ko-KR')}`));
-      const button=element('button','받기');button.type='button';button.setAttribute('aria-label',`${mail.name} 받기`);
+      const button=element('button','받기','trap-mail-claim');button.type='button';button.setAttribute('aria-label',`${mail.name} 받기`);
       button.addEventListener('click',() => claimMail([mail.id]));row.append(detail,button);body.append(row);
     });
-    action('모두 받기',() => claimMail(state.mailbox.map(mail => mail.id)));
+    action(`보상 모두 받기 (${fmt(state.mailbox.length)})`,() => claimMail(state.mailbox.map(mail => mail.id)));
   }
   const withMailLock = callback => navigator.locks?.request ? navigator.locks.request(`${KEY}.mail`,callback) : Promise.resolve().then(callback);
   async function claimMail(ids) {

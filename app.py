@@ -2568,9 +2568,9 @@ def community():
             sidebar=_community_sidebar_context(),
             canonical_url=_canonical("/player-reviews"),
             robots_meta="noindex,follow" if review_is_filtered else "index,follow",
-            meta_description="FC모바일 선수리뷰를 포지션과 별점으로 검색. 이용자 사용 후기와 평가.",
+            meta_description="FC모바일 선수리뷰를 포지션과 별점으로 검색하고, 이용자들의 사용 후기와 평가를 확인할 수 있습니다.",
             og_title="FC모바일 선수리뷰, 사용 후기 | 피모북",
-            og_description="FC모바일 선수리뷰, 사용 후기, 평점과 장단점.",
+            og_description="FC모바일 선수리뷰와 이용자 사용 후기, 평점과 장단점을 확인할 수 있습니다.",
         )
 
     post_query = Post.query.filter(Post.board_type == active_board)
@@ -7237,7 +7237,7 @@ def index():
         robots_meta="index,follow",
         canonical_url=_canonical("/"),
         og_title="피모북 | FC모바일 선수검색·갱신시간·팀경력·쿠폰",
-        og_description="FC모바일 선수 이름, 시즌, 포지션, OVR 검색. 능력치와 시세.",
+        og_description="FC모바일 선수를 이름, 시즌, 포지션, OVR로 검색하고 상세 능력치와 시세를 확인할 수 있습니다.",
         weekly_players=_get_weekly_players(),
         market_trends=_get_market_trends(),
         evolution_material_trends=_get_evolution_material_trends(),
@@ -7318,7 +7318,7 @@ def win_rate_calculator():
         robots_meta="index,follow",
         canonical_url=_canonical("/win-rate-calculator"),
         og_title="FC모바일 승률 계산기 | 피모북",
-        og_description="별 수와 총 승리 수, 무승부 빈도로 FC모바일 일반모드 승률과 전체 경기 수를 계산합니다.",
+        og_description="별 수와 총 승리 수, 무승부 빈도를 바탕으로 FC모바일 일반모드의 승률과 전체 경기 수를 계산할 수 있습니다.",
     )
 
 
@@ -7400,7 +7400,7 @@ def normal_mode_power_ranking():
         robots_meta="index,follow",
         canonical_url=_canonical("/normal-mode-power-ranking"),
         og_title="FC모바일 일반모드 파워랭킹 | 피모북",
-        og_description="FC모바일 일반모드 상위 랭커의 선수 사용 현황. 포지션별 랭킹과 시각화.",
+        og_description="FC모바일 일반모드 상위 랭커의 선수 사용 현황을 확인하고, 포지션별 랭킹과 시각화 자료를 볼 수 있습니다.",
     )
 
 
@@ -7419,7 +7419,7 @@ def normal_mode_season_ranking():
         robots_meta="index,follow",
         canonical_url=_canonical("/normal-mode-ranking/season-5"),
         og_title="FC모바일 시즌 5 일반모드 랭킹 | 피모북",
-        og_description="일반모드 상위 250명의 순위, 스타와 팀 OVR을 확인하고 닉네임으로 내 순위를 검색하세요.",
+        og_description="일반모드 상위 250명의 순위와 스타, 팀 OVR을 확인하고 닉네임으로 내 순위를 검색할 수 있습니다.",
     )
 
 
@@ -7547,9 +7547,9 @@ def players_hub():
         total=total,
         canonical_url=canonical_url,
         robots_meta="index,follow",
-        meta_description="FC모바일 전체 선수 목록. 이름, 클래스, 포지션, OVR과 상세 능력치.",
+        meta_description="FC모바일 전체 선수 목록입니다. 이름, 클래스, 포지션, OVR과 상세 능력치를 확인할 수 있습니다.",
         og_title="FC모바일 전체 선수 목록과 정보 | 피모북",
-        og_description="FC모바일 선수 이름, 클래스, 포지션, OVR과 상세 정보.",
+        og_description="FC모바일 선수의 이름, 클래스, 포지션, OVR과 상세 정보를 확인할 수 있습니다.",
     )
 
 
@@ -7558,7 +7558,7 @@ def pack_opener_page():
     return render_template(
         "pack_opener.html",
         canonical_url=_canonical("/pack-opener"),
-        meta_description="FC모바일 공식 상점 확률표를 그대로 쓴 무료 팩 오프너. 시즌별 팩 연출과 선수 카드 뽑기.",
+        meta_description="FC모바일 공식 상점 확률표를 그대로 적용한 무료 팩 오프너입니다. 시즌별 팩 연출과 함께 선수 카드 뽑기를 체험할 수 있습니다.",
         og_title="FC모바일 팩 오프너 | 피모북",
     )
 
@@ -7568,7 +7568,7 @@ def trapping_simulator_page():
     return render_template(
         "trapping_simulator.html",
         canonical_url=_canonical("/trapping-simulator"),
-        meta_description="FC모바일 트래핑의 신 시뮬레이터. 가슴·머리·발 트래핑과 슈퍼 트래핑 확률, 1~24P 보상과 참가 횟수 보상을 무료로 체험하세요.",
+        meta_description="FC모바일 트래핑의 신 시뮬레이터입니다. 가슴·머리·발 트래핑과 슈퍼 트래핑 확률, 1~24P 보상과 참가 횟수 보상을 무료로 체험할 수 있습니다.",
         og_title="FC모바일 트래핑의 신 시뮬레이터 | 피모북",
     )
 
@@ -7644,7 +7644,7 @@ def evolution_simulator_page():
     return render_template(
         "evolution_simulator.html",
         canonical_url=_canonical("/evolution-simulator"),
-        meta_description="FC모바일 선수 진화 시뮬레이터. 넥슨 공식 진화 확률표 기준으로 진화 성공률을 계산합니다.",
+        meta_description="FC모바일 선수 진화 시뮬레이터입니다. 넥슨 공식 진화 확률표를 기준으로 진화 성공률을 계산할 수 있습니다.",
         og_title="FC모바일 진화 시뮬레이터 | 피모북",
         evolution_data=_evolution_probability_data(),
         evolution_materials=_evolution_materials(),
@@ -7867,7 +7867,7 @@ def player_compare_page():
         robots_meta="index,follow",
         canonical_url=_canonical("/player_compare"),
         og_title="FC모바일 선수 비교 - 능력치·진화·스킬 | 피모북",
-        og_description="FC모바일 선수 두 명의 OVR과 세부 능력치를 진화 단계와 스킬부스트까지 적용해 비교하세요.",
+        og_description="FC모바일 선수 두 명의 OVR과 세부 능력치를 진화 단계와 스킬부스트까지 적용하여 비교할 수 있습니다.",
     )
 
 # 선수 상세 정보 페이지 (API 사용)
@@ -8932,9 +8932,9 @@ def traits_selection():
         max_player_height=max(player_heights) if player_heights else 210,
         canonical_url=_canonical("/traits_selection"),
         robots_meta="index,follow",
-        meta_description="FC모바일 선수를 이름, OVR, 가격, 포지션, 클래스, 키, 약발, 특성, 스킬, 플레이스타일, 활동량과 팀 경력으로 세부검색.",
+        meta_description="FC모바일 선수를 이름, OVR, 가격, 포지션, 클래스, 키, 약발, 특성, 스킬, 플레이스타일, 활동량, 팀 경력 조건으로 세부검색할 수 있습니다.",
         og_title="FC모바일 선수 세부검색 - 스탯과 특성, 스킬 필터 | 피모북",
-        og_description="FC모바일 선수를 능력치, 클래스, 특성, 스킬, 플레이스타일과 팀 경력 조건으로 세부검색하세요.",
+        og_description="FC모바일 선수를 능력치, 클래스, 특성, 스킬, 플레이스타일, 팀 경력 조건으로 세부검색할 수 있습니다.",
     )
 
 
@@ -9235,9 +9235,9 @@ def times():
         renewal_cards=_load_renewal_cards(),
         canonical_url=_canonical("/times"),
         robots_meta="index,follow",
-        meta_description="FC모바일 클래스별 갱신시간과 다음 갱신까지 남은 시간. 클래스명, 시즌명, 통용 별칭으로 검색.",
+        meta_description="FC모바일 클래스별 갱신시간과 다음 갱신까지 남은 시간을 확인하고, 클래스명이나 시즌명, 통용 별칭으로 검색할 수 있습니다.",
         og_title="FC모바일 갱신시간 - 클래스별 다음 갱신 시간 | 피모북",
-        og_description="FC모바일 클래스별 갱신시간과 다음 갱신까지 남은 시간. 클래스명, 시즌명으로 검색.",
+        og_description="FC모바일 클래스별 갱신시간과 다음 갱신까지 남은 시간을 확인하고, 클래스명과 시즌명으로 검색할 수 있습니다.",
     )
 
 
@@ -9920,7 +9920,7 @@ def coupons_page():
         canonical_url=_canonical("/coupons/"),
         robots_meta="index,follow",
         og_title="FC모바일 쿠폰 코드와 보상, 등록 방법 | 피모북",
-        og_description="현재 사용할 수 있는 FC모바일 쿠폰 코드와 보상, 만료 상태를 확인하고 공식 쿠폰센터에 등록하세요.",
+        og_description="현재 사용할 수 있는 FC모바일 쿠폰 코드와 보상, 만료 상태를 확인하고 공식 쿠폰센터에 등록할 수 있습니다.",
         firebase_config=app.config.get("FIREBASE_WEB_CONFIG") or {},
         firebase_vapid_key=app.config.get("FIREBASE_WEB_VAPID_KEY", ""),
     )

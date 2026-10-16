@@ -356,3 +356,6 @@ html[data-theme=dark] .trap-dialog footer>button.secondary.danger:disabled{backg
 html[data-theme=dark] .trap-mailbox-button.has-mail{background:#3d3412;border-color:#8a7420;color:#ffe9a0}
 html[data-theme=dark] .trap-mail-hint{color:#a8b3c2}
 @media(max-width:740px){.trap-mailbox-button{min-height:42px;padding:8px 12px;font-size:13px!important}.trap-mailbox-button>.bi{font-size:18px}}
+
+.trap-mail-claim{background:#ffdb00!important;color:#592e00!important;font-weight:700!important;border:0!important}
+.trap-mail-claim:disabled{background:#a7aaaa!important;color:#fff!important}
